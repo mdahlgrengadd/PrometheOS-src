@@ -141,6 +141,7 @@ const Desktop = () => {
 
   return (
     <div className="desktop">
+      <div className="desktop-blueprint-details"></div>
       <DesktopIcons windows={windows} openWindow={openWindow} />
       
       {windows.map(window => (
