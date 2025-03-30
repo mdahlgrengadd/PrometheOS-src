@@ -37,6 +37,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
               case "calculator": return "🔢 ";
               case "browser": return "🌐 ";
               case "settings": return "⚙️ ";
+              case "wordprocessor": return "📄 ";
               default: return "✨ ";
             }
           };

@@ -1,9 +1,22 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Bold, 
+  Italic, 
+  Underline, 
+  AlignLeft, 
+  AlignCenter, 
+  AlignRight, 
+  List, 
+  ListOrdered,
+  Type,
+  Image,
+  Table,
+  Link
+} from "lucide-react";
 
 // Notepad App
 const Notepad = () => {
@@ -175,7 +188,7 @@ const Browser = () => {
           <TabsTrigger value="tab2">About</TabsTrigger>
           <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.75 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z" fill="currentColor"></path>
+              <path d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.7761 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z" fill="currentColor"></path>
             </svg>
           </Button>
         </TabsList>
@@ -268,9 +281,208 @@ const Settings = () => {
   );
 };
 
+// Word Processor App
+const WordProcessor = () => {
+  const [content, setContent] = useState("");
+  const [fontSize, setFontSize] = useState("16px");
+  const [fontFamily, setFontFamily] = useState("Arial");
+  const [textColor, setTextColor] = useState("#000000");
+  const [documentName, setDocumentName] = useState("Untitled Document");
+  
+  const handleBold = () => {
+    const textarea = document.getElementById("word-editor") as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    const newContent = content.substring(0, start) + `**${selectedText}**` + content.substring(end);
+    
+    setContent(newContent);
+  };
+  
+  const handleItalic = () => {
+    const textarea = document.getElementById("word-editor") as HTMLTextAreaElement;
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    const newContent = content.substring(0, start) + `*${selectedText}*` + content.substring(end);
+    
+    setContent(newContent);
+  };
+  
+  const convertMarkdownToHTML = (text: string) => {
+    // Simple markdown conversion (bold and italic)
+    let html = text;
+    // Convert bold: **text** to <strong>text</strong>
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Convert italic: *text* to <em>text</em>
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Convert newlines to <br>
+    html = html.replace(/\n/g, '<br>');
+    return html;
+  };
+  
+  return (
+    <div className="h-full flex flex-col">
+      <div className="mb-2">
+        <Input 
+          value={documentName}
+          onChange={(e) => setDocumentName(e.target.value)}
+          className="font-bold text-lg border-none"
+        />
+      </div>
+      
+      <div className="bg-gray-100 p-2 rounded-md mb-2 flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-1 border-r pr-2">
+          <select 
+            className="bg-white rounded p-1 text-sm"
+            value={fontFamily}
+            onChange={(e) => setFontFamily(e.target.value)}
+          >
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Comic Sans MS">Comic Sans MS</option>
+          </select>
+          
+          <select 
+            className="bg-white rounded p-1 text-sm"
+            value={fontSize}
+            onChange={(e) => setFontSize(e.target.value)}
+          >
+            <option value="12px">12</option>
+            <option value="14px">14</option>
+            <option value="16px">16</option>
+            <option value="18px">18</option>
+            <option value="20px">20</option>
+            <option value="24px">24</option>
+            <option value="28px">28</option>
+            <option value="32px">32</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-1 border-r pr-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-neon-blue animate-pulse hover:text-neon-purple hover:bg-blue-50"
+            onClick={handleBold}
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-neon-pink animate-pulse hover:text-neon-purple hover:bg-pink-50"
+            onClick={handleItalic}
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-neon-purple hover:text-neon-blue hover:bg-purple-50"
+          >
+            <Underline className="h-4 w-4" />
+          </Button>
+          
+          <input 
+            type="color" 
+            value={textColor}
+            onChange={(e) => setTextColor(e.target.value)}
+            className="h-6 w-6 rounded cursor-pointer"
+          />
+        </div>
+        
+        <div className="flex items-center gap-1 border-r pr-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-green hover:bg-green-50">
+            <AlignLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-green hover:bg-green-50">
+            <AlignCenter className="h-4 w-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-green hover:bg-green-50">
+            <AlignRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-1 border-r pr-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-orange animate-float hover:bg-orange-50">
+            <List className="h-4 w-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-orange animate-float hover:bg-orange-50">
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-yellow hover:bg-yellow-50">
+            <Image className="h-4 w-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-cyan hover:bg-cyan-50">
+            <Table className="h-4 w-4" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-neon-blue hover:bg-blue-50">
+            <Link className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex-1 flex">
+        <div className="w-1/2 p-2 border-r">
+          <Textarea
+            id="word-editor"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="h-full resize-none font-sans"
+            style={{ 
+              fontFamily, 
+              fontSize, 
+              color: textColor 
+            }}
+            placeholder="Start typing your document here..."
+          />
+        </div>
+        <div className="w-1/2 p-4 bg-white shadow-inner overflow-auto">
+          <div
+            className="prose max-w-none"
+            style={{ 
+              fontFamily, 
+              fontSize, 
+              color: textColor 
+            }}
+            dangerouslySetInnerHTML={{ __html: convertMarkdownToHTML(content) }}
+          ></div>
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+        <div>Words: {content.split(/\s+/).filter(Boolean).length}</div>
+        <div className="flex items-center gap-2">
+          <span className="animate-pulse">✨</span>
+          <span>StarWord 1.0</span>
+          <span className="animate-pulse">✨</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AppWindow = {
   Notepad,
   Calculator,
   Browser,
-  Settings
+  Settings,
+  WordProcessor
 };
