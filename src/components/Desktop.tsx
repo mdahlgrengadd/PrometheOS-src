@@ -57,16 +57,6 @@ const Desktop = () => {
       zIndex: 1,
       position: { x: 250, y: 150 },
       size: { width: 450, height: 350 }
-    },
-    {
-      id: "wordprocessor",
-      title: "StarWord",
-      content: <AppWindow.WordProcessor />,
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 300, y: 120 },
-      size: { width: 700, height: 500 }
     }
   ]);
 
@@ -151,7 +141,6 @@ const Desktop = () => {
 
   return (
     <div className="desktop">
-      <div className="desktop-blueprint-details"></div>
       <DesktopIcons windows={windows} openWindow={openWindow} />
       
       {windows.map(window => (

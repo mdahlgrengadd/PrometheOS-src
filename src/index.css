@@ -5,43 +5,81 @@
 
 @layer base {
   :root {
-    --background: 225 60% 5%;
-    --foreground: 210 40% 98%;
+    --background: 225 60% 99%;
+    --foreground: 224 71.4% 4.1%;
 
-    --card: 224 71.4% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
 
-    --popover: 224 71.4% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
 
     --primary: 235 85% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220 8.9% 46.1%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 224 71.4% 4.1%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+
+    --radius: 0.4rem;
+
+    --window: 0 0% 100%;
+    --window-foreground: 224 71.4% 4.1%;
+    --window-border: 220 13% 91%;
+    --window-header: 220 14.3% 95.9%;
+
+    --taskbar: 224 71.4% 21%;
+    --taskbar-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 224 71.4% 8%;
+    --foreground: 210 20% 98%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 235 85% 60%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 14.3% 97.3%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 210 20% 98%;
 
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 216 34% 17%;
-
-    --radius: 0.5rem;
+    --ring: 216 12.2% 83.9%;
 
     --window: 224 71.4% 10%;
-    --window-foreground: 210 40% 98%;
+    --window-foreground: 210 20% 98%;
     --window-border: 215 27.9% 16.9%;
-    --window-header: 217 33% 17%;
+    --window-header: 215 27.9% 16.9%;
 
-    --taskbar: 224 71.4% 15%;
-    --taskbar-foreground: 210 40% 98%;
+    --taskbar: 224 71.4% 21%;
+    --taskbar-foreground: 0 0% 100%;
   }
 }
 
@@ -70,19 +108,14 @@
 }
 
 .draggable-window {
-  @apply bg-window/90 backdrop-blur-md border border-neon-blue/30 rounded-md overflow-hidden animate-fade-in;
+  @apply bg-window border border-window-border shadow-lg rounded-lg overflow-hidden animate-fade-in;
   position: absolute;
   min-width: 320px;
   min-height: 200px;
-  box-shadow: 0 0 15px rgba(30, 174, 219, 0.3);
-}
-
-.draggable-window:hover {
-  @apply animate-pulse-rainbow;
 }
 
 .window-header {
-  @apply bg-window-header/90 backdrop-blur-sm px-4 py-2 flex items-center justify-between cursor-move select-none border-b border-neon-blue/20;
+  @apply bg-window-header px-4 py-2 flex items-center justify-between cursor-move select-none;
 }
 
 .window-title {
@@ -98,147 +131,19 @@
 }
 
 .window-content {
-  @apply p-4 h-full overflow-auto relative;
-  background: linear-gradient(to bottom, rgba(30, 174, 219, 0.05), transparent);
-}
-
-.window-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(30, 174, 219, 0.5);
-  opacity: 0.7;
-  animation: scanner 4s linear infinite;
-  pointer-events: none;
+  @apply p-4 h-full overflow-auto;
 }
 
 .desktop {
-  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
-  position: relative;
+  @apply bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950;
   height: 100%;
   width: 100%;
+  position: relative;
   overflow: hidden;
 }
 
-/* Blueprint grid pattern */
-.desktop::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    linear-gradient(rgba(30, 174, 219, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 174, 219, 0.15) 1px, transparent 1px),
-    linear-gradient(rgba(30, 174, 219, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 174, 219, 0.1) 1px, transparent 1px);
-  background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
-  background-position: -1px -1px, -1px -1px, -1px -1px, -1px -1px;
-  animation: grid-fade 10s infinite alternate;
-}
-
-/* Rainbow accents */
-.desktop::after {
-  content: "";
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  z-index: 0;
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(217, 70, 239, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 25%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 25% 75%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(30, 174, 219, 0.2) 0%, transparent 50%);
-}
-
-/* Blueprint circles and details */
-.desktop-blueprint-details {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.desktop-blueprint-details::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(circle at 20% 20%, rgba(30, 174, 219, 0.2) 0%, rgba(30, 174, 219, 0) 20%),
-    radial-gradient(circle at 80% 30%, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0) 20%),
-    radial-gradient(circle at 40% 70%, rgba(217, 70, 239, 0.2) 0%, rgba(217, 70, 239, 0) 20%),
-    radial-gradient(circle at 70% 80%, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0) 20%);
-}
-
-@keyframes grid-fade {
-  0% {
-    opacity: 0.5;
-    background-image: 
-      linear-gradient(rgba(30, 174, 219, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(30, 174, 219, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(30, 174, 219, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(30, 174, 219, 0.1) 1px, transparent 1px);
-  }
-  20% {
-    background-image: 
-      linear-gradient(rgba(139, 92, 246, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139, 92, 246, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
-  }
-  40% {
-    background-image: 
-      linear-gradient(rgba(217, 70, 239, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(217, 70, 239, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(217, 70, 239, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(217, 70, 239, 0.1) 1px, transparent 1px);
-  }
-  60% {
-    background-image: 
-      linear-gradient(rgba(249, 115, 22, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(249, 115, 22, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(249, 115, 22, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(249, 115, 22, 0.1) 1px, transparent 1px);
-  }
-  80% {
-    background-image: 
-      linear-gradient(rgba(16, 185, 129, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(16, 185, 129, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
-  }
-  100% {
-    opacity: 0.8;
-    background-image: 
-      linear-gradient(rgba(251, 191, 36, 0.15) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(251, 191, 36, 0.15) 1px, transparent 1px),
-      linear-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(251, 191, 36, 0.1) 1px, transparent 1px);
-  }
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .taskbar {
-  @apply bg-taskbar/80 backdrop-blur-md text-taskbar-foreground p-2 border-t border-neon-blue/20;
+  @apply bg-taskbar text-taskbar-foreground p-2 shadow-md;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -247,26 +152,10 @@
   display: flex;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .taskbar-item {
-  @apply px-3 py-2 rounded-md hover:bg-white/10 cursor-pointer transition-all duration-200;
-  position: relative;
-  overflow: hidden;
-}
-
-.taskbar-item:hover {
-  @apply bg-neon-blue/20;
-}
-
-.taskbar-item:active {
-  @apply bg-neon-blue/30;
-}
-
-.taskbar-item.active {
-  @apply bg-neon-blue/20;
-  box-shadow: inset 0 -2px 0 rgba(30, 174, 219, 0.8);
+  @apply px-3 py-2 rounded-md hover:bg-white/10 cursor-pointer;
 }
 
 .desktop-icons {
@@ -274,21 +163,14 @@
   grid-template-columns: repeat(auto-fill, 80px);
   grid-gap: 16px;
   padding: 16px;
-  z-index: 2;
-  position: relative;
 }
 
 .desktop-icon {
-  @apply flex flex-col items-center justify-center p-2 rounded-md hover:bg-neon-blue/10 cursor-pointer transition-colors duration-200;
+  @apply flex flex-col items-center justify-center p-2 rounded-md hover:bg-white/20 cursor-pointer;
   width: 80px;
   height: 80px;
 }
 
 .desktop-icon-label {
-  @apply text-center text-sm mt-1 truncate w-full text-white/80;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.desktop-icon svg {
-  filter: drop-shadow(0 0 5px rgba(30, 174, 219, 0.5));
+  @apply text-center text-sm mt-1 truncate w-full;
 }
