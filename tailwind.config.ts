@@ -62,12 +62,6 @@ export default {
 				taskbar: {
 					DEFAULT: 'hsl(var(--taskbar))',
 					foreground: 'hsl(var(--taskbar-foreground))'
-				},
-				neon: {
-					blue: '#1EAEDB',
-					purple: '#8B5CF6',
-					pink: '#D946EF',
-					orange: '#F97316'
 				}
 			},
 			borderRadius: {
@@ -91,27 +85,13 @@ export default {
 				'fade-out': {
 					'0%': { opacity: '1' },
 					'100%': { opacity: '0' }
-				},
-				'glow': {
-					'0%, 100%': { 
-						boxShadow: '0 0 5px rgba(30, 174, 219, 0.5), 0 0 15px rgba(30, 174, 219, 0.3)' 
-					},
-					'50%': { 
-						boxShadow: '0 0 20px rgba(30, 174, 219, 0.8), 0 0 30px rgba(30, 174, 219, 0.5)' 
-					}
-				},
-				'scanner': {
-					'0%': { transform: 'translateY(-100%)' },
-					'100%': { transform: 'translateY(100%)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.2s ease-out',
-				'fade-out': 'fade-out 0.2s ease-out',
-				'glow': 'glow 2s ease-in-out infinite',
-				'scanner': 'scanner 2s linear infinite'
+				'fade-out': 'fade-out 0.2s ease-out'
 			}
 		}
 	},
