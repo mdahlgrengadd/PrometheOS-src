@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { X, Minus, Square } from "lucide-react";
 import { WindowState } from "./Desktop";
@@ -96,31 +97,21 @@ const Window: React.FC<WindowProps> = ({
     height: window.size.height,
   };
 
-  const WindowControls = () => (
-    <div className="window-controls">
-      <button
-        className="window-control"
-        onClick={onMinimize}
-        aria-label="Minimize"
-      >
-        <Minus className="h-2.5 w-2.5 text-black" />
-      </button>
-      <button
-        className="window-control"
-        onClick={onMaximize}
-        aria-label="Maximize"
-      >
-        <Square className="h-2.5 w-2.5 text-black" />
-      </button>
-      <button
-        className="window-control"
-        onClick={onClose}
-        aria-label="Close"
-      >
-        <X className="h-2.5 w-2.5 text-black" />
-      </button>
-    </div>
-  );
+  // Handle window control button clicks with proper event stopping
+  const handleMinimizeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMinimize();
+  };
+
+  const handleMaximizeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMaximize();
+  };
+
+  const handleCloseClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  };
 
   return (
     <div 
@@ -133,7 +124,29 @@ const Window: React.FC<WindowProps> = ({
         className={`window-header ${isMaximized ? 'hidden' : 'inline-flex'}`}
       >
         <div className="window-title">{window.title}</div>
-        <WindowControls />
+        <div className="window-controls">
+          <button
+            className="window-control"
+            onClick={handleMinimizeClick}
+            aria-label="Minimize"
+          >
+            <Minus className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleMaximizeClick}
+            aria-label="Maximize"
+          >
+            <Square className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleCloseClick}
+            aria-label="Close"
+          >
+            <X className="h-2.5 w-2.5 text-black" />
+          </button>
+        </div>
       </div>
       <div className="window-content">
         {window.content}

@@ -109,11 +109,12 @@
 }
 
 .draggable-window {
-  @apply bg-window border border-window-border shadow-lg overflow-hidden animate-fade-in;
+  @apply shadow-lg overflow-hidden animate-fade-in;
   position: absolute;
   min-width: 320px;
   min-height: 200px;
   border-radius: 0;
+  background-color: transparent;
 }
 
 .window-header {
