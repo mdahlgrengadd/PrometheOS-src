@@ -2,8 +2,23 @@
 .window-header {
   @apply bg-beos-yellow px-2 py-1 flex items-center justify-between cursor-move select-none;
   height: 26px;
-  width: 100%; /* Change from fit-content to 100% */
+  width: 100%; /* Change from fit-content to full width */
   min-width: 200px;
-  max-width: 100%; /* Ensure it can expand to full width */
+  max-width: 100%;
   border-bottom-right-radius: 3px;
+  background-color: var(--window-header); /* Ensure consistent color */
+}
+
+.draggable-window {
+  @apply border border-window-border shadow-lg overflow-hidden animate-fade-in;
+  position: absolute;
+  min-width: 320px;
+  min-height: 200px;
+  border-radius: 0;
+  background-color: transparent; /* Make background transparent */
+}
+
+.window-content {
+  @apply p-4 h-[calc(100%-26px)] overflow-auto bg-window;
+  background-color: var(--window); /* Use CSS variable for consistency */
 }
