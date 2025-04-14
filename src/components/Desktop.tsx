@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Window from "./Window";
 import Taskbar from "./Taskbar";
 import DesktopIcons from "./DesktopIcons";
@@ -59,6 +59,14 @@ const Desktop = () => {
       size: { width: 450, height: 350 }
     }
   ]);
+  
+  // Get all maximized windows
+  const maximizedWindows = windows.filter(w => 
+    w.isOpen && 
+    !w.isMinimized && 
+    w.size.width === "100%" && 
+    (w.size.height === "calc(100% - 48px)" || w.size.height === "calc(100vh - 62px)")
+  ).sort((a, b) => b.zIndex - a.zIndex);
 
   const openWindow = (id: string) => {
     setWindows(prevWindows => {
@@ -103,13 +111,15 @@ const Desktop = () => {
       prevWindows.map(window => {
         if (window.id === id) {
           // Toggle between maximized and normal size
-          const isMaximized = window.size.width === "100%" && window.size.height === "calc(100% - 48px)";
+          const isMaximized = window.size.width === "100%" && 
+                            (window.size.height === "calc(100% - 48px)" || 
+                             window.size.height === "calc(100vh - 62px)");
           return {
             ...window,
             position: isMaximized ? { x: 100, y: 100 } : { x: 0, y: 0 },
             size: isMaximized 
               ? { width: 500, height: 400 }
-              : { width: "100%", height: "calc(100% - 48px)" }
+              : { width: "100%", height: "calc(100vh - 62px)" }
           };
         }
         return window;
@@ -139,8 +149,26 @@ const Desktop = () => {
     );
   };
 
+  const handleTabClick = (id: string) => {
+    focusWindow(id);
+  };
+
   return (
     <div className="desktop">
+      {maximizedWindows.length > 0 && (
+        <div className="window-tab-bar">
+          {maximizedWindows.map(window => (
+            <div 
+              key={window.id} 
+              className={`window-tab ${window.zIndex === Math.max(...maximizedWindows.map(w => w.zIndex)) ? 'font-bold' : ''}`}
+              onClick={() => handleTabClick(window.id)}
+            >
+              <span className="window-tab-title">{window.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      
       <DesktopIcons windows={windows} openWindow={openWindow} />
       
       {windows.map(window => (
@@ -148,11 +176,13 @@ const Desktop = () => {
           <Window 
             key={window.id}
             window={window}
+            allWindows={windows}
             onClose={() => closeWindow(window.id)}
             onMinimize={() => minimizeWindow(window.id)}
             onMaximize={() => maximizeWindow(window.id)}
             onFocus={() => focusWindow(window.id)}
             onDragStop={(position) => updateWindowPosition(window.id, position)}
+            onTabClick={handleTabClick}
           />
         )
       ))}

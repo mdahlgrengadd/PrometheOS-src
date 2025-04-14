@@ -57,11 +57,19 @@ export default {
 					DEFAULT: 'hsl(var(--window))',
 					foreground: 'hsl(var(--window-foreground))',
 					border: 'hsl(var(--window-border))',
-					header: 'hsl(var(--window-header))'
+					header: 'hsl(var(--window-header))',
+					tab: 'hsl(var(--window-tab))'
 				},
 				taskbar: {
 					DEFAULT: 'hsl(var(--taskbar))',
 					foreground: 'hsl(var(--taskbar-foreground))'
+				},
+				beos: {
+					blue: '#2c56a1',
+					yellow: '#f5c156',
+					grey: '#d9d9d9',
+					lightgrey: '#f0f0f0',
+					darkgrey: '#9f9ea1',
 				}
 			},
 			borderRadius: {
