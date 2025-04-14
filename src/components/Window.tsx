@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { X, Minus, Square } from "lucide-react";
 import { WindowState } from "./Desktop";
@@ -89,20 +88,6 @@ const Window: React.FC<WindowProps> = ({
   // Don't render if the window is not open or is minimized
   if (!window.isOpen || window.isMinimized) return null;
 
-  // All maximized windows
-  const maximizedWindows = allWindows.filter(w => 
-    w.isOpen && 
-    !w.isMinimized && 
-    w.size.width === "100%" && 
-    (w.size.height === "calc(100% - 48px)" || w.size.height === "calc(100vh - 62px)")
-  );
-  
-  // Check if any window is maximized
-  const hasMaximizedWindows = maximizedWindows.length > 0;
-  
-  // Hide header if window is maximized and not on top
-  const hideHeader = isMaximized && window.zIndex !== Math.max(...maximizedWindows.map(w => w.zIndex));
-
   const style: React.CSSProperties = {
     zIndex: window.zIndex,
     left: window.position.x,
@@ -111,40 +96,45 @@ const Window: React.FC<WindowProps> = ({
     height: window.size.height,
   };
 
+  const WindowControls = () => (
+    <div className="window-controls">
+      <button
+        className="window-control"
+        onClick={onMinimize}
+        aria-label="Minimize"
+      >
+        <Minus className="h-2.5 w-2.5 text-black" />
+      </button>
+      <button
+        className="window-control"
+        onClick={onMaximize}
+        aria-label="Maximize"
+      >
+        <Square className="h-2.5 w-2.5 text-black" />
+      </button>
+      <button
+        className="window-control"
+        onClick={onClose}
+        aria-label="Close"
+      >
+        <X className="h-2.5 w-2.5 text-black" />
+      </button>
+    </div>
+  );
+
   return (
     <div 
       ref={windowRef} 
       className={`draggable-window ${isMaximized ? 'maximized' : ''}`}
       style={style}
     >
-      {!hideHeader && (
-        <div ref={headerRef} className="window-header">
-          <div className="window-title">{window.title}</div>
-          <div className="window-controls">
-            <button
-              className="window-control"
-              onClick={onMinimize}
-              aria-label="Minimize"
-            >
-              <Minus className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={onMaximize}
-              aria-label="Maximize"
-            >
-              <Square className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              <X className="h-2.5 w-2.5 text-black" />
-            </button>
-          </div>
-        </div>
-      )}
+      <div 
+        ref={headerRef} 
+        className={`window-header ${isMaximized ? 'hidden' : 'inline-flex'}`}
+      >
+        <div className="window-title">{window.title}</div>
+        <WindowControls />
+      </div>
       <div className="window-content">
         {window.content}
       </div>

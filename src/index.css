@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -120,6 +119,10 @@
 .window-header {
   @apply bg-beos-yellow px-2 py-1 flex items-center justify-between cursor-move select-none;
   height: 26px;
+  width: fit-content;
+  min-width: 200px;
+  max-width: 400px;
+  border-bottom-right-radius: 3px;
 }
 
 .window-title {
@@ -191,16 +194,15 @@
 }
 
 .window-tab {
-  @apply bg-beos-yellow text-black px-2 py-1 border-r border-r-black/20 flex items-center;
-  min-width: 120px;
-  max-width: 200px;
+  @apply bg-beos-yellow text-black px-2 py-1 border-r border-r-black/20 flex items-center justify-between;
+  min-width: 200px;
+  max-width: 400px;
   height: 26px;
   cursor: pointer;
 }
 
 .window-tab-title {
-  @apply text-sm truncate;
-  max-width: calc(100% - 20px);
+  @apply text-sm truncate flex-1;
 }
 
 .maximized {

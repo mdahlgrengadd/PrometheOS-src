@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Window from "./Window";
 import Taskbar from "./Taskbar";
@@ -60,7 +59,6 @@ const Desktop = () => {
     }
   ]);
   
-  // Get all maximized windows
   const maximizedWindows = windows.filter(w => 
     w.isOpen && 
     !w.isMinimized && 
@@ -110,7 +108,6 @@ const Desktop = () => {
     setWindows(prevWindows => 
       prevWindows.map(window => {
         if (window.id === id) {
-          // Toggle between maximized and normal size
           const isMaximized = window.size.width === "100%" && 
                             (window.size.height === "calc(100% - 48px)" || 
                              window.size.height === "calc(100vh - 62px)");
@@ -164,6 +161,40 @@ const Desktop = () => {
               onClick={() => handleTabClick(window.id)}
             >
               <span className="window-tab-title">{window.title}</span>
+              {window.zIndex === Math.max(...maximizedWindows.map(w => w.zIndex)) && (
+                <div className="window-controls">
+                  <button
+                    className="window-control"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      minimizeWindow(window.id);
+                    }}
+                    aria-label="Minimize"
+                  >
+                    <Minus className="h-2.5 w-2.5 text-black" />
+                  </button>
+                  <button
+                    className="window-control"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      maximizeWindow(window.id);
+                    }}
+                    aria-label="Maximize"
+                  >
+                    <Square className="h-2.5 w-2.5 text-black" />
+                  </button>
+                  <button
+                    className="window-control"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeWindow(window.id);
+                    }}
+                    aria-label="Close"
+                  >
+                    <X className="h-2.5 w-2.5 text-black" />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
