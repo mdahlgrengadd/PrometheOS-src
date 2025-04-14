@@ -1,9 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 100% 60%;
+    --foreground: 224 71.4% 4.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 210 100% 60%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220 8.9% 46.1%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 224 71.4% 4.1%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 0 0% 85%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+
+    --radius: 0px;
+
+    --window: 0 0% 100%;
+    --window-foreground: 0 0% 0%;
+    --window-border: 0 0% 85%;
+    --window-header: 45 85% 65%;
+    --window-tab: 45 85% 65%;
+
+    --taskbar: 210 100% 20%;
+    --taskbar-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 210 100% 35%;
+    --foreground: 0 0% 100%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 210 100% 40%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 14.3% 97.3%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+
+    --window: 0 0% 20%;
+    --window-foreground: 0 0% 100%;
+    --window-border: 215 27.9% 16.9%;
+    --window-header: 45 85% 60%;
+    --window-tab: 45 85% 60%;
+
+    --taskbar: 210 100% 15%;
+    --taskbar-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-beos-blue text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+}
+
+.draggable-window {
+  @apply bg-window border border-window-border shadow-lg overflow-hidden animate-fade-in;
+  position: absolute;
+  min-width: 320px;
+  min-height: 200px;
+  border-radius: 0;
+}
 
 .window-header {
   @apply bg-beos-yellow px-2 py-1 flex items-center justify-between cursor-move select-none;
   height: 26px;
-  width: 100%; /* Change from fit-content to 100% */
+  width: fit-content;
   min-width: 200px;
-  max-width: 100%; /* Ensure it can expand to full width */
+  max-width: 400px;
   border-bottom-right-radius: 3px;
+}
+
+.window-title {
+  @apply text-black font-medium truncate text-sm;
+  max-width: calc(100% - 80px);
+}
+
+.window-controls {
+  @apply flex items-center;
+}
+
+.window-control {
+  @apply w-3 h-3 flex items-center justify-center mx-0.5 cursor-pointer;
+}
+
+.window-content {
+  @apply p-4 h-[calc(100%-26px)] overflow-auto bg-beos-grey;
+}
+
+.desktop {
+  @apply bg-beos-blue;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.taskbar {
+  @apply bg-beos-darkgrey border-t border-beos-lightgrey text-taskbar-foreground p-1;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.taskbar-item {
+  @apply px-3 py-1.5 rounded-none text-sm border border-transparent hover:border-white/40 cursor-pointer mx-1;
+}
+
+.desktop-icons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 80px);
+  grid-gap: 16px;
+  padding: 16px;
+}
+
+.desktop-icon {
+  @apply flex flex-col items-center justify-center p-1 cursor-pointer;
+  width: 80px;
+  height: 80px;
+}
+
+.desktop-icon-label {
+  @apply text-center text-xs mt-1 truncate w-full text-white shadow-sm;
+}
+
+.window-tab-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  z-index: 900;
+  height: 26px;
+}
+
+.window-tab {
+  @apply bg-beos-yellow text-black px-2 py-1 border-r border-r-black/20 flex items-center justify-between;
+  min-width: 200px;
+  max-width: 400px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.window-tab-title {
+  @apply text-sm truncate flex-1;
+}
+
+.maximized {
+  margin: 26px 0 0 0 !important;
+  width: 100% !important;
+  height: calc(100vh - 62px) !important; /* 26px tab + 36px taskbar */
+}
+
+.beui-button {
+  @apply bg-beos-grey border border-white rounded-none px-2 py-1 text-sm shadow-sm;
 }
