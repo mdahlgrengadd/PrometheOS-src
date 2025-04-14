@@ -119,9 +119,9 @@
 .window-header {
   @apply bg-beos-yellow px-2 py-1 flex items-center justify-between cursor-move select-none;
   height: 26px;
-  width: fit-content;
-  min-width: 200px;
-  max-width: 400px;
+  width: 100%;
+  max-width: 100%;
+  background-color: rgba(45, 185, 255, 0.5);
   border-bottom-right-radius: 3px;
 }
 
