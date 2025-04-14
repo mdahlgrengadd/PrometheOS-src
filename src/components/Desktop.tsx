@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from "react";
+import { Minus, Square, X } from "lucide-react"; // Added missing icon imports
 import Window from "./Window";
 import Taskbar from "./Taskbar";
 import DesktopIcons from "./DesktopIcons";
