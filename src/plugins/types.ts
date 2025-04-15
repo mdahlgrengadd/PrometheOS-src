@@ -10,7 +10,7 @@ export interface PluginManifest {
   version: string;
   description: string;
   author: string;
-  icon: React.ReactNode | string;
+  icon: React.ReactNode;
   entry: string;
 }
 
