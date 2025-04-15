@@ -342,7 +342,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         size="sm"
         className="px-2 h-8 w-8"
         onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().chain().focus().undo().run()}
+        disabled={!editor.can().undo()}
       >
         <RotateCcw className="h-4 w-4" />
       </Button>
@@ -352,7 +352,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         size="sm"
         className="px-2 h-8 w-8"
         onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().chain().focus().redo().run()}
+        disabled={!editor.can().redo()}
       >
         <Redo className="h-4 w-4" />
       </Button>
