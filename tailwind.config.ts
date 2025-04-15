@@ -1,5 +1,8 @@
 import type { Config } from "tailwindcss";
-import { fontFamily } from "tailwindcss/defaultTheme";
+import tailwindcssAnimate from 'tailwindcss-animate';
+import { fontFamily } from 'tailwindcss/defaultTheme';
+
+import tailwindcssTypography from '@tailwindcss/typography';
 
 export default {
   darkMode: ["class"],
@@ -8,6 +11,7 @@ export default {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
+    "./src/**/*.css", // Add CSS files to the content sources
   ],
   prefix: "",
   theme: {
@@ -58,7 +62,7 @@ export default {
         "beos-yellow": "#ffcb06",
         "beos-darkgrey": "#333333",
         "beos-lightgrey": "#989898",
-        "window": "var(--window-bg)",
+        window: "var(--window-bg)",
         "window-border": "var(--window-border)",
       },
       borderRadius: {
@@ -72,7 +76,7 @@ export default {
       typography: {
         DEFAULT: {
           css: {
-            maxWidth: 'none',
+            maxWidth: "none",
           },
         },
       },
@@ -96,9 +100,9 @@ export default {
         "fade-in": "fade-in 0.2s ease-out",
       },
       textColor: {
-        'taskbar-foreground': 'white',
+        "taskbar-foreground": "white",
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require('@tailwindcss/typography')],
+  plugins: [tailwindcssAnimate, tailwindcssTypography],
 } satisfies Config;
