@@ -1,7 +1,7 @@
+import React, { useEffect } from 'react';
 
-import React from "react";
-import { WindowState } from "./Desktop";
-import { usePlugins } from "../plugins/PluginContext";
+import { usePlugins } from '../plugins/PluginContext';
+import { WindowState } from './Desktop';
 
 interface DesktopIconsProps {
   windows: WindowState[];
@@ -10,12 +10,22 @@ interface DesktopIconsProps {
 
 const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
   const { pluginManager } = usePlugins();
-  
+
+  // Debug: Log windows and plugins when component mounts or windows change
+  useEffect(() => {
+    console.log("DesktopIcons - Available windows:", windows);
+    console.log(
+      "DesktopIcons - Loaded plugins:",
+      pluginManager.getAllPlugins()
+    );
+  }, [windows, pluginManager]);
+
   return (
     <div className="desktop-icons">
       {windows.map((window) => {
         const plugin = pluginManager.getPlugin(window.id);
-        
+        console.log(`Rendering icon for ${window.id}:`, plugin?.manifest.icon);
+
         return (
           <div
             key={window.id}

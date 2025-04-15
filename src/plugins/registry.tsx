@@ -1,48 +1,23 @@
-
-import React from 'react';
-import { PluginManifest } from './types';
-import { Circle, Settings, FileText, Calculator, Globe, FileEdit, Music } from 'lucide-react'; 
-
+import { manifest as audioPlayerManifest } from './apps/audioplayer';
+import { manifest as browserManifest } from './apps/browser';
+import { manifest as calculatorManifest } from './apps/calculator';
 // Import all plugin manifests
 import { manifest as notepadManifest } from './apps/notepad';
-import { manifest as calculatorManifest } from './apps/calculator';
-import { manifest as audioPlayerManifest } from './apps/audioplayer';
+import { manifest as settingsManifest } from './apps/settings';
+import { manifest as wordEditorManifest } from './apps/wordeditor';
+import { PluginManifest } from './types';
 
 // Export all available plugins manifests
 export const availablePlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,
   audioPlayerManifest,
-  {
-    id: "browser",
-    name: "Browser",
-    version: "1.0.0",
-    description: "A simple web browser",
-    author: "Desktop System",
-    icon: <Globe className="h-8 w-8" />,
-    entry: "apps/browser"
-  },
-  {
-    id: "settings",
-    name: "Settings",
-    version: "1.0.0",
-    description: "System settings application",
-    author: "Desktop System",
-    icon: <Settings className="h-8 w-8" />,
-    entry: "apps/settings"
-  },
-  {
-    id: "wordeditor",
-    name: "Word Editor",
-    version: "1.0.0",
-    description: "A word processing application",
-    author: "Desktop System",
-    icon: <FileEdit className="h-8 w-8" />,
-    entry: "apps/wordeditor"
-  }
+  browserManifest,
+  settingsManifest,
+  wordEditorManifest,
 ];
 
 // Helper function to get plugin manifest by ID
 export function getPluginManifestById(id: string): PluginManifest | undefined {
-  return availablePlugins.find(plugin => plugin.id === id);
+  return availablePlugins.find((plugin) => plugin.id === id);
 }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -12,6 +11,10 @@ export interface PluginManifest {
   author: string;
   icon: React.ReactNode;
   entry: string;
+  preferredSize?: {
+    width: number;
+    height: number;
+  };
 }
 
 /**

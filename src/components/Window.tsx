@@ -34,10 +34,8 @@ const Window: React.FC<WindowProps> = ({
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
 
-  const isMaximized =
-    window.size.width === "100%" &&
-    (window.size.height === "calc(100% - 48px)" ||
-      window.size.height === "calc(100vh - 62px)");
+  // Use the isMaximized flag from window state instead of calculating it
+  const isMaximized = window.isMaximized === true;
 
   // Handle click to focus
   useEffect(() => {

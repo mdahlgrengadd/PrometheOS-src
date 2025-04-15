@@ -1,8 +1,8 @@
+import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
-import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 
 const AudioPlayerContent = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -59,7 +59,7 @@ const AudioPlayerContent = () => {
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const handleSeek = (newTime: number[]) => {
@@ -73,17 +73,17 @@ const AudioPlayerContent = () => {
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-xl mx-auto">
       <audio
         ref={audioRef}
-        src="/public/audio/sample.mp3"
+        src="/audio/sample.mp3"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
       />
-      
+
       <div className="space-y-6">
         <div className="flex justify-between items-center text-sm text-gray-500">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
-        
+
         <Slider
           value={[currentTime]}
           max={duration}
@@ -91,7 +91,7 @@ const AudioPlayerContent = () => {
           onValueChange={handleSeek}
           className="w-full"
         />
-        
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -107,13 +107,9 @@ const AudioPlayerContent = () => {
               )}
             </Button>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMute}
-            >
+            <Button variant="ghost" size="icon" onClick={toggleMute}>
               {isMuted ? (
                 <VolumeX className="h-4 w-4" />
               ) : (
