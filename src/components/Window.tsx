@@ -162,35 +162,33 @@ const Window: React.FC<WindowProps> = ({
       style={style}
       onMouseUp={handleResize}
     >
-      {/* Only render window header if not maximized (fixes duplicate header issue) */}
-      {!isMaximized && (
-        <div ref={headerRef} className="window-header">
-          <div className="window-title">{window.title}</div>
-          <div className="window-controls">
-            <button
-              className="window-control"
-              onClick={handleMinimizeClick}
-              aria-label="Minimize"
-            >
-              <Minus className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={handleMaximizeClick}
-              aria-label="Maximize"
-            >
-              <Square className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={handleCloseClick}
-              aria-label="Close"
-            >
-              <X className="h-2.5 w-2.5 text-black" />
-            </button>
-          </div>
+      {/* Always render window header */}
+      <div ref={headerRef} className="window-header">
+        <div className="window-title">{window.title}</div>
+        <div className="window-controls">
+          <button
+            className="window-control"
+            onClick={handleMinimizeClick}
+            aria-label="Minimize"
+          >
+            <Minus className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleMaximizeClick}
+            aria-label="Maximize"
+          >
+            <Square className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleCloseClick}
+            aria-label="Close"
+          >
+            <X className="h-2.5 w-2.5 text-black" />
+          </button>
         </div>
-      )}
+      </div>
       <div className="window-content">
         {window.content}
       </div>

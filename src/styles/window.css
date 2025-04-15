@@ -15,7 +15,7 @@
       0 0 0 5px var(--window-border),
       0 14px 16px -6px rgba(0,0,0,0.2);
     resize: both;
-    overflow: hidden;  /* Change to hidden to prevent content overflow */
+    overflow: hidden;
   }
 
   .window-header {
@@ -35,6 +35,20 @@
   .window-title {
     @apply text-black font-bold truncate text-sm;
     max-width: calc(100% - 80px);
+    margin: 0 auto 0 15px; /* Add margin to make room for the BeOS yellow dot */
+  }
+
+  /* BeOS yellow dot in the header */
+  .window-header::before {
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    content: '';
+    width: 13px;
+    height: 13px;
+    background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
+    border: 1px solid #b99100;
+    border-radius: 50%;
   }
 
   .window-controls {
