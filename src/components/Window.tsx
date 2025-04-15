@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { WindowState } from './Desktop';
 import { WindowContent } from './window/WindowContent';
 import { WindowHeader } from './window/WindowHeader';
+import { cn } from '@/lib/utils';
 
 interface WindowProps {
   window: WindowState;
@@ -33,13 +34,23 @@ const Window: React.FC<WindowProps> = ({
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
+  const [isFocused, setIsFocused] = useState(false);
 
   // Use the isMaximized flag from window state instead of calculating it
   const isMaximized = window.isMaximized === true;
 
   // Handle click to focus
   useEffect(() => {
-    const handleClick = () => onFocus();
+    const handleClick = () => {
+      onFocus();
+      setIsFocused(true); // Set focus state for animations
+      
+      // Reset focus state after animation completes
+      setTimeout(() => {
+        setIsFocused(false);
+      }, 300);
+    };
+    
     const windowElement = windowRef.current;
 
     if (windowElement) {
@@ -179,15 +190,6 @@ const Window: React.FC<WindowProps> = ({
     const handleResizeMouseUp = () => {
       if (resizing) {
         setResizing(false);
-
-        // Update the window state with new size
-        if (
-          typeof window.size.width === "number" &&
-          typeof window.size.height === "number"
-        ) {
-          // We don't need to do anything here as the element already has the new dimensions
-          // The parent only needs to know about position changes
-        }
       }
     };
 
@@ -224,9 +226,13 @@ const Window: React.FC<WindowProps> = ({
   return (
     <div
       ref={windowRef}
-      className={`draggable-window ${isMaximized ? "maximized" : ""} ${
-        resizing ? "resizing" : ""
-      }`}
+      className={cn(
+        "draggable-window", 
+        isMaximized && "maximized", 
+        resizing && "resizing",
+        dragging && "opacity-90",
+        isFocused && "ring-2 ring-primary/30"
+      )}
       style={style}
     >
       {!isMaximized && (
