@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
-import { X, Minus, Square } from "lucide-react";
 import { WindowState } from "./Desktop";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
+import { WindowHeader } from "./window/WindowHeader";
+import { WindowContent } from "./window/WindowContent";
 
 interface WindowProps {
   window: WindowState;
@@ -117,41 +117,12 @@ const Window: React.FC<WindowProps> = ({
     height: window.size.height,
   };
 
-  const handleMinimizeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onMinimize();
-  };
-
-  const handleMaximizeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onMaximize();
-  };
-
-  const handleCloseClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClose();
-  };
-
   const handleResize = () => {
     if (windowRef.current) {
-      const { offsetWidth, offsetHeight } = windowRef.current;
       onDragStop({ 
         x: window.position.x, 
         y: window.position.y 
       });
-      
-      // Update the window size in parent component
-      if (window.size.width !== offsetWidth || window.size.height !== offsetHeight) {
-        const updatedWindow = {
-          ...window,
-          size: {
-            width: offsetWidth,
-            height: offsetHeight
-          }
-        };
-        // This will trigger a re-render with the new size
-        // But we're still keeping the drag position stable
-      }
     }
   };
 
@@ -162,36 +133,16 @@ const Window: React.FC<WindowProps> = ({
       style={style}
       onMouseUp={handleResize}
     >
-      {/* Always render window header */}
-      <div ref={headerRef} className="window-header">
-        <div className="window-title">{window.title}</div>
-        <div className="window-controls">
-          <button
-            className="window-control"
-            onClick={handleMinimizeClick}
-            aria-label="Minimize"
-          >
-            <Minus className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleMaximizeClick}
-            aria-label="Maximize"
-          >
-            <Square className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleCloseClick}
-            aria-label="Close"
-          >
-            <X className="h-2.5 w-2.5 text-black" />
-          </button>
-        </div>
-      </div>
-      <div className="window-content">
+      <WindowHeader
+        title={window.title}
+        onMinimize={onMinimize}
+        onMaximize={onMaximize}
+        onClose={onClose}
+        headerRef={headerRef}
+      />
+      <WindowContent>
         {window.content}
-      </div>
+      </WindowContent>
     </div>
   );
 };
