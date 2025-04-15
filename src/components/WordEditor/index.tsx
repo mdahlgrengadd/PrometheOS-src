@@ -77,49 +77,9 @@ const WordEditor = () => {
     }
   };
 
-  // Convert HTML content to basic markdown
-  const htmlToMarkdown = (html: string) => {
-    if (!html) return '';
-    
-    // Basic replacements for common HTML elements
-    let markdown = html;
-    
-    // Replace headings
-    markdown = markdown.replace(/<h1>(.*?)<\/h1>/g, '# $1\n');
-    markdown = markdown.replace(/<h2>(.*?)<\/h2>/g, '## $1\n');
-    markdown = markdown.replace(/<h3>(.*?)<\/h3>/g, '### $1\n');
-    
-    // Replace paragraphs
-    markdown = markdown.replace(/<p>(.*?)<\/p>/g, '$1\n\n');
-    
-    // Replace bold
-    markdown = markdown.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
-    
-    // Replace italic
-    markdown = markdown.replace(/<em>(.*?)<\/em>/g, '*$1*');
-    
-    // Replace links
-    markdown = markdown.replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)');
-    
-    // Replace lists
-    markdown = markdown.replace(/<ul>(.*?)<\/ul>/gs, (match, content) => {
-      return content.replace(/<li>(.*?)<\/li>/g, '- $1\n');
-    });
-    
-    markdown = markdown.replace(/<ol>(.*?)<\/ol>/gs, (match, content) => {
-      let index = 1;
-      return content.replace(/<li>(.*?)<\/li>/g, () => `${index++}. $1\n`);
-    });
-    
-    // Remove remaining HTML tags
-    markdown = markdown.replace(/<[^>]*>/g, '');
-    
-    return markdown;
-  };
-
   const getMarkdownContent = () => {
     if (!editor) return '';
-    return htmlToMarkdown(editor.getHTML());
+    return editor.storage.markdown?.getMarkdown() || '';
   };
 
   return (
