@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PluginManifest } from './types';
 import { Circle, Settings, FileText, Calculator, Globe, FileEdit, Music } from 'lucide-react'; 
