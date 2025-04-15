@@ -28,8 +28,11 @@ const Window: React.FC<WindowProps> = ({
   const windowRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [startSize, setStartSize] = useState({ width: 0, height: 0 });
+  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
 
   const isMaximized =
     window.size.width === "100%" &&
@@ -62,14 +65,14 @@ const Window: React.FC<WindowProps> = ({
     const handleMouseDown = (e: MouseEvent) => {
       if (windowRef.current) {
         const windowRect = windowRef.current.getBoundingClientRect();
-        
+
         // Calculate offset directly from mouse position to window position
         // This ensures there's no initial jerk when dragging starts
         setDragOffset({
           x: e.clientX - windowRect.left,
           y: e.clientY - windowRect.top,
         });
-        
+
         setStartPos({ x: windowRect.left, y: windowRect.top });
         setDragging(true);
         e.preventDefault();
@@ -119,6 +122,97 @@ const Window: React.FC<WindowProps> = ({
     isMaximized,
   ]);
 
+  // Custom resizing functionality
+  useEffect(() => {
+    if (
+      !windowRef.current ||
+      !window.isOpen ||
+      window.isMinimized ||
+      isMaximized
+    )
+      return;
+
+    const windowElement = windowRef.current;
+
+    // Function to determine if we're in the resize zone (bottom-right corner)
+    const isInResizeZone = (e: MouseEvent, element: HTMLElement): boolean => {
+      const rect = element.getBoundingClientRect();
+      const rightEdgeZone = rect.right - e.clientX < 20;
+      const bottomEdgeZone = rect.bottom - e.clientY < 20;
+      return rightEdgeZone && bottomEdgeZone;
+    };
+
+    const handleResizeMouseDown = (e: MouseEvent) => {
+      if (!isInResizeZone(e, windowElement)) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Start resizing
+      setResizing(true);
+
+      // Record initial positions and sizes
+      const rect = windowElement.getBoundingClientRect();
+      setStartSize({
+        width: rect.width,
+        height: rect.height,
+      });
+      setResizeStartPos({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    };
+
+    const handleResizeMouseMove = (e: MouseEvent) => {
+      if (!resizing) return;
+
+      // Calculate new width and height
+      const deltaX = e.clientX - resizeStartPos.x;
+      const deltaY = e.clientY - resizeStartPos.y;
+
+      const newWidth = Math.max(320, startSize.width + deltaX);
+      const newHeight = Math.max(200, startSize.height + deltaY);
+
+      // Apply the new dimensions directly for a smoother experience
+      windowElement.style.width = `${newWidth}px`;
+      windowElement.style.height = `${newHeight}px`;
+    };
+
+    const handleResizeMouseUp = () => {
+      if (resizing) {
+        setResizing(false);
+
+        // Update the window state with new size
+        if (
+          typeof window.size.width === "number" &&
+          typeof window.size.height === "number"
+        ) {
+          // We don't need to do anything here as the element already has the new dimensions
+          // The parent only needs to know about position changes
+        }
+      }
+    };
+
+    windowElement.addEventListener("mousedown", handleResizeMouseDown);
+    document.addEventListener("mousemove", handleResizeMouseMove);
+    document.addEventListener("mouseup", handleResizeMouseUp);
+
+    return () => {
+      windowElement.removeEventListener("mousedown", handleResizeMouseDown);
+      document.removeEventListener("mousemove", handleResizeMouseMove);
+      document.removeEventListener("mouseup", handleResizeMouseUp);
+    };
+  }, [
+    window.isOpen,
+    window.isMinimized,
+    isMaximized,
+    resizing,
+    resizeStartPos.x,
+    resizeStartPos.y,
+    startSize.width,
+    startSize.height,
+  ]);
+
   if (!window.isOpen || window.isMinimized) return null;
 
   const style: React.CSSProperties = {
@@ -129,21 +223,13 @@ const Window: React.FC<WindowProps> = ({
     height: window.size.height,
   };
 
-  const handleResize = () => {
-    if (windowRef.current) {
-      onDragStop({
-        x: window.position.x,
-        y: window.position.y,
-      });
-    }
-  };
-
   return (
     <div
       ref={windowRef}
-      className={`draggable-window ${isMaximized ? "maximized" : ""}`}
+      className={`draggable-window ${isMaximized ? "maximized" : ""} ${
+        resizing ? "resizing" : ""
+      }`}
       style={style}
-      onMouseUp={handleResize}
     >
       {!isMaximized && (
         <WindowHeader
@@ -155,6 +241,9 @@ const Window: React.FC<WindowProps> = ({
         />
       )}
       <WindowContent>{window.content}</WindowContent>
+
+      {/* Custom resize handle indicator */}
+      {!isMaximized && <div className="resize-handle" />}
     </div>
   );
 };

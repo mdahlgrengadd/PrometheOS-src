@@ -14,8 +14,73 @@
       0 0 0 5px var(--window-border),
       0 14px 16px -6px rgba(0,0,0,0.2);
     resize: both;
-    overflow: visible; /* Changed from hidden to allow header to overflow */
+    overflow: visible; /* Keep overflow visible so titlebar is not clipped */
     padding-top: 22px; /* Space for the header that sits above */
+  }
+
+  /* Add a separate inner container for scrollable content */
+  .window-content {
+    @apply bg-window;
+    overflow: auto; /* Apply scrolling to the content area instead */
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: 4px;
+    border-top: 1px solid var(--window-border);
+  }
+  
+  /* Corner resize handle for better resize UX */
+  .draggable-window::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px; /* Make it even larger for easier targeting */
+    height: 20px; /* Make it even larger for easier targeting */
+    cursor: nwse-resize;
+    background: rgba(0, 0, 0, 0.05); /* Add slight visibility to the handle */
+    z-index: 10; /* Ensure the resize handle is above other elements */
+  }
+
+  /* Custom resize handle for window resizing */
+  .resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    background: transparent;
+    z-index: 10;
+  }
+  
+  .resize-handle::before {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 12px;
+    height: 12px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+    border-right: 2px solid rgba(0, 0, 0, 0.3);
+  }
+  
+  .resize-handle::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+    border-right: 2px solid rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Add a visual indicator when resizing */
+  .draggable-window.resizing {
+    user-select: none;
   }
 
   .window-header {
@@ -67,30 +132,6 @@
 
   .window-control:hover {
     background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
-  }
-
-  .window-content {
-    @apply bg-window;
-    overflow: auto;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    top: 0;
-    left: 0;
-    padding: 4px;
-    border-top: 1px solid var(--window-border);
-  }
-  
-  /* Corner resize handle for better resize UX */
-  .draggable-window::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    cursor: nwse-resize;
-    background: transparent;
   }
 }
 
