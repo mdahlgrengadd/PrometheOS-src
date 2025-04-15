@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import WordEditorToolbar from "./WordEditorToolbar";
 import WordEditorContent from "./WordEditorContent";
@@ -10,21 +9,24 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Color from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";  // Ensure this import is correct
+import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import CharacterCount from "@tiptap/extension-character-count";
-import { 
-  Menubar, 
-  MenubarMenu, 
-  MenubarContent, 
-  MenubarItem, 
-  MenubarSeparator, 
+import { Code, Type } from "lucide-react"; 
+import { Toggle } from "@/components/ui/toggle";
+import {
+  Menubar,
+  MenubarMenu,
   MenubarTrigger,
+  MenubarContent,
+  MenubarItem,
+  MenubarSeparator,
   MenubarShortcut
 } from "@/components/ui/menubar";
 
 const WordEditor = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
+  const [isMarkdown, setIsMarkdown] = useState(false);
   
   const editor = useEditor({
     extensions: [
@@ -65,16 +67,63 @@ const WordEditor = () => {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none p-4',
       },
     },
+    editable: !isMarkdown,
   });
 
-  // Rename document handler
-  const handleRename = (name: string) => {
-    setDocumentName(name);
+  const toggleView = () => {
+    setIsMarkdown(!isMarkdown);
+    if (editor) {
+      editor.setEditable(!isMarkdown);
+    }
+  };
+
+  // Convert HTML content to basic markdown
+  const htmlToMarkdown = (html: string) => {
+    if (!html) return '';
+    
+    // Basic replacements for common HTML elements
+    let markdown = html;
+    
+    // Replace headings
+    markdown = markdown.replace(/<h1>(.*?)<\/h1>/g, '# $1\n');
+    markdown = markdown.replace(/<h2>(.*?)<\/h2>/g, '## $1\n');
+    markdown = markdown.replace(/<h3>(.*?)<\/h3>/g, '### $1\n');
+    
+    // Replace paragraphs
+    markdown = markdown.replace(/<p>(.*?)<\/p>/g, '$1\n\n');
+    
+    // Replace bold
+    markdown = markdown.replace(/<strong>(.*?)<\/strong>/g, '**$1**');
+    
+    // Replace italic
+    markdown = markdown.replace(/<em>(.*?)<\/em>/g, '*$1*');
+    
+    // Replace links
+    markdown = markdown.replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)');
+    
+    // Replace lists
+    markdown = markdown.replace(/<ul>(.*?)<\/ul>/gs, (match, content) => {
+      return content.replace(/<li>(.*?)<\/li>/g, '- $1\n');
+    });
+    
+    markdown = markdown.replace(/<ol>(.*?)<\/ol>/gs, (match, content) => {
+      let index = 1;
+      return content.replace(/<li>(.*?)<\/li>/g, () => `${index++}. $1\n`);
+    });
+    
+    // Remove remaining HTML tags
+    markdown = markdown.replace(/<[^>]*>/g, '');
+    
+    return markdown;
+  };
+
+  const getMarkdownContent = () => {
+    if (!editor) return '';
+    return htmlToMarkdown(editor.getHTML());
   };
 
   return (
     <div className="flex flex-col h-full bg-white text-black">
-      {/* Menu Bar */}
       <Menubar className="rounded-none border-b border-gray-200">
         <MenubarMenu>
           <MenubarTrigger className="font-normal">File</MenubarTrigger>
@@ -175,15 +224,41 @@ const WordEditor = () => {
         </MenubarMenu>
       </Menubar>
       
-      {/* Toolbar */}
-      <WordEditorToolbar editor={editor} />
-      
-      {/* Content Area */}
-      <div className="flex-grow overflow-auto bg-white">
-        <WordEditorContent editor={editor} documentName={documentName} />
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-gray-50">
+        <Toggle
+          pressed={isMarkdown}
+          onPressedChange={toggleView}
+          className="gap-2"
+          aria-label="Toggle editor view"
+        >
+          {isMarkdown ? (
+            <>
+              <Code className="h-4 w-4" />
+              <span>Markdown</span>
+            </>
+          ) : (
+            <>
+              <Type className="h-4 w-4" />
+              <span>WYSIWYG</span>
+            </>
+          )}
+        </Toggle>
       </div>
       
-      {/* Status Bar */}
+      {!isMarkdown && <WordEditorToolbar editor={editor} />}
+      
+      <div className="flex-grow overflow-auto bg-white">
+        {isMarkdown ? (
+          <div className="w-[8.5in] mx-auto my-4 min-h-[11in] shadow-lg bg-white p-8 border border-gray-300">
+            <pre className="whitespace-pre-wrap font-mono text-sm">
+              {getMarkdownContent()}
+            </pre>
+          </div>
+        ) : (
+          <WordEditorContent editor={editor} documentName={documentName} />
+        )}
+      </div>
+      
       <div className="border-t border-gray-200 px-4 py-1 text-xs flex justify-between items-center bg-gray-50">
         <div className="flex items-center space-x-4">
           <span>Words: {editor?.storage.characterCount.words() || 0}</span>
