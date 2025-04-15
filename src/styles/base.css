@@ -1,0 +1,40 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --window-bg: #d8d8d8;
+    --window-border: #5e5e5e;
+    --window-border-light: #DED5DD;
+    --window-border-lighter: #EDDEEC;
+    --title-gradient-start: #ffe17d;
+    --title-gradient-end: #ffcb06;
+    --title-border: #d7cd51;
+  }
+
+  * {
+    @apply m-0 p-0;
+    box-sizing: border-box;
+    font-family: 'Lato', sans-serif;
+  }
+
+  body {
+    @apply bg-beos-blue;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+}

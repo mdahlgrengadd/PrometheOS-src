@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -54,11 +53,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "beos-blue": "#3a6ea5",
-        "beos-grey": "#d3d3d3",
-        "beos-yellow": "#ffda40",
+        "beos-blue": "#326698",
+        "beos-grey": "#d8d8d8",
+        "beos-yellow": "#ffcb06",
         "beos-darkgrey": "#333333",
-        "beos-lightgrey": "#eeeeee",
+        "beos-lightgrey": "#989898",
+        "window": "var(--window-bg)",
+        "window-border": "var(--window-border)",
       },
       borderRadius: {
         lg: "var(--radius)",

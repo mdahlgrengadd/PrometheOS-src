@@ -1,0 +1,51 @@
+
+@layer components {
+  .desktop {
+    @apply bg-beos-blue;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    padding: 50px;
+  }
+
+  .desktop-icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 80px);
+    grid-gap: 16px;
+    padding: 16px;
+  }
+
+  .desktop-icon {
+    @apply flex flex-col items-center justify-center p-1 cursor-pointer;
+    width: 80px;
+    height: 80px;
+  }
+
+  .desktop-icon-label {
+    @apply text-center text-xs mt-1 truncate w-full text-white shadow-sm;
+  }
+
+  .window-tab-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    z-index: 900;
+    height: 26px;
+  }
+
+  .window-tab {
+    @apply bg-yellow-400 text-black px-2 py-1 border-r border-black/20 flex items-center justify-between;
+    background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
+    min-width: 200px;
+    max-width: 400px;
+    height: 26px;
+    cursor: pointer;
+  }
+
+  .window-tab-title {
+    @apply text-sm truncate flex-1;
+  }
+}

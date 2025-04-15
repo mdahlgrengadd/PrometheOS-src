@@ -1,0 +1,18 @@
+
+@layer components {
+  .taskbar {
+    @apply bg-beos-darkgrey border-t border-beos-lightgrey text-white p-1;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .taskbar-item {
+    @apply px-3 py-1.5 rounded-none text-sm border border-transparent hover:border-white/40 cursor-pointer mx-1;
+  }
+}
