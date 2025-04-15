@@ -138,7 +138,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
           "px-2 h-8 w-8", 
           editor.isActive("underline") && "bg-muted"
         )}
-        onClick={() => editor.chain().focus().toggleMark('underline').run()}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
       >
         <Underline className="h-4 w-4" />
       </Button>
