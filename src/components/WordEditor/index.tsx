@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import WordEditorToolbar from "./WordEditorToolbar";
 import WordEditorContent from "./WordEditorContent";
@@ -9,15 +10,21 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import Color from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";
+import Underline from "@tiptap/extension-underline";  // Ensure this import is correct
 import Highlight from "@tiptap/extension-highlight";
 import CharacterCount from "@tiptap/extension-character-count";
-import { Code, Type } from "lucide-react"; 
-import { Toggle } from "@/components/ui/toggle";
+import { 
+  Menubar, 
+  MenubarMenu, 
+  MenubarContent, 
+  MenubarItem, 
+  MenubarSeparator, 
+  MenubarTrigger,
+  MenubarShortcut
+} from "@/components/ui/menubar";
 
 const WordEditor = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
-  const [isMarkdown, setIsMarkdown] = useState(false);
   
   const editor = useEditor({
     extensions: [
@@ -58,21 +65,11 @@ const WordEditor = () => {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none p-4',
       },
     },
-    editable: !isMarkdown,
   });
 
-  // Toggle view handler
-  const toggleView = () => {
-    setIsMarkdown(!isMarkdown);
-    if (editor) {
-      editor.setEditable(!isMarkdown);
-    }
-  };
-
-  // Get markdown content
-  const getMarkdownContent = () => {
-    if (!editor) return '';
-    return editor.storage.markdown?.getMarkdown() || '';
+  // Rename document handler
+  const handleRename = (name: string) => {
+    setDocumentName(name);
   };
 
   return (
@@ -178,42 +175,12 @@ const WordEditor = () => {
         </MenubarMenu>
       </Menubar>
       
-      {/* View Toggle */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-gray-50">
-        <Toggle
-          pressed={isMarkdown}
-          onPressedChange={toggleView}
-          className="gap-2"
-          aria-label="Toggle editor view"
-        >
-          {isMarkdown ? (
-            <>
-              <Code className="h-4 w-4" />
-              <span>Markdown</span>
-            </>
-          ) : (
-            <>
-              <Type className="h-4 w-4" />
-              <span>WYSIWYG</span>
-            </>
-          )}
-        </Toggle>
-      </div>
-      
-      {/* Toolbar (only show in WYSIWYG mode) */}
-      {!isMarkdown && <WordEditorToolbar editor={editor} />}
+      {/* Toolbar */}
+      <WordEditorToolbar editor={editor} />
       
       {/* Content Area */}
       <div className="flex-grow overflow-auto bg-white">
-        {isMarkdown ? (
-          <div className="w-[8.5in] mx-auto my-4 min-h-[11in] shadow-lg bg-white p-8 border border-gray-300">
-            <pre className="whitespace-pre-wrap font-mono text-sm">
-              {getMarkdownContent()}
-            </pre>
-          </div>
-        ) : (
-          <WordEditorContent editor={editor} documentName={documentName} />
-        )}
+        <WordEditorContent editor={editor} documentName={documentName} />
       </div>
       
       {/* Status Bar */}
