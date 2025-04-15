@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { X, Minus, Square } from "lucide-react";
 import { WindowState } from "./Desktop";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./ui/resizable";
 
 interface WindowProps {
   window: WindowState;
@@ -51,6 +52,8 @@ const Window: React.FC<WindowProps> = ({
     const header = headerRef.current;
     
     const handleMouseDown = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).classList.contains('window-header')) return;
+      
       setDragging(true);
       const rect = header.getBoundingClientRect();
       setDragOffset({
@@ -58,7 +61,6 @@ const Window: React.FC<WindowProps> = ({
         y: e.clientY - rect.top
       });
       
-      // Prevent text selection during drag
       e.preventDefault();
     };
     
@@ -86,7 +88,6 @@ const Window: React.FC<WindowProps> = ({
     };
   }, [dragging, dragOffset, onDragStop, window.isMinimized, window.isOpen, isMaximized]);
 
-  // Don't render if the window is not open or is minimized
   if (!window.isOpen || window.isMinimized) return null;
 
   const style: React.CSSProperties = {
@@ -97,7 +98,6 @@ const Window: React.FC<WindowProps> = ({
     height: window.size.height,
   };
 
-  // Handle window control button clicks with proper event stopping
   const handleMinimizeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onMinimize();
@@ -113,45 +113,46 @@ const Window: React.FC<WindowProps> = ({
     onClose();
   };
 
-  // For maximized windows, rely on the tab bar header in Desktop.tsx
-  // This window component should not show its own header when maximized
   return (
     <div 
       ref={windowRef} 
       className={`draggable-window ${isMaximized ? 'maximized' : ''}`}
       style={style}
     >
-      {!isMaximized && (
-        <div ref={headerRef} className="window-header">
-          <div className="window-title">{window.title}</div>
-          <div className="window-controls">
-            <button
-              className="window-control"
-              onClick={handleMinimizeClick}
-              aria-label="Minimize"
-            >
-              <Minus className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={handleMaximizeClick}
-              aria-label="Maximize"
-            >
-              <Square className="h-2.5 w-2.5 text-black" />
-            </button>
-            <button
-              className="window-control"
-              onClick={handleCloseClick}
-              aria-label="Close"
-            >
-              <X className="h-2.5 w-2.5 text-black" />
-            </button>
-          </div>
+      <div ref={headerRef} className="window-header">
+        <div className="window-title">{window.title}</div>
+        <div className="window-controls">
+          <button
+            className="window-control"
+            onClick={handleMinimizeClick}
+            aria-label="Minimize"
+          >
+            <Minus className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleMaximizeClick}
+            aria-label="Maximize"
+          >
+            <Square className="h-2.5 w-2.5 text-black" />
+          </button>
+          <button
+            className="window-control"
+            onClick={handleCloseClick}
+            aria-label="Close"
+          >
+            <X className="h-2.5 w-2.5 text-black" />
+          </button>
         </div>
-      )}
-      <div className="window-content">
-        {window.content}
       </div>
+      <ResizablePanelGroup 
+        direction="horizontal" 
+        className="window-content rounded-none border-none"
+      >
+        <ResizablePanel defaultSize={100} minSize={30}>
+          {window.content}
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };

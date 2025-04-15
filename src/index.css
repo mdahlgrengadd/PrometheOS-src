@@ -1,4 +1,3 @@
-
 .taskbar {
   @apply bg-beos-darkgrey border-t border-beos-lightgrey text-taskbar-foreground p-1;
   position: absolute;
@@ -122,12 +121,14 @@
 }
 
 .draggable-window {
-  @apply shadow-lg overflow-hidden animate-fade-in;
+  @apply shadow-lg animate-fade-in;
   position: absolute;
   min-width: 320px;
   min-height: 200px;
   border-radius: 0;
   background-color: transparent;
+  resize: both;
+  overflow: auto;
 }
 
 .window-header {
