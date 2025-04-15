@@ -1,10 +1,4 @@
 
-@layer components {
-  .text-taskbar-foreground {
-    color: #f3f3f3; /* Light gray color that fits the BeOS aesthetic */
-  }
-}
-
 .taskbar {
   @apply bg-beos-darkgrey border-t border-beos-lightgrey text-taskbar-foreground p-1;
   position: absolute;
