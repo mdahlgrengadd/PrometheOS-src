@@ -1,8 +1,7 @@
-
 import React from 'react';
+
 import { Plugin, PluginManifest } from '../../types';
 import AudioPlayerContent from './AudioPlayerContent';
-import { Music } from 'lucide-react';
 
 export const manifest: PluginManifest = {
   id: "audioplayer",
@@ -10,8 +9,14 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "A modern audio player",
   author: "Desktop System",
-  icon: <Music className="h-8 w-8" />,
-  entry: "apps/audioplayer"
+  icon: (
+    <img
+      src="/icons/34696_cdplayer_beos_cdplayer_beos.png"
+      className="h-8 w-8"
+      alt="Audio Player"
+    />
+  ),
+  entry: "apps/audioplayer",
 };
 
 const AudioPlayerPlugin: Plugin = {
@@ -22,7 +27,7 @@ const AudioPlayerPlugin: Plugin = {
   },
   render: () => {
     return <AudioPlayerContent />;
-  }
+  },
 };
 
 export default AudioPlayerPlugin;

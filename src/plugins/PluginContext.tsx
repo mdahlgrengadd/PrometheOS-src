@@ -1,24 +1,25 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { PluginManager } from './PluginManager';
-import { Plugin, PluginManifest } from './types';
-import { availablePlugins } from './registry';
-import { eventBus } from './EventBus';
 
+import AudioPlayerPlugin from './apps/audioplayer';
+import BrowserPlugin from './apps/browser';
+import CalculatorPlugin from './apps/calculator';
 // Import plugins directly for reliable loading
 import NotepadPlugin from './apps/notepad';
-import CalculatorPlugin from './apps/calculator';
-import BrowserPlugin from './apps/browser';
 import SettingsPlugin from './apps/settings';
 import WordEditorPlugin from './apps/wordeditor';
+import { eventBus } from './EventBus';
+import { PluginManager } from './PluginManager';
+import { availablePlugins } from './registry';
+import { Plugin, PluginManifest } from './types';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
-  'notepad': NotepadPlugin,
-  'calculator': CalculatorPlugin,
-  'browser': BrowserPlugin,
-  'settings': SettingsPlugin,
-  'wordeditor': WordEditorPlugin,
+  notepad: NotepadPlugin,
+  calculator: CalculatorPlugin,
+  browser: BrowserPlugin,
+  settings: SettingsPlugin,
+  wordeditor: WordEditorPlugin,
+  audioplayer: AudioPlayerPlugin,
 };
 
 type PluginContextType = {
@@ -34,20 +35,25 @@ type PluginContextType = {
 
 const PluginContext = createContext<PluginContextType | undefined>(undefined);
 
-export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [pluginManager] = useState(() => new PluginManager());
   const [loadedPlugins, setLoadedPlugins] = useState<Plugin[]>([]);
   const [activeWindows, setActiveWindows] = useState<string[]>([]);
-  
+
   useEffect(() => {
     // Initialize plugin manager and load plugins
     const loadPlugins = async () => {
       try {
         // Register event handler for plugin registration
-        const unsubscribe = eventBus.subscribe('plugin:registered', (pluginId: string) => {
-          setLoadedPlugins(pluginManager.getAllPlugins());
-        });
-        
+        const unsubscribe = eventBus.subscribe(
+          "plugin:registered",
+          (pluginId: string) => {
+            setLoadedPlugins(pluginManager.getAllPlugins());
+          }
+        );
+
         // Load the plugins directly from imported modules
         for (const manifest of availablePlugins) {
           try {
@@ -62,11 +68,11 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             console.error(`Failed to load plugin ${manifest.id}:`, error);
           }
         }
-        
+
         return () => {
           unsubscribe();
           // Clean up all plugins when unmounting
-          pluginManager.getAllPlugins().forEach(plugin => {
+          pluginManager.getAllPlugins().forEach((plugin) => {
             plugin.onDestroy?.();
           });
         };
@@ -74,10 +80,10 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error("Failed to initialize plugins:", error);
       }
     };
-    
+
     loadPlugins();
   }, [pluginManager]);
-  
+
   const openWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
@@ -85,45 +91,45 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         pluginManager.activatePlugin(pluginId);
       }
       plugin.onOpen?.();
-      setActiveWindows(prev => 
+      setActiveWindows((prev) =>
         prev.includes(pluginId) ? prev : [...prev, pluginId]
       );
-      eventBus.emit('window:opened', pluginId);
+      eventBus.emit("window:opened", pluginId);
     }
   };
-  
+
   const closeWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
       plugin.onClose?.();
-      setActiveWindows(prev => prev.filter(id => id !== pluginId));
-      eventBus.emit('window:closed', pluginId);
+      setActiveWindows((prev) => prev.filter((id) => id !== pluginId));
+      eventBus.emit("window:closed", pluginId);
     }
   };
-  
+
   const minimizeWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
       plugin.onMinimize?.();
-      eventBus.emit('window:minimized', pluginId);
+      eventBus.emit("window:minimized", pluginId);
     }
   };
-  
+
   const maximizeWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
       plugin.onMaximize?.();
-      eventBus.emit('window:maximized', pluginId);
+      eventBus.emit("window:maximized", pluginId);
     }
   };
-  
+
   const focusWindow = (pluginId: string) => {
-    eventBus.emit('window:focused', pluginId);
+    eventBus.emit("window:focused", pluginId);
   };
-  
+
   return (
-    <PluginContext.Provider 
-      value={{ 
+    <PluginContext.Provider
+      value={{
         pluginManager,
         loadedPlugins,
         activeWindows,
@@ -131,7 +137,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         closeWindow,
         minimizeWindow,
         maximizeWindow,
-        focusWindow
+        focusWindow,
       }}
     >
       {children}
@@ -142,7 +148,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 export const usePlugins = () => {
   const context = useContext(PluginContext);
   if (context === undefined) {
-    throw new Error('usePlugins must be used within a PluginProvider');
+    throw new Error("usePlugins must be used within a PluginProvider");
   }
   return context;
 };

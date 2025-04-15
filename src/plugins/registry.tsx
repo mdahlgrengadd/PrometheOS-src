@@ -1,12 +1,25 @@
-
+import { Calculator, Circle, FileEdit, FileText, Globe, Music, Settings } from 'lucide-react';
 import React from 'react';
-import { PluginManifest } from './types';
-import { Circle, Settings, FileText, Calculator, Globe, FileEdit, Music } from 'lucide-react'; 
 
-// Import all plugin manifests
-import { manifest as notepadManifest } from './apps/notepad';
-import { manifest as calculatorManifest } from './apps/calculator';
-import { manifest as audioPlayerManifest } from './apps/audioplayer';
+import AudioPlayerPlugin, { manifest as audioPlayerManifest } from './apps/audioplayer';
+import BrowserPlugin from './apps/browser';
+import CalculatorPlugin, { manifest as calculatorManifest } from './apps/calculator';
+import NotepadPlugin, { manifest as notepadManifest } from './apps/notepad';
+import SettingsPlugin from './apps/settings';
+import WordEditorPlugin from './apps/wordeditor';
+import { PluginManifest } from './types';
+
+// Register your plugins here
+const plugins = [
+  BrowserPlugin,
+  CalculatorPlugin,
+  NotepadPlugin,
+  SettingsPlugin,
+  WordEditorPlugin,
+  AudioPlayerPlugin,
+];
+
+export default plugins;
 
 // Export all available plugins manifests
 export const availablePlugins: PluginManifest[] = [
@@ -20,7 +33,7 @@ export const availablePlugins: PluginManifest[] = [
     description: "A simple web browser",
     author: "Desktop System",
     icon: <Globe className="h-8 w-8" />,
-    entry: "apps/browser"
+    entry: "apps/browser",
   },
   {
     id: "settings",
@@ -29,7 +42,7 @@ export const availablePlugins: PluginManifest[] = [
     description: "System settings application",
     author: "Desktop System",
     icon: <Settings className="h-8 w-8" />,
-    entry: "apps/settings"
+    entry: "apps/settings",
   },
   {
     id: "wordeditor",
@@ -38,11 +51,11 @@ export const availablePlugins: PluginManifest[] = [
     description: "A word processing application",
     author: "Desktop System",
     icon: <FileEdit className="h-8 w-8" />,
-    entry: "apps/wordeditor"
-  }
+    entry: "apps/wordeditor",
+  },
 ];
 
 // Helper function to get plugin manifest by ID
 export function getPluginManifestById(id: string): PluginManifest | undefined {
-  return availablePlugins.find(plugin => plugin.id === id);
+  return availablePlugins.find((plugin) => plugin.id === id);
 }

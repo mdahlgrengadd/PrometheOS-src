@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Plugin, PluginManifest } from '../../types';
 import CalculatorContent from './CalculatorContent';
 
@@ -8,8 +9,14 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "A simple calculator",
   author: "Desktop System",
-  icon: <img src="/icons/34689_beos_blocks_cubos_serv_app_beos_blocks_cubos_serv_app.png" className="h-8 w-8" alt="Calculator" />,
-  entry: "apps/calculator"
+  icon: (
+    <img
+      src="/icons/34689_beos_blocks_cubos_serv_app_beos_blocks_cubos_serv_app.png"
+      className="h-8 w-8"
+      alt="Calculator"
+    />
+  ),
+  entry: "apps/calculator",
 };
 
 const CalculatorPlugin: Plugin = {
@@ -21,7 +28,7 @@ const CalculatorPlugin: Plugin = {
   render: () => {
     // We're now returning a proper component instead of using hooks directly
     return <CalculatorContent />;
-  }
+  },
 };
 
 export default CalculatorPlugin;
