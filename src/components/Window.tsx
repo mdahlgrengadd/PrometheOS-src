@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from "react";
 import { X, Minus, Square } from "lucide-react";
 import { WindowState } from "./Desktop";
@@ -29,6 +28,7 @@ const Window: React.FC<WindowProps> = ({
   const headerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
   const isMaximized = window.size.width === "100%" && 
                      (window.size.height === "calc(100% - 48px)" || 
@@ -52,12 +52,20 @@ const Window: React.FC<WindowProps> = ({
     const header = headerRef.current;
     
     const handleMouseDown = (e: MouseEvent) => {
+      // Get the initial window position
+      if (windowRef.current) {
+        const rect = windowRef.current.getBoundingClientRect();
+        setStartPos({ x: rect.left, y: rect.top });
+      }
+      
       // Allow dragging even when clicking on the title text
       setDragging(true);
-      const rect = header.getBoundingClientRect();
+      
+      // Calculate offset relative to the header
+      const headerRect = header.getBoundingClientRect();
       setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: e.clientX - headerRect.left,
+        y: e.clientY - headerRect.top
       });
       
       e.preventDefault();
@@ -66,14 +74,26 @@ const Window: React.FC<WindowProps> = ({
     const handleMouseMove = (e: MouseEvent) => {
       if (!dragging) return;
       
+      // Calculate new position based on mouse movement
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
       
-      onDragStop({ x: newX, y: newY });
+      // Update window position directly for smoother dragging
+      if (windowRef.current) {
+        windowRef.current.style.left = `${newX}px`;
+        windowRef.current.style.top = `${newY}px`;
+      }
     };
     
     const handleMouseUp = () => {
-      setDragging(false);
+      if (dragging) {
+        // Get final position and notify parent component
+        if (windowRef.current) {
+          const rect = windowRef.current.getBoundingClientRect();
+          onDragStop({ x: rect.left, y: rect.top });
+        }
+        setDragging(false);
+      }
     };
     
     header.addEventListener("mousedown", handleMouseDown);
@@ -112,11 +132,35 @@ const Window: React.FC<WindowProps> = ({
     onClose();
   };
 
+  const handleResize = () => {
+    if (windowRef.current) {
+      const { offsetWidth, offsetHeight } = windowRef.current;
+      onDragStop({ 
+        x: window.position.x, 
+        y: window.position.y 
+      });
+      
+      // Update the window size in parent component
+      if (window.size.width !== offsetWidth || window.size.height !== offsetHeight) {
+        const updatedWindow = {
+          ...window,
+          size: {
+            width: offsetWidth,
+            height: offsetHeight
+          }
+        };
+        // This will trigger a re-render with the new size
+        // But we're still keeping the drag position stable
+      }
+    }
+  };
+
   return (
     <div 
       ref={windowRef} 
       className={`draggable-window ${isMaximized ? 'maximized' : ''}`}
       style={style}
+      onMouseUp={handleResize}
     >
       {/* Only render window header if not maximized (fixes duplicate header issue) */}
       {!isMaximized && (
