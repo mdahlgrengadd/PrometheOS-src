@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import AudioPlayerPlugin from './apps/audioplayer';
 import BrowserPlugin from './apps/browser';
 import CalculatorPlugin from './apps/calculator';
+import FileBrowserPlugin from './apps/filebrowser';
 // Import plugins directly for reliable loading
 import NotepadPlugin from './apps/notepad';
 import SettingsPlugin from './apps/settings';
@@ -21,11 +22,13 @@ const pluginModules: Record<string, Plugin> = {
   settings: SettingsPlugin,
   wordeditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin, // Make sure the key matches the plugin ID exactly
+  filebrowser: FileBrowserPlugin, // Add the File Browser plugin
 };
 
 // Debug: Log available plugins
 console.log("Available plugin modules:", Object.keys(pluginModules));
 console.log("AudioPlayerPlugin:", AudioPlayerPlugin);
+console.log("FileBrowserPlugin:", FileBrowserPlugin);
 
 type PluginContextType = {
   pluginManager: PluginManager;
