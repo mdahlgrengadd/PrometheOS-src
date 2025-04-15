@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import WordEditor from "./WordEditor";
 
 // Notepad App
 const Notepad = () => {
@@ -268,9 +268,15 @@ const Settings = () => {
   );
 };
 
+// Word Editor App
+const Word = () => {
+  return <WordEditor />;
+};
+
 export const AppWindow = {
   Notepad,
   Calculator,
   Browser,
-  Settings
+  Settings,
+  Word
 };

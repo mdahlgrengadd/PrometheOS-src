@@ -113,41 +113,42 @@ const Window: React.FC<WindowProps> = ({
     onClose();
   };
 
+  // For maximized windows, rely on the tab bar header in Desktop.tsx
+  // This window component should not show its own header when maximized
   return (
     <div 
       ref={windowRef} 
       className={`draggable-window ${isMaximized ? 'maximized' : ''}`}
       style={style}
     >
-      <div 
-        ref={headerRef} 
-        className={`window-header ${isMaximized ? 'hidden' : 'inline-flex'}`}
-      >
-        <div className="window-title">{window.title}</div>
-        <div className="window-controls">
-          <button
-            className="window-control"
-            onClick={handleMinimizeClick}
-            aria-label="Minimize"
-          >
-            <Minus className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleMaximizeClick}
-            aria-label="Maximize"
-          >
-            <Square className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleCloseClick}
-            aria-label="Close"
-          >
-            <X className="h-2.5 w-2.5 text-black" />
-          </button>
+      {!isMaximized && (
+        <div ref={headerRef} className="window-header">
+          <div className="window-title">{window.title}</div>
+          <div className="window-controls">
+            <button
+              className="window-control"
+              onClick={handleMinimizeClick}
+              aria-label="Minimize"
+            >
+              <Minus className="h-2.5 w-2.5 text-black" />
+            </button>
+            <button
+              className="window-control"
+              onClick={handleMaximizeClick}
+              aria-label="Maximize"
+            >
+              <Square className="h-2.5 w-2.5 text-black" />
+            </button>
+            <button
+              className="window-control"
+              onClick={handleCloseClick}
+              aria-label="Close"
+            >
+              <X className="h-2.5 w-2.5 text-black" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       <div className="window-content">
         {window.content}
       </div>
