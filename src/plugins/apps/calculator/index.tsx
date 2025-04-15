@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Plugin, PluginManifest } from '../../types';
 import { eventBus } from '../../EventBus';
 
-// Content component for the calculator plugin
+// Calculator component
 const CalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState('0');
   const [firstOperand, setFirstOperand] = useState<number | null>(null);
@@ -53,7 +53,7 @@ const CalculatorContent: React.FC = () => {
     setOperator(nextOperator);
   };
   
-  const calculate = (firstOperand: number, secondOperand: number, operator: string) => {
+  const calculate = (firstOperand: number, secondOperand: number, operator: string): number => {
     switch (operator) {
       case '+':
         return firstOperand + secondOperand;
@@ -68,17 +68,29 @@ const CalculatorContent: React.FC = () => {
     }
   };
   
+  const handleEquals = () => {
+    if (firstOperand === null || operator === null) {
+      return;
+    }
+    
+    const inputValue = parseFloat(display);
+    const result = calculate(firstOperand, inputValue, operator);
+    
+    setDisplay(String(result));
+    setFirstOperand(result);
+    setOperator(null);
+    setWaitingForSecondOperand(true);
+  };
+  
   return (
-    <div className="h-full flex flex-col bg-gray-100 p-2">
-      <div className="mb-2 p-2 bg-white text-right text-xl font-mono h-12 flex items-center justify-end border">
-        {display}
-      </div>
-      <div className="grid grid-cols-4 gap-1 flex-1">
+    <div className="calculator p-2">
+      <div className="display bg-gray-200 p-2 mb-2 text-right">{display}</div>
+      <div className="keypad grid grid-cols-4 gap-1">
         {['7', '8', '9', '/'].map(key => (
           <button 
             key={key} 
-            className={`${/\d/.test(key) ? 'bg-white' : 'bg-gray-300'} hover:bg-gray-200 p-2`}
-            onClick={() => /\d/.test(key) ? inputDigit(key) : performOperation(key)}
+            className="bg-gray-300 p-2"
+            onClick={() => key === '/' ? performOperation(key) : inputDigit(key)}
           >
             {key}
           </button>
@@ -86,8 +98,8 @@ const CalculatorContent: React.FC = () => {
         {['4', '5', '6', '*'].map(key => (
           <button 
             key={key} 
-            className={`${/\d/.test(key) ? 'bg-white' : 'bg-gray-300'} hover:bg-gray-200 p-2`}
-            onClick={() => /\d/.test(key) ? inputDigit(key) : performOperation(key)}
+            className="bg-gray-300 p-2"
+            onClick={() => key === '*' ? performOperation(key) : inputDigit(key)}
           >
             {key}
           </button>
@@ -95,8 +107,8 @@ const CalculatorContent: React.FC = () => {
         {['1', '2', '3', '-'].map(key => (
           <button 
             key={key} 
-            className={`${/\d/.test(key) ? 'bg-white' : 'bg-gray-300'} hover:bg-gray-200 p-2`}
-            onClick={() => /\d/.test(key) ? inputDigit(key) : performOperation(key)}
+            className="bg-gray-300 p-2"
+            onClick={() => key === '-' ? performOperation(key) : inputDigit(key)}
           >
             {key}
           </button>
@@ -104,24 +116,19 @@ const CalculatorContent: React.FC = () => {
         {['0', '.', '=', '+'].map(key => (
           <button 
             key={key} 
-            className={`${key === '=' ? 'bg-blue-500 text-white' : /\d|\./.test(key) ? 'bg-white' : 'bg-gray-300'} hover:bg-gray-200 p-2`}
+            className="bg-gray-300 p-2"
             onClick={() => {
-              if (key === '=') {
-                performOperation('=');
-              } else if (key === '.') {
-                inputDecimal();
-              } else if (/\d/.test(key)) {
-                inputDigit(key);
-              } else {
-                performOperation(key);
-              }
+              if (key === '.') inputDecimal();
+              else if (key === '=') handleEquals();
+              else if (key === '+') performOperation(key);
+              else inputDigit(key);
             }}
           >
             {key}
           </button>
         ))}
-        <button
-          className="col-span-4 bg-red-500 text-white p-2 hover:bg-red-600"
+        <button 
+          className="bg-red-300 p-2 col-span-4"
           onClick={clearDisplay}
         >
           Clear
@@ -160,6 +167,7 @@ const calculatorPlugin: Plugin = {
   
   init: () => {
     console.log("Calculator plugin initialized");
+    // Subscribe to events if needed
   },
   
   render: () => <CalculatorContent />,
@@ -174,6 +182,7 @@ const calculatorPlugin: Plugin = {
   
   onDestroy: () => {
     console.log("Calculator plugin destroyed");
+    // Clean up any resources, event listeners, etc.
   }
 };
 

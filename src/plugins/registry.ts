@@ -1,11 +1,12 @@
 
+import React from 'react';
 import { PluginManifest } from './types';
 
 // Import all plugin manifests
 import { manifest as notepadManifest } from './apps/notepad';
 import { manifest as calculatorManifest } from './apps/calculator';
 
-// Export all available plugin manifests
+// Export all available plugins manifests
 export const availablePlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,

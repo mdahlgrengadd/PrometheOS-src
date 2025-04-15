@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * Plugin manifest definition that describes a plugin in the system
  */
