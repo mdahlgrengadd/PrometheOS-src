@@ -1,17 +1,17 @@
-
 import React from 'react';
 import { PluginManifest } from './types';
-import { Circle, Settings, FileText, Calculator, Globe, FileEdit } from 'lucide-react'; 
+import { Circle, Settings, FileText, Calculator, Globe, FileEdit, Music } from 'lucide-react'; 
 
 // Import all plugin manifests
 import { manifest as notepadManifest } from './apps/notepad';
 import { manifest as calculatorManifest } from './apps/calculator';
+import { manifest as audioPlayerManifest } from './apps/audioplayer';
 
 // Export all available plugins manifests
 export const availablePlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,
-  // Additional plugins would be added here
+  audioPlayerManifest,
   {
     id: "browser",
     name: "Browser",
