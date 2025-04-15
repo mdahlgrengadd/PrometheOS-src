@@ -1,7 +1,8 @@
-import React from 'react';
 import { Minus, Square, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from 'react';
+
 import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface WindowControlsProps {
   onMinimize: () => void;
@@ -15,7 +16,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
   onClose,
 }) => {
   const { theme } = useTheme();
-  const isBeOSTheme = theme === 'beos';
+  const isBeOSTheme = theme === "beos";
 
   const handleClick = (e: React.MouseEvent, handler: () => void) => {
     e.stopPropagation();
@@ -53,7 +54,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
       </div>
     );
   }
-  
+
   // Modern light/dark theme controls
   return (
     <div className="window-controls">

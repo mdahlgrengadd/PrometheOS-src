@@ -11,17 +11,20 @@
     z-index: 1000;
     
     .theme-beos & {
-      @apply bg-gray-200 border-t border-gray-400 text-black p-1;
+      @apply bg-gray-200 border-t border-gray-400 p-1;
+      color: var(--text-primary);
       box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
     }
     
     .theme-light & {
-      @apply bg-background/80 backdrop-blur-lg border-t border-border text-foreground p-1;
+      @apply bg-background/80 backdrop-blur-lg border-t border-border p-1;
+      color: var(--text-primary);
       box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
     }
     
     .theme-dark & {
-      @apply bg-background/80 backdrop-blur-lg border-t border-border text-foreground p-1;
+      @apply bg-background/80 backdrop-blur-lg border-t border-border p-1;
+      color: var(--foreground);
       box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
     }
   }
@@ -31,12 +34,22 @@
     
     .theme-beos & {
       @apply px-2 py-1 text-xs font-bold bg-gray-100 hover:bg-white border border-gray-300;
+      color: var(--text-primary);
       min-width: 100px;
       height: 22px;
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
       @apply px-3 py-1.5 rounded-md text-sm border border-transparent hover:bg-accent hover:text-accent-foreground gap-2 transition-all duration-150;
+      color: var(--text-primary);
+      min-width: 120px;
+      height: 36px;
+      backdrop-filter: blur(8px);
+    }
+    
+    .theme-dark & {
+      @apply px-3 py-1.5 rounded-md text-sm border border-transparent hover:bg-accent hover:text-accent-foreground gap-2 transition-all duration-150;
+      color: var(--foreground);
       min-width: 120px;
       height: 36px;
       backdrop-filter: blur(8px);
@@ -60,7 +73,11 @@
       @apply bg-white;
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
+      @apply bg-secondary text-secondary-foreground border-border;
+    }
+    
+    .theme-dark & {
       @apply bg-secondary text-secondary-foreground border-border;
     }
   }
@@ -70,7 +87,11 @@
       @apply w-4 h-4 mr-1;
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
+      @apply w-5 h-5 text-muted-foreground;
+    }
+    
+    .theme-dark & {
       @apply w-5 h-5 text-muted-foreground;
     }
   }
@@ -80,7 +101,11 @@
       @apply w-px h-4 bg-gray-300 mx-1;
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
+      @apply w-px h-6 bg-border mx-2 opacity-50;
+    }
+    
+    .theme-dark & {
       @apply w-px h-6 bg-border mx-2 opacity-50;
     }
   }

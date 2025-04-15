@@ -1,6 +1,8 @@
-import React from 'react';
 import { Grip } from 'lucide-react';
+import React from 'react';
+
 import { useTheme } from '@/lib/ThemeProvider';
+
 import { WindowControls } from './WindowControls';
 
 interface WindowHeaderProps {
@@ -19,7 +21,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
   headerRef,
 }) => {
   const { theme } = useTheme();
-  const isBeOSTheme = theme === 'beos';
+  const isBeOSTheme = theme === "beos";
 
   return (
     <div ref={headerRef} className="window-header">
@@ -29,9 +31,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = ({
           <div className="window-title">{title}</div>
         </div>
       )}
-      {isBeOSTheme && (
-        <div className="window-title">{title}</div>
-      )}
+      {isBeOSTheme && <div className="window-title">{title}</div>}
       <WindowControls
         onMinimize={onMinimize}
         onMaximize={onMaximize}

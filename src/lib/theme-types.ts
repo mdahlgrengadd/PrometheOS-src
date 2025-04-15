@@ -1,4 +1,4 @@
-export type ThemeType = 'beos' | 'light' | 'dark';
+export type ThemeType = "beos" | "light" | "dark";
 
 export interface ThemeConfig {
   id: ThemeType;

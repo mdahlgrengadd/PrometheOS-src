@@ -55,13 +55,21 @@
     @apply text-center text-xs mt-2 truncate w-full;
     
     .theme-beos & {
-      @apply font-bold text-black;
+      @apply font-bold;
+      color: var(--text-primary);
       text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);
     }
     
-    .theme-light &, .theme-dark & {
-      @apply font-medium text-foreground;
+    .theme-light & {
+      @apply font-medium;
+      color: var(--text-primary);
       text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-dark & {
+      @apply font-medium;
+      color: white;
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
     }
   }
 
@@ -87,14 +95,24 @@
     cursor: pointer;
     
     .theme-beos & {
-      @apply bg-gray-100/90 text-black px-3 py-0.5 border-r border-gray-300 flex items-center justify-between;
+      @apply bg-gray-100/90 border-r border-gray-300 flex items-center justify-between px-3 py-0.5;
+      color: var(--text-primary);
       min-width: 180px;
       max-width: 360px;
       height: 24px;
     }
     
-    .theme-light &, .theme-dark & {
-      @apply bg-background/70 text-foreground px-3 py-1.5 border-r border-border flex items-center justify-between transition-all duration-100;
+    .theme-light & {
+      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      color: var(--text-primary);
+      min-width: 200px;
+      max-width: 400px;
+      height: 36px;
+    }
+    
+    .theme-dark & {
+      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      color: var(--foreground);
       min-width: 200px;
       max-width: 400px;
       height: 36px;
@@ -116,10 +134,17 @@
     
     .theme-beos & {
       @apply text-xs font-bold;
+      color: var(--text-primary);
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
       @apply text-sm font-medium;
+      color: var(--text-primary);
+    }
+    
+    .theme-dark & {
+      @apply text-sm font-medium;
+      color: var(--foreground);
     }
   }
 }

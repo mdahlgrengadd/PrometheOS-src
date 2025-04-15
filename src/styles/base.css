@@ -6,6 +6,11 @@
   :root {
     /* Default fallback variables */
     --radius: 0.5rem;
+    color-scheme: light;
+  }
+
+  .theme-dark {
+    color-scheme: dark;
   }
 
   * {
@@ -14,8 +19,12 @@
     font-family: 'Inter', 'Lato', system-ui, sans-serif;
   }
 
+  html, body {
+    @apply text-foreground;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background;
     position: relative;
     margin: 0;
     padding: 0;
@@ -30,5 +39,14 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
+  }
+
+  /* Fix text coloring in dark mode */
+  .theme-dark .window-content,
+  .theme-dark input,
+  .theme-dark button,
+  .theme-dark textarea,
+  .theme-dark select {
+    color: var(--foreground);
   }
 }

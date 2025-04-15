@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
-import { usePlugins } from '../plugins/PluginContext';
-import { WindowState } from './Desktop';
+import { usePlugins } from "../plugins/PluginContext";
+import { WindowState } from "./Desktop";
 
 interface DesktopIconsProps {
   windows: WindowState[];

@@ -1,8 +1,8 @@
-import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 const AudioPlayerContent = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -70,7 +70,7 @@ const AudioPlayerContent = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg max-w-xl mx-auto">
+    <div className="p-6 rounded-lg shadow-lg max-w-xl mx-auto bg-gradient-to-br from-pink-100 via-purple-100 to-blue-200">
       <audio
         ref={audioRef}
         src="/audio/sample.mp3"
@@ -79,7 +79,7 @@ const AudioPlayerContent = () => {
       />
 
       <div className="space-y-6">
-        <div className="flex justify-between items-center text-sm text-gray-500">
+        <div className="flex justify-between items-center text-sm text-black">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -89,7 +89,7 @@ const AudioPlayerContent = () => {
           max={duration}
           step={1}
           onValueChange={handleSeek}
-          className="w-full"
+          className="w-full text-black"
         />
 
         <div className="flex items-center justify-between">
@@ -98,22 +98,27 @@ const AudioPlayerContent = () => {
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              className="h-12 w-12"
+              className="h-12 w-12 text-black"
             >
               {isPlaying ? (
-                <Pause className="h-6 w-6" />
+                <Pause className="h-6 w-6 text-black" />
               ) : (
-                <Play className="h-6 w-6" />
+                <Play className="h-6 w-6 text-black" />
               )}
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={toggleMute}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMute}
+              className="text-black"
+            >
               {isMuted ? (
-                <VolumeX className="h-4 w-4" />
+                <VolumeX className="h-4 w-4 text-black" />
               ) : (
-                <Volume2 className="h-4 w-4" />
+                <Volume2 className="h-4 w-4 text-black" />
               )}
             </Button>
             <Slider
@@ -121,7 +126,7 @@ const AudioPlayerContent = () => {
               max={1}
               step={0.1}
               onValueChange={handleVolumeChange}
-              className="w-24"
+              className="w-24 text-black"
             />
           </div>
         </div>

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { cn } from '@/lib/utils';
+
 import { WindowState } from './Desktop';
 import { WindowContent } from './window/WindowContent';
 import { WindowHeader } from './window/WindowHeader';
-import { cn } from '@/lib/utils';
 
 interface WindowProps {
   window: WindowState;
@@ -44,13 +45,13 @@ const Window: React.FC<WindowProps> = ({
     const handleClick = () => {
       onFocus();
       setIsFocused(true); // Set focus state for animations
-      
+
       // Reset focus state after animation completes
       setTimeout(() => {
         setIsFocused(false);
       }, 300);
     };
-    
+
     const windowElement = windowRef.current;
 
     if (windowElement) {
@@ -227,8 +228,8 @@ const Window: React.FC<WindowProps> = ({
     <div
       ref={windowRef}
       className={cn(
-        "draggable-window", 
-        isMaximized && "maximized", 
+        "draggable-window",
+        isMaximized && "maximized",
         resizing && "resizing",
         dragging && "opacity-90",
         isFocused && "ring-2 ring-primary/30"
