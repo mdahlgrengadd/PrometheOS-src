@@ -4,7 +4,8 @@ import { Minus, Square, X } from "lucide-react";
 import Window from "./Window";
 import Taskbar from "./Taskbar";
 import DesktopIcons from "./DesktopIcons";
-import { AppWindow } from "./AppContents";
+import { usePlugins } from "../plugins/PluginContext";
+import { eventBus } from "../plugins/EventBus";
 
 export interface WindowState {
   id: string;
@@ -18,58 +19,99 @@ export interface WindowState {
 }
 
 const Desktop = () => {
-  const [windows, setWindows] = useState<WindowState[]>([
-    {
-      id: "notepad",
-      title: "Notepad",
-      content: <AppWindow.Notepad />,
-      isOpen: false,
+  const { loadedPlugins, activeWindows, openWindow, closeWindow, minimizeWindow, focusWindow } = usePlugins();
+  const [windows, setWindows] = useState<WindowState[]>([]);
+  
+  // Set up windows based on loaded plugins
+  useEffect(() => {
+    const newWindows = loadedPlugins.map(plugin => ({
+      id: plugin.id,
+      title: plugin.manifest.name,
+      content: plugin.render(),
+      isOpen: activeWindows.includes(plugin.id),
       isMinimized: false,
       zIndex: 1,
-      position: { x: 100, y: 100 },
+      position: { x: 100 + Math.random() * 100, y: 100 + Math.random() * 100 },
       size: { width: 400, height: 300 }
-    },
-    {
-      id: "calculator",
-      title: "Calculator",
-      content: <AppWindow.Calculator />,
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 150, y: 150 },
-      size: { width: 320, height: 400 }
-    },
-    {
-      id: "browser",
-      title: "Browser",
-      content: <AppWindow.Browser />,
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 200, y: 100 },
-      size: { width: 600, height: 450 }
-    },
-    {
-      id: "settings",
-      title: "Settings",
-      content: <AppWindow.Settings />,
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 250, y: 150 },
-      size: { width: 450, height: 350 }
-    },
-    {
-      id: "wordeditor",
-      title: "Word Editor",
-      content: <AppWindow.Word />,
-      isOpen: false,
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 250, y: 200 },
-      size: { width: 600, height: 450 }
-    }
-  ]);
+    }));
+    
+    setWindows(newWindows);
+  }, [loadedPlugins, activeWindows]);
+  
+  // Set up event listeners
+  useEffect(() => {
+    const handleWindowOpened = (pluginId: string) => {
+      setWindows(prev => 
+        prev.map(window => 
+          window.id === pluginId ? { ...window, isOpen: true, isMinimized: false } : window
+        )
+      );
+    };
+    
+    const handleWindowClosed = (pluginId: string) => {
+      setWindows(prev => 
+        prev.map(window => 
+          window.id === pluginId ? { ...window, isOpen: false } : window
+        )
+      );
+    };
+    
+    const handleWindowMinimized = (pluginId: string) => {
+      setWindows(prev => 
+        prev.map(window => 
+          window.id === pluginId ? { ...window, isMinimized: true } : window
+        )
+      );
+    };
+    
+    const handleWindowMaximized = (pluginId: string) => {
+      setWindows(prev => 
+        prev.map(window => {
+          if (window.id === pluginId) {
+            const isMaximized = window.size.width === "100%" && 
+                              (window.size.height === "calc(100% - 48px)" || 
+                               window.size.height === "calc(100vh - 62px)");
+            return {
+              ...window,
+              position: isMaximized ? { x: 100, y: 100 } : { x: 0, y: 0 },
+              size: isMaximized 
+                ? { width: 500, height: 400 }
+                : { width: "100%", height: "calc(100vh - 62px)" }
+            };
+          }
+          return window;
+        })
+      );
+    };
+    
+    const handleWindowFocused = (pluginId: string) => {
+      setWindows(prev => {
+        const highestZ = Math.max(...prev.map(w => w.zIndex), 0);
+        
+        return prev.map(window => 
+          window.id === pluginId 
+            ? { ...window, zIndex: highestZ + 1, isMinimized: false } 
+            : window
+        );
+      });
+    };
+    
+    // Subscribe to events
+    const unsubscribeOpened = eventBus.subscribe('window:opened', handleWindowOpened);
+    const unsubscribeClosed = eventBus.subscribe('window:closed', handleWindowClosed);
+    const unsubscribeMinimized = eventBus.subscribe('window:minimized', handleWindowMinimized);
+    const unsubscribeMaximized = eventBus.subscribe('window:maximized', handleWindowMaximized);
+    const unsubscribeFocused = eventBus.subscribe('window:focused', handleWindowFocused);
+    
+    return () => {
+      // Clean up event subscriptions
+      unsubscribeOpened();
+      unsubscribeClosed();
+      unsubscribeMinimized();
+      unsubscribeMaximized();
+      unsubscribeFocused();
+    };
+  }, []);
   
   const maximizedWindows = windows.filter(w => 
     w.isOpen && 
@@ -77,75 +119,9 @@ const Desktop = () => {
     w.size.width === "100%" && 
     (w.size.height === "calc(100% - 48px)" || w.size.height === "calc(100vh - 62px)")
   ).sort((a, b) => b.zIndex - a.zIndex);
-
-  const openWindow = (id: string) => {
-    setWindows(prevWindows => {
-      const highestZ = Math.max(...prevWindows.map(w => w.zIndex), 0);
-      
-      return prevWindows.map(window => {
-        if (window.id === id) {
-          return {
-            ...window,
-            isOpen: true,
-            isMinimized: false,
-            zIndex: highestZ + 1
-          };
-        }
-        return window;
-      });
-    });
-  };
-
-  const closeWindow = (id: string) => {
-    setWindows(prevWindows => 
-      prevWindows.map(window => 
-        window.id === id 
-          ? { ...window, isOpen: false } 
-          : window
-      )
-    );
-  };
-
-  const minimizeWindow = (id: string) => {
-    setWindows(prevWindows => 
-      prevWindows.map(window => 
-        window.id === id 
-          ? { ...window, isMinimized: true } 
-          : window
-      )
-    );
-  };
-
+  
   const maximizeWindow = (id: string) => {
-    setWindows(prevWindows => 
-      prevWindows.map(window => {
-        if (window.id === id) {
-          const isMaximized = window.size.width === "100%" && 
-                            (window.size.height === "calc(100% - 48px)" || 
-                             window.size.height === "calc(100vh - 62px)");
-          return {
-            ...window,
-            position: isMaximized ? { x: 100, y: 100 } : { x: 0, y: 0 },
-            size: isMaximized 
-              ? { width: 500, height: 400 }
-              : { width: "100%", height: "calc(100vh - 62px)" }
-          };
-        }
-        return window;
-      })
-    );
-  };
-
-  const focusWindow = (id: string) => {
-    setWindows(prevWindows => {
-      const highestZ = Math.max(...prevWindows.map(w => w.zIndex), 0);
-      
-      return prevWindows.map(window => 
-        window.id === id 
-          ? { ...window, zIndex: highestZ + 1, isMinimized: false } 
-          : window
-      );
-    });
+    eventBus.emit('window:maximized', id);
   };
 
   const updateWindowPosition = (id: string, position: { x: number; y: number }) => {
@@ -179,7 +155,7 @@ const Desktop = () => {
                     className="window-control"
                     onClick={(e) => {
                       e.stopPropagation();
-                      minimizeWindow(window.id);
+                      eventBus.emit('window:minimized', window.id);
                     }}
                     aria-label="Minimize"
                   >
@@ -212,7 +188,7 @@ const Desktop = () => {
         </div>
       )}
       
-      <DesktopIcons windows={windows} openWindow={openWindow} />
+      <DesktopIcons windows={windows} openWindow={(id) => openWindow(id)} />
       
       {windows.map(window => (
         window.isOpen && (
