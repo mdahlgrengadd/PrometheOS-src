@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { WindowState } from "./Desktop";
 import { WindowHeader } from "./window/WindowHeader";
@@ -133,13 +134,15 @@ const Window: React.FC<WindowProps> = ({
       style={style}
       onMouseUp={handleResize}
     >
-      <WindowHeader
-        title={window.title}
-        onMinimize={onMinimize}
-        onMaximize={onMaximize}
-        onClose={onClose}
-        headerRef={headerRef}
-      />
+      {!isMaximized && (
+        <WindowHeader
+          title={window.title}
+          onMinimize={onMinimize}
+          onMaximize={onMaximize}
+          onClose={onClose}
+          headerRef={headerRef}
+        />
+      )}
       <WindowContent>
         {window.content}
       </WindowContent>
