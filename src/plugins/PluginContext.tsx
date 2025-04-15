@@ -5,6 +5,22 @@ import { Plugin, PluginManifest } from './types';
 import { availablePlugins } from './registry';
 import { eventBus } from './EventBus';
 
+// Import plugins directly for reliable loading
+import NotepadPlugin from './apps/notepad';
+import CalculatorPlugin from './apps/calculator';
+import BrowserPlugin from './apps/browser';
+import SettingsPlugin from './apps/settings';
+import WordEditorPlugin from './apps/wordeditor';
+
+// Map of plugin modules for direct access
+const pluginModules: Record<string, Plugin> = {
+  'notepad': NotepadPlugin,
+  'calculator': CalculatorPlugin,
+  'browser': BrowserPlugin,
+  'settings': SettingsPlugin,
+  'wordeditor': WordEditorPlugin,
+};
+
 type PluginContextType = {
   pluginManager: PluginManager;
   loadedPlugins: Plugin[];
@@ -27,24 +43,24 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Initialize plugin manager and load plugins
     const loadPlugins = async () => {
       try {
-        // In a real implementation, these would be loaded dynamically
-        // For now, we're importing them directly in the registry
-        
         // Register event handler for plugin registration
         const unsubscribe = eventBus.subscribe('plugin:registered', (pluginId: string) => {
           setLoadedPlugins(pluginManager.getAllPlugins());
         });
         
-        // Load the plugins from manifests
+        // Load the plugins directly from imported modules
         for (const manifest of availablePlugins) {
-          // Dynamic import simulation
-          const modulePromise = import(`./apps/${manifest.id}`);
-          modulePromise.then(module => {
-            const plugin = module.default;
-            pluginManager.registerPlugin(plugin);
-          }).catch(error => {
+          try {
+            // Get the plugin module from our direct imports
+            const plugin = pluginModules[manifest.id];
+            if (plugin) {
+              pluginManager.registerPlugin(plugin);
+            } else {
+              console.error(`Plugin module for ${manifest.id} not found`);
+            }
+          } catch (error) {
             console.error(`Failed to load plugin ${manifest.id}:`, error);
-          });
+          }
         }
         
         return () => {
