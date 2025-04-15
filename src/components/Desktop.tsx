@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Minus, Square, X } from "lucide-react";
 import Window from "./Window";
@@ -61,7 +62,7 @@ const Desktop = () => {
     {
       id: "wordeditor",
       title: "Word Editor",
-      content: <AppWindow.WordEditor />,
+      content: <AppWindow.Word />,
       isOpen: false,
       isMinimized: false,
       zIndex: 1,
