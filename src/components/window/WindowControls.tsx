@@ -1,6 +1,4 @@
-
 import React from 'react';
-import { Minus, Square, X } from 'lucide-react';
 
 interface WindowControlsProps {
   onMinimize: () => void;
@@ -25,21 +23,27 @@ export const WindowControls: React.FC<WindowControlsProps> = ({
         onClick={(e) => handleClick(e, onMinimize)}
         aria-label="Minimize"
       >
-        <Minus className="h-2.5 w-2.5 text-black" />
+        {/* BeOS-style minimize icon */}
+        <div className="h-2 w-2 bg-black rounded-none"></div>
       </button>
       <button
         className="window-control"
         onClick={(e) => handleClick(e, onMaximize)}
         aria-label="Maximize"
       >
-        <Square className="h-2.5 w-2.5 text-black" />
+        {/* BeOS-style maximize icon */}
+        <div className="h-2.5 w-2.5 border border-black"></div>
       </button>
       <button
         className="window-control"
         onClick={(e) => handleClick(e, onClose)}
         aria-label="Close"
       >
-        <X className="h-2.5 w-2.5 text-black" />
+        {/* BeOS-style close (X) icon */}
+        <div className="h-2.5 w-2.5 relative">
+          <div className="absolute w-3 h-0.5 bg-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+          <div className="absolute w-3 h-0.5 bg-black top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+        </div>
       </button>
     </div>
   );

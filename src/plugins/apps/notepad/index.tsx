@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { Plugin, PluginManifest } from '../../types';
-import { FileText } from 'lucide-react';
 
 export const manifest: PluginManifest = {
   id: "notepad",
@@ -9,7 +7,7 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "A simple text editor",
   author: "Desktop System",
-  icon: <FileText className="h-8 w-8" />,
+  icon: <img src="/icons/34688_ans_beos_ans_beos.png" className="h-8 w-8" alt="Notepad" />,
   entry: "apps/notepad"
 };
 

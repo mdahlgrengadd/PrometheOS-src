@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { Plugin, PluginManifest } from '../../types';
-import { Settings } from 'lucide-react';
 import SettingsContent from './SettingsContent';
 
 export const manifest: PluginManifest = {
@@ -10,7 +8,7 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "System settings application",
   author: "Desktop System",
-  icon: <Settings className="h-8 w-8" />,
+  icon: <img src="/icons/34685_display_beos_apple_17_beos_studio_display_apple_17_studio.png" className="h-8 w-8" alt="Settings" />,
   entry: "apps/settings"
 };
 

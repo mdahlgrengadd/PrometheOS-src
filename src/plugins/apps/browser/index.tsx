@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { Plugin, PluginManifest } from '../../types';
-import { Globe } from 'lucide-react';
 
 export const manifest: PluginManifest = {
   id: "browser",
@@ -9,7 +7,7 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "A simple web browser",
   author: "Desktop System",
-  icon: <Globe className="h-8 w-8" />,
+  icon: <img src="/icons/34686_acrobat_beos_acrobat_beos.png" className="h-8 w-8" alt="Browser" />,
   entry: "apps/browser"
 };
 

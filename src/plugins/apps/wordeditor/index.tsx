@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { Plugin, PluginManifest } from '../../types';
-import { FileEdit } from 'lucide-react';
 
 export const manifest: PluginManifest = {
   id: "wordeditor",
@@ -9,7 +7,7 @@ export const manifest: PluginManifest = {
   version: "1.0.0",
   description: "A word processing application",
   author: "Desktop System",
-  icon: <FileEdit className="h-8 w-8" />,
+  icon: <img src="/icons/34684_aim_be_be_aim.png" className="h-8 w-8" alt="Word Editor" />,
   entry: "apps/wordeditor"
 };
 
