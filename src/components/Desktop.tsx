@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Minus, Square, X } from "lucide-react"; // Added missing icon imports
+import { Minus, Square, X } from "lucide-react";
 import Window from "./Window";
 import Taskbar from "./Taskbar";
 import DesktopIcons from "./DesktopIcons";
@@ -58,6 +57,16 @@ const Desktop = () => {
       zIndex: 1,
       position: { x: 250, y: 150 },
       size: { width: 450, height: 350 }
+    },
+    {
+      id: "wordeditor",
+      title: "Word Editor",
+      content: <AppWindow.WordEditor />,
+      isOpen: false,
+      isMinimized: false,
+      zIndex: 1,
+      position: { x: 250, y: 200 },
+      size: { width: 600, height: 450 }
     }
   ]);
   
