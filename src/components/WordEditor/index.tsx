@@ -12,6 +12,7 @@ import Color from "@tiptap/extension-color";
 import TextStyle from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
+import CharacterCount from "@tiptap/extension-character-count";
 import { 
   Menubar, 
   MenubarMenu, 
@@ -51,6 +52,7 @@ const WordEditor = () => {
       Highlight.configure({
         multicolor: true,
       }),
+      CharacterCount,
     ],
     content: `
       <h1>Welcome to Word Editor</h1>
@@ -101,14 +103,14 @@ const WordEditor = () => {
           <MenubarContent>
             <MenubarItem 
               onClick={() => editor?.commands.undo()}
-              disabled={!editor?.can().undo()}
+              disabled={!editor?.can().chain().focus().undo().run()}
             >
               Undo
               <MenubarShortcut>⌘Z</MenubarShortcut>
             </MenubarItem>
             <MenubarItem 
               onClick={() => editor?.commands.redo()}
-              disabled={!editor?.can().redo()}
+              disabled={!editor?.can().chain().focus().redo().run()}
             >
               Redo
               <MenubarShortcut>⇧⌘Z</MenubarShortcut>

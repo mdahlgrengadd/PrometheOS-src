@@ -54,9 +54,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
     const url = window.prompt("URL");
     
     if (url) {
-      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+      editor.chain().focus().setLink({ href: url }).run();
     } else {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      editor.chain().focus().unsetLink().run();
     }
   };
   
@@ -341,8 +341,8 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         variant="ghost"
         size="sm"
         className="px-2 h-8 w-8"
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
+        onClick={() => editor.commands.undo()}
+        disabled={!editor.can().chain().focus().undo().run()}
       >
         <RotateCcw className="h-4 w-4" />
       </Button>
@@ -351,8 +351,8 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         variant="ghost"
         size="sm"
         className="px-2 h-8 w-8"
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
+        onClick={() => editor.commands.redo()}
+        disabled={!editor.can().chain().focus().redo().run()}
       >
         <Redo className="h-4 w-4" />
       </Button>
