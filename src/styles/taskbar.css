@@ -1,0 +1,22 @@
+
+.taskbar {
+  @apply bg-beos-darkgrey border-t border-beos-lightgrey text-taskbar-foreground p-1;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.taskbar-item {
+  @apply px-3 py-1.5 rounded-none text-sm border border-transparent;
+  background: linear-gradient(to bottom, var(--window-gradient-start) 0%, var(--window-gradient-end) 100%);
+}
+
+.taskbar-item:hover {
+  @apply border-white/40;
+  background: rgba(0,0,0,0.1);
+}

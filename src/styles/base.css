@@ -1,0 +1,22 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+    font-family: 'Lato', sans-serif;
+  }
+
+  body {
+    @apply bg-beos-blue relative;
+  }
+
+  :root {
+    --window-gradient-start: #f6e4f4;
+    --window-gradient-end: #c6c6c6;
+    --title-gradient-start: #ffe17d;
+    --title-gradient-end: #ffcb06;
+  }
+}
