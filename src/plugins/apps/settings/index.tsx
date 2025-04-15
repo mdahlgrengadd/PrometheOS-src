@@ -55,7 +55,7 @@ const SettingsPlugin: Plugin = {
           <p className="text-sm text-gray-600">
             3D Desktop Environment v1.0.0
             <br />
-            Powered by Next.js and React
+            Powered by React
           </p>
         </div>
       </div>

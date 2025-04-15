@@ -1,8 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Plugin, PluginManifest } from './types';
 import { eventBus } from './EventBus';
-import dynamic from 'next/dynamic';
 
 /**
  * Manages the lifecycle of plugins
@@ -144,8 +142,11 @@ export function usePluginManager() {
 
 // Higher-order component for dynamic plugin loading
 export function withDynamicImport(pluginEntry: string) {
-  return dynamic(() => import(`../plugins/${pluginEntry}`), {
-    loading: () => <div>Loading plugin...</div>,
-    ssr: false
-  });
+  const LazyComponent = lazy(() => import(`../plugins/${pluginEntry}`));
+  
+  return () => (
+    <Suspense fallback={<div>Loading plugin...</div>}>
+      <LazyComponent />
+    </Suspense>
+  );
 }
