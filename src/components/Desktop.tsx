@@ -24,18 +24,29 @@ const Desktop = () => {
   
   // Set up windows based on loaded plugins
   useEffect(() => {
-    const newWindows = loadedPlugins.map(plugin => ({
-      id: plugin.id,
-      title: plugin.manifest.name,
-      content: plugin.render(),
-      isOpen: activeWindows.includes(plugin.id),
-      isMinimized: false,
-      zIndex: 1,
-      position: { x: 100 + Math.random() * 100, y: 100 + Math.random() * 100 },
-      size: { width: 400, height: 300 }
+    // Only create windows that don't already exist
+    const existingWindowIds = windows.map(w => w.id);
+    
+    const newPluginWindows = loadedPlugins
+      .filter(plugin => !existingWindowIds.includes(plugin.id))
+      .map(plugin => ({
+        id: plugin.id,
+        title: plugin.manifest.name,
+        content: plugin.render(),
+        isOpen: activeWindows.includes(plugin.id),
+        isMinimized: false,
+        zIndex: 1,
+        position: { x: 100 + Math.random() * 100, y: 100 + Math.random() * 100 },
+        size: { width: 400, height: 300 }
+      }));
+    
+    // Update existing windows' active state without changing positions
+    const updatedExistingWindows = windows.map(window => ({
+      ...window,
+      isOpen: activeWindows.includes(window.id)
     }));
     
-    setWindows(newWindows);
+    setWindows([...updatedExistingWindows, ...newPluginWindows]);
   }, [loadedPlugins, activeWindows]);
   
   // Set up event listeners
@@ -149,40 +160,39 @@ const Desktop = () => {
               onClick={() => handleTabClick(window.id)}
             >
               <span className="window-tab-title">{window.title}</span>
-              {window.zIndex === Math.max(...maximizedWindows.map(w => w.zIndex)) && (
-                <div className="window-controls">
-                  <button
-                    className="window-control"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      eventBus.emit('window:minimized', window.id);
-                    }}
-                    aria-label="Minimize"
-                  >
-                    <Minus className="h-2.5 w-2.5 text-black" />
-                  </button>
-                  <button
-                    className="window-control"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      maximizeWindow(window.id);
-                    }}
-                    aria-label="Maximize"
-                  >
-                    <Square className="h-2.5 w-2.5 text-black" />
-                  </button>
-                  <button
-                    className="window-control"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeWindow(window.id);
-                    }}
-                    aria-label="Close"
-                  >
-                    <X className="h-2.5 w-2.5 text-black" />
-                  </button>
-                </div>
-              )}
+              {/* Show window controls for all maximized windows, not just the active one */}
+              <div className="window-controls">
+                <button
+                  className="window-control"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    eventBus.emit('window:minimized', window.id);
+                  }}
+                  aria-label="Minimize"
+                >
+                  <Minus className="h-2.5 w-2.5 text-black" />
+                </button>
+                <button
+                  className="window-control"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    maximizeWindow(window.id);
+                  }}
+                  aria-label="Maximize"
+                >
+                  <Square className="h-2.5 w-2.5 text-black" />
+                </button>
+                <button
+                  className="window-control"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    closeWindow(window.id);
+                  }}
+                  aria-label="Close"
+                >
+                  <X className="h-2.5 w-2.5 text-black" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -128,7 +128,7 @@
   border-radius: 0;
   background-color: transparent;
   resize: both;
-  overflow: auto;
+  overflow: visible;
 }
 
 .window-header {
@@ -154,7 +154,8 @@
 }
 
 .window-content {
-  @apply p-4 h-[calc(100%-26px)] overflow-auto bg-beos-grey;
+  @apply p-4 h-[calc(100%-26px)] bg-beos-grey;
+  overflow: auto;
 }
 
 .desktop {
@@ -223,7 +224,7 @@
 .maximized {
   margin: 26px 0 0 0 !important;
   width: 100% !important;
-  height: calc(100vh - 62px) !important; /* 26px tab + 36px taskbar */
+  height: calc(100vh - 62px) !important;
 }
 
 .beui-button {

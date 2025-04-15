@@ -52,8 +52,7 @@ const Window: React.FC<WindowProps> = ({
     const header = headerRef.current;
     
     const handleMouseDown = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).classList.contains('window-header')) return;
-      
+      // Allow dragging even when clicking on the title text
       setDragging(true);
       const rect = header.getBoundingClientRect();
       setDragOffset({
@@ -119,40 +118,38 @@ const Window: React.FC<WindowProps> = ({
       className={`draggable-window ${isMaximized ? 'maximized' : ''}`}
       style={style}
     >
-      <div ref={headerRef} className="window-header">
-        <div className="window-title">{window.title}</div>
-        <div className="window-controls">
-          <button
-            className="window-control"
-            onClick={handleMinimizeClick}
-            aria-label="Minimize"
-          >
-            <Minus className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleMaximizeClick}
-            aria-label="Maximize"
-          >
-            <Square className="h-2.5 w-2.5 text-black" />
-          </button>
-          <button
-            className="window-control"
-            onClick={handleCloseClick}
-            aria-label="Close"
-          >
-            <X className="h-2.5 w-2.5 text-black" />
-          </button>
+      {/* Only render window header if not maximized (fixes duplicate header issue) */}
+      {!isMaximized && (
+        <div ref={headerRef} className="window-header">
+          <div className="window-title">{window.title}</div>
+          <div className="window-controls">
+            <button
+              className="window-control"
+              onClick={handleMinimizeClick}
+              aria-label="Minimize"
+            >
+              <Minus className="h-2.5 w-2.5 text-black" />
+            </button>
+            <button
+              className="window-control"
+              onClick={handleMaximizeClick}
+              aria-label="Maximize"
+            >
+              <Square className="h-2.5 w-2.5 text-black" />
+            </button>
+            <button
+              className="window-control"
+              onClick={handleCloseClick}
+              aria-label="Close"
+            >
+              <X className="h-2.5 w-2.5 text-black" />
+            </button>
+          </div>
         </div>
+      )}
+      <div className="window-content">
+        {window.content}
       </div>
-      <ResizablePanelGroup 
-        direction="horizontal" 
-        className="window-content rounded-none border-none"
-      >
-        <ResizablePanel defaultSize={100} minSize={30}>
-          {window.content}
-        </ResizablePanel>
-      </ResizablePanelGroup>
     </div>
   );
 };
