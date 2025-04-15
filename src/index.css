@@ -143,6 +143,65 @@
   @apply p-4 h-[calc(100%-26px)] overflow-auto bg-beos-grey;
 }
 
+.ProseMirror {
+  @apply outline-none;
+  min-height: 100px;
+}
+
+.ProseMirror p {
+  @apply mb-2;
+}
+
+.ProseMirror h1 {
+  @apply text-3xl font-bold mb-4;
+}
+
+.ProseMirror h2 {
+  @apply text-2xl font-bold mb-3;
+}
+
+.ProseMirror h3 {
+  @apply text-xl font-bold mb-2;
+}
+
+.ProseMirror ul, 
+.ProseMirror ol {
+  @apply pl-5 mb-3;
+}
+
+.ProseMirror ul {
+  @apply list-disc;
+}
+
+.ProseMirror ol {
+  @apply list-decimal;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-4;
+}
+
+.ProseMirror hr {
+  @apply my-4;
+}
+
+.ProseMirror pre {
+  @apply bg-gray-100 p-4 rounded font-mono my-4;
+}
+
+.ProseMirror a {
+  @apply text-blue-600 underline;
+}
+
+.ProseMirror img {
+  @apply max-w-full h-auto my-2;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-gray-400 float-left h-0 pointer-events-none;
+}
+
 .desktop {
   @apply bg-beos-blue;
   height: 100%;
