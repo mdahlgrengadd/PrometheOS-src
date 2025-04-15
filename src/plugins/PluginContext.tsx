@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import AudioPlayerPlugin from './apps/audioplayer';
@@ -10,7 +11,7 @@ import WordEditorPlugin from './apps/wordeditor';
 import { eventBus } from './EventBus';
 import { PluginManager } from './PluginManager';
 import { availablePlugins } from './registry';
-import { Plugin, PluginManifest } from './types';
+import { Plugin } from './types';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
@@ -19,7 +20,7 @@ const pluginModules: Record<string, Plugin> = {
   browser: BrowserPlugin,
   settings: SettingsPlugin,
   wordeditor: WordEditorPlugin,
-  audioplayer: AudioPlayerPlugin,
+  audioplayer: AudioPlayerPlugin, // Make sure the key matches the plugin ID exactly
 };
 
 // Debug: Log available plugins
