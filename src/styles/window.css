@@ -49,7 +49,7 @@
     
     .theme-beos & {
       border-top: 1px solid var(--window-border);
-      padding: 4px;
+      padding: 16px;
     }
     
     .theme-light &, .theme-dark & {
@@ -202,18 +202,32 @@
   }
 
   .window-title {
-    max-width: calc(100% - 80px);
     line-height: 1.25rem;
     
     .theme-beos & {
       @apply text-black font-bold truncate text-sm;
+      max-width: calc(100% - 80px);
       margin: 0 auto 0 15px; /* Add margin to make room for the BeOS yellow dot */
     }
     
-    .theme-light &, .theme-dark & {
-      @apply text-foreground font-medium truncate text-sm;
+    .theme-light & {
+      @apply text-foreground font-medium text-sm;
+      max-width: calc(100% - 10px); /* Increase available space for title */
+      padding-right: 8px; /* Add padding to prevent title from touching window controls */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* Use ellipsis instead of hard truncation */
     }
-  }
+    
+    .theme-dark & {
+      @apply text-white font-medium text-sm;
+      max-width: calc(100% - 10px);
+      padding-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    }
 
   .window-controls {
     @apply flex items-center;

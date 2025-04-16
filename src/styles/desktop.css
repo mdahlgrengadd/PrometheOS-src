@@ -81,7 +81,7 @@
     z-index: 900;
     
     .theme-beos & {
-      height: 24px;
+      height: 36px;
       @apply bg-gray-200 border-b border-gray-400;
     }
     
@@ -95,11 +95,11 @@
     cursor: pointer;
     
     .theme-beos & {
-      @apply bg-gray-100/90 border-r border-gray-300 flex items-center justify-between px-3 py-0.5;
+      @apply bg-gray-100/90 border-r border-gray-300 flex items-center justify-between px-3 py-1.5;
       color: var(--text-primary);
       min-width: 180px;
       max-width: 360px;
-      height: 24px;
+      height: 36px;
     }
     
     .theme-light & {

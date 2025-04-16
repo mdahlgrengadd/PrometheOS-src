@@ -33,10 +33,10 @@
     @apply cursor-pointer mx-1 flex items-center;
     
     .theme-beos & {
-      @apply px-2 py-1 text-xs font-bold bg-gray-100 hover:bg-white border border-gray-300;
+      @apply px-3 py-1.5 text-xs font-bold bg-gray-100 hover:bg-white border border-gray-300;
       color: var(--text-primary);
       min-width: 100px;
-      height: 22px;
+      height: 36px;
     }
     
     .theme-light & {
@@ -114,7 +114,7 @@
   .taskbar-start {
     .theme-beos & {
       @apply bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-none px-2 flex items-center mr-auto;
-      height: 22px;
+      height: 36px;
     }
     
     .theme-light &, .theme-dark & {
