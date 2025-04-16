@@ -101,6 +101,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         prev.includes(pluginId) ? prev : [...prev, pluginId]
       );
       eventBus.emit("window:opened", pluginId);
+      // Ensure the window is focused and brought to the front when opened
+      eventBus.emit("window:focused", pluginId);
     }
   };
 
