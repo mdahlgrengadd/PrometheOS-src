@@ -33,10 +33,10 @@ const beosTheme: ThemeConfig = {
 
     // Window header properties
     "--header-position": "absolute",
-    "--header-top": "-22px",
-    "--header-left": "8px",
-    "--header-height": "22px",
-    "--header-width": "calc(100% - 16px)",
+    "--header-top": "-36px",
+    "--header-left": "-5px",
+    "--header-height": "32px",
+    "--header-width": "210px",
     "--header-border-radius": "4px 4px 0 0",
     "--header-padding": "0.25rem 0.5rem",
     "--window-padding-top": "22px",

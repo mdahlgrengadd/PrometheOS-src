@@ -82,7 +82,8 @@
     
     .theme-beos & {
       height: 36px;
-      @apply bg-gray-200 border-b border-gray-400;
+      @apply border-b border-gray-400;
+      background-color: var(--background);
     }
     
     .theme-light &, .theme-dark & {
@@ -95,11 +96,14 @@
     cursor: pointer;
     
     .theme-beos & {
-      @apply bg-gray-100/90 border-r border-gray-300 flex items-center justify-between px-3 py-1.5;
+      @apply border-r flex items-center justify-between px-3 py-1.5;
       color: var(--text-primary);
       min-width: 180px;
       max-width: 360px;
       height: 36px;
+      background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
+      border: 1px solid var(--title-border);
+      border-bottom: none;
     }
     
     .theme-light & {
@@ -121,7 +125,7 @@
 
   .window-tab:hover {
     .theme-beos & {
-      @apply bg-white;
+      filter: brightness(1.05);
     }
     
     .theme-light &, .theme-dark & {
@@ -134,7 +138,7 @@
     
     .theme-beos & {
       @apply text-xs font-bold;
-      color: var(--text-primary);
+      color: black;
     }
     
     .theme-light & {
