@@ -6,7 +6,8 @@ import CalculatorPlugin from './apps/calculator';
 // Import plugins directly for reliable loading
 import NotepadPlugin from './apps/notepad';
 import SettingsPlugin from './apps/settings';
-import WordEditorPlugin from './apps/wordeditor';
+import WebLLMChatPlugin from './apps/webllm-chat';
+import WordEditorPlugin from './apps/WordEditor';
 import { eventBus } from './EventBus';
 import { PluginManager } from './PluginManager';
 import { availablePlugins } from './registry';
@@ -18,8 +19,9 @@ const pluginModules: Record<string, Plugin> = {
   calculator: CalculatorPlugin,
   browser: BrowserPlugin,
   settings: SettingsPlugin,
-  wordeditor: WordEditorPlugin,
+  WordEditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin,
+  "webllm-chat": WebLLMChatPlugin,
 };
 
 // Debug: Log available plugins

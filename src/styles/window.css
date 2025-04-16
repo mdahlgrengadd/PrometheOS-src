@@ -30,9 +30,22 @@
 
     /* Focus state */
     &:focus-within {
-      box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 
-                  0 1px 4px rgba(0, 0, 0, 0.05), 
-                  0 0 0 2px var(--ring);
+      .theme-beos & {
+        /* Apply purple to all frame layers for strong focus indication */
+        box-shadow:
+          0 0 0 1px var(--ring),
+          0 0 0 2px color-mix(in srgb, var(--ring) 85%, white),
+          0 0 0 3px color-mix(in srgb, var(--ring) 70%, white),
+          0 0 0 4px color-mix(in srgb, var(--ring) 85%, white),
+          0 0 0 5px var(--ring),
+          0 14px 16px -6px rgba(0,0,0,0.2);
+      }
+
+      .theme-light &, .theme-dark & {
+        box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 
+                    0 1px 4px rgba(0, 0, 0, 0.05), 
+                    0 0 0 2px var(--ring);
+      }
     }
   }
 

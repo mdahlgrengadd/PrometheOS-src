@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
-import { Plugin, PluginManifest } from "../../types";
-import AudioPlayerContent from "./AudioPlayerContent";
+import { Plugin, PluginManifest } from '../../types';
+import AudioPlayerContent from './AudioPlayerContent';
 
 // Ensure icon path is correct and valid
 export const manifest: PluginManifest = {
@@ -20,7 +20,7 @@ export const manifest: PluginManifest = {
   entry: "apps/audioplayer",
   preferredSize: {
     width: 400,
-    height: 260,
+    height: 300,
   },
 };
 

@@ -13,6 +13,7 @@
   "dependencies": {
     "@cubone/react-file-manager": "^1.20.2",
     "@hookform/resolvers": "^3.9.0",
+    "@mlc-ai/web-llm": "^0.2.78",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -52,6 +53,7 @@
     "@tiptap/pm": "^2.2.4",
     "@tiptap/react": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
+    "@types/howler": "^2.2.12",
     "a": "^3.0.1",
     "all": "^0.0.0",
     "class-variance-authority": "^0.7.1",
@@ -61,6 +63,7 @@
     "date-fns": "^3.6.0",
     "dependencies": "^0.0.1",
     "embla-carousel-react": "^8.3.0",
+    "howler": "^2.2.4",
     "in": "^0.19.0",
     "input-otp": "^1.2.4",
     "install": "^0.13.0",
