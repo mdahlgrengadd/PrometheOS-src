@@ -32,6 +32,26 @@ export function withApi<P extends object>(
 
       // Create the full API documentation by merging defaults with props
       const fullApiDoc = useMemo<IApiComponent>(() => {
+        // Deduplicate actions by ID
+        const defaultActions = defaultApiDoc?.actions || [];
+        const propActions = api?.actions || [];
+
+        // Create a map of actions by ID for faster lookup
+        const actionMap = new Map();
+
+        // Add all default actions to the map
+        defaultActions.forEach((action) => {
+          actionMap.set(action.id, action);
+        });
+
+        // Add or override with prop actions
+        propActions.forEach((action) => {
+          actionMap.set(action.id, action);
+        });
+
+        // Convert the map back to an array
+        const mergedActions = Array.from(actionMap.values());
+
         const doc = {
           id: uniqueId.current,
           type: defaultApiDoc?.type || "unknown",
@@ -43,7 +63,7 @@ export function withApi<P extends object>(
             ...defaultApiDoc?.state,
             ...api?.state,
           },
-          actions: [...(defaultApiDoc?.actions || []), ...(api?.actions || [])],
+          actions: mergedActions,
           path:
             api?.path ||
             defaultApiDoc?.path ||

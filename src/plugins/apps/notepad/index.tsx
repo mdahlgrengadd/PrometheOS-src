@@ -31,8 +31,14 @@ const NotepadComponent: React.FC = () => {
 
   // Handle text changes
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    console.log("Notepad text changed:", e.target.value);
     setNoteContent(e.target.value);
   };
+
+  // Log state changes for debugging
+  React.useEffect(() => {
+    console.log("Notepad state updated, current content:", noteContent);
+  }, [noteContent]);
 
   return (
     <div className="p-4 h-full flex flex-col">
@@ -59,7 +65,7 @@ const NotepadComponent: React.FC = () => {
           state: {
             enabled: true,
             visible: true,
-            value: noteContent,
+            value: noteContent, // Ensure current value is passed
           },
           // Use the actions from the textareaApiDoc
           actions: textareaApiDoc.actions,

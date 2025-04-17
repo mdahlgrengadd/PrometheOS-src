@@ -132,9 +132,14 @@ export const ApiTextareaWithHandler: React.FC<ApiTextareaWithHandlerProps> = (
       }
     };
 
-    // Handler to get current value
+    // Handler to get current value - re-defined inside the useEffect to access the current value
     const getValueHandler = async (): Promise<IActionResult> => {
       try {
+        // Access the current value directly from props.value which has the current value due to React's closure
+        console.log(
+          `[API] GetValue called for ${apiId}, current value:`,
+          value
+        );
         return {
           success: true,
           data: { value },
@@ -223,14 +228,12 @@ export const ApiTextareaWithHandler: React.FC<ApiTextareaWithHandlerProps> = (
         `[API] Handlers for ${componentId} will be cleaned up on unmount`
       );
     };
-  }, [apiId]);
-
-  // And then add an additional useEffect to handle value updates
-  useEffect(() => {
-    // Update value in closure for the action handlers
-    // This ensures the latest value is used in the handlers
-    console.log(`ApiTextarea value updated for ${apiId}: "${value}"`);
   }, [apiId, value, onChange]);
+
+  // Log value updates for debugging
+  useEffect(() => {
+    console.log(`ApiTextarea value updated for ${apiId}: "${value}"`);
+  }, [apiId, value]);
 
   return (
     <ApiTextarea apiId={apiId} value={value} onChange={onChange} {...rest} />
