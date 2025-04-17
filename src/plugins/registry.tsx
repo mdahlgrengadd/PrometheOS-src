@@ -1,3 +1,4 @@
+import { manifest as apiExplorerManifest } from './apps/api-explorer';
 import { manifest as audioPlayerManifest } from './apps/audioplayer';
 import { manifest as browserManifest } from './apps/browser';
 import { manifest as calculatorManifest } from './apps/calculator';
@@ -17,6 +18,7 @@ export const availablePlugins: PluginManifest[] = [
   settingsManifest,
   wordEditorManifest,
   webllmChatManifest,
+  apiExplorerManifest,
 ];
 
 // Helper function to get plugin manifest by ID

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+import ApiExplorerPlugin from './apps/api-explorer';
 import AudioPlayerPlugin from './apps/audioplayer';
 import BrowserPlugin from './apps/browser';
 import CalculatorPlugin from './apps/calculator';
@@ -15,6 +16,7 @@ import { Plugin, PluginManifest } from './types';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
+  "api-explorer": ApiExplorerPlugin,
   notepad: NotepadPlugin,
   calculator: CalculatorPlugin,
   browser: BrowserPlugin,
@@ -93,6 +95,15 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
   const openWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
+      // If opening API Explorer, make sure notepad is activated first
+      if (pluginId === "api-explorer") {
+        const notepadPlugin = pluginManager.getPlugin("notepad");
+        if (notepadPlugin && !pluginManager.isPluginActive("notepad")) {
+          console.log("Activating notepad plugin for API Explorer");
+          pluginManager.activatePlugin("notepad");
+        }
+      }
+
       if (!pluginManager.isPluginActive(pluginId)) {
         pluginManager.activatePlugin(pluginId);
       }
