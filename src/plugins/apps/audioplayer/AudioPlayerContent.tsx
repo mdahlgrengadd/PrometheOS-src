@@ -2,6 +2,8 @@ import { Howl } from 'howler';
 import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { ApiAudioPlayerHandler } from '@/components/api/ApiAudioPlayer';
+
 // Define WebkitAudioContext interface if it doesn't exist in TypeScript types
 interface Window {
   webkitAudioContext: typeof AudioContext;
@@ -205,6 +207,18 @@ const AudioPlayerContent = () => {
     setIsPlaying(!isPlaying);
   };
 
+  // Play action for API
+  const handlePlay = () => {
+    if (isPlaying) return; // Already playing
+    togglePlay();
+  };
+
+  // Pause action for API
+  const handlePause = () => {
+    if (!isPlaying) return; // Already paused
+    togglePlay();
+  };
+
   // Skip to previous track
   const prevTrack = () => {
     if (!audioElementRef.current) return;
@@ -241,6 +255,15 @@ const AudioPlayerContent = () => {
     setIsMuted(newVolume === 0);
   };
 
+  // Set volume directly (for API)
+  const handleSetVolume = (newVolume: number) => {
+    if (!audioElementRef.current) return;
+
+    setVolume(newVolume);
+    audioElementRef.current.volume = newVolume;
+    setIsMuted(newVolume === 0);
+  };
+
   // Toggle mute
   const toggleMute = () => {
     if (!audioElementRef.current) return;
@@ -258,12 +281,12 @@ const AudioPlayerContent = () => {
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioElementRef.current) return;
 
-    const bar = e.currentTarget;
-    const rect = bar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
+    const progressBar = e.currentTarget;
+    const percent = e.nativeEvent.offsetX / progressBar.clientWidth;
+    const newTime = percent * audioElementRef.current.duration;
 
-    audioElementRef.current.currentTime =
-      percent * audioElementRef.current.duration;
+    audioElementRef.current.currentTime = newTime;
+    setProgress(percent * 100);
   };
 
   // Toggle playlist visibility
@@ -276,143 +299,165 @@ const AudioPlayerContent = () => {
     setShowVolumeSlider(!showVolumeSlider);
   };
 
-  // Play a track from the playlist
+  // Play specific track
   const playTrack = (index: number) => {
-    if (!audioElementRef.current) return;
+    if (!audioElementRef.current || index === currentTrack) return;
 
     setCurrentTrack(index);
     audioElementRef.current.src = songs[index].file;
-    audioElementRef.current.play();
-    setIsPlaying(true);
-    setShowPlaylist(false);
+
+    if (isPlaying) {
+      audioElementRef.current.play();
+    } else {
+      togglePlay();
+    }
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600">
-      {/* Title and Time */}
-      <div className="absolute top-0 w-full p-2 z-10">
-        <div id="title" className="text-center text-white font-light text-xl">
-          {songs[currentTrack].title}
-        </div>
+    <ApiAudioPlayerHandler
+      apiId="audio-player-controls"
+      onPlay={handlePlay}
+      onPause={handlePause}
+      onNext={nextTrack}
+      onPrevious={prevTrack}
+      onToggleMute={toggleMute}
+      onSetVolume={handleSetVolume}
+      isPlaying={isPlaying}
+      currentTrack={currentTrack}
+      volume={volume}
+      isMuted={isMuted}
+    >
+      <div className="flex flex-col h-full p-4 bg-gray-900 text-white">
+        {/* Oscilloscope visualization */}
         <div
-          id="timer"
-          className="absolute top-0 left-3 text-white text-lg opacity-90"
-        >
-          {currentTime}
-        </div>
-        <div
-          id="duration"
-          className="absolute top-0 right-3 text-white text-lg opacity-50"
-        >
-          {duration}
-        </div>
-      </div>
+          ref={oscilloscopeRef}
+          className="w-full h-32 mb-4 bg-gray-800 rounded-md overflow-hidden"
+        ></div>
 
-      {/* Oscilloscope/Waveform - Make it take less vertical space */}
-      <div
-        ref={oscilloscopeRef}
-        className="w-full flex-1 flex items-start justify-center pt-4 min-h-0"
-      ></div>
-
-      {/* Progress Bar - Reduce bottom margin */}
-      <div className="w-full px-4 relative mb-2">
-        <div
-          id="bar"
-          className="w-full h-1 bg-white/30 cursor-pointer rounded-full overflow-hidden"
-          onClick={seek}
-        >
-          <div
-            id="progress"
-            className="h-full bg-white/90 rounded-full"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Controls - Ensure they have enough space */}
-      <div className="p-2 pb-3 flex items-center justify-between">
-        <button
-          className="text-white opacity-80 hover:opacity-100 transition-opacity"
-          onClick={togglePlaylist}
-        >
-          <List size={22} />
-        </button>
-
-        <div className="flex items-center justify-center gap-4">
-          <button
-            className="text-white opacity-80 hover:opacity-100 transition-opacity"
-            onClick={prevTrack}
-          >
-            <SkipBack size={26} />
-          </button>
-
-          <button
-            className="text-white bg-white/20 w-10 h-10 rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
-            onClick={togglePlay}
-          >
-            {isPlaying ? (
-              <Pause size={22} />
-            ) : (
-              <Play size={22} className="ml-1" />
-            )}
-          </button>
-
-          <button
-            className="text-white opacity-80 hover:opacity-100 transition-opacity"
-            onClick={nextTrack}
-          >
-            <SkipForward size={26} />
-          </button>
-        </div>
-
-        <button
-          className="text-white opacity-80 hover:opacity-100 transition-opacity"
-          onClick={toggleVolumeSlider}
-        >
-          {isMuted ? <VolumeX size={22} /> : <Volume size={22} />}
-        </button>
-      </div>
-
-      {/* Playlist Overlay */}
-      {showPlaylist && (
-        <div className="absolute inset-0 bg-black/60 z-20 flex flex-col">
-          <div className="flex-1 py-10 overflow-auto">
-            {songs.map((song, index) => (
-              <div
-                key={index}
-                className={`text-white text-lg py-3 px-6 cursor-pointer hover:bg-white/10 transition ${
-                  index === currentTrack ? "font-bold" : "font-light"
-                }`}
-                onClick={() => playTrack(index)}
-              >
-                {song.title}
-              </div>
-            ))}
+        {/* Track info */}
+        <div className="mb-4">
+          <div className="text-xl font-semibold">
+            {songs[currentTrack].title}
           </div>
-          <button
-            className="self-center mb-6 text-white py-2 px-6 rounded-full bg-white/20 hover:bg-white/30 transition"
-            onClick={togglePlaylist}
+          <div className="text-sm text-gray-400">
+            Track {currentTrack + 1} of {songs.length}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-4">
+          <div
+            className="h-2 bg-gray-700 rounded-full cursor-pointer"
+            onClick={seek}
           >
-            Close
+            <div
+              className="h-full bg-blue-500 rounded-full"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs mt-1">
+            <span>{currentTime}</span>
+            <span>{duration}</span>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={prevTrack}
+            className="p-2 hover:bg-gray-800 rounded-full"
+            aria-label="Previous track"
+          >
+            <SkipBack size={24} />
+          </button>
+          <button
+            onClick={togglePlay}
+            className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full"
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+          </button>
+          <button
+            onClick={nextTrack}
+            className="p-2 hover:bg-gray-800 rounded-full"
+            aria-label="Next track"
+          >
+            <SkipForward size={24} />
           </button>
         </div>
-      )}
 
-      {/* Volume Slider Overlay */}
-      {showVolumeSlider && (
-        <div className="absolute bottom-16 right-4 bg-black/60 p-3 rounded-lg z-20">
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={volume}
-            onChange={handleVolumeChange}
-            className="w-32 accent-white"
-          />
+        {/* Secondary controls */}
+        <div className="flex justify-between items-center">
+          <button
+            onClick={togglePlaylist}
+            className="p-2 hover:bg-gray-800 rounded-full relative"
+            aria-label="Playlist"
+          >
+            <List size={20} />
+          </button>
+
+          <div className="flex items-center">
+            <button
+              onClick={toggleMute}
+              className="p-2 hover:bg-gray-800 rounded-full"
+              aria-label={isMuted ? "Unmute" : "Mute"}
+            >
+              {isMuted ? <VolumeX size={20} /> : <Volume size={20} />}
+            </button>
+
+            <div
+              className={`transition-all duration-300 overflow-hidden ${
+                showVolumeSlider ? "w-24 ml-2" : "w-0"
+              }`}
+            >
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-full"
+              />
+            </div>
+
+            <button
+              onClick={toggleVolumeSlider}
+              className="p-2 hover:bg-gray-800 rounded-full ml-1"
+              aria-label="Volume control"
+            >
+              {volume > 0.5 ? (
+                <Volume size={20} />
+              ) : volume > 0 ? (
+                <Volume size={20} />
+              ) : (
+                <VolumeX size={20} />
+              )}
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Playlist */}
+        {showPlaylist && (
+          <div className="mt-4 bg-gray-800 rounded-md p-2 max-h-40 overflow-y-auto">
+            <h3 className="text-sm font-semibold mb-2">Playlist</h3>
+            <ul>
+              {songs.map((song, index) => (
+                <li
+                  key={index}
+                  className={`p-2 cursor-pointer hover:bg-gray-700 rounded ${
+                    currentTrack === index ? "bg-gray-700 text-blue-400" : ""
+                  }`}
+                  onClick={() => playTrack(index)}
+                >
+                  {song.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </ApiAudioPlayerHandler>
   );
 };
 
