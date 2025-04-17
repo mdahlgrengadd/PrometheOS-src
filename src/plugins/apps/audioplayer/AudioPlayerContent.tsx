@@ -1,8 +1,16 @@
-import { Howl } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Howl } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { ApiAudioPlayerHandler } from '@/components/api/ApiAudioPlayer';
+import { MemoizedApiAudioPlayerHandler } from "@/components/api/ApiAudioPlayer";
 
 // Define WebkitAudioContext interface if it doesn't exist in TypeScript types
 interface Window {
@@ -188,6 +196,14 @@ const AudioPlayerContent = () => {
 
     setCurrentTime(formatTime(currentTime));
     setProgress((currentTime / duration) * 100);
+
+    // Force rendering of progress bar by directly updating DOM if needed
+    const progressBar = document.querySelector(".progress-bar-inner");
+    if (progressBar) {
+      (progressBar as HTMLElement).style.width = `${
+        (currentTime / duration) * 100
+      }%`;
+    }
   };
 
   // Play/pause toggle
@@ -314,7 +330,7 @@ const AudioPlayerContent = () => {
   };
 
   return (
-    <ApiAudioPlayerHandler
+    <MemoizedApiAudioPlayerHandler
       apiId="audio-player-controls"
       onPlay={handlePlay}
       onPause={handlePause}
@@ -351,7 +367,7 @@ const AudioPlayerContent = () => {
             onClick={seek}
           >
             <div
-              className="h-full bg-blue-500 rounded-full"
+              className="h-full bg-blue-500 rounded-full progress-bar-inner"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -457,8 +473,8 @@ const AudioPlayerContent = () => {
           </div>
         )}
       </div>
-    </ApiAudioPlayerHandler>
+    </MemoizedApiAudioPlayerHandler>
   );
 };
 
-export default AudioPlayerContent;
+export default React.memo(AudioPlayerContent);

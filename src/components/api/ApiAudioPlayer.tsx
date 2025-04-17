@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from "react";
 
-import { registerApiActionHandler } from '@/api/context/ApiContext';
-import { IActionResult, IApiAction } from '@/api/core/types';
-import { withApi } from '@/api/hoc/withApi';
+import { registerApiActionHandler, useApi } from "@/api/context/ApiContext";
+import { IActionResult, IApiAction } from "@/api/core/types";
+import { withApi } from "@/api/hoc/withApi";
+
+// Better approach: track active registrations rather than preventing all future registrations
+const activeRegistrations = new Map<string, number>();
 
 /**
  * Default API documentation for audio player
@@ -122,147 +125,154 @@ export const ApiAudioPlayerHandler: React.FC<ApiAudioPlayerHandlerProps> = ({
   isMuted,
   children,
 }) => {
-  // Register action handlers
+  // Always register this instance for proper functioning
+  const registeredRef = useRef(false);
+
+  // Handle action registration
   useEffect(() => {
-    // Fix for component ID mismatch - handle both with and without @src suffix
-    const componentId = apiId;
-    const componentIdWithSuffix = `${apiId}@src`;
+    // Track this specific component - we'll increment a reference count
+    // rather than completely preventing registration
+    let count = activeRegistrations.get(apiId) || 0;
+    count++;
+    activeRegistrations.set(apiId, count);
 
-    console.log(`[API] Registering handlers for audio player: ${componentId}`);
-
-    // Handler for play action
-    const playHandler = async (): Promise<IActionResult> => {
-      try {
-        onPlay();
-        return {
-          success: true,
-          data: { isPlaying: true },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Handler for pause action
-    const pauseHandler = async (): Promise<IActionResult> => {
-      try {
-        onPause();
-        return {
-          success: true,
-          data: { isPlaying: false },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Handler for next track action
-    const nextHandler = async (): Promise<IActionResult> => {
-      try {
-        onNext();
-        return {
-          success: true,
-          data: { message: "Skipped to next track" },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Handler for previous track action
-    const previousHandler = async (): Promise<IActionResult> => {
-      try {
-        onPrevious();
-        return {
-          success: true,
-          data: { message: "Skipped to previous track" },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Handler for toggle mute action
-    const toggleMuteHandler = async (): Promise<IActionResult> => {
-      try {
-        onToggleMute();
-        return {
-          success: true,
-          data: { isMuted: !isMuted },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Handler for set volume action
-    const setVolumeHandler = async (
-      params?: Record<string, unknown>
-    ): Promise<IActionResult> => {
-      try {
-        if (!params || typeof params.volume !== "number") {
-          return {
-            success: false,
-            error: "setVolume requires a 'volume' parameter of type number",
-          };
-        }
-
-        const newVolume = Math.max(0, Math.min(1, params.volume as number));
-        onSetVolume(newVolume);
-
-        return {
-          success: true,
-          data: { volume: newVolume },
-        };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        return { success: false, error: errorMessage };
-      }
-    };
-
-    // Register handlers for both ID versions to handle the @src suffix issue
-    // Register for original ID
-    registerApiActionHandler(componentId, "play", playHandler);
-    registerApiActionHandler(componentId, "pause", pauseHandler);
-    registerApiActionHandler(componentId, "next", nextHandler);
-    registerApiActionHandler(componentId, "previous", previousHandler);
-    registerApiActionHandler(componentId, "toggleMute", toggleMuteHandler);
-    registerApiActionHandler(componentId, "setVolume", setVolumeHandler);
-
-    // Also register for ID with @src suffix
-    registerApiActionHandler(componentIdWithSuffix, "play", playHandler);
-    registerApiActionHandler(componentIdWithSuffix, "pause", pauseHandler);
-    registerApiActionHandler(componentIdWithSuffix, "next", nextHandler);
-    registerApiActionHandler(
-      componentIdWithSuffix,
-      "previous",
-      previousHandler
-    );
-    registerApiActionHandler(
-      componentIdWithSuffix,
-      "toggleMute",
-      toggleMuteHandler
-    );
-    registerApiActionHandler(
-      componentIdWithSuffix,
-      "setVolume",
-      setVolumeHandler
-    );
-
-    return () => {
+    // Always register on first mount of this instance
+    if (!registeredRef.current) {
       console.log(
-        `[API] Handlers for ${componentId} will be cleaned up on unmount`
+        `[API] Registering handlers for ${apiId} (instance ${count})`
+      );
+      registeredRef.current = true;
+
+      // Only log the "already registered" message on subsequent instances
+      if (count > 1) {
+        console.log(
+          `[API] Note: ${apiId} already has ${count - 1} active registration(s)`
+        );
+      }
+
+      // Handler for play action
+      const playHandler = async (): Promise<IActionResult> => {
+        try {
+          onPlay();
+          return {
+            success: true,
+            data: { isPlaying: true },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Handler for pause action
+      const pauseHandler = async (): Promise<IActionResult> => {
+        try {
+          onPause();
+          return {
+            success: true,
+            data: { isPlaying: false },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Handler for next track action
+      const nextHandler = async (): Promise<IActionResult> => {
+        try {
+          onNext();
+          return {
+            success: true,
+            data: { message: "Skipped to next track" },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Handler for previous track action
+      const previousHandler = async (): Promise<IActionResult> => {
+        try {
+          onPrevious();
+          return {
+            success: true,
+            data: { message: "Skipped to previous track" },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Handler for toggle mute action
+      const toggleMuteHandler = async (): Promise<IActionResult> => {
+        try {
+          onToggleMute();
+          return {
+            success: true,
+            data: { isMuted: !isMuted },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Handler for set volume action
+      const setVolumeHandler = async (
+        params?: Record<string, unknown>
+      ): Promise<IActionResult> => {
+        try {
+          if (!params || typeof params.volume !== "number") {
+            return {
+              success: false,
+              error: "setVolume requires a 'volume' parameter of type number",
+            };
+          }
+
+          const newVolume = Math.max(0, Math.min(1, params.volume as number));
+          onSetVolume(newVolume);
+
+          return {
+            success: true,
+            data: { volume: newVolume },
+          };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      };
+
+      // Register all handlers
+      registerApiActionHandler(apiId, "play", playHandler);
+      registerApiActionHandler(apiId, "pause", pauseHandler);
+      registerApiActionHandler(apiId, "next", nextHandler);
+      registerApiActionHandler(apiId, "previous", previousHandler);
+      registerApiActionHandler(apiId, "toggleMute", toggleMuteHandler);
+      registerApiActionHandler(apiId, "setVolume", setVolumeHandler);
+    }
+
+    // Clean up on unmount
+    return () => {
+      // Decrement the reference count
+      const count = activeRegistrations.get(apiId) || 0;
+      if (count > 0) {
+        activeRegistrations.set(apiId, count - 1);
+      }
+
+      registeredRef.current = false;
+      console.log(
+        `[API] Handlers for ${apiId} released (${
+          count - 1
+        } registrations remaining)`
       );
     };
   }, [
@@ -273,7 +283,6 @@ export const ApiAudioPlayerHandler: React.FC<ApiAudioPlayerHandlerProps> = ({
     onPrevious,
     onToggleMute,
     onSetVolume,
-    isPlaying,
     isMuted,
   ]);
 
@@ -299,3 +308,18 @@ export const ApiAudioPlayerHandler: React.FC<ApiAudioPlayerHandlerProps> = ({
 
   return <ApiWrapper apiId={apiId}>{children}</ApiWrapper>;
 };
+
+// Create a memoized version to prevent unnecessary rerenders
+export const MemoizedApiAudioPlayerHandler = React.memo(
+  ApiAudioPlayerHandler,
+  (prevProps, nextProps) => {
+    // Only rerender when these props change
+    return (
+      prevProps.apiId === nextProps.apiId &&
+      prevProps.isPlaying === nextProps.isPlaying &&
+      prevProps.currentTrack === nextProps.currentTrack &&
+      prevProps.volume === nextProps.volume &&
+      prevProps.isMuted === nextProps.isMuted
+    );
+  }
+);
