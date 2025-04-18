@@ -1,16 +1,8 @@
-import { Howl } from "howler";
-import {
-  List,
-  Pause,
-  Play,
-  SkipBack,
-  SkipForward,
-  Volume,
-  VolumeX,
-} from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Howl } from 'howler';
+import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { MemoizedApiAudioPlayerHandler } from "@/components/api/ApiAudioPlayer";
+import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
 
 // Define WebkitAudioContext interface if it doesn't exist in TypeScript types
 interface Window {
@@ -41,20 +33,41 @@ const songs = [
   },
 ];
 
-const AudioPlayerContent = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+// Component that consumes the audio player context
+const AudioPlayerUI = () => {
+  // Get state and actions from context
+  const {
+    isPlaying,
+    currentTrack,
+    volume,
+    isMuted,
+    onPlay,
+    onPause,
+    onNext,
+    onPrevious,
+    onToggleMute,
+    onSetVolume,
+  } = useAudioPlayer();
+
   const [currentTime, setCurrentTime] = useState("0:00");
   const [duration, setDuration] = useState("0:00");
   const [progress, setProgress] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  const playerRef = useRef<HTMLDivElement>(null);
-  const requestRef = useRef<number | null>(null);
+  // Track which listeners have been added to the audio element
+  const listenersAddedRef = useRef<{
+    timeupdate: boolean;
+    loadedmetadata: boolean;
+    ended: boolean;
+  }>({
+    timeupdate: false,
+    loadedmetadata: false,
+    ended: false,
+  });
+
   const oscilloscopeRef = useRef<HTMLDivElement>(null);
+  const requestRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -63,32 +76,49 @@ const AudioPlayerContent = () => {
 
   // Initialize audio element and visualization
   useEffect(() => {
+    console.log("Audio reinitializing for track", currentTrack);
+
     // Create audio element
-    const audioElement = document.createElement("audio");
-    audioElement.crossOrigin = "anonymous";
+    let audioElement = audioElementRef.current;
+
+    if (!audioElement) {
+      audioElement = document.createElement("audio");
+      audioElement.crossOrigin = "anonymous";
+      audioElementRef.current = audioElement;
+    }
+
+    // Update the source
     audioElement.src = songs[currentTrack].file;
     audioElement.preload = "metadata";
-    audioElementRef.current = audioElement;
 
-    // Set up audio context and analyzer for visualization
-    const AudioContext =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const audioContext = new AudioContext();
-    audioContextRef.current = audioContext;
+    // If it was previously playing, continue playing
+    if (isPlaying) {
+      audioElement
+        .play()
+        .catch((e) => console.error("Error playing audio:", e));
+    }
 
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    analyserRef.current = analyser;
+    // Set up audio context if it doesn't exist
+    if (!audioContextRef.current) {
+      const AudioContext =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
 
-    const source = audioContext.createMediaElementSource(audioElement);
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-    sourceRef.current = source;
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
 
-    // Create canvas for visualization with specific dimensions
-    if (oscilloscopeRef.current) {
+      const source = audioContext.createMediaElementSource(audioElement);
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
+      sourceRef.current = source;
+    }
+
+    // Create canvas for visualization if it doesn't exist
+    if (oscilloscopeRef.current && !canvasRef.current) {
       const canvas = document.createElement("canvas");
       canvas.width = oscilloscopeRef.current.clientWidth;
       // Set a fixed height for the canvas to prevent layout issues
@@ -99,25 +129,88 @@ const AudioPlayerContent = () => {
     }
 
     // Set up event listeners
-    audioElement.addEventListener("timeupdate", updateProgress);
-    audioElement.addEventListener("loadedmetadata", () => {
-      setDuration(formatTime(audioElement.duration));
-    });
-    audioElement.addEventListener("ended", () => {
-      nextTrack();
-    });
+    if (!listenersAddedRef.current.timeupdate) {
+      listenersAddedRef.current.timeupdate = true;
+      audioElement.addEventListener("timeupdate", updateProgress);
+    }
 
+    if (!listenersAddedRef.current.loadedmetadata) {
+      listenersAddedRef.current.loadedmetadata = true;
+      audioElement.addEventListener("loadedmetadata", () => {
+        setDuration(formatTime(audioElement.duration));
+      });
+    }
+
+    if (!listenersAddedRef.current.ended) {
+      listenersAddedRef.current.ended = true;
+      audioElement.addEventListener("ended", () => {
+        onNext();
+      });
+    }
+
+    // When unmounting, clean up
     return () => {
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
       }
-      if (audioContext) {
-        audioContext.close();
+    };
+  }, [currentTrack, isPlaying, onNext]);
+
+  // Clean up on complete unmount
+  useEffect(() => {
+    return () => {
+      if (audioElementRef.current) {
+        const audioElement = audioElementRef.current;
+        audioElement.pause();
+
+        if (listenersAddedRef.current.timeupdate) {
+          audioElement.removeEventListener("timeupdate", updateProgress);
+          listenersAddedRef.current.timeupdate = false;
+        }
+
+        if (sourceRef.current) {
+          sourceRef.current.disconnect();
+        }
+
+        if (analyserRef.current) {
+          analyserRef.current.disconnect();
+        }
+
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+
+        audioElement.remove();
       }
-      audioElement.removeEventListener("timeupdate", updateProgress);
-      audioElement.remove();
+
+      if (canvasRef.current && oscilloscopeRef.current) {
+        oscilloscopeRef.current.removeChild(canvasRef.current);
+      }
     };
   }, []);
+
+  // Sync audio element with context state
+  useEffect(() => {
+    if (!audioElementRef.current) return;
+
+    const audioElement = audioElementRef.current;
+
+    // Update playback state
+    if (isPlaying && audioElement.paused) {
+      // Resume or start AudioContext if it's suspended
+      if (audioContextRef.current?.state === "suspended") {
+        audioContextRef.current.resume();
+      }
+      audioElement
+        .play()
+        .catch((e) => console.error("Error playing audio:", e));
+    } else if (!isPlaying && !audioElement.paused) {
+      audioElement.pause();
+    }
+
+    // Update volume
+    audioElement.volume = isMuted ? 0 : volume;
+  }, [isPlaying, volume, isMuted]);
 
   // Start visualization loop
   useEffect(() => {
@@ -208,89 +301,19 @@ const AudioPlayerContent = () => {
 
   // Play/pause toggle
   const togglePlay = () => {
-    if (!audioElementRef.current) return;
-
     if (isPlaying) {
-      audioElementRef.current.pause();
+      onPause();
     } else {
-      // Resume or start AudioContext if it's suspended
-      if (audioContextRef.current?.state === "suspended") {
-        audioContextRef.current.resume();
-      }
-      audioElementRef.current.play();
-    }
-
-    setIsPlaying(!isPlaying);
-  };
-
-  // Play action for API
-  const handlePlay = () => {
-    if (isPlaying) return; // Already playing
-    togglePlay();
-  };
-
-  // Pause action for API
-  const handlePause = () => {
-    if (!isPlaying) return; // Already paused
-    togglePlay();
-  };
-
-  // Skip to previous track
-  const prevTrack = () => {
-    if (!audioElementRef.current) return;
-
-    const newIndex = (currentTrack - 1 + songs.length) % songs.length;
-    setCurrentTrack(newIndex);
-
-    audioElementRef.current.src = songs[newIndex].file;
-    if (isPlaying) {
-      audioElementRef.current.play();
+      onPlay();
     }
   };
 
-  // Skip to next track
-  const nextTrack = () => {
-    if (!audioElementRef.current) return;
-
-    const newIndex = (currentTrack + 1) % songs.length;
-    setCurrentTrack(newIndex);
-
-    audioElementRef.current.src = songs[newIndex].file;
-    if (isPlaying) {
-      audioElementRef.current.play();
-    }
-  };
-
-  // Set new volume
+  // Handle volume change from UI
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!audioElementRef.current) return;
 
     const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    audioElementRef.current.volume = newVolume;
-    setIsMuted(newVolume === 0);
-  };
-
-  // Set volume directly (for API)
-  const handleSetVolume = (newVolume: number) => {
-    if (!audioElementRef.current) return;
-
-    setVolume(newVolume);
-    audioElementRef.current.volume = newVolume;
-    setIsMuted(newVolume === 0);
-  };
-
-  // Toggle mute
-  const toggleMute = () => {
-    if (!audioElementRef.current) return;
-
-    if (isMuted) {
-      audioElementRef.current.volume = volume;
-    } else {
-      audioElementRef.current.volume = 0;
-    }
-
-    setIsMuted(!isMuted);
+    onSetVolume(newVolume);
   };
 
   // Seek to position
@@ -319,161 +342,222 @@ const AudioPlayerContent = () => {
   const playTrack = (index: number) => {
     if (!audioElementRef.current || index === currentTrack) return;
 
-    setCurrentTrack(index);
-    audioElementRef.current.src = songs[index].file;
+    // Need to update the track via the context
+    // We can't directly set the track, so we need to move to it
+    // Calculate how many positions we need to move
+    const currentPosition = currentTrack;
+    const targetPosition = index;
+    const tracksCount = songs.length;
 
-    if (isPlaying) {
-      audioElementRef.current.play();
+    // Find the shortest path (forward or backward)
+    const forwardDistance =
+      (targetPosition - currentPosition + tracksCount) % tracksCount;
+    const backwardDistance =
+      (currentPosition - targetPosition + tracksCount) % tracksCount;
+
+    // Use the shortest path
+    if (forwardDistance <= backwardDistance) {
+      // Go forward
+      for (let i = 0; i < forwardDistance; i++) {
+        onNext();
+      }
     } else {
-      togglePlay();
+      // Go backward
+      for (let i = 0; i < backwardDistance; i++) {
+        onPrevious();
+      }
     }
+
+    // Make sure playback starts
+    onPlay();
   };
 
   return (
-    <MemoizedApiAudioPlayerHandler
+    <div className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600">
+      {/* Title and Time */}
+      <div className="absolute top-0 w-full p-2 z-10">
+        <div id="title" className="text-center text-white font-light text-xl">
+          {songs[currentTrack].title}
+        </div>
+        <div
+          id="timer"
+          className="absolute top-0 left-3 text-white text-lg opacity-90"
+        >
+          {currentTime}
+        </div>
+        <div
+          id="duration"
+          className="absolute top-0 right-3 text-white text-lg opacity-50"
+        >
+          {duration}
+        </div>
+      </div>
+
+      {/* Oscilloscope/Waveform - Make it take less vertical space */}
+      <div
+        ref={oscilloscopeRef}
+        className="w-full flex-1 flex items-start justify-center pt-4 min-h-0"
+      ></div>
+
+      {/* Progress Bar - Reduce bottom margin */}
+      <div className="w-full px-4 relative mb-2">
+        <div
+          id="bar"
+          className="w-full h-1 bg-white/30 cursor-pointer rounded-full overflow-hidden"
+          onClick={seek}
+        >
+          <div
+            id="progress"
+            className="h-full bg-white/90 rounded-full"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Controls - Ensure they have enough space */}
+      <div className="p-2 pb-3 flex items-center justify-between">
+        <button
+          className="text-white opacity-80 hover:opacity-100 transition-opacity"
+          onClick={togglePlaylist}
+        >
+          <List size={22} />
+        </button>
+
+        <div className="flex items-center justify-center gap-4">
+          <button
+            className="text-white opacity-80 hover:opacity-100 transition-opacity"
+            onClick={onPrevious}
+          >
+            <SkipBack size={26} />
+          </button>
+
+          <button
+            className="text-white bg-white/20 w-10 h-10 rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
+            onClick={togglePlay}
+          >
+            {isPlaying ? (
+              <Pause size={22} />
+            ) : (
+              <Play size={22} className="ml-1" />
+            )}
+          </button>
+
+          <button
+            className="text-white opacity-80 hover:opacity-100 transition-opacity"
+            onClick={onNext}
+          >
+            <SkipForward size={26} />
+          </button>
+        </div>
+
+        <button
+          className="text-white opacity-80 hover:opacity-100 transition-opacity"
+          onClick={toggleVolumeSlider}
+        >
+          {isMuted ? <VolumeX size={22} /> : <Volume size={22} />}
+        </button>
+      </div>
+
+      {/* Playlist Overlay */}
+      {showPlaylist && (
+        <div className="absolute inset-0 bg-black/60 z-20 flex flex-col">
+          <div className="flex-1 py-10 overflow-auto">
+            {songs.map((song, index) => (
+              <div
+                key={index}
+                className={`text-white text-lg py-3 px-6 cursor-pointer hover:bg-white/10 transition ${
+                  index === currentTrack ? "font-bold" : "font-light"
+                }`}
+                onClick={() => playTrack(index)}
+              >
+                {song.title}
+              </div>
+            ))}
+          </div>
+          <button
+            className="self-center mb-6 text-white py-2 px-6 rounded-full bg-white/20 hover:bg-white/30 transition"
+            onClick={togglePlaylist}
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      {/* Volume Slider Overlay */}
+      {showVolumeSlider && (
+        <div className="absolute bottom-16 right-4 bg-black/60 p-3 rounded-lg z-20">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onToggleMute}
+              className="text-white opacity-80 hover:opacity-100"
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume size={16} />}
+            </button>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+              className="w-32 accent-white"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main component that provides the audio player context
+const AudioPlayerContent = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Handler functions for the audio player
+  const handlePlay = () => {
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    setIsPlaying(false);
+  };
+
+  const handleNext = () => {
+    setCurrentTrack((prev) => (prev + 1) % songs.length);
+  };
+
+  const handlePrevious = () => {
+    setCurrentTrack((prev) => (prev - 1 + songs.length) % songs.length);
+  };
+
+  const handleToggleMute = () => {
+    setIsMuted((prev) => !prev);
+  };
+
+  const handleSetVolume = (newVolume: number) => {
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
+
+  return (
+    <AudioPlayerProvider
       apiId="audio-player-controls"
       onPlay={handlePlay}
       onPause={handlePause}
-      onNext={nextTrack}
-      onPrevious={prevTrack}
-      onToggleMute={toggleMute}
+      onNext={handleNext}
+      onPrevious={handlePrevious}
+      onToggleMute={handleToggleMute}
       onSetVolume={handleSetVolume}
       isPlaying={isPlaying}
       currentTrack={currentTrack}
       volume={volume}
       isMuted={isMuted}
     >
-      <div className="flex flex-col h-full p-4 bg-gray-900 text-white">
-        {/* Oscilloscope visualization */}
-        <div
-          ref={oscilloscopeRef}
-          className="w-full h-32 mb-4 bg-gray-800 rounded-md overflow-hidden"
-        ></div>
-
-        {/* Track info */}
-        <div className="mb-4">
-          <div className="text-xl font-semibold">
-            {songs[currentTrack].title}
-          </div>
-          <div className="text-sm text-gray-400">
-            Track {currentTrack + 1} of {songs.length}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mb-4">
-          <div
-            className="h-2 bg-gray-700 rounded-full cursor-pointer"
-            onClick={seek}
-          >
-            <div
-              className="h-full bg-blue-500 rounded-full progress-bar-inner"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between text-xs mt-1">
-            <span>{currentTime}</span>
-            <span>{duration}</span>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={prevTrack}
-            className="p-2 hover:bg-gray-800 rounded-full"
-            aria-label="Previous track"
-          >
-            <SkipBack size={24} />
-          </button>
-          <button
-            onClick={togglePlay}
-            className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full"
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-          </button>
-          <button
-            onClick={nextTrack}
-            className="p-2 hover:bg-gray-800 rounded-full"
-            aria-label="Next track"
-          >
-            <SkipForward size={24} />
-          </button>
-        </div>
-
-        {/* Secondary controls */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={togglePlaylist}
-            className="p-2 hover:bg-gray-800 rounded-full relative"
-            aria-label="Playlist"
-          >
-            <List size={20} />
-          </button>
-
-          <div className="flex items-center">
-            <button
-              onClick={toggleMute}
-              className="p-2 hover:bg-gray-800 rounded-full"
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <VolumeX size={20} /> : <Volume size={20} />}
-            </button>
-
-            <div
-              className={`transition-all duration-300 overflow-hidden ${
-                showVolumeSlider ? "w-24 ml-2" : "w-0"
-              }`}
-            >
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-full"
-              />
-            </div>
-
-            <button
-              onClick={toggleVolumeSlider}
-              className="p-2 hover:bg-gray-800 rounded-full ml-1"
-              aria-label="Volume control"
-            >
-              {volume > 0.5 ? (
-                <Volume size={20} />
-              ) : volume > 0 ? (
-                <Volume size={20} />
-              ) : (
-                <VolumeX size={20} />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Playlist */}
-        {showPlaylist && (
-          <div className="mt-4 bg-gray-800 rounded-md p-2 max-h-40 overflow-y-auto">
-            <h3 className="text-sm font-semibold mb-2">Playlist</h3>
-            <ul>
-              {songs.map((song, index) => (
-                <li
-                  key={index}
-                  className={`p-2 cursor-pointer hover:bg-gray-700 rounded ${
-                    currentTrack === index ? "bg-gray-700 text-blue-400" : ""
-                  }`}
-                  onClick={() => playTrack(index)}
-                >
-                  {song.title}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </MemoizedApiAudioPlayerHandler>
+      <AudioPlayerUI />
+    </AudioPlayerProvider>
   );
 };
 

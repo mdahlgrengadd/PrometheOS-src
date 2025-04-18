@@ -1,11 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React from 'react';
 
-import { registerApiActionHandler, useApi } from "@/api/context/ApiContext";
-import { IActionResult, IApiAction } from "@/api/core/types";
-import { withApi } from "@/api/hoc/withApi";
-
-// Better approach: track active registrations rather than preventing all future registrations
-const activeRegistrations = new Map<string, number>();
+import {
+    AudioPlayerProvider as ContextProvider, useAudioPlayer as useAudioPlayerContext
+} from '@/api/context/AudioPlayerContext';
+import { IApiAction } from '@/api/core/types';
 
 /**
  * Default API documentation for audio player
@@ -76,13 +74,15 @@ export const audioPlayerApiDoc = {
 };
 
 /**
- * Props for ApiAudioPlayerHandler component
+ * Props for ApiAudioPlayer component
  */
-export interface ApiAudioPlayerHandlerProps {
+export interface ApiAudioPlayerProps {
   /** API ID for the audio player */
   apiId: string;
   /** API documentation for the audio player */
   api?: typeof audioPlayerApiDoc;
+  /** Child components */
+  children: React.ReactNode;
   /** Play function */
   onPlay: () => void;
   /** Pause function */
@@ -103,16 +103,19 @@ export interface ApiAudioPlayerHandlerProps {
   volume: number;
   /** Whether audio is muted */
   isMuted: boolean;
-  /** Child components */
-  children: React.ReactNode;
 }
 
+// Re-export the context provider and hook with aliases
+// The AudioPlayerProvider automatically registers action handlers for all API actions
+export const AudioPlayerProvider = ContextProvider;
+export const useAudioPlayer = useAudioPlayerContext;
+
 /**
- * Registers API handlers for audio player controls
+ * ApiAudioPlayer component - uses AudioPlayerProvider to manage API registrations
  */
-export const ApiAudioPlayerHandler: React.FC<ApiAudioPlayerHandlerProps> = ({
+export const ApiAudioPlayer: React.FC<ApiAudioPlayerProps> = ({
   apiId,
-  api,
+  children,
   onPlay,
   onPause,
   onNext,
@@ -123,195 +126,30 @@ export const ApiAudioPlayerHandler: React.FC<ApiAudioPlayerHandlerProps> = ({
   currentTrack,
   volume,
   isMuted,
-  children,
 }) => {
-  // Always register this instance for proper functioning
-  const registeredRef = useRef(false);
-
-  // Handle action registration
-  useEffect(() => {
-    // Track this specific component - we'll increment a reference count
-    // rather than completely preventing registration
-    let count = activeRegistrations.get(apiId) || 0;
-    count++;
-    activeRegistrations.set(apiId, count);
-
-    // Always register on first mount of this instance
-    if (!registeredRef.current) {
-      console.log(
-        `[API] Registering handlers for ${apiId} (instance ${count})`
-      );
-      registeredRef.current = true;
-
-      // Only log the "already registered" message on subsequent instances
-      if (count > 1) {
-        console.log(
-          `[API] Note: ${apiId} already has ${count - 1} active registration(s)`
-        );
-      }
-
-      // Handler for play action
-      const playHandler = async (): Promise<IActionResult> => {
-        try {
-          onPlay();
-          return {
-            success: true,
-            data: { isPlaying: true },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Handler for pause action
-      const pauseHandler = async (): Promise<IActionResult> => {
-        try {
-          onPause();
-          return {
-            success: true,
-            data: { isPlaying: false },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Handler for next track action
-      const nextHandler = async (): Promise<IActionResult> => {
-        try {
-          onNext();
-          return {
-            success: true,
-            data: { message: "Skipped to next track" },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Handler for previous track action
-      const previousHandler = async (): Promise<IActionResult> => {
-        try {
-          onPrevious();
-          return {
-            success: true,
-            data: { message: "Skipped to previous track" },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Handler for toggle mute action
-      const toggleMuteHandler = async (): Promise<IActionResult> => {
-        try {
-          onToggleMute();
-          return {
-            success: true,
-            data: { isMuted: !isMuted },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Handler for set volume action
-      const setVolumeHandler = async (
-        params?: Record<string, unknown>
-      ): Promise<IActionResult> => {
-        try {
-          if (!params || typeof params.volume !== "number") {
-            return {
-              success: false,
-              error: "setVolume requires a 'volume' parameter of type number",
-            };
-          }
-
-          const newVolume = Math.max(0, Math.min(1, params.volume as number));
-          onSetVolume(newVolume);
-
-          return {
-            success: true,
-            data: { volume: newVolume },
-          };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          return { success: false, error: errorMessage };
-        }
-      };
-
-      // Register all handlers
-      registerApiActionHandler(apiId, "play", playHandler);
-      registerApiActionHandler(apiId, "pause", pauseHandler);
-      registerApiActionHandler(apiId, "next", nextHandler);
-      registerApiActionHandler(apiId, "previous", previousHandler);
-      registerApiActionHandler(apiId, "toggleMute", toggleMuteHandler);
-      registerApiActionHandler(apiId, "setVolume", setVolumeHandler);
-    }
-
-    // Clean up on unmount
-    return () => {
-      // Decrement the reference count
-      const count = activeRegistrations.get(apiId) || 0;
-      if (count > 0) {
-        activeRegistrations.set(apiId, count - 1);
-      }
-
-      registeredRef.current = false;
-      console.log(
-        `[API] Handlers for ${apiId} released (${
-          count - 1
-        } registrations remaining)`
-      );
-    };
-  }, [
-    apiId,
-    onPlay,
-    onPause,
-    onNext,
-    onPrevious,
-    onToggleMute,
-    onSetVolume,
-    isMuted,
-  ]);
-
-  // Create the api state based on current props
-  const apiState = {
-    enabled: true,
-    visible: true,
-    isPlaying,
-    currentTrack,
-    volume,
-    isMuted,
-  };
-
-  // Wrap children with withApi HOC
-  const ApiWrapper = withApi(
-    ({ children }: { children: React.ReactNode }) => children,
-    {
-      ...audioPlayerApiDoc,
-      ...(api || {}),
-      state: apiState,
-    }
+  // Use the AudioPlayerProvider from our context
+  return (
+    <AudioPlayerProvider
+      apiId={apiId}
+      onPlay={onPlay}
+      onPause={onPause}
+      onNext={onNext}
+      onPrevious={onPrevious}
+      onToggleMute={onToggleMute}
+      onSetVolume={onSetVolume}
+      isPlaying={isPlaying}
+      currentTrack={currentTrack}
+      volume={volume}
+      isMuted={isMuted}
+    >
+      {children}
+    </AudioPlayerProvider>
   );
-
-  return <ApiWrapper apiId={apiId}>{children}</ApiWrapper>;
 };
 
-// Create a memoized version to prevent unnecessary rerenders
+// Also export a memoized version for backward compatibility
 export const MemoizedApiAudioPlayerHandler = React.memo(
-  ApiAudioPlayerHandler,
+  ApiAudioPlayer,
   (prevProps, nextProps) => {
     // Only rerender when these props change
     return (
