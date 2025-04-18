@@ -73,29 +73,37 @@ const AudioPlayerUI = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio element and visualization
+  // Format time in mm:ss
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  // Update progress bar and time display - make it stable with useCallback
+  const updateProgress = useCallback(() => {
+    if (!audioElementRef.current) return;
+    const el = audioElementRef.current;
+    const currentTime = el.currentTime;
+    const duration = el.duration || 0;
+    setCurrentTime(formatTime(currentTime));
+    setProgress((currentTime / duration) * 100);
+  }, []);
+
+  // Initialize audio element and visualization - now only handles track loading
   useEffect(() => {
     console.log("Audio reinitializing for track", currentTrack);
 
     // Create audio element
-    let audioElement = audioElementRef.current;
-
-    if (!audioElement) {
-      audioElement = document.createElement("audio");
-      audioElement.crossOrigin = "anonymous";
-      audioElementRef.current = audioElement;
+    const el = audioElementRef.current ?? document.createElement("audio");
+    if (!audioElementRef.current) {
+      el.crossOrigin = "anonymous";
+      audioElementRef.current = el;
     }
 
     // Update the source
-    audioElement.src = songs[currentTrack].file;
-    audioElement.preload = "metadata";
-
-    // If it was previously playing, continue playing
-    if (isPlaying) {
-      audioElement
-        .play()
-        .catch((e) => console.error("Error playing audio:", e));
-    }
+    el.src = songs[currentTrack].file;
+    el.preload = "metadata";
 
     // Set up audio context if it doesn't exist
     if (!audioContextRef.current) {
@@ -110,7 +118,7 @@ const AudioPlayerUI = () => {
       analyser.fftSize = 256;
       analyserRef.current = analyser;
 
-      const source = audioContext.createMediaElementSource(audioElement);
+      const source = audioContext.createMediaElementSource(el);
       source.connect(analyser);
       analyser.connect(audioContext.destination);
       sourceRef.current = source;
@@ -130,23 +138,48 @@ const AudioPlayerUI = () => {
     // Set up event listeners
     if (!listenersAddedRef.current.timeupdate) {
       listenersAddedRef.current.timeupdate = true;
-      audioElement.addEventListener("timeupdate", updateProgress);
+      el.addEventListener("timeupdate", updateProgress);
     }
 
     if (!listenersAddedRef.current.loadedmetadata) {
       listenersAddedRef.current.loadedmetadata = true;
-      audioElement.addEventListener("loadedmetadata", () => {
-        setDuration(formatTime(audioElement.duration));
+      el.addEventListener("loadedmetadata", () => {
+        setDuration(formatTime(el.duration));
       });
     }
 
     if (!listenersAddedRef.current.ended) {
       listenersAddedRef.current.ended = true;
-      audioElement.addEventListener("ended", () => {
-        onNext();
-      });
+      el.addEventListener("ended", onNext);
     }
-  }, [currentTrack, isPlaying, onNext]);
+  }, [currentTrack, onNext, updateProgress]);
+
+  // Auto-play effect - plays the track when isPlaying is true or currentTrack changes
+  useEffect(() => {
+    const el = audioElementRef.current;
+    if (!el) return;
+
+    if (isPlaying) {
+      // Resume AudioContext if it's suspended
+      if (audioContextRef.current?.state === "suspended") {
+        audioContextRef.current.resume();
+      }
+      el.play().catch((e) => console.error("Error auto-playing track:", e));
+    }
+  }, [currentTrack, isPlaying]);
+
+  // Sync effect - handles pause and volume adjustments only
+  useEffect(() => {
+    const el = audioElementRef.current;
+    if (!el) return;
+
+    if (!isPlaying && !el.paused) {
+      el.pause();
+    }
+
+    // Update volume
+    el.volume = isMuted ? 0 : volume;
+  }, [isPlaying, volume, isMuted]);
 
   // Clean up on complete unmount
   useEffect(() => {
@@ -179,30 +212,7 @@ const AudioPlayerUI = () => {
         oscilloscopeRef.current.removeChild(canvasRef.current);
       }
     };
-  }, []);
-
-  // Sync audio element with context state
-  useEffect(() => {
-    if (!audioElementRef.current) return;
-
-    const audioElement = audioElementRef.current;
-
-    // Update playback state
-    if (isPlaying && audioElement.paused) {
-      // Resume or start AudioContext if it's suspended
-      if (audioContextRef.current?.state === "suspended") {
-        audioContextRef.current.resume();
-      }
-      audioElement
-        .play()
-        .catch((e) => console.error("Error playing audio:", e));
-    } else if (!isPlaying && !audioElement.paused) {
-      audioElement.pause();
-    }
-
-    // Update volume
-    audioElement.volume = isMuted ? 0 : volume;
-  }, [isPlaying, volume, isMuted]);
+  }, [updateProgress]);
 
   // Start visualization loop
   useEffect(() => {
@@ -264,26 +274,6 @@ const AudioPlayerUI = () => {
       }
     };
   }, [isPlaying]);
-
-  // Format time in mm:ss
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-  };
-
-  // Update progress bar and time display
-  const updateProgress = () => {
-    if (!audioElementRef.current) return;
-
-    const currentTime = audioElementRef.current.currentTime;
-    const duration = audioElementRef.current.duration || 0;
-
-    setCurrentTime(formatTime(currentTime));
-    setProgress((currentTime / duration) * 100);
-
-    // Progress is now handled by React's state, no need for manual DOM updates
-  };
 
   // Play/pause toggle
   const togglePlay = () => {
