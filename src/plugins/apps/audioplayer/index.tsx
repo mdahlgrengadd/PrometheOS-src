@@ -20,7 +20,7 @@ export const manifest: PluginManifest = {
   entry: "apps/audioplayer",
   preferredSize: {
     width: 400,
-    height: 205,
+    height: 300,
   },
 };
 

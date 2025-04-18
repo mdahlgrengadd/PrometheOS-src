@@ -1,12 +1,13 @@
-
 @layer components {
   .desktop {
-    @apply bg-beos-blue;
     height: 100%;
     width: 100%;
     position: relative;
     overflow: hidden;
     padding: 50px;
+    transition: background-color 0.3s ease;
+
+    /* Background is set through JavaScript by ThemeProvider */
   }
 
   .desktop-icons {
@@ -17,13 +18,59 @@
   }
 
   .desktop-icon {
-    @apply flex flex-col items-center justify-center p-1 cursor-pointer;
     width: 80px;
     height: 80px;
+    @apply flex flex-col items-center justify-center p-1 cursor-pointer transition-all duration-200;
+    
+    .theme-beos & {
+      @apply rounded-sm;
+      background-color: transparent;
+    }
+    
+    .theme-light &, .theme-dark & {
+      @apply rounded-md;
+      backdrop-filter: blur(4px);
+      background-color: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .desktop-icon:hover {
+    .theme-beos & {
+      @apply bg-white/10;
+    }
+    
+    .theme-light &, .theme-dark & {
+      @apply shadow-md bg-white/20 scale-105;
+    }
+  }
+
+  .desktop-icon:active {
+    .theme-light &, .theme-dark & {
+      @apply scale-95;
+    }
   }
 
   .desktop-icon-label {
-    @apply text-center text-xs mt-1 truncate w-full text-white shadow-sm;
+    @apply text-center text-xs mt-2 truncate w-full;
+    
+    .theme-beos & {
+      @apply font-bold;
+      color: var(--text-primary);
+      text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);
+    }
+    
+    .theme-light & {
+      @apply font-medium;
+      color: var(--text-primary);
+      text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-dark & {
+      @apply font-medium;
+      color: white;
+      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+    }
   }
 
   .window-tab-bar {
@@ -31,21 +78,77 @@
     top: 0;
     left: 0;
     right: 0;
-    display: flex;
     z-index: 900;
-    height: 26px;
+    
+    .theme-beos & {
+      height: 36px;
+      @apply border-b border-gray-400;
+      background-color: var(--background);
+    }
+    
+    .theme-light &, .theme-dark & {
+      height: 36px;
+      @apply flex bg-background/80 backdrop-blur-lg shadow-sm border-b border-border;
+    }
   }
 
   .window-tab {
-    @apply bg-yellow-400 text-black px-2 py-1 border-r border-black/20 flex items-center justify-between;
-    background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
-    min-width: 200px;
-    max-width: 400px;
-    height: 26px;
     cursor: pointer;
+    
+    .theme-beos & {
+      @apply border-r flex items-center justify-between px-3 py-1.5;
+      color: var(--text-primary);
+      min-width: 180px;
+      max-width: 360px;
+      height: 36px;
+      background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
+      border: 1px solid var(--title-border);
+      border-bottom: none;
+    }
+    
+    .theme-light & {
+      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      color: var(--text-primary);
+      min-width: 200px;
+      max-width: 400px;
+      height: 36px;
+    }
+    
+    .theme-dark & {
+      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      color: var(--foreground);
+      min-width: 200px;
+      max-width: 400px;
+      height: 36px;
+    }
+  }
+
+  .window-tab:hover {
+    .theme-beos & {
+      filter: brightness(1.05);
+    }
+    
+    .theme-light &, .theme-dark & {
+      @apply bg-accent;
+    }
   }
 
   .window-tab-title {
-    @apply text-sm truncate flex-1;
+    @apply truncate flex-1;
+    
+    .theme-beos & {
+      @apply text-xs font-bold;
+      color: black;
+    }
+    
+    .theme-light & {
+      @apply text-sm font-medium;
+      color: var(--text-primary);
+    }
+    
+    .theme-dark & {
+      @apply text-sm font-medium;
+      color: var(--foreground);
+    }
   }
 }

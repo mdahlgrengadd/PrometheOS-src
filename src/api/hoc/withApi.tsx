@@ -1,0 +1,222 @@
+import React, { useEffect, useMemo, useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
+
+import { useApi } from "../context/ApiContext";
+import { ApiComponentProps, IApiComponent } from "../core/types";
+
+/**
+ * Higher Order Component to make a component API-aware
+ * This allows components to be discoverable and interactable by the AI agent
+ * @param Component The component to wrap
+ * @param defaultApiDoc Default API documentation for the component
+ * @returns An API-aware component
+ */
+export function withApi<P extends object>(
+  Component: React.ComponentType<P>,
+  defaultApiDoc?: Omit<IApiComponent, "id">
+) {
+  // Create a display name for debugging
+  const displayName = Component.displayName || Component.name || "Component";
+
+  // Define the wrapped component
+  const WithApiComponent = React.forwardRef<unknown, P & ApiComponentProps>(
+    (props, ref) => {
+      const { api, apiId, ...componentProps } = props as P & ApiComponentProps;
+      const { registerComponent, unregisterComponent, updateComponentState } =
+        useApi();
+
+      // Generate a unique ID if not provided
+      const uniqueId = useRef(
+        apiId || `${defaultApiDoc?.type || "component"}-${uuidv4()}`
+      );
+
+      // Track whether component has been registered
+      const isRegisteredRef = useRef(false);
+
+      // Track if this is the initial mount
+      const initialMountRef = useRef(true);
+
+      // Track the previous state to prevent redundant updates
+      const prevStateRef = useRef<Record<string, unknown>>({});
+
+      // Create the full API documentation by merging defaults with props
+      const fullApiDoc = useMemo<IApiComponent>(() => {
+        // Deduplicate actions by ID
+        const defaultActions = defaultApiDoc?.actions || [];
+        const propActions = api?.actions || [];
+
+        // Create a map of actions by ID for faster lookup
+        const actionMap = new Map();
+
+        // Add all default actions to the map
+        defaultActions.forEach((action) => {
+          actionMap.set(action.id, action);
+        });
+
+        // Add or override with prop actions
+        propActions.forEach((action) => {
+          actionMap.set(action.id, action);
+        });
+
+        // Convert the map back to an array
+        const mergedActions = Array.from(actionMap.values());
+
+        const doc = {
+          id: uniqueId.current,
+          type: api?.type || defaultApiDoc?.type || "unknown",
+          description:
+            api?.description || defaultApiDoc?.description || "No description",
+          state: {
+            enabled: true,
+            visible: true,
+            ...defaultApiDoc?.state,
+            ...api?.state,
+          },
+          actions: mergedActions,
+          path:
+            api?.path ||
+            defaultApiDoc?.path ||
+            `/components/${uniqueId.current}`,
+          metadata: {
+            ...defaultApiDoc?.metadata,
+            ...api?.metadata,
+          },
+        };
+
+        return doc;
+      }, [api, defaultApiDoc]);
+
+      // IMPORTANT: Register ONCE when mounted, with an empty dependency array
+      // This ensures registration happens only on mount, not on every render
+      useEffect(() => {
+        if (initialMountRef.current) {
+          console.log(
+            `[API] Initial registration of component: ${uniqueId.current} with ${fullApiDoc.actions.length} actions`
+          );
+          registerComponent(fullApiDoc);
+          isRegisteredRef.current = true;
+          initialMountRef.current = false;
+
+          // Initialize the prev state ref with initial state
+          if (api?.state) {
+            prevStateRef.current = { ...api.state };
+          }
+        }
+      }, []); // Empty dependency array - runs ONCE on mount only
+
+      // IMPORTANT: Handle cleanup in a separate useEffect with empty deps
+      // This ensures cleanup happens only on unmount, not on property changes
+      useEffect(() => {
+        // Only cleanup function, no registration here
+        return () => {
+          if (isRegisteredRef.current) {
+            console.log(
+              `[API] Unregistering component: ${uniqueId.current} (final cleanup)`
+            );
+            unregisterComponent(uniqueId.current);
+            isRegisteredRef.current = false;
+          }
+        };
+      }, []); // Empty dependency array - runs ONCE on unmount
+
+      // Handle state updates - but don't re-register the component
+      useEffect(() => {
+        if (isRegisteredRef.current && api?.state) {
+          // Check if state has actually changed before updating
+          const hasStateChanged = Object.entries(api.state).some(
+            ([key, value]) => {
+              // If the property didn't exist before or has changed
+              return (
+                prevStateRef.current[key] === undefined ||
+                prevStateRef.current[key] !== value
+              );
+            }
+          );
+
+          if (hasStateChanged) {
+            console.log(
+              `[API] State change detected for ${uniqueId.current}, updating`
+            );
+            updateComponentState(uniqueId.current, api.state);
+            // Update the previous state reference
+            prevStateRef.current = { ...api.state };
+          }
+        }
+      }, [api?.state, updateComponentState]);
+
+      return <Component ref={ref} {...(componentProps as P)} />;
+    }
+  );
+
+  // Set display name for debugging
+  WithApiComponent.displayName = `WithApi(${displayName})`;
+
+  return WithApiComponent;
+}
+
+/**
+ * Hook for components to register themselves with the API
+ * @param apiId Unique identifier for the component
+ * @param apiDoc API documentation for the component
+ * @returns Object with functions to update the component state
+ */
+export function useApiComponent(
+  apiId: string,
+  apiDoc: Omit<IApiComponent, "id">
+) {
+  const { registerComponent, unregisterComponent, updateComponentState } =
+    useApi();
+
+  // Track registration status
+  const isRegisteredRef = useRef(false);
+
+  // Track previous state to prevent redundant updates
+  const prevStateRef = useRef<Record<string, unknown>>({});
+
+  // Register once on mount
+  useEffect(() => {
+    if (!isRegisteredRef.current) {
+      registerComponent({
+        id: apiId,
+        ...apiDoc,
+      });
+      isRegisteredRef.current = true;
+
+      // Initialize previous state reference
+      if (apiDoc.state) {
+        prevStateRef.current = { ...apiDoc.state };
+      }
+    }
+  }, []); // Empty dependency array - runs once
+
+  // Separate cleanup effect
+  useEffect(() => {
+    return () => {
+      if (isRegisteredRef.current) {
+        unregisterComponent(apiId);
+        isRegisteredRef.current = false;
+      }
+    };
+  }, []); // Empty dependency array - cleanup runs once on unmount
+
+  // Return functions to update the component state
+  return {
+    updateState: (state: Partial<IApiComponent["state"]>) => {
+      if (isRegisteredRef.current) {
+        // Check if state has actually changed
+        const hasStateChanged = Object.entries(state).some(([key, value]) => {
+          return (
+            prevStateRef.current[key] === undefined ||
+            prevStateRef.current[key] !== value
+          );
+        });
+
+        if (hasStateChanged) {
+          updateComponentState(apiId, state);
+          // Update previous state
+          prevStateRef.current = { ...prevStateRef.current, ...state };
+        }
+      }
+    },
+  };
+}

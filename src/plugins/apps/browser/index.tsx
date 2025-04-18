@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
-import { Plugin, PluginManifest } from '../../types';
+import { Plugin, PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "browser",
@@ -33,26 +33,26 @@ const BrowserContent = () => {
   const [frameError, setFrameError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Handle X-Frame-Options errors
-  useEffect(() => {
-    const handleFrameError = () => {
-      if (iframeRef.current) {
-        try {
-          // Try to access iframe content to see if it loaded
-          const testAccess = iframeRef.current.contentWindow?.location.href;
-        } catch (error) {
-          // If we can't access the content, it's likely due to X-Frame-Options
-          setFrameError(
-            `This website (${currentUrl}) cannot be displayed in the browser due to security restrictions set by the website owner. This occurs when websites use X-Frame-Options to prevent embedding.`
-          );
-        }
-      }
-    };
+  // // Handle X-Frame-Options errors
+  // useEffect(() => {
+  //   const handleFrameError = () => {
+  //     if (iframeRef.current) {
+  //       try {
+  //         // Try to access iframe content to see if it loaded
+  //         const testAccess = iframeRef.current.contentWindow?.location.href;
+  //       } catch (error) {
+  //         // If we can't access the content, it's likely due to X-Frame-Options
+  //         setFrameError(
+  //           `This website (${currentUrl}) cannot be displayed in the browser due to security restrictions set by the website owner. This occurs when websites use X-Frame-Options to prevent embedding.`
+  //         );
+  //       }
+  //     }
+  //   };
 
-    // Set a timeout to check for frame access after load attempt
-    const timer = setTimeout(handleFrameError, 1500);
-    return () => clearTimeout(timer);
-  }, [currentUrl]);
+  //   // Set a timeout to check for frame access after load attempt
+  //   const timer = setTimeout(handleFrameError, 1500);
+  //   return () => clearTimeout(timer);
+  // }, [currentUrl]);
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
