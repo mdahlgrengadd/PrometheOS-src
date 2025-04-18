@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { eventBus } from '../plugins/EventBus';
 import { usePlugins } from '../plugins/PluginContext';
@@ -195,6 +195,24 @@ const Desktop = () => {
     focusWindow(id);
   };
 
+  const iconWindows = useMemo(
+    () =>
+      windows.map((w) => {
+        const plugin = loadedPlugins.find((p) => p.id === w.id);
+        return {
+          id: w.id,
+          title: w.title,
+          icon: plugin?.manifest.icon,
+        };
+      }),
+    [windows, loadedPlugins]
+  );
+
+  // Memoize the openWindow callback to prevent unnecessary re-renders of DesktopIcons
+  const memoizedOpenWindow = useMemo(() => {
+    return (id: string) => openWindow(id);
+  }, [openWindow]);
+
   return (
     <div className="desktop">
       {maximizedWindows.length > 0 && (
@@ -252,7 +270,7 @@ const Desktop = () => {
         </div>
       )}
 
-      <DesktopIcons windows={windows} openWindow={(id) => openWindow(id)} />
+      <DesktopIcons windows={iconWindows} openWindow={memoizedOpenWindow} />
 
       {windows.map(
         (window) =>

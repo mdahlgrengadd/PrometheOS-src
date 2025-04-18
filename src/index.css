@@ -1,4 +1,3 @@
-
 @import './styles/base.css';
 @import './styles/window.css';
 @import './styles/desktop.css';
@@ -6,8 +5,71 @@
 
 /* Any remaining utility classes */
 .maximized {
-  margin: 26px 0 0 0 !important;
   width: 100% !important;
   height: calc(100vh - 62px) !important;
 }
 
+/* Theme-specific maximized window styles */
+.theme-light .maximized, .theme-dark .maximized {
+  margin: 26px 0 0 0 !important;
+}
+
+.theme-beos .maximized {
+  margin: 36px 0 0 0 !important;
+  z-index: 1;
+}
+
+/* Fix for BeOS theme headers layout when windows are maximized */
+.theme-beos .maximized .window-header {
+  top: -36px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  z-index: 2; /* Ensure headers are above window content */
+  background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end)) !important;
+  border: 1px solid var(--title-border) !important;
+  border-bottom: none !important;
+  box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Create a container for maximized window headers in BeOS theme */
+.window-tab-bar {
+  .theme-beos & {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    z-index: 3;
+  }
+}
+
+/* Position BeOS maximized window headers horizontally */
+.theme-beos .maximized:nth-child(1) .window-header { left: 0; }
+.theme-beos .maximized:nth-child(2) .window-header { left: 180px; }
+.theme-beos .maximized:nth-child(3) .window-header { left: 360px; }
+.theme-beos .maximized:nth-child(4) .window-header { left: 540px; }
+.theme-beos .maximized:nth-child(5) .window-header { left: 720px; }
+.theme-beos .maximized:nth-child(6) .window-header { left: 900px; }
+
+/* Ensure the yellow dot is visible in maximized BeOS windows */
+.theme-beos .maximized .window-header::before {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  content: '';
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(135deg, var(--dot-color-start) 0%, var(--dot-color-end) 100%);
+  border: 1px solid var(--dot-border);
+  border-radius: 50%;
+  display: block !important;
+}
+
+/* Ensure BeOS header elements have proper styling when maximized */
+.theme-beos .maximized .window-header * {
+  color: var(--text-primary) !important;
+}
+
+.theme-beos .maximized .window-header .window-title {
+  font-weight: bold;
+  color: black !important;
+}

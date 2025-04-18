@@ -1,12 +1,17 @@
-
-import Desktop from "@/components/Desktop";
-import { PluginProvider } from "@/plugins/PluginContext";
+import { ApiProvider } from '@/api/context/ApiContext';
+import Desktop from '@/components/Desktop';
+import { MacroProvider } from '@/macros/context/MacroContext';
+import { PluginProvider } from '@/plugins/PluginContext';
 
 const Index = () => {
   return (
-    <PluginProvider>
-      <Desktop />
-    </PluginProvider>
+    <ApiProvider>
+      <MacroProvider>
+        <PluginProvider>
+          <Desktop />
+        </PluginProvider>
+      </MacroProvider>
+    </ApiProvider>
   );
 };
 

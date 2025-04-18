@@ -4,31 +4,69 @@
     position: absolute;
     min-width: 320px;
     min-height: 200px;
-    border-radius: 0;
+    border-radius: var(--window-border-radius);
     background-color: var(--window-bg);
-    box-shadow:
-      0 0 0 1px var(--window-border),
-      0 0 0 2px var(--window-border-light),
-      0 0 0 3px var(--window-border-lighter),
-      0 0 0 4px var(--window-border-light),
-      0 0 0 5px var(--window-border),
-      0 14px 16px -6px rgba(0,0,0,0.2);
-    resize: both;
+    transition: box-shadow 0.2s ease;
     overflow: visible; /* Keep overflow visible so titlebar is not clipped */
-    padding-top: 22px; /* Space for the header that sits above */
+    padding-top: var(--window-padding-top); /* Space for the header */
+    resize: both;
+
+    /* Theme-specific styles */
+    .theme-beos & {
+      box-shadow:
+        0 0 0 1px var(--window-border),
+        0 0 0 2px var(--window-border-light),
+        0 0 0 3px var(--window-border-lighter),
+        0 0 0 4px var(--window-border-light),
+        0 0 0 5px var(--window-border),
+        0 14px 16px -6px rgba(0,0,0,0.2);
+    }
+
+    .theme-light &, .theme-dark & {
+      border: 1px solid var(--window-border);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 
+                  0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Focus state */
+    &:focus-within {
+      .theme-beos & {
+        /* Apply purple to all frame layers for strong focus indication */
+        box-shadow:
+          0 0 0 1px var(--ring),
+          0 0 0 2px color-mix(in srgb, var(--ring) 85%, white),
+          0 0 0 3px color-mix(in srgb, var(--ring) 70%, white),
+          0 0 0 4px color-mix(in srgb, var(--ring) 85%, white),
+          0 0 0 5px var(--ring),
+          0 14px 16px -6px rgba(0,0,0,0.2);
+      }
+
+      .theme-light &, .theme-dark & {
+        box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 
+                    0 1px 4px rgba(0, 0, 0, 0.05), 
+                    0 0 0 2px var(--ring);
+      }
+    }
   }
 
   /* Add a separate inner container for scrollable content */
   .window-content {
-    @apply bg-window;
+    @apply bg-card text-card-foreground;
     overflow: auto; /* Apply scrolling to the content area instead */
     width: 100%;
     height: 100%;
     position: relative;
     top: 0;
     left: 0;
-    padding: 4px;
-    border-top: 1px solid var(--window-border);
+    padding: var(--window-content-padding, 16px);
+    
+    .theme-beos & {
+      border-top: 1px solid var(--window-border);
+    }
+    
+    .theme-light &, .theme-dark & {
+      border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
+    }
   }
   
   /* Corner resize handle for better resize UX */
@@ -40,8 +78,11 @@
     width: 20px; /* Make it even larger for easier targeting */
     height: 20px; /* Make it even larger for easier targeting */
     cursor: nwse-resize;
-    background: rgba(0, 0, 0, 0.05); /* Add slight visibility to the handle */
     z-index: 10; /* Ensure the resize handle is above other elements */
+    
+    .theme-beos & {
+      background: rgba(0, 0, 0, 0.05);
+    }
   }
 
   /* Custom resize handle for window resizing */
@@ -54,28 +95,63 @@
     cursor: nwse-resize;
     background: transparent;
     z-index: 10;
+    
+    .theme-light &, .theme-dark & {
+      opacity: 0.6;
+      transition: opacity 0.15s ease;
+      width: 16px;
+      height: 16px;
+      bottom: 4px;
+      right: 4px;
+    }
   }
   
   .resize-handle::before {
     content: '';
     position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 12px;
-    height: 12px;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
-    border-right: 2px solid rgba(0, 0, 0, 0.3);
+    
+    .theme-beos & {
+      bottom: 4px;
+      right: 4px;
+      width: 12px;
+      height: 12px;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+      border-right: 2px solid rgba(0, 0, 0, 0.3);
+    }
+    
+    .theme-light &, .theme-dark & {
+      bottom: 3px;
+      right: 3px;
+      width: 8px;
+      height: 8px;
+      border-bottom: 2px solid var(--muted-foreground);
+      border-right: 2px solid var(--muted-foreground);
+      border-radius: 1px;
+    }
   }
   
   .resize-handle::after {
     content: '';
     position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 6px;
-    height: 6px;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.3);
-    border-right: 2px solid rgba(0, 0, 0, 0.3);
+    
+    .theme-beos & {
+      bottom: 8px;
+      right: 8px;
+      width: 6px;
+      height: 6px;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+      border-right: 2px solid rgba(0, 0, 0, 0.3);
+    }
+    
+    .theme-light &, .theme-dark & {
+      display: none;
+    }
+  }
+  
+  .draggable-window:hover .resize-handle {
+    .theme-light &, .theme-dark & {
+      opacity: 1;
+    }
   }
   
   /* Add a visual indicator when resizing */
@@ -85,53 +161,127 @@
 
   .window-header {
     text-align: left;
-    position: absolute;
-    top: -22px; /* Position above the window */
-    left: 8px; /* Offset from left edge */
-    height: 22px;
-    width: calc(100% - 16px); /* Not full width, inset from edges */
-    background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
-    border: 1px solid var(--title-border);
-    border-bottom: none;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1);
-    @apply px-2 py-0.5 flex items-center justify-between cursor-move select-none;
+    position: var(--header-position);
+    top: var(--header-top);
+    left: var(--header-left);
+    height: var(--header-height);
+    width: var(--header-width);
+    border-radius: var(--header-border-radius);
+    padding: var(--header-padding);
+    @apply flex items-center justify-between cursor-move select-none;
     z-index: 1; /* Ensure header is above window content */
+    transition: background-color 0.15s ease;
+    
+    /* Theme-specific styles */
+    .theme-beos & {
+      background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
+      border: 1px solid var(--title-border);
+      border-bottom: none;
+      box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .theme-light &, .theme-dark & {
+      background-color: var(--title-bg);
+      border-bottom: 1px solid var(--border);
+    }
   }
 
-  .window-title {
-    @apply text-black font-bold truncate text-sm;
-    max-width: calc(100% - 80px);
-    margin: 0 auto 0 15px; /* Add margin to make room for the BeOS yellow dot */
+  .window-header:hover {
+    .theme-light &, .theme-dark & {
+      background-color: var(--title-hover);
+    }
   }
 
   /* BeOS yellow dot in the header */
   .window-header::before {
-    position: absolute;
-    left: 4px;
-    top: 4px;
-    content: '';
-    width: 13px;
-    height: 13px;
-    background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
-    border: 1px solid #b99100;
-    border-radius: 50%;
+    /* Only show in BeOS theme */
+    .theme-beos & {
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      content: '';
+      width: 13px;
+      height: 13px;
+      background: linear-gradient(135deg, var(--dot-color-start) 0%, var(--dot-color-end) 100%);
+      border: 1px solid var(--dot-border);
+      border-radius: 50%;
+    }
+    
+    /* Hide in other themes */
+    .theme-light &, .theme-dark & {
+      display: none;
+    }
   }
+
+  .window-title {
+    line-height: 1.25rem;
+    
+    .theme-beos & {
+      @apply text-black font-bold truncate text-sm;
+      max-width: calc(100% - 80px);
+      margin: 0 auto 0 15px; /* Add margin to make room for the BeOS yellow dot */
+    }
+    
+    .theme-light & {
+      @apply text-foreground font-medium text-sm;
+      max-width: calc(100% - 10px); /* Increase available space for title */
+      padding-right: 8px; /* Add padding to prevent title from touching window controls */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis; /* Use ellipsis instead of hard truncation */
+    }
+    
+    .theme-dark & {
+      @apply text-white font-medium text-sm;
+      max-width: calc(100% - 10px);
+      padding-right: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    }
 
   .window-controls {
     @apply flex items-center;
+    
+    .theme-light &, .theme-dark & {
+      gap: 4px;
+    }
   }
 
   .window-control {
-    @apply w-4 h-4 flex items-center justify-center mx-0.5 cursor-pointer;
-    background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
-    border: 1px solid #888;
-    border-radius: 2px;
+    @apply flex items-center justify-center cursor-pointer;
+    
+    .theme-beos & {
+      @apply w-4 h-4 mx-0.5;
+      background: var(--control-bg);
+      border: 1px solid var(--control-border);
+      border-radius: 2px;
+    }
+    
+    .theme-light &, .theme-dark & {
+      @apply w-6 h-6 rounded-full;
+      background-color: var(--secondary);
+      transition: all 0.15s ease;
+    }
   }
 
   .window-control:hover {
-    background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
+    .theme-beos & {
+      background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
+    }
+    
+    .theme-light &, .theme-dark & {
+      background-color: var(--accent);
+      @apply shadow-sm;
+      transform: scale(1.05);
+    }
+  }
+  
+  .window-control:active {
+    .theme-light &, .theme-dark & {
+      transform: scale(0.95);
+    }
   }
 }
 

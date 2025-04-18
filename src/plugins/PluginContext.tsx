@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+import ApiExplorerPlugin from './apps/api-explorer';
 import AudioPlayerPlugin from './apps/audioplayer';
 import BrowserPlugin from './apps/browser';
 import CalculatorPlugin from './apps/calculator';
@@ -8,7 +9,8 @@ import FileBrowserPlugin from './apps/filebrowser';
 // Import plugins directly for reliable loading
 import NotepadPlugin from './apps/notepad';
 import SettingsPlugin from './apps/settings';
-import WordEditorPlugin from './apps/wordeditor';
+import WebLLMChatPlugin from './apps/webllm-chat';
+import WordEditorPlugin from './apps/WordEditor';
 import { eventBus } from './EventBus';
 import { PluginManager } from './PluginManager';
 import { availablePlugins } from './registry';
@@ -16,13 +18,15 @@ import { Plugin } from './types';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
+  "api-explorer": ApiExplorerPlugin,
   notepad: NotepadPlugin,
   calculator: CalculatorPlugin,
   browser: BrowserPlugin,
   settings: SettingsPlugin,
-  wordeditor: WordEditorPlugin,
-  audioplayer: AudioPlayerPlugin, // Make sure the key matches the plugin ID exactly
-  filebrowser: FileBrowserPlugin, // Add the File Browser plugin
+  WordEditor: WordEditorPlugin,
+  audioplayer: AudioPlayerPlugin,
+  "webllm-chat": WebLLMChatPlugin,
+
 };
 
 // Debug: Log available plugins
@@ -95,6 +99,15 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
   const openWindow = (pluginId: string) => {
     const plugin = pluginManager.getPlugin(pluginId);
     if (plugin) {
+      // If opening API Explorer, make sure notepad is activated first
+      if (pluginId === "api-explorer") {
+        const notepadPlugin = pluginManager.getPlugin("notepad");
+        if (notepadPlugin && !pluginManager.isPluginActive("notepad")) {
+          console.log("Activating notepad plugin for API Explorer");
+          pluginManager.activatePlugin("notepad");
+        }
+      }
+
       if (!pluginManager.isPluginActive(pluginId)) {
         pluginManager.activatePlugin(pluginId);
       }
@@ -103,6 +116,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         prev.includes(pluginId) ? prev : [...prev, pluginId]
       );
       eventBus.emit("window:opened", pluginId);
+      // Ensure the window is focused and brought to the front when opened
+      eventBus.emit("window:focused", pluginId);
     }
   };
 
