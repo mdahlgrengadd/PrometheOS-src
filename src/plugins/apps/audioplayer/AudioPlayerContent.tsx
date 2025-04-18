@@ -1,5 +1,5 @@
 import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
 
@@ -510,30 +510,30 @@ const AudioPlayerContent = () => {
   const [isMuted, setIsMuted] = useState(false);
 
   // Handler functions for the audio player
-  const handlePlay = () => {
+  const handlePlay = useCallback(() => {
     setIsPlaying(true);
-  };
+  }, []);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setIsPlaying(false);
-  };
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentTrack((prev) => (prev + 1) % songs.length);
-  };
+  }, []);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setCurrentTrack((prev) => (prev - 1 + songs.length) % songs.length);
-  };
+  }, []);
 
-  const handleToggleMute = () => {
+  const handleToggleMute = useCallback(() => {
     setIsMuted((prev) => !prev);
-  };
+  }, []);
 
-  const handleSetVolume = (newVolume: number) => {
+  const handleSetVolume = useCallback((newVolume: number) => {
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-  };
+  }, []);
 
   return (
     <AudioPlayerProvider

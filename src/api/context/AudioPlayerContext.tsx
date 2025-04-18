@@ -4,7 +4,7 @@ import { useApiComponent } from '@/api/hoc/withApi';
 import { audioPlayerApiDoc } from '@/components/api/ApiAudioPlayer';
 
 import { IActionResult } from '../core/types';
-import { registerApiActionHandler, useApi } from './ApiContext';
+import { registerApiActionHandler } from './ApiContext';
 
 type AudioPlayerCtx = {
   isPlaying: boolean;
@@ -36,6 +36,8 @@ export const AudioPlayerProvider: React.FC<
   });
 
   /** Register action handlers */
+  const { onPlay, onPause, onNext, onPrevious, onToggleMute, onSetVolume } =
+    stateAndActions;
   const handlersRegisteredRef = useRef(false);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export const AudioPlayerProvider: React.FC<
         "play",
         async (): Promise<IActionResult> => {
           try {
-            stateAndActions.onPlay();
+            onPlay();
             return {
               success: true,
             };
@@ -68,7 +70,7 @@ export const AudioPlayerProvider: React.FC<
         "pause",
         async (): Promise<IActionResult> => {
           try {
-            stateAndActions.onPause();
+            onPause();
             return {
               success: true,
             };
@@ -86,7 +88,7 @@ export const AudioPlayerProvider: React.FC<
         "next",
         async (): Promise<IActionResult> => {
           try {
-            stateAndActions.onNext();
+            onNext();
             return {
               success: true,
             };
@@ -104,7 +106,7 @@ export const AudioPlayerProvider: React.FC<
         "previous",
         async (): Promise<IActionResult> => {
           try {
-            stateAndActions.onPrevious();
+            onPrevious();
             return {
               success: true,
             };
@@ -122,7 +124,7 @@ export const AudioPlayerProvider: React.FC<
         "toggleMute",
         async (): Promise<IActionResult> => {
           try {
-            stateAndActions.onToggleMute();
+            onToggleMute();
             return {
               success: true,
             };
@@ -148,7 +150,7 @@ export const AudioPlayerProvider: React.FC<
             }
 
             const newVolume = Math.max(0, Math.min(1, params.volume as number));
-            stateAndActions.onSetVolume(newVolume);
+            onSetVolume(newVolume);
 
             return {
               success: true,
@@ -164,7 +166,7 @@ export const AudioPlayerProvider: React.FC<
     }
 
     // No cleanup needed for action handlers as they're cleaned up when component is unregistered
-  }, [apiId, stateAndActions]);
+  }, [apiId, onPlay, onPause, onNext, onPrevious, onToggleMute, onSetVolume]);
 
   /** 2️⃣  Push state changes only */
   const { isPlaying, currentTrack, volume, isMuted } = stateAndActions;
