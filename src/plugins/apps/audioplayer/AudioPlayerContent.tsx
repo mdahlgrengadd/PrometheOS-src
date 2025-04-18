@@ -1,4 +1,3 @@
-import { Howl } from 'howler';
 import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -290,13 +289,7 @@ const AudioPlayerUI = () => {
     setCurrentTime(formatTime(currentTime));
     setProgress((currentTime / duration) * 100);
 
-    // Force rendering of progress bar by directly updating DOM if needed
-    const progressBar = document.querySelector(".progress-bar-inner");
-    if (progressBar) {
-      (progressBar as HTMLElement).style.width = `${
-        (currentTime / duration) * 100
-      }%`;
-    }
+    // Progress is now handled by React's state, no need for manual DOM updates
   };
 
   // Play/pause toggle

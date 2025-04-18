@@ -4,29 +4,8 @@ import { eventBus } from '../../plugins/EventBus';
 import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
 import { generateOpenApiSpec } from '../utils/openapi';
 
-// Create the API context with default values
-const ApiContext = createContext<IApiContextValue>({
-  registerComponent: () => {},
-  unregisterComponent: () => {},
-  updateComponentState: () => {},
-  executeAction: async () => ({
-    success: false,
-    error: "API context not initialized",
-  }),
-  getComponents: () => [],
-  getOpenApiSpec: () => ({
-    openapi: "3.0.0",
-    info: {
-      title: "Desktop Dreamscape API",
-      description: "API for AI agent interaction with the Desktop Dreamscape",
-      version: "1.0.0",
-    },
-    paths: {},
-    components: {
-      schemas: {},
-    },
-  }),
-});
+// Create the API context with null default value
+const ApiContext = createContext<IApiContextValue | null>(null);
 
 /**
  * API Provider component

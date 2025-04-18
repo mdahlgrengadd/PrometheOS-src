@@ -53,7 +53,6 @@ export const AudioPlayerProvider: React.FC<
             stateAndActions.onPlay();
             return {
               success: true,
-              data: { isPlaying: true },
             };
           } catch (error) {
             const errorMessage =
@@ -72,7 +71,6 @@ export const AudioPlayerProvider: React.FC<
             stateAndActions.onPause();
             return {
               success: true,
-              data: { isPlaying: false },
             };
           } catch (error) {
             const errorMessage =
@@ -91,7 +89,6 @@ export const AudioPlayerProvider: React.FC<
             stateAndActions.onNext();
             return {
               success: true,
-              data: { message: "Skipped to next track" },
             };
           } catch (error) {
             const errorMessage =
@@ -110,7 +107,6 @@ export const AudioPlayerProvider: React.FC<
             stateAndActions.onPrevious();
             return {
               success: true,
-              data: { message: "Skipped to previous track" },
             };
           } catch (error) {
             const errorMessage =
@@ -129,7 +125,6 @@ export const AudioPlayerProvider: React.FC<
             stateAndActions.onToggleMute();
             return {
               success: true,
-              data: { isMuted: !stateAndActions.isMuted },
             };
           } catch (error) {
             const errorMessage =
@@ -157,7 +152,7 @@ export const AudioPlayerProvider: React.FC<
 
             return {
               success: true,
-              data: { volume: newVolume },
+              // Don't return state data to avoid stale closures
             };
           } catch (error) {
             const errorMessage =
@@ -178,7 +173,32 @@ export const AudioPlayerProvider: React.FC<
   }, [isPlaying, currentTrack, volume, isMuted, updateState]);
 
   /** 3️⃣  Memo‑ise the context value so its identity stays stable */
-  const ctxValue = useMemo(() => stateAndActions, [stateAndActions]);
+  const ctxValue = useMemo(
+    () => ({
+      isPlaying,
+      currentTrack,
+      volume,
+      isMuted,
+      onPlay: stateAndActions.onPlay,
+      onPause: stateAndActions.onPause,
+      onNext: stateAndActions.onNext,
+      onPrevious: stateAndActions.onPrevious,
+      onToggleMute: stateAndActions.onToggleMute,
+      onSetVolume: stateAndActions.onSetVolume,
+    }),
+    [
+      isPlaying,
+      currentTrack,
+      volume,
+      isMuted,
+      stateAndActions.onPlay,
+      stateAndActions.onPause,
+      stateAndActions.onNext,
+      stateAndActions.onPrevious,
+      stateAndActions.onToggleMute,
+      stateAndActions.onSetVolume,
+    ]
+  );
 
   return <Ctx.Provider value={ctxValue}>{children}</Ctx.Provider>;
 };
