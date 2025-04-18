@@ -5,24 +5,28 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
     addEdge, Background, BackgroundVariant, Connection, ConnectionMode, Controls, Edge, EdgeTypes,
-    MiniMap, Node, NodeTypes, PanOnScrollMode, ReactFlow, useEdgesState, useNodesState
+    getOutgoers, MiniMap, Node, NodeTypes, PanOnScrollMode, ReactFlow, ReactFlowProvider,
+    useEdgesState, useNodesState, useReactFlow
 } from '@xyflow/react';
 
 import { useApi } from '../../../api/hooks/useApi';
 import { ApiComponentService } from '../services/ApiComponentService';
 import { WorkflowExecutionService } from '../services/WorkflowExecutionService';
-import { WorkflowExecutionContext } from '../types/flowTypes';
+import { ApiAppNodeData, Pin, WorkflowExecutionContext } from '../types/flowTypes';
 import ApiAppNode from './ApiAppNode';
 import ApiNode from './ApiNode';
 import BeginWorkflowNode from './BeginWorkflowNode';
 import CustomEdge from './CustomEdge';
 import NodeCreationMenu from './NodeCreationMenu';
+import NumberPrimitiveNode from './NumberPrimitiveNode';
+import StringPrimitiveNode from './StringPrimitiveNode';
 
 // Initialize with empty arrays
 const defaultInitialNodes: Node[] = [];
 const defaultInitialEdges: Edge[] = [];
 
-const FlowCanvas: React.FC = () => {
+// Create the inner component that uses the ReactFlow hooks
+const FlowCanvasInner: React.FC = () => {
   // Initialize API component service
   const apiContext = useApi();
   useEffect(() => {
@@ -36,6 +40,8 @@ const FlowCanvas: React.FC = () => {
       apiNode: ApiNode,
       apiAppNode: ApiAppNode,
       beginWorkflow: BeginWorkflowNode,
+      stringPrimitive: StringPrimitiveNode,
+      numberPrimitive: NumberPrimitiveNode,
     }),
     []
   );
@@ -80,25 +86,146 @@ const FlowCanvas: React.FC = () => {
     },
   });
 
+  // Get the ReactFlow instance to access current nodes and edges
+  const { getNodes, getEdges } = useReactFlow();
+
+  // Validate if a connection would create a cycle
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      const nodes = getNodes();
+      const edges = getEdges();
+      const target = nodes.find((node) => node.id === connection.target);
+
+      // Don't allow connecting a node to itself
+      if (target.id === connection.source) {
+        console.warn("Invalid connection: Cannot connect a node to itself");
+        return false;
+      }
+
+      // Check for cycles using DFS
+      const hasCycle = (node: Node, visited = new Set<string>()) => {
+        if (visited.has(node.id)) return false;
+
+        visited.add(node.id);
+
+        for (const outgoer of getOutgoers(node, nodes, edges)) {
+          if (outgoer.id === connection.source) return true;
+          if (hasCycle(outgoer, visited)) return true;
+        }
+
+        return false;
+      };
+
+      return !hasCycle(target);
+    },
+    [getNodes, getEdges]
+  );
+
   // Handle connections between nodes
   const onConnect = useCallback(
     (connection: Connection) => {
+      // Prevent connections within the same node
+      if (connection.source === connection.target) {
+        console.warn(
+          "Invalid connection: Cannot connect pins within the same node"
+        );
+        return; // Don't create the connection
+      }
+
+      const sourceIsExecution =
+        connection.sourceHandle?.includes("exec") || false;
+      const targetIsExecution =
+        connection.targetHandle?.includes("exec") || false;
+
+      // Validate connection: ensure both pins are of same type (execution or value)
+      if (sourceIsExecution !== targetIsExecution) {
+        console.warn(
+          "Invalid connection: Cannot connect execution pins to value pins"
+        );
+        return; // Don't create the connection
+      }
+
+      // Only validate cycle detection for execution paths, not for data paths
+      if (sourceIsExecution) {
+        // Check if this connection would create a cycle
+        if (!isValidConnection(connection)) {
+          console.warn("Invalid connection: Would create a cycle in the graph");
+          return; // Don't create the connection
+        }
+      }
+
+      // Create the connection
       setEdges((eds) =>
         addEdge(
           {
             ...connection,
             type: "custom",
             data: {
-              isExecution:
-                connection.sourceHandle?.includes("exec") ||
-                connection.targetHandle?.includes("exec"),
+              isExecution: sourceIsExecution,
             },
           },
           eds
         )
       );
+
+      // If this is a data connection (not execution), update parameter mappings
+      if (!sourceIsExecution && !targetIsExecution) {
+        const sourceNode = getNodes().find(
+          (node) => node.id === connection.source
+        );
+        const targetNode = getNodes().find(
+          (node) => node.id === connection.target
+        );
+
+        // Check if target is an API app node
+        if (targetNode && targetNode.type === "apiAppNode" && sourceNode) {
+          console.log("Setting up parameter mapping for data connection");
+
+          setNodes((nodes) =>
+            nodes.map((node) => {
+              if (node.id === targetNode.id) {
+                // Cast node.data to ApiAppNodeData
+                const nodeData = node.data as unknown as ApiAppNodeData;
+
+                // Create parameterMappings if it doesn't exist
+                const parameterMappings = nodeData.parameterMappings || {};
+
+                // Map the target handle (input pin) to a parameter name
+                // For setValue action, the parameter should be 'value'
+                if (
+                  nodeData.actionId &&
+                  nodeData.actionId.includes("setValue")
+                ) {
+                  parameterMappings[connection.targetHandle!] = "value";
+                } else if (nodeData.inputs) {
+                  // For other actions, try to find the parameter name based on the pin label
+                  const inputPin = nodeData.inputs.find(
+                    (pin: Pin) => pin.id === connection.targetHandle
+                  );
+                  if (inputPin) {
+                    parameterMappings[connection.targetHandle!] =
+                      inputPin.label;
+                  }
+                }
+
+                // Update the node data with the new parameterMappings
+                return {
+                  ...node,
+                  data: {
+                    ...nodeData,
+                    parameterMappings,
+                  },
+                };
+              }
+              return node;
+            })
+          );
+
+          console.log("Parameter mapping updated");
+        }
+      }
     },
-    [setEdges]
+    [setEdges, isValidConnection, getNodes, setNodes]
   );
 
   // Node selection handling
@@ -328,8 +455,6 @@ const FlowCanvas: React.FC = () => {
         panOnScrollMode={PanOnScrollMode.Free}
         selectionOnDrag={true}
         className="bg-[#1A1F2C]"
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
         deleteKeyCode={["Backspace", "Delete"]}
       >
         <Background
@@ -348,6 +473,15 @@ const FlowCanvas: React.FC = () => {
         />
       </ReactFlow>
     </div>
+  );
+};
+
+// Wrapper component that provides the ReactFlow context
+const FlowCanvas: React.FC = () => {
+  return (
+    <ReactFlowProvider>
+      <FlowCanvasInner />
+    </ReactFlowProvider>
   );
 };
 

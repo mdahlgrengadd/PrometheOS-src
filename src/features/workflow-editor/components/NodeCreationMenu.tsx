@@ -16,8 +16,19 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   const [nodeName, setNodeName] = useState("");
   const [endpoint, setEndpoint] = useState("");
 
-  // New states for app-based nodes
-  const [isAppNodeMode, setIsAppNodeMode] = useState(false);
+  // Node type mode state
+  const [nodeMode, setNodeMode] = useState<"basic" | "app" | "primitive">(
+    "basic"
+  );
+
+  // Primitive node type state
+  const [primitiveType, setPrimitiveType] = useState<"string" | "number">(
+    "string"
+  );
+  const [stringValue, setStringValue] = useState("");
+  const [numberValue, setNumberValue] = useState(0);
+
+  // App node states
   const [availableApps, setAvailableApps] = useState<
     { id: string; name: string }[]
   >([]);
@@ -204,6 +215,62 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
     setIsOpen(false);
   };
 
+  // Handle adding a string primitive node
+  const handleAddStringPrimitiveNode = () => {
+    const newNode: Node = {
+      id: `string-primitive-${Date.now()}`,
+      type: "stringPrimitive",
+      position: {
+        x: Math.random() * 300 + 50,
+        y: Math.random() * 300 + 50,
+      },
+      data: {
+        label: "String Value",
+        value: stringValue,
+        outputs: [
+          {
+            id: `output-${Date.now()}`,
+            type: "output",
+            label: "Value",
+            dataType: "string",
+          },
+        ],
+      },
+    };
+
+    onAddNode(newNode);
+    setStringValue("");
+    setIsOpen(false);
+  };
+
+  // Handle adding a number primitive node
+  const handleAddNumberPrimitiveNode = () => {
+    const newNode: Node = {
+      id: `number-primitive-${Date.now()}`,
+      type: "numberPrimitive",
+      position: {
+        x: Math.random() * 300 + 50,
+        y: Math.random() * 300 + 50,
+      },
+      data: {
+        label: "Number Value",
+        value: numberValue,
+        outputs: [
+          {
+            id: `output-${Date.now()}`,
+            type: "output",
+            label: "Value",
+            dataType: "number",
+          },
+        ],
+      },
+    };
+
+    onAddNode(newNode);
+    setNumberValue(0);
+    setIsOpen(false);
+  };
+
   // Render the App Node creation form
   const renderAppNodeForm = () => {
     return (
@@ -310,6 +377,93 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
     );
   };
 
+  // Render primitive node form
+  const renderPrimitiveNodeForm = () => {
+    return (
+      <>
+        <div className="mb-3">
+          <label className="block text-gray-300 text-sm mb-1">
+            Primitive Type
+          </label>
+          <div className="flex space-x-2">
+            <button
+              className={`flex-1 py-1 text-sm ${
+                primitiveType === "string"
+                  ? "bg-blue-600 text-white"
+                  : "bg-[#2D3748] text-gray-300"
+              } rounded`}
+              onClick={() => setPrimitiveType("string")}
+            >
+              String
+            </button>
+            <button
+              className={`flex-1 py-1 text-sm ${
+                primitiveType === "number"
+                  ? "bg-green-600 text-white"
+                  : "bg-[#2D3748] text-gray-300"
+              } rounded`}
+              onClick={() => setPrimitiveType("number")}
+            >
+              Number
+            </button>
+          </div>
+        </div>
+
+        {primitiveType === "string" ? (
+          <div className="mb-4">
+            <label className="block text-gray-300 text-sm mb-1">
+              Initial Value
+            </label>
+            <input
+              type="text"
+              value={stringValue}
+              onChange={(e) => setStringValue(e.target.value)}
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              placeholder="Enter string value..."
+            />
+          </div>
+        ) : (
+          <div className="mb-4">
+            <label className="block text-gray-300 text-sm mb-1">
+              Initial Value
+            </label>
+            <input
+              type="number"
+              value={numberValue}
+              onChange={(e) => setNumberValue(parseFloat(e.target.value) || 0)}
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              placeholder="Enter number value..."
+              step="0.1"
+            />
+          </div>
+        )}
+
+        <div className="flex justify-between">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={
+              primitiveType === "string"
+                ? handleAddStringPrimitiveNode
+                : handleAddNumberPrimitiveNode
+            }
+            className={`px-3 py-1 ${
+              primitiveType === "string"
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-green-600 hover:bg-green-700"
+            } text-white rounded`}
+          >
+            Add {primitiveType === "string" ? "String" : "Number"} Node
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="node-creation-menu absolute top-4 left-4 z-10">
       {!isOpen ? (
@@ -317,7 +471,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
           <button
             onClick={() => {
               setIsOpen(true);
-              setIsAppNodeMode(false);
+              setNodeMode("basic");
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-lg"
           >
@@ -326,49 +480,80 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
           <button
             onClick={() => {
               setIsOpen(true);
-              setIsAppNodeMode(true);
+              setNodeMode("app");
             }}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg"
           >
             Add App API Node
           </button>
+          <button
+            onClick={() => {
+              setIsOpen(true);
+              setNodeMode("primitive");
+            }}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg"
+          >
+            Add Primitive
+          </button>
         </div>
       ) : (
         <div className="p-4 bg-[#2D3748] rounded-md shadow-xl border border-[#4A5568] w-64">
           <h3 className="text-white font-bold mb-3">
-            {isAppNodeMode ? "Add App API Node" : "Add Basic Node"}
+            {nodeMode === "basic"
+              ? "Add Basic Node"
+              : nodeMode === "app"
+              ? "Add App API Node"
+              : "Add Primitive Node"}
           </h3>
 
           {/* Tabs to switch between node types */}
           <div className="flex mb-4 bg-[#1A202C] rounded overflow-hidden">
             <button
               className={`flex-1 py-1 text-sm ${
-                !isAppNodeMode ? "bg-blue-600 text-white" : "text-gray-400"
+                nodeMode === "basic"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-400"
               }`}
-              onClick={() => setIsAppNodeMode(false)}
+              onClick={() => setNodeMode("basic")}
             >
               Basic
             </button>
             <button
               className={`flex-1 py-1 text-sm ${
-                isAppNodeMode ? "bg-green-600 text-white" : "text-gray-400"
+                nodeMode === "app" ? "bg-green-600 text-white" : "text-gray-400"
               }`}
-              onClick={() => setIsAppNodeMode(true)}
+              onClick={() => setNodeMode("app")}
             >
               App API
             </button>
-          </div>
-
-          {isAppNodeMode ? renderAppNodeForm() : renderBasicNodeForm()}
-
-          <div className="menu-section">
             <button
-              onClick={handleAddBeginWorkflowNode}
-              className="menu-button"
+              className={`flex-1 py-1 text-sm ${
+                nodeMode === "primitive"
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400"
+              }`}
+              onClick={() => setNodeMode("primitive")}
             >
-              Begin Workflow
+              Primitive
             </button>
           </div>
+
+          {nodeMode === "basic"
+            ? renderBasicNodeForm()
+            : nodeMode === "app"
+            ? renderAppNodeForm()
+            : renderPrimitiveNodeForm()}
+
+          {nodeMode !== "primitive" && (
+            <div className="menu-section mt-4">
+              <button
+                onClick={handleAddBeginWorkflowNode}
+                className="menu-button w-full px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                Begin Workflow
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
-
 import React from 'react';
+
 import { Handle, Position } from '@xyflow/react';
+
 import { Pin } from '../types/flowTypes';
 
 interface ExecutionPinProps {
@@ -10,20 +11,29 @@ interface ExecutionPinProps {
   isConnectable: boolean;
 }
 
-const ExecutionPin = ({ pin, position, nodeId, isConnectable }: ExecutionPinProps) => {
+const ExecutionPin = ({
+  pin,
+  position,
+  nodeId,
+  isConnectable,
+}: ExecutionPinProps) => {
   const handleId = `${pin.id}`;
-  
+
   return (
-    <div className="execution-pin flex items-center my-2 relative">
+    <div className="execution-pin flex items-center my-3 relative">
       <Handle
-        type={position === Position.Left ? 'target' : 'source'}
+        type={position === Position.Left ? "target" : "source"}
         position={position}
         id={handleId}
         isConnectable={isConnectable}
-        className="execution-handle w-3 h-3 bg-white border-2 border-white rounded-sm"
+        className="execution-handle w-4 h-4 bg-white border-2 border-gray-300 rounded-full"
         style={{ zIndex: 100 }}
       />
-      <div className={`execution-label text-xs text-white font-mono font-bold ml-1 ${position === Position.Right ? 'text-right mr-1' : ''}`}>
+      <div
+        className={`execution-label text-xs text-white font-mono font-bold ${
+          position === Position.Right ? "mr-1 ml-2" : "ml-1 mr-2"
+        }`}
+      >
         {pin.label}
       </div>
     </div>

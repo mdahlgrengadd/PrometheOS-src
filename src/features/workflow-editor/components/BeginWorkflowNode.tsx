@@ -35,7 +35,7 @@ const BeginWorkflowNode = ({
         </div>
 
         {/* Right execution pins (output) */}
-        <div className="execution-pins-right py-2 pl-1 flex flex-col justify-start">
+        <div className="right-pins-container flex flex-col gap-3 py-3 pl-3 pr-0">
           {data.executionOutputs.map((pin) => (
             <ExecutionPin
               key={pin.id}

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { BaseEdge, EdgeProps, getBezierPath } from '@xyflow/react';
 
 function CustomEdge({
@@ -22,14 +23,19 @@ function CustomEdge({
     targetPosition,
   });
 
-  // Set color based on whether it's an execution edge or data edge
+  // Determine if this is an execution edge
   const isExecution = data?.isExecution;
-  const edgeColor = isExecution 
-    ? 'white' 
-    : '#4D9CEF'; // Default to blue data flow for now
-  
-  const strokeWidth = isExecution ? 2 : 3;
-  const strokeDasharray = isExecution ? '5, 5' : '';
+
+  // Set color and style based on pin type
+  let edgeColor = "#A78BFA"; // Default to purple for value connections
+  let strokeWidth = 3; // Default to thicker for value connections
+  let strokeDasharray = ""; // Default to solid for value connections
+
+  if (isExecution) {
+    edgeColor = "white"; // White for execution connections
+    strokeWidth = 2; // Slightly thinner for execution
+    strokeDasharray = "5, 5"; // Dashed pattern for execution
+  }
 
   return (
     <BaseEdge

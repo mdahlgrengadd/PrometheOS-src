@@ -69,3 +69,16 @@ export interface WorkflowExecutionContext {
   setResult: (nodeId: string, result: unknown) => void;
   getResult: (nodeId: string) => unknown;
 }
+
+// For primitive node types that provide literal values
+export interface StringPrimitiveNodeData {
+  label: string;
+  value: string;
+  outputs: Pin[];
+}
+
+export interface NumberPrimitiveNodeData {
+  label: string;
+  value: number;
+  outputs: Pin[];
+}
