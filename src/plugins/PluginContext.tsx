@@ -1,9 +1,11 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import ApiExplorerPlugin from './apps/api-explorer';
 import AudioPlayerPlugin from './apps/audioplayer';
 import BrowserPlugin from './apps/browser';
 import CalculatorPlugin from './apps/calculator';
+import FileBrowserPlugin from './apps/filebrowser';
 // Import plugins directly for reliable loading
 import NotepadPlugin from './apps/notepad';
 import SettingsPlugin from './apps/settings';
@@ -12,7 +14,7 @@ import WordEditorPlugin from './apps/WordEditor';
 import { eventBus } from './EventBus';
 import { PluginManager } from './PluginManager';
 import { availablePlugins } from './registry';
-import { Plugin, PluginManifest } from './types';
+import { Plugin } from './types';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
@@ -24,11 +26,13 @@ const pluginModules: Record<string, Plugin> = {
   WordEditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin,
   "webllm-chat": WebLLMChatPlugin,
+
 };
 
 // Debug: Log available plugins
 console.log("Available plugin modules:", Object.keys(pluginModules));
 console.log("AudioPlayerPlugin:", AudioPlayerPlugin);
+console.log("FileBrowserPlugin:", FileBrowserPlugin);
 
 type PluginContextType = {
   pluginManager: PluginManager;

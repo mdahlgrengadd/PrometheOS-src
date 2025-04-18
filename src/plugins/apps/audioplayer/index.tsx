@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { Music } from 'lucide-react';
 
 import { Plugin, PluginManifest } from '../../types';
 import AudioPlayerContent from './AudioPlayerContent';
@@ -11,11 +13,9 @@ export const manifest: PluginManifest = {
   description: "A modern audio player",
   author: "Desktop System",
   icon: (
-    <img
-      src="/icons/34691_beos_audio_loud_music_server_speaker_audio_beos_loud_music_server_speaker.png"
-      className="h-8 w-8"
-      alt="Audio Player"
-    />
+    <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full">
+      <Music className="h-5 w-5 text-white" />
+    </div>
   ),
   entry: "apps/audioplayer",
   preferredSize: {
