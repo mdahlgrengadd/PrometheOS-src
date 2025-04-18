@@ -1,0 +1,61 @@
+/* Flow Editor styles */
+
+/* Node execution states */
+.executing-node {
+  box-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+  border-color: orange !important;
+}
+
+.completed-node {
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  border-color: green !important;
+}
+
+.error-node {
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+  border-color: red !important;
+}
+
+/* Custom styling for React Flow elements */
+.react-flow__node {
+  transition: all 0.2s ease-in-out;
+}
+
+.react-flow__node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Connection line styles */
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+/* Execution paths - thicker lines for execution flow */
+.react-flow__edge.execution-edge .react-flow__edge-path {
+  stroke-width: 3;
+  stroke: #f8f8f8;
+}
+
+/* Data paths - different style for data flow */
+.react-flow__edge.data-edge .react-flow__edge-path {
+  stroke-width: 2;
+  stroke: #64b5f6;
+  stroke-dasharray: 5 2;
+}
+
+/* Pin styles */
+.execution-pin {
+  background-color: #f8f8f8;
+  border: 2px solid #444;
+}
+
+.input-pin {
+  background-color: #e3f2fd;
+  border: 2px solid #64b5f6;
+}
+
+.output-pin {
+  background-color: #fff8e1;
+  border: 2px solid #ffb74d;
+} 
