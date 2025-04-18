@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
@@ -9,7 +10,37 @@ import { ThemeType } from '@/lib/theme-types';
 import { useTheme } from '@/lib/ThemeProvider';
 
 const SettingsContent: React.FC = () => {
-  const { theme, setTheme, themes, padding, setPadding } = useTheme();
+  const {
+    theme,
+    setTheme,
+    themes,
+    padding,
+    setPadding,
+    wallpaper,
+    setWallpaper,
+    backgroundColor,
+    setBackgroundColor,
+  } = useTheme();
+  const [availableWallpapers, setAvailableWallpapers] = useState<string[]>([
+    "/wallpapers/background_01.png",
+    "/wallpapers/background_02.png",
+  ]);
+
+  // Available background colors
+  const backgroundColors = [
+    { name: "Indigo", value: "#6366f1" },
+    { name: "Blue", value: "#3b82f6" },
+    { name: "Cyan", value: "#06b6d4" },
+    { name: "Teal", value: "#14b8a6" },
+    { name: "Green", value: "#22c55e" },
+    { name: "Yellow", value: "#eab308" },
+    { name: "Orange", value: "#f97316" },
+    { name: "Red", value: "#ef4444" },
+    { name: "Pink", value: "#ec4899" },
+    { name: "Purple", value: "#a855f7" },
+    { name: "Gray", value: "#71717a" },
+    { name: "Slate", value: "#334155" },
+  ];
 
   const handleThemeChange = (selectedTheme: ThemeType) => {
     setTheme(selectedTheme);
@@ -17,6 +48,15 @@ const SettingsContent: React.FC = () => {
 
   const handlePaddingChange = (value: number[]) => {
     setPadding(value[0]);
+  };
+
+  const handleWallpaperChange = (wallpaperPath: string) => {
+    setWallpaper(wallpaperPath);
+  };
+
+  // Use solid color background
+  const useSolidColor = () => {
+    setWallpaper(null);
   };
 
   return (
@@ -123,9 +163,88 @@ const SettingsContent: React.FC = () => {
 
           <div className="space-y-4">
             <div className="space-y-2">
+              <h3 className="text-lg font-medium">Desktop Wallpaper</h3>
+              <p className="text-sm text-muted-foreground">
+                Customize your desktop background image
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
+              {/* Solid color option */}
+              <div
+                className={`relative group cursor-pointer ${
+                  wallpaper === null ? "ring-2 ring-primary" : ""
+                }`}
+                onClick={useSolidColor}
+              >
+                <div className="rounded-md border border-border overflow-hidden aspect-video">
+                  <div
+                    className="h-full w-full"
+                    style={{ background: backgroundColor }}
+                  ></div>
+                </div>
+                <div className="mt-1 text-xs text-center">Solid Color</div>
+              </div>
+
+              {/* Custom wallpaper options */}
+              {availableWallpapers.map((wallpaperPath, index) => (
+                <div
+                  key={wallpaperPath}
+                  className={`relative group cursor-pointer ${
+                    wallpaper === wallpaperPath ? "ring-2 ring-primary" : ""
+                  }`}
+                  onClick={() => handleWallpaperChange(wallpaperPath)}
+                >
+                  <div className="rounded-md border border-border overflow-hidden aspect-video">
+                    <div
+                      className="h-full w-full"
+                      style={{
+                        backgroundImage: `url(${wallpaperPath})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    ></div>
+                  </div>
+                  <div className="mt-1 text-xs text-center">
+                    Wallpaper {index + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
               <h3 className="text-lg font-medium">Color Preferences</h3>
               <p className="text-sm text-muted-foreground">
                 Customize the color scheme of your desktop
+              </p>
+            </div>
+
+            {/* Background color options */}
+            <div className="space-y-2">
+              <Label>Background Color</Label>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1">
+                {backgroundColors.map((color) => (
+                  <div
+                    key={color.value}
+                    className={`relative cursor-pointer ${
+                      backgroundColor === color.value
+                        ? "ring-2 ring-primary"
+                        : ""
+                    }`}
+                    onClick={() => setBackgroundColor(color.value)}
+                    title={color.name}
+                  >
+                    <div
+                      className="h-10 rounded-md"
+                      style={{ backgroundColor: color.value }}
+                    ></div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select a background color for Solid Color mode
               </p>
             </div>
 

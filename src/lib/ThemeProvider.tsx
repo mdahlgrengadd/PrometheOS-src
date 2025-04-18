@@ -10,6 +10,10 @@ const ThemeContext = createContext<ThemeContextType>({
   themes,
   setPadding: () => {},
   padding: 0, // Default padding
+  wallpaper: null,
+  setWallpaper: () => {},
+  backgroundColor: "#6366f1", // Default background color (indigo)
+  setBackgroundColor: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -29,6 +33,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     return savedPadding ? parseInt(savedPadding, 10) : 0;
   });
 
+  // Get stored wallpaper from localStorage
+  const [wallpaper, setWallpaperState] = useState<string | null>(() => {
+    return localStorage.getItem("os-wallpaper");
+  });
+
+  // Get stored background color from localStorage or use default
+  const [backgroundColor, setBackgroundColorState] = useState<string>(() => {
+    return localStorage.getItem("os-background-color") || "#6366f1";
+  });
+
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
     localStorage.setItem("os-theme", newTheme);
@@ -37,6 +51,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const setPadding = (newPadding: number) => {
     setPaddingState(newPadding);
     localStorage.setItem("window-content-padding", newPadding.toString());
+  };
+
+  const setWallpaper = (newWallpaper: string | null) => {
+    setWallpaperState(newWallpaper);
+    if (newWallpaper) {
+      localStorage.setItem("os-wallpaper", newWallpaper);
+    } else {
+      localStorage.removeItem("os-wallpaper");
+    }
+  };
+
+  const setBackgroundColor = (newColor: string) => {
+    setBackgroundColorState(newColor);
+    localStorage.setItem("os-background-color", newColor);
   };
 
   // Apply theme CSS variables when theme changes
@@ -52,8 +80,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Set window content padding
     root.style.setProperty("--window-content-padding", `${padding}px`);
 
-    // Set body background based on desktop background
-    document.body.style.background = themeConfig.desktopBackground;
+    // Set body background based on wallpaper, solid color, or theme default
+    if (wallpaper) {
+      document.body.style.background = `url(${wallpaper}) no-repeat center center fixed`;
+      document.body.style.backgroundSize = "cover";
+    } else if (wallpaper === null && backgroundColor) {
+      document.body.style.background = backgroundColor;
+    } else {
+      document.body.style.background = themeConfig.desktopBackground;
+    }
 
     // Add theme class to root for other selectors
     root.classList.remove("theme-beos", "theme-light", "theme-dark");
@@ -65,11 +100,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-  }, [theme, padding]);
+  }, [theme, padding, wallpaper, backgroundColor]);
 
   return (
     <ThemeContext.Provider
-      value={{ theme, setTheme, themes, padding, setPadding }}
+      value={{
+        theme,
+        setTheme,
+        themes,
+        padding,
+        setPadding,
+        wallpaper,
+        setWallpaper,
+        backgroundColor,
+        setBackgroundColor,
+      }}
     >
       {children}
     </ThemeContext.Provider>

@@ -16,4 +16,8 @@ export interface ThemeContextType {
   themes: Record<ThemeType, ThemeConfig>;
   setPadding: (padding: number) => void;
   padding: number;
+  wallpaper: string | null;
+  setWallpaper: (wallpaper: string | null) => void;
+  backgroundColor: string;
+  setBackgroundColor: (color: string) => void;
 }
