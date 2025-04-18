@@ -1,7 +1,9 @@
 import { Edge, Node } from '@xyflow/react';
 
+import { DataTypeConversionNodeData } from '../components/DataTypeConversionNode';
 import {
-    ApiAppNodeData, NumberPrimitiveNodeData, Pin, StringPrimitiveNodeData, WorkflowExecutionContext
+    ApiAppNodeData, ApiNodeData, NumberPrimitiveNodeData, Pin, StringPrimitiveNodeData,
+    WorkflowExecutionContext, WorkflowVariableValue
 } from '../types/flowTypes';
 import { ApiComponentService } from './ApiComponentService';
 
@@ -96,6 +98,8 @@ export class WorkflowExecutionService {
       } else if (node.type === "beginWorkflow") {
         // Execute BeginWorkflow Node
         await this.executeBeginWorkflowNode(node, context);
+      } else if (node.type === "dataTypeConversion") {
+        await this.executeDataTypeConversionNode(node, context);
       } else {
         // Other node types - just log for now
         console.log(
@@ -228,6 +232,9 @@ export class WorkflowExecutionService {
     // Collect input parameters
     const parameters: Record<string, unknown> = {};
 
+    // Check if this is a setValue action
+    const isSetValueAction = nodeData.actionId.includes("setValue");
+
     // Map input pins to parameters based on mappings
     if (nodeData.parameterMappings && nodeData.inputs) {
       for (const input of nodeData.inputs) {
@@ -238,11 +245,25 @@ export class WorkflowExecutionService {
 
           // If we got a value, use it
           if (inputValue !== undefined) {
-            parameters[paramName] = inputValue;
-            console.log(
-              `Found value for parameter '${paramName}':`,
-              inputValue
-            );
+            // Handle setValue action specially - ensure value is a string
+            if (isSetValueAction && paramName === "value") {
+              // For setValue action, we need to ensure the value is a string
+              if (typeof inputValue === "object") {
+                parameters[paramName] = JSON.stringify(inputValue, null, 2);
+              } else {
+                parameters[paramName] = String(inputValue);
+              }
+              console.log(
+                `For setValue action, set '${paramName}' parameter to:`,
+                parameters[paramName]
+              );
+            } else {
+              parameters[paramName] = inputValue;
+              console.log(
+                `Found value for parameter '${paramName}':`,
+                inputValue
+              );
+            }
           } else {
             console.warn(
               `No value found for parameter '${paramName}' (pin ${input.id})`
@@ -256,6 +277,14 @@ export class WorkflowExecutionService {
       `Executing API action: ${nodeData.componentId}.${nodeData.actionId} with params:`,
       parameters
     );
+
+    // For setValue action, check if 'value' parameter exists and is a string
+    if (
+      isSetValueAction &&
+      (!parameters.value || typeof parameters.value !== "string")
+    ) {
+      throw new Error(`setValue requires a 'value' parameter of type string`);
+    }
 
     // Execute the API action
     const result = await this.apiService.executeAction(
@@ -380,6 +409,92 @@ export class WorkflowExecutionService {
       for (const output of outputs) {
         context.addVariable(output.id, null);
       }
+    }
+  }
+
+  /**
+   * Execute a DataTypeConversion Node, converting from one data type to another
+   */
+  private async executeDataTypeConversionNode(
+    node: Node,
+    context: WorkflowExecutionContext
+  ): Promise<void> {
+    if (node.type !== "dataTypeConversion" || !node.data) {
+      throw new Error(`Node ${node.id} is not a valid DataTypeConversion Node`);
+    }
+
+    const nodeData = node.data as unknown as DataTypeConversionNodeData;
+    console.log(
+      `Executing DataTypeConversion Node: ${node.id} converting from ${nodeData.inputDataType} to ${nodeData.outputDataType}`
+    );
+
+    // Find the input pin
+    const inputPin = nodeData.inputs[0];
+
+    if (!inputPin) {
+      console.error("No input pin found on DataTypeConversion node");
+      return;
+    }
+
+    // Get the input value from the context
+    const inputValue = context.getVariable(inputPin.id);
+
+    if (inputValue === undefined) {
+      console.error(`No input value found for pin ${inputPin.id}`);
+      return;
+    }
+
+    console.log(`DataTypeConversion input value:`, inputValue);
+    let convertedValue: WorkflowVariableValue;
+
+    // Perform the conversion based on output type
+    if (nodeData.outputDataType === "string") {
+      // Convert any input to string
+      if (typeof inputValue === "object") {
+        // For objects, use JSON.stringify with formatting
+        convertedValue = JSON.stringify(inputValue, null, 2);
+      } else {
+        // For primitives, convert directly to string
+        convertedValue = String(inputValue);
+      }
+      console.log(`Converted to string:`, convertedValue);
+    } else if (nodeData.outputDataType === "number") {
+      // Try to convert to number
+      convertedValue = Number(inputValue);
+      if (isNaN(convertedValue)) {
+        console.error(`Cannot convert value to number: ${inputValue}`);
+        return;
+      }
+    } else if (nodeData.outputDataType === "boolean") {
+      // Convert to boolean
+      convertedValue = Boolean(inputValue);
+    } else {
+      // For object or array types, parsing might be needed
+      try {
+        if (typeof inputValue === "string") {
+          convertedValue = JSON.parse(inputValue);
+        } else {
+          convertedValue = inputValue; // Keep as is
+        }
+      } catch (error) {
+        console.error(
+          `Error converting to ${nodeData.outputDataType}: ${error}`
+        );
+        return;
+      }
+    }
+
+    // Store the result in the context
+    context.setResult(node.id, {
+      success: true,
+      data: { value: convertedValue },
+    });
+
+    // Make the converted value available as a variable for the output pin
+    if (nodeData.outputs && nodeData.outputs.length > 0) {
+      const outputPin = nodeData.outputs[0];
+      context.addVariable(outputPin.id, convertedValue);
+      console.log(`Set output variable ${outputPin.id} to:`, convertedValue);
     }
   }
 

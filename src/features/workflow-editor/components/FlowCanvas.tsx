@@ -17,6 +17,7 @@ import ApiAppNode from './ApiAppNode';
 import ApiNode from './ApiNode';
 import BeginWorkflowNode from './BeginWorkflowNode';
 import CustomEdge from './CustomEdge';
+import DataTypeConversionNode from './DataTypeConversionNode';
 import NodeCreationMenu from './NodeCreationMenu';
 import NumberPrimitiveNode from './NumberPrimitiveNode';
 import StringPrimitiveNode from './StringPrimitiveNode';
@@ -42,6 +43,7 @@ const FlowCanvasInner: React.FC = () => {
       beginWorkflow: BeginWorkflowNode,
       stringPrimitive: StringPrimitiveNode,
       numberPrimitive: NumberPrimitiveNode,
+      dataTypeConversion: DataTypeConversionNode,
     }),
     []
   );
@@ -145,6 +147,40 @@ const FlowCanvasInner: React.FC = () => {
         return; // Don't create the connection
       }
 
+      // Only for data connections (not execution), check data type compatibility
+      if (!sourceIsExecution && !targetIsExecution) {
+        const nodes = getNodes();
+        const sourceNode = nodes.find((node) => node.id === connection.source);
+        const targetNode = nodes.find((node) => node.id === connection.target);
+
+        if (sourceNode && targetNode) {
+          // Find the source and target pins
+          const sourceData = sourceNode.data as { outputs?: Pin[] };
+          const targetData = targetNode.data as { inputs?: Pin[] };
+
+          const sourcePin = sourceData.outputs?.find(
+            (pin: Pin) => pin.id === connection.sourceHandle
+          );
+          const targetPin = targetData.inputs?.find(
+            (pin: Pin) => pin.id === connection.targetHandle
+          );
+
+          // Check if the data types are compatible
+          if (
+            sourcePin &&
+            targetPin &&
+            sourcePin.dataType &&
+            targetPin.dataType &&
+            sourcePin.dataType !== targetPin.dataType
+          ) {
+            console.warn(
+              `Invalid connection: Data type mismatch. Source: ${sourcePin.dataType}, Target: ${targetPin.dataType}`
+            );
+            return; // Don't create the connection
+          }
+        }
+      }
+
       // Only validate cycle detection for execution paths, not for data paths
       if (sourceIsExecution) {
         // Check if this connection would create a cycle
@@ -180,23 +216,33 @@ const FlowCanvasInner: React.FC = () => {
         // Check if target is an API app node
         if (targetNode && targetNode.type === "apiAppNode" && sourceNode) {
           console.log("Setting up parameter mapping for data connection");
+          const sourceData = sourceNode.data as { outputs?: Pin[] };
+          const sourcePin = sourceData.outputs?.find(
+            (pin: Pin) => pin.id === connection.sourceHandle
+          );
+
+          console.log("Source pin data type:", sourcePin?.dataType);
 
           setNodes((nodes) =>
             nodes.map((node) => {
               if (node.id === targetNode.id) {
                 // Cast node.data to ApiAppNodeData
                 const nodeData = node.data as unknown as ApiAppNodeData;
+                console.log("Target node action:", nodeData.actionId);
 
                 // Create parameterMappings if it doesn't exist
                 const parameterMappings = nodeData.parameterMappings || {};
 
                 // Map the target handle (input pin) to a parameter name
-                // For setValue action, the parameter should be 'value'
+                // For setValue action, the parameter should always be 'value'
                 if (
                   nodeData.actionId &&
                   nodeData.actionId.includes("setValue")
                 ) {
                   parameterMappings[connection.targetHandle!] = "value";
+                  console.log(
+                    `Setting parameter mapping for setValue: target pin ${connection.targetHandle} -> parameter 'value'`
+                  );
                 } else if (nodeData.inputs) {
                   // For other actions, try to find the parameter name based on the pin label
                   const inputPin = nodeData.inputs.find(
@@ -205,6 +251,9 @@ const FlowCanvasInner: React.FC = () => {
                   if (inputPin) {
                     parameterMappings[connection.targetHandle!] =
                       inputPin.label;
+                    console.log(
+                      `Setting parameter mapping: target pin ${connection.targetHandle} -> parameter '${inputPin.label}'`
+                    );
                   }
                 }
 
@@ -221,7 +270,7 @@ const FlowCanvasInner: React.FC = () => {
             })
           );
 
-          console.log("Parameter mapping updated");
+          console.log("Parameter mapping updated", targetNode.id);
         }
       }
     },

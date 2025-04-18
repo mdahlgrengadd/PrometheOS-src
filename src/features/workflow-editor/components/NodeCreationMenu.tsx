@@ -6,6 +6,7 @@ import { IApiComponent } from '../../../api/core/types';
 import { useApi } from '../../../api/hooks/useApi';
 import { ApiComponentService } from '../services/ApiComponentService';
 import { ApiAppNodeData, PinDataType } from '../types/flowTypes';
+import { DataTypeConversionNodeData } from './DataTypeConversionNode';
 
 interface NodeCreationMenuProps {
   onAddNode: (node: Node) => void;
@@ -35,6 +36,10 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   const [selectedAppId, setSelectedAppId] = useState("");
   const [appComponents, setAppComponents] = useState<IApiComponent[]>([]);
   const [selectedComponentId, setSelectedComponentId] = useState("");
+
+  // Add data type conversion state
+  const [inputDataType, setInputDataType] = useState<PinDataType>("object");
+  const [outputDataType, setOutputDataType] = useState<PinDataType>("string");
 
   // Get API context for accessing components
   const apiContext = useApi();
@@ -271,6 +276,42 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
     setIsOpen(false);
   };
 
+  // Handle adding a data type conversion node
+  const handleAddDataTypeConversionNode = () => {
+    const newNode: Node = {
+      id: `datatype-conversion-${Date.now()}`,
+      type: "dataTypeConversion",
+      position: {
+        x: Math.random() * 300 + 50,
+        y: Math.random() * 300 + 50,
+      },
+      data: {
+        label: `Convert ${inputDataType} to ${outputDataType}`,
+        inputDataType,
+        outputDataType,
+        inputs: [
+          {
+            id: `input-${Date.now()}`,
+            type: "input",
+            label: "Input",
+            dataType: inputDataType,
+          },
+        ],
+        outputs: [
+          {
+            id: `output-${Date.now()}`,
+            type: "output",
+            label: "Output",
+            dataType: outputDataType,
+          },
+        ],
+      } as unknown as Record<string, unknown>,
+    };
+
+    onAddNode(newNode);
+    setIsOpen(false);
+  };
+
   // Render the App Node creation form
   const renderAppNodeForm = () => {
     return (
@@ -430,10 +471,9 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
             <input
               type="number"
               value={numberValue}
-              onChange={(e) => setNumberValue(parseFloat(e.target.value) || 0)}
+              onChange={(e) => setNumberValue(Number(e.target.value))}
               className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-              placeholder="Enter number value..."
-              step="0.1"
+              placeholder="0"
             />
           </div>
         )}
@@ -445,19 +485,66 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
           >
             Cancel
           </button>
+          {primitiveType === "string" ? (
+            <button
+              onClick={handleAddStringPrimitiveNode}
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            >
+              Add String
+            </button>
+          ) : (
+            <button
+              onClick={handleAddNumberPrimitiveNode}
+              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded"
+            >
+              Add Number
+            </button>
+          )}
+        </div>
+
+        {/* Add type conversion section */}
+        <div className="mt-6 pt-4 border-t border-gray-600">
+          <h4 className="text-white font-medium mb-3">Type Converter</h4>
+
+          <div className="mb-3">
+            <label className="block text-gray-300 text-sm mb-1">
+              Input Type
+            </label>
+            <select
+              value={inputDataType}
+              onChange={(e) => setInputDataType(e.target.value as PinDataType)}
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+            >
+              <option value="string">String</option>
+              <option value="number">Number</option>
+              <option value="boolean">Boolean</option>
+              <option value="object">Object</option>
+              <option value="array">Array</option>
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-gray-300 text-sm mb-1">
+              Output Type
+            </label>
+            <select
+              value={outputDataType}
+              onChange={(e) => setOutputDataType(e.target.value as PinDataType)}
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+            >
+              <option value="string">String</option>
+              <option value="number">Number</option>
+              <option value="boolean">Boolean</option>
+              <option value="object">Object</option>
+              <option value="array">Array</option>
+            </select>
+          </div>
+
           <button
-            onClick={
-              primitiveType === "string"
-                ? handleAddStringPrimitiveNode
-                : handleAddNumberPrimitiveNode
-            }
-            className={`px-3 py-1 ${
-              primitiveType === "string"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-green-600 hover:bg-green-700"
-            } text-white rounded`}
+            onClick={handleAddDataTypeConversionNode}
+            className="w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded"
           >
-            Add {primitiveType === "string" ? "String" : "Number"} Node
+            Add Type Converter
           </button>
         </div>
       </>

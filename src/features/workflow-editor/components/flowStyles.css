@@ -50,12 +50,40 @@
   border: 2px solid #444;
 }
 
-.input-pin {
+/* Base data pin styles */
+.input-pin,
+.output-pin {
   background-color: #e3f2fd;
-  border: 2px solid #64b5f6;
 }
 
-.output-pin {
+/* Data type specific colors */
+.string-data-pin {
+  background-color: #e8f5e9;
+  border: 2px solid #66bb6a;
+}
+
+.number-data-pin {
+  background-color: #e3f2fd;
+  border: 2px solid #42a5f5;
+}
+
+.boolean-data-pin {
   background-color: #fff8e1;
-  border: 2px solid #ffb74d;
+  border: 2px solid #ffca28;
+}
+
+.object-data-pin {
+  background-color: #f3e5f5;
+  border: 2px solid #ab47bc;
+}
+
+.array-data-pin {
+  background-color: #fce4ec;
+  border: 2px solid #ec407a;
+}
+
+/* Type conversion node styles */
+.type-conversion-node {
+  background-color: #37474f;
+  border-color: #607d8b;
 } 
