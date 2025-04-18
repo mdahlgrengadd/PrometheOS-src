@@ -12,24 +12,24 @@ interface Window {
 const songs = [
   {
     title: "Vibe Machine",
-    file: "/audio/sample.mp3",
-    howl: null,
-  },
-  {
-    title: "Rave Digger",
     file: "/audio/sample1.mp3",
     howl: null,
   },
   {
-    title: "80s Vibe",
+    title: "Rave Digger",
     file: "/audio/sample2.mp3",
     howl: null,
   },
-  {
-    title: "Running Out",
-    file: "/audio/sample3.mp3",
-    howl: null,
-  },
+  // {
+  //   title: "80s Vibe",
+  //   file: "/audio/sample3.mp3",
+  //   howl: null,
+  // },
+  // {
+  //   title: "Running Out",
+  //   file: "/audio/sample4.mp3",
+  //   howl: null,
+  // },
 ];
 
 // Component that consumes the audio player context
@@ -146,13 +146,6 @@ const AudioPlayerUI = () => {
         onNext();
       });
     }
-
-    // When unmounting, clean up
-    return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
   }, [currentTrack, isPlaying, onNext]);
 
   // Clean up on complete unmount
