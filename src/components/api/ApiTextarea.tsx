@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
-import { registerApiActionHandler } from '@/api/context/ApiContext';
-import { IActionResult, IApiAction, IApiParameter } from '@/api/core/types';
-import { withApi } from '@/api/hoc/withApi';
-import { Textarea, TextareaProps } from '@/components/ui/textarea';
+import { registerApiActionHandler } from "@/api/context/ApiContext";
+import { IActionResult, IApiAction, IApiParameter } from "@/api/core/types";
+import { withApi } from "@/api/hoc/withApi";
+import { Textarea, TextareaProps } from "@/components/ui/textarea";
 
 /**
  * Default API documentation for textarea

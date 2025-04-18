@@ -72,7 +72,7 @@ export const audioPlayerApiDoc = {
       ],
     } as IApiAction,
   ],
-  path: "/components/audioplayer",
+  path: "/apps/audioplayer/controls",
 };
 
 /**

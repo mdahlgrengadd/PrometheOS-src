@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
-import { registerApiActionHandler } from '@/api/context/ApiContext';
-import { IActionResult, IApiAction } from '@/api/core/types';
-import { withApi } from '@/api/hoc/withApi';
-import { Button, ButtonProps } from '@/components/ui/button';
+import { registerApiActionHandler } from "@/api/context/ApiContext";
+import { IActionResult, IApiAction } from "@/api/core/types";
+import { withApi } from "@/api/hoc/withApi";
+import { Button, ButtonProps } from "@/components/ui/button";
 
 /**
  * Default API documentation for buttons
