@@ -1,17 +1,22 @@
-import React from "react";
+import React from 'react';
 
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeType } from "@/lib/theme-types";
-import { useTheme } from "@/lib/ThemeProvider";
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ThemeType } from '@/lib/theme-types';
+import { useTheme } from '@/lib/ThemeProvider';
 
 const SettingsContent: React.FC = () => {
-  const { theme, setTheme, themes } = useTheme();
+  const { theme, setTheme, themes, padding, setPadding } = useTheme();
 
   const handleThemeChange = (selectedTheme: ThemeType) => {
     setTheme(selectedTheme);
+  };
+
+  const handlePaddingChange = (value: number[]) => {
+    setPadding(value[0]);
   };
 
   return (
@@ -189,6 +194,37 @@ const SettingsContent: React.FC = () => {
                   </p>
                 </div>
                 <Switch id="animations" defaultChecked={true} />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Window Settings</h3>
+              <p className="text-sm text-muted-foreground">
+                Customize window appearance and behavior
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between mb-2">
+                  <Label htmlFor="window-padding">Window Content Padding</Label>
+                  <span className="text-sm text-muted-foreground">
+                    {padding}px
+                  </span>
+                </div>
+                <Slider
+                  id="window-padding"
+                  min={0}
+                  max={32}
+                  step={1}
+                  value={[padding]}
+                  onValueChange={handlePaddingChange}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Adjust the padding inside all application windows
+                </p>
               </div>
             </div>
           </div>

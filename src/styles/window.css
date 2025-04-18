@@ -58,11 +58,10 @@
     position: relative;
     top: 0;
     left: 0;
-    padding: 16px;
+    padding: var(--window-content-padding, 16px);
     
     .theme-beos & {
       border-top: 1px solid var(--window-border);
-      padding: 16px;
     }
     
     .theme-light &, .theme-dark & {

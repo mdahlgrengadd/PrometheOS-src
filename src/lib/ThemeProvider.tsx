@@ -8,6 +8,8 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   setTheme: () => {},
   themes,
+  setPadding: () => {},
+  padding: 0, // Default padding
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -21,9 +23,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     return (savedTheme as ThemeType) || "light";
   });
 
+  // Get stored padding from localStorage or use 0px as default
+  const [padding, setPaddingState] = useState<number>(() => {
+    const savedPadding = localStorage.getItem("window-content-padding");
+    return savedPadding ? parseInt(savedPadding, 10) : 0;
+  });
+
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
     localStorage.setItem("os-theme", newTheme);
+  };
+
+  const setPadding = (newPadding: number) => {
+    setPaddingState(newPadding);
+    localStorage.setItem("window-content-padding", newPadding.toString());
   };
 
   // Apply theme CSS variables when theme changes
@@ -35,6 +48,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
+
+    // Set window content padding
+    root.style.setProperty("--window-content-padding", `${padding}px`);
 
     // Set body background based on desktop background
     document.body.style.background = themeConfig.desktopBackground;
@@ -49,10 +65,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-  }, [theme]);
+  }, [theme, padding]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, themes }}>
+    <ThemeContext.Provider
+      value={{ theme, setTheme, themes, padding, setPadding }}
+    >
       {children}
     </ThemeContext.Provider>
   );

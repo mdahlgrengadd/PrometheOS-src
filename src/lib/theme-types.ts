@@ -5,10 +5,15 @@ export interface ThemeConfig {
   name: string;
   cssVariables: Record<string, string>;
   desktopBackground: string;
+  paddingConfig?: {
+    windowContent: number;
+  };
 }
 
 export interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
   themes: Record<ThemeType, ThemeConfig>;
+  setPadding: (padding: number) => void;
+  padding: number;
 }
