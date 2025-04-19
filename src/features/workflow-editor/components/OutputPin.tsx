@@ -33,8 +33,8 @@ const OutputPin = ({ pin, nodeId, isConnectable }: OutputPinProps) => {
   const colorClass = getPinColorClass(pin.dataType);
 
   return (
-    <div className="output-pin flex items-center justify-end my-3 relative">
-      <div className="pin-label text-xs text-gray-300 font-mono mr-2">
+    <div className="output-pin flex items-center justify-end my-1 relative">
+      <div className="pin-label text-xs text-gray-300 font-mono mr-4">
         {pin.label}
       </div>
       <Handle

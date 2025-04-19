@@ -86,16 +86,36 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
           };
         }) || [];
 
+      // Create success and error execution pins
+      const successPinId = `exec-success-${Date.now()}`;
+      const errorPinId = `exec-error-${Date.now()}`;
+
+      const updatedExecutionOutputs = [
+        {
+          id: successPinId,
+          type: "execution" as const,
+          label: "Success",
+        },
+        {
+          id: errorPinId,
+          type: "execution" as const,
+          label: "Error",
+        },
+      ];
+
       // Update the node data in the React Flow graph
       const updateNode = (nds: Node[]) => {
         return nds.map((node) => {
           if (node.id === id) {
-            // Create updated data with the actionId and parameterMappings
+            // Create updated data with the actionId, parameterMappings, and execution pins
             const updatedData = {
               ...node.data,
               actionId: action.id,
               inputs: updatedInputs,
               parameterMappings: parameterMappings,
+              executionOutputs: updatedExecutionOutputs,
+              successPinId: successPinId,
+              errorPinId: errorPinId,
             };
 
             return {

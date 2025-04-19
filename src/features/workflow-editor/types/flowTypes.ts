@@ -1,4 +1,6 @@
 // API Flow Editor Type Definitions
+import { Edge } from '@xyflow/react';
+
 export type PinType = "execution" | "input" | "output";
 export type PinDataType = "string" | "number" | "boolean" | "object" | "array";
 
@@ -27,6 +29,8 @@ export interface ApiAppNodeData extends ApiNodeData {
   appId: string; // ID of the app this component belongs to
   parameterMappings?: Record<string, string>; // Maps parameter IDs to pin IDs
   resultMappings?: Record<string, string>; // Maps result fields to output pin IDs
+  successPinId?: string; // ID of the success execution pin
+  errorPinId?: string; // ID of the error execution pin
 }
 
 export interface ApiNode {
@@ -64,6 +68,7 @@ export interface WorkflowExecutionContext {
   currentNodeId?: string;
   error?: string;
   isExecuting: boolean;
+  allEdges?: Edge[]; // Add allEdges for access during execution
   addVariable: (name: string, value: WorkflowVariableValue) => void;
   getVariable: (name: string) => WorkflowVariableValue;
   setResult: (nodeId: string, result: unknown) => void;

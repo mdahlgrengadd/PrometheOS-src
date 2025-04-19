@@ -78,6 +78,9 @@ export class WorkflowExecutionService {
     // Update context with current node
     context.currentNodeId = node.id;
 
+    // Store all edges in context for access by nodes
+    context.allEdges = allEdges;
+
     // Notify node started
     options.onNodeStart?.(node.id);
 
@@ -111,7 +114,52 @@ export class WorkflowExecutionService {
       // Notify node completed
       options.onNodeComplete?.(node.id, context.getResult(node.id));
 
-      // Find outgoing execution edges
+      // MODIFIED SECTION: Find outgoing execution edges
+      // For API App nodes with success/fail pins, only follow valid execution paths
+      if (node.type === "apiAppNode" && node.data) {
+        const nodeData = node.data as unknown as ApiAppNodeData;
+
+        // Only proceed with conditional execution if the node has success/error pins
+        if (nodeData.successPinId && nodeData.errorPinId) {
+          const result = context.getResult(node.id);
+          // Use type assertion to check for success property
+          const isSuccess =
+            result &&
+            typeof result === "object" &&
+            "success" in result &&
+            (result as { success: boolean }).success === true;
+
+          // Get the relevant pin ID based on execution result
+          const activePinId = isSuccess
+            ? nodeData.successPinId
+            : nodeData.errorPinId;
+
+          // Find only the edges that start from the active pin
+          const activeEdges = allEdges.filter(
+            (edge) =>
+              edge.source === node.id && edge.sourceHandle === activePinId
+          );
+
+          // Follow execution flow only for the active edges
+          for (const edge of activeEdges) {
+            const nextNode = allNodes.find((n) => n.id === edge.target);
+            if (nextNode) {
+              await this.executeNode(
+                nextNode,
+                allNodes,
+                allEdges,
+                context,
+                options
+              );
+            }
+          }
+
+          // Skip the normal execution flow handling below
+          return;
+        }
+      }
+
+      // Default behavior for other nodes or API nodes without conditional pins
       const executionEdges = allEdges.filter(
         (edge) => edge.source === node.id && edge.sourceHandle?.includes("exec")
       );
@@ -529,8 +577,35 @@ export class WorkflowExecutionService {
       `After executing ${nodeData.componentId}.${nodeData.actionId}`
     );
 
-    // If action failed, throw an error to stop execution
-    if (!result.success) {
+    // MODIFIED SECTION: Handle branching based on API result
+    // Instead of throwing an error, use success/error execution pins for branching
+
+    // For backward compatibility, check if node has success/error pins
+    if (nodeData.successPinId && nodeData.errorPinId) {
+      // Find all outgoing execution edges from this node
+      const executionEdges =
+        context.allEdges?.filter(
+          (edge) =>
+            edge.source === node.id && edge.sourceHandle?.includes("exec")
+        ) || [];
+
+      // Find edges connected to success and error pins
+      const successEdges = executionEdges.filter(
+        (edge) => edge.sourceHandle === nodeData.successPinId
+      );
+
+      const errorEdges = executionEdges.filter(
+        (edge) => edge.sourceHandle === nodeData.errorPinId
+      );
+
+      // Add success/error information to execution context for the node
+      context.addVariable(nodeData.successPinId, result.success ? true : null);
+      context.addVariable(nodeData.errorPinId, !result.success ? true : null);
+
+      // Don't throw error - the execution will continue via appropriate pins
+      // The follow-up execution will be handled by the executeNode method
+    } else if (!result.success) {
+      // For backward compatibility: if no success/error pins are defined, throw error as before
       throw new Error(
         result.error || `Action execution failed for node ${node.id}`
       );

@@ -33,7 +33,7 @@ const InputPin = ({ pin, nodeId, isConnectable }: InputPinProps) => {
   const colorClass = getPinColorClass(pin.dataType);
 
   return (
-    <div className="input-pin flex items-center my-3 relative">
+    <div className="input-pin flex items-center my-1 relative">
       <Handle
         type="target"
         position={Position.Left}
@@ -44,7 +44,7 @@ const InputPin = ({ pin, nodeId, isConnectable }: InputPinProps) => {
         data-pin-type={pin.type}
         data-pin-data-type={pin.dataType || "unknown"}
       />
-      <div className="pin-label text-xs text-gray-300 font-mono ml-2">
+      <div className="pin-label text-xs text-gray-300 font-mono ml-4">
         {pin.label}
       </div>
     </div>

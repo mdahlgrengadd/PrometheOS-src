@@ -20,7 +20,7 @@ const ExecutionPin = ({
   const handleId = `${pin.id}`;
 
   return (
-    <div className="execution-pin flex items-center my-3 relative">
+    <div className="execution-pin flex items-center my-1 relative">
       <Handle
         type={position === Position.Left ? "target" : "source"}
         position={position}
@@ -31,7 +31,7 @@ const ExecutionPin = ({
       />
       <div
         className={`execution-label text-xs text-white font-mono font-bold ${
-          position === Position.Right ? "mr-1 ml-2" : "ml-1 mr-2"
+          position === Position.Right ? "mr-4 ml-4" : "ml-4 mr-4"
         }`}
       >
         {pin.label}

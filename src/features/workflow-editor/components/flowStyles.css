@@ -46,44 +46,44 @@
 
 /* Pin styles */
 .execution-pin {
-  background-color: #f8f8f8;
-  border: 2px solid #444;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 /* Base data pin styles */
 .input-pin,
 .output-pin {
-  background-color: #e3f2fd;
+  background-color: transparent;
 }
 
 /* Data type specific colors */
 .string-data-pin {
-  background-color: #e8f5e9;
-  border: 2px solid #66bb6a;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 .number-data-pin {
-  background-color: #e3f2fd;
-  border: 2px solid #42a5f5;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 .boolean-data-pin {
-  background-color: #fff8e1;
-  border: 2px solid #ffca28;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 .object-data-pin {
-  background-color: #f3e5f5;
-  border: 2px solid #ab47bc;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 .array-data-pin {
-  background-color: #fce4ec;
-  border: 2px solid #ec407a;
+  background-color: transparent;
+  /* border: 2px solid transparent;*/
 }
 
 /* Type conversion node styles */
 .type-conversion-node {
-  background-color: #37474f;
-  border-color: #607d8b;
-} 
+  background-color: transparent;
+  /* border-color: transparent;*/
+}
