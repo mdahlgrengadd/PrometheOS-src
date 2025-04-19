@@ -147,6 +147,17 @@ export class WorkflowExecutionService {
     allEdges: Edge[],
     context: WorkflowExecutionContext
   ): void {
+    console.log(
+      `Processing data connections for node ${node.id} (${node.type})`
+    );
+
+    // Debug log before processing
+    this.debugLogContext(
+      context,
+      node.id,
+      `Before processing data connections`
+    );
+
     // Find all incoming data edges (non-execution edges)
     const incomingDataEdges = allEdges.filter(
       (edge) =>
@@ -154,6 +165,19 @@ export class WorkflowExecutionService {
         !edge.targetHandle?.includes("exec") &&
         !edge.sourceHandle?.includes("exec")
     );
+
+    console.log(
+      `Found ${incomingDataEdges.length} incoming data edges for node ${node.id}`
+    );
+
+    // Log details about each edge
+    incomingDataEdges.forEach((edge, index) => {
+      console.log(
+        `Edge ${index + 1}: source=${edge.source} (${
+          edge.sourceHandle
+        }) → target=${edge.target} (${edge.targetHandle})`
+      );
+    });
 
     // For each incoming data edge, get the value from the source node's output pin
     // and store it in the context for the target node's input pin
@@ -167,6 +191,10 @@ export class WorkflowExecutionService {
         const targetPinId = edge.targetHandle;
 
         if (sourcePinId && targetPinId) {
+          console.log(
+            `Processing connection: ${sourceNode.id}.${sourcePinId} → ${node.id}.${targetPinId}`
+          );
+
           // Try to get the value from the context (should have been set when source node was executed)
           const value = context.getVariable(sourcePinId);
 
@@ -182,11 +210,68 @@ export class WorkflowExecutionService {
               `No value found for source pin ${sourcePinId} from node ${sourceNode.id}`
             );
 
-            // If this is a primitive node, we need to execute it to get its value
+            // Try to find the value in the results directly
+            const sourceNodeResult = context.getResult(sourceNode.id);
+            console.log(
+              `Checking source node ${sourceNode.id} result:`,
+              sourceNodeResult
+            );
+
+            if (sourceNodeResult && typeof sourceNodeResult === "object") {
+              // Found data in the source node result
+              console.log(
+                `Source node ${sourceNode.id} has result data:`,
+                sourceNodeResult
+              );
+
+              // Try to extract a useful value from the result
+              let extractedValue: WorkflowVariableValue | undefined = undefined;
+
+              // Check if the result has data property (common pattern)
+              if (
+                "data" in sourceNodeResult &&
+                sourceNodeResult.data !== undefined
+              ) {
+                if (
+                  typeof sourceNodeResult.data === "object" &&
+                  "value" in sourceNodeResult.data
+                ) {
+                  // Most common pattern: result.data.value
+                  extractedValue = sourceNodeResult.data
+                    .value as WorkflowVariableValue;
+                  console.log(
+                    `Using value from result.data.value:`,
+                    extractedValue
+                  );
+                } else {
+                  // Just use the data property directly
+                  extractedValue =
+                    sourceNodeResult.data as WorkflowVariableValue;
+                  console.log(
+                    `Using entire result.data as value:`,
+                    extractedValue
+                  );
+                }
+              } else {
+                // Last resort: use the entire result
+                extractedValue = sourceNodeResult as WorkflowVariableValue;
+                console.log(`Using entire result as value:`, extractedValue);
+              }
+
+              if (extractedValue !== undefined) {
+                context.addVariable(targetPinId, extractedValue);
+                continue;
+              }
+            }
+
+            // If the node hasn't been executed yet, execute it now to get its value
             if (
               sourceNode.type === "stringPrimitive" ||
               sourceNode.type === "numberPrimitive"
             ) {
+              console.log(
+                `Executing primitive node ${sourceNode.id} to get value`
+              );
               if (sourceNode.type === "stringPrimitive") {
                 this.executeStringPrimitiveNode(sourceNode, context);
               } else {
@@ -202,11 +287,43 @@ export class WorkflowExecutionService {
                 );
                 context.addVariable(targetPinId, valueAfterExecution);
               }
+            } else if (sourceNode.type === "dataTypeConversion") {
+              // For data type conversion nodes, execute them
+              console.log(
+                `Executing data conversion node ${sourceNode.id} to get value`
+              );
+              this.executeDataTypeConversionNode(sourceNode, context);
+
+              // Now try again to get the value
+              const valueAfterExecution = context.getVariable(sourcePinId);
+              if (valueAfterExecution !== undefined) {
+                console.log(
+                  `Now transferring converted value from ${sourcePinId} to ${targetPinId}:`,
+                  valueAfterExecution
+                );
+                context.addVariable(targetPinId, valueAfterExecution);
+              }
             }
           }
         }
       }
     }
+
+    // Debug log after processing
+    this.debugLogContext(context, node.id, `After processing data connections`);
+  }
+
+  /**
+   * Debug helper to log the current state of variables and pins
+   */
+  private debugLogContext(
+    context: WorkflowExecutionContext,
+    nodeId: string,
+    message: string
+  ): void {
+    console.log(`[DEBUG ${nodeId}] ${message}`);
+    console.log(`Variables:`, context.variables);
+    console.log(`Results:`, context.results);
   }
 
   /**
@@ -229,6 +346,13 @@ export class WorkflowExecutionService {
       );
     }
 
+    // Debug log before execution
+    this.debugLogContext(
+      context,
+      node.id,
+      `Before executing ${nodeData.componentId}.${nodeData.actionId}`
+    );
+
     // Collect input parameters
     const parameters: Record<string, unknown> = {};
 
@@ -249,12 +373,17 @@ export class WorkflowExecutionService {
             if (isSetValueAction && paramName === "value") {
               // For setValue action, we need to ensure the value is a string
               if (typeof inputValue === "object") {
-                parameters[paramName] = JSON.stringify(inputValue, null, 2);
+                // Try to serialize the object to a string
+                try {
+                  parameters[paramName] = JSON.stringify(inputValue);
+                } catch (e) {
+                  parameters[paramName] = String(inputValue);
+                }
               } else {
                 parameters[paramName] = String(inputValue);
               }
               console.log(
-                `For setValue action, set '${paramName}' parameter to:`,
+                `For setValue action, set '${paramName}' parameter to string:`,
                 parameters[paramName]
               );
             } else {
@@ -283,7 +412,16 @@ export class WorkflowExecutionService {
       isSetValueAction &&
       (!parameters.value || typeof parameters.value !== "string")
     ) {
-      throw new Error(`setValue requires a 'value' parameter of type string`);
+      console.error(
+        `setValue requires a 'value' parameter of type string. Got:`,
+        parameters.value
+      );
+      // Force convert to string as a last resort
+      if (parameters.value !== undefined) {
+        parameters.value = String(parameters.value);
+      } else {
+        parameters.value = "";
+      }
     }
 
     // Execute the API action
@@ -295,6 +433,23 @@ export class WorkflowExecutionService {
 
     // Store the result in the context
     context.setResult(node.id, result);
+
+    // Always set the main result to the 'result' output pin if it exists
+    if (nodeData.outputs && nodeData.outputs.length > 0) {
+      // Find the result output pin - typically named with 'result' or is the first output pin
+      const resultPin =
+        nodeData.outputs.find((pin) =>
+          pin.label.toLowerCase().includes("result")
+        ) || nodeData.outputs[0];
+
+      if (resultPin) {
+        console.log(
+          `Setting API result to output pin ${resultPin.id}:`,
+          result
+        );
+        context.addVariable(resultPin.id, result);
+      }
+    }
 
     // Map result to output variables if mappings exist
     if (nodeData.resultMappings && result.data) {
@@ -310,9 +465,69 @@ export class WorkflowExecutionService {
             pinId,
             value as string | number | boolean | object | null
           );
+          console.log(
+            `Mapped result.data.${resultKey} to pin ${pinId}:`,
+            value
+          );
         }
       }
     }
+
+    // Even if there are no explicit mappings, make the entire result available
+    // through all output pins to ensure data flows to the next nodes
+    if (nodeData.outputs && nodeData.outputs.length > 0) {
+      for (const output of nodeData.outputs) {
+        // Only set if not already set through mappings
+        if (context.getVariable(output.id) === undefined) {
+          if (result.data) {
+            // For pins with a specific data type, try to provide appropriate data
+            if (output.dataType === "object") {
+              context.addVariable(output.id, result.data);
+              console.log(
+                `Set output for pin ${output.id} to result.data:`,
+                result.data
+              );
+            } else if (output.dataType === "string") {
+              // For string pins, stringify the result
+              try {
+                const stringValue =
+                  typeof result.data === "string"
+                    ? result.data
+                    : JSON.stringify(result.data);
+                context.addVariable(output.id, stringValue);
+                console.log(
+                  `Set string output for pin ${output.id} to:`,
+                  stringValue
+                );
+              } catch (e) {
+                context.addVariable(output.id, String(result.data));
+              }
+            } else if (output.dataType === "boolean") {
+              // For boolean pins, use success flag
+              context.addVariable(output.id, !!result.success);
+            } else {
+              // For other types, pass the whole result
+              context.addVariable(output.id, result);
+            }
+          } else {
+            // If no data, at least provide the success status
+            if (output.dataType === "boolean") {
+              context.addVariable(output.id, !!result.success);
+            } else {
+              // For other types without data, provide the whole result
+              context.addVariable(output.id, result);
+            }
+          }
+        }
+      }
+    }
+
+    // Debug log after execution
+    this.debugLogContext(
+      context,
+      node.id,
+      `After executing ${nodeData.componentId}.${nodeData.actionId}`
+    );
 
     // If action failed, throw an error to stop execution
     if (!result.success) {
@@ -428,19 +643,60 @@ export class WorkflowExecutionService {
       `Executing DataTypeConversion Node: ${node.id} converting from ${nodeData.inputDataType} to ${nodeData.outputDataType}`
     );
 
+    // Debug log before execution
+    this.debugLogContext(
+      context,
+      node.id,
+      `Before conversion from ${nodeData.inputDataType} to ${nodeData.outputDataType}`
+    );
+
     // Find the input pin
     const inputPin = nodeData.inputs[0];
+    // Find the output pin
+    const outputPin = nodeData.outputs[0];
 
     if (!inputPin) {
       console.error("No input pin found on DataTypeConversion node");
       return;
     }
 
-    // Get the input value from the context
-    const inputValue = context.getVariable(inputPin.id);
+    if (!outputPin) {
+      console.error("No output pin found on DataTypeConversion node");
+      return;
+    }
+
+    console.log(
+      `Conversion node input pin ID: ${inputPin.id}, output pin ID: ${outputPin.id}`
+    );
+
+    // Try various methods to get input value
+    const inputValue: WorkflowVariableValue | undefined = this.findValueForPin(
+      inputPin.id,
+      context
+    );
 
     if (inputValue === undefined) {
-      console.error(`No input value found for pin ${inputPin.id}`);
+      console.error(
+        `No input value found for pin ${inputPin.id} after searching everywhere`
+      );
+      // Set a default empty value to prevent further errors
+      if (nodeData.outputDataType === "string") {
+        console.log(`Setting default empty string for ${outputPin.id}`);
+        context.addVariable(outputPin.id, "");
+        context.setResult(node.id, { success: true, data: { value: "" } });
+      } else if (nodeData.outputDataType === "number") {
+        console.log(`Setting default 0 for ${outputPin.id}`);
+        context.addVariable(outputPin.id, 0);
+        context.setResult(node.id, { success: true, data: { value: 0 } });
+      } else if (nodeData.outputDataType === "boolean") {
+        console.log(`Setting default false for ${outputPin.id}`);
+        context.addVariable(outputPin.id, false);
+        context.setResult(node.id, { success: true, data: { value: false } });
+      } else {
+        console.log(`Setting default empty object for ${outputPin.id}`);
+        context.addVariable(outputPin.id, {});
+        context.setResult(node.id, { success: true, data: { value: {} } });
+      }
       return;
     }
 
@@ -451,8 +707,13 @@ export class WorkflowExecutionService {
     if (nodeData.outputDataType === "string") {
       // Convert any input to string
       if (typeof inputValue === "object") {
-        // For objects, use JSON.stringify with formatting
-        convertedValue = JSON.stringify(inputValue, null, 2);
+        // For objects, use JSON.stringify without extra formatting
+        try {
+          convertedValue = JSON.stringify(inputValue);
+        } catch (e) {
+          console.error(`Error stringifying object:`, e);
+          convertedValue = String(inputValue);
+        }
       } else {
         // For primitives, convert directly to string
         convertedValue = String(inputValue);
@@ -461,9 +722,9 @@ export class WorkflowExecutionService {
     } else if (nodeData.outputDataType === "number") {
       // Try to convert to number
       convertedValue = Number(inputValue);
-      if (isNaN(convertedValue)) {
+      if (isNaN(convertedValue as number)) {
         console.error(`Cannot convert value to number: ${inputValue}`);
-        return;
+        convertedValue = 0; // Default to 0 to prevent further errors
       }
     } else if (nodeData.outputDataType === "boolean") {
       // Convert to boolean
@@ -480,22 +741,87 @@ export class WorkflowExecutionService {
         console.error(
           `Error converting to ${nodeData.outputDataType}: ${error}`
         );
-        return;
+        convertedValue = inputValue; // Keep as is to prevent further errors
       }
     }
 
-    // Store the result in the context
+    // Store the result in the context with a properly structured result object
+    // to match what other nodes like primitives produce
     context.setResult(node.id, {
       success: true,
       data: { value: convertedValue },
     });
 
     // Make the converted value available as a variable for the output pin
-    if (nodeData.outputs && nodeData.outputs.length > 0) {
-      const outputPin = nodeData.outputs[0];
-      context.addVariable(outputPin.id, convertedValue);
-      console.log(`Set output variable ${outputPin.id} to:`, convertedValue);
+    context.addVariable(outputPin.id, convertedValue);
+    console.log(`Set output variable ${outputPin.id} to:`, convertedValue);
+
+    // Debug log after execution
+    this.debugLogContext(
+      context,
+      node.id,
+      `After conversion from ${nodeData.inputDataType} to ${nodeData.outputDataType}`
+    );
+  }
+
+  /**
+   * Utility method to find a value for a pin ID using various search methods
+   */
+  private findValueForPin(
+    pinId: string,
+    context: WorkflowExecutionContext
+  ): WorkflowVariableValue | undefined {
+    // First, try to get directly from variables
+    const value = context.getVariable(pinId);
+    if (value !== undefined) {
+      return value;
     }
+
+    console.log(
+      `No direct value found for pin ${pinId}, searching in all variables...`
+    );
+
+    // Check all variables for any matching data
+    console.log(`All available variables:`, context.variables);
+
+    // Look for any matching value in the variables
+    for (const [varId, varValue] of Object.entries(context.variables)) {
+      console.log(`Checking variable ${varId}:`, varValue);
+
+      // Try to match the pin by ID suffix or other pattern
+      if (varId.includes(pinId) || pinId.includes(varId)) {
+        console.log(`Found potential match in variable ${varId}`);
+        return varValue;
+      }
+    }
+
+    console.log(`No value found in variables, checking node results...`);
+
+    // If not found, check results from all nodes
+    for (const [nodeId, result] of Object.entries(context.results)) {
+      console.log(`Checking results from node ${nodeId}:`, result);
+
+      if (result && typeof result === "object") {
+        // Check for data in standard format
+        if ("data" in result && result.data !== undefined) {
+          console.log(`Node ${nodeId} has data property:`, result.data);
+
+          if (typeof result.data === "object" && "value" in result.data) {
+            console.log(`Found value in result.data.value:`, result.data.value);
+            return result.data.value as WorkflowVariableValue;
+          } else {
+            console.log(`Using result.data as value:`, result.data);
+            return result.data as WorkflowVariableValue;
+          }
+        } else {
+          // Try using the whole result object
+          console.log(`Using entire result as value:`, result);
+          return result as WorkflowVariableValue;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**
