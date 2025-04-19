@@ -535,7 +535,7 @@ const ComponentsList: React.FC<{
           onClick={() => setViewMode("grouped")}
           className={`text-xs ${
             viewMode === "grouped"
-              ? "bg-primary text-primary-foreground border-primary"
+              ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
               : "hover:bg-secondary hover:text-secondary-foreground"
           }`}
         >
@@ -547,7 +547,7 @@ const ComponentsList: React.FC<{
           onClick={() => setViewMode("flat")}
           className={`text-xs ${
             viewMode === "flat"
-              ? "bg-primary text-primary-foreground border-primary"
+              ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
               : "hover:bg-secondary hover:text-secondary-foreground"
           }`}
         >
