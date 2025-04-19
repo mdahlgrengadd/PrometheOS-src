@@ -194,13 +194,22 @@ const ActionExecutor: React.FC<{
           {result.error && (
             <div className="text-red-600 mt-1">{result.error}</div>
           )}
-          {result.data && (
-            <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
-              {typeof result.data === "object"
-                ? JSON.stringify(result.data, null, 2)
-                : String(result.data)}
+          <div className="mt-3">
+            <div className="text-xs font-medium text-gray-500">Response:</div>
+            <pre className="mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+              {JSON.stringify(result, null, 2)}
             </pre>
-          )}
+          </div>
+          {result.data &&
+            typeof result.data === "object" &&
+            JSON.stringify(result.data) !== JSON.stringify(result) && (
+              <div className="mt-3">
+                <div className="text-xs font-medium text-gray-500">Data:</div>
+                <pre className="mt-1 text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                  {JSON.stringify(result.data, null, 2)}
+                </pre>
+              </div>
+            )}
         </div>
       )}
     </div>
