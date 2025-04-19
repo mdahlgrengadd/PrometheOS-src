@@ -168,3 +168,15 @@
 .theme-beos [class*="bg-card"] {
   background-color: #f0f0f0 !important;
 }
+
+/* Fix for window content positioning in light/dark themes - prevents header overlap */
+.theme-light .draggable-window:not(.maximized) .window-content, 
+.theme-dark .draggable-window:not(.maximized) .window-content {
+  padding-top: 36px !important; /* Match the header height to prevent content overlap */
+}
+
+/* When maximized, content already has correct margin */
+.theme-light .maximized .window-content,
+.theme-dark .maximized .window-content {
+  padding-top: 0 !important;
+}
