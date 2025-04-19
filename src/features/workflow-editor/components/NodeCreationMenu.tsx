@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Node } from '@xyflow/react';
 
 import { IApiComponent } from '../../../api/core/types';
 import { useApi } from '../../../api/hooks/useApi';
+import { useDataPin, useExecPin } from '../../../hooks/usePin';
 import { ApiComponentService } from '../services/ApiComponentService';
-import { ApiAppNodeData, PinDataType } from '../types/flowTypes';
+import { ApiAppNodeData, Pin, PinDataType, PinType } from '../types/flowTypes';
 import { DataTypeConversionNodeData } from './DataTypeConversionNode';
 
 interface NodeCreationMenuProps {
@@ -44,6 +45,100 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   // Get API context for accessing components
   const apiContext = useApi();
 
+  // Create pins at the component level (React hooks can only be called here)
+  // Basic node pins
+  const basicNodeInputPin = useDataPin("input", "string", "setParam");
+  const basicNodeOutputPin = useDataPin("output", "object", "getData");
+  const basicNodeExecInputPin = useExecPin("In", "in");
+  const basicNodeExecOutputPin = useExecPin("Out", "out");
+
+  // Begin workflow pins
+  const beginWorkflowNextPin = useExecPin("Next", "out");
+
+  // String primitive pins
+  const stringValuePin = useDataPin("output", "string", "Value");
+
+  // Number primitive pins
+  const numberValuePin = useDataPin("output", "number", "Value");
+
+  // Data type converter pins - these depend on the selected data types
+  const typeCoverterInputPin = useMemo(
+    () => useDataPin("input", inputDataType, "Input"),
+    [inputDataType]
+  );
+
+  const typeCoverterOutputPin = useMemo(
+    () => useDataPin("output", outputDataType, "Output"),
+    [outputDataType]
+  );
+
+  // API App node pins - these need to be created when the component is selected
+  const createAppPins = (
+    selectedComponent: IApiComponent | undefined
+  ): {
+    inputs: Pin[];
+    outputs: Pin[];
+    executionInputs: Pin[];
+    executionOutputs: Pin[];
+  } => {
+    if (!selectedComponent) {
+      return {
+        inputs: [],
+        outputs: [],
+        executionInputs: [],
+        executionOutputs: [],
+      };
+    }
+
+    // Create inputs based on parameters
+    const inputs =
+      selectedComponent.actions[0]?.parameters?.map((param) => {
+        return {
+          id: `input-${Date.now()}-${param.name}`,
+          type: "input" as PinType,
+          label: param.name,
+          dataType: param.type as PinDataType,
+          acceptsMultipleConnections: true,
+        };
+      }) || [];
+
+    // Create a standard output
+    const outputs = [
+      {
+        id: `output-${Date.now()}-result`,
+        type: "output" as PinType,
+        label: "Result",
+        dataType: "object" as PinDataType,
+      },
+    ];
+
+    // Create standard execution pins
+    const executionInputs = [
+      {
+        id: `exec-in-${Date.now()}`,
+        type: "execution" as PinType,
+        label: "In",
+        acceptsMultipleConnections: true,
+      },
+    ];
+
+    const executionOutputs = [
+      {
+        id: `exec-out-${Date.now()}`,
+        type: "execution" as PinType,
+        label: "Success",
+        acceptsMultipleConnections: true,
+      },
+    ];
+
+    return {
+      inputs,
+      outputs,
+      executionInputs,
+      executionOutputs,
+    };
+  };
+
   // Initialize the API component service
   useEffect(() => {
     const apiService = ApiComponentService.getInstance();
@@ -81,38 +176,10 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       data: {
         label: nodeName,
         endpoint: endpoint,
-        inputs: [
-          {
-            id: `input-${Date.now()}-1`,
-            type: "input",
-            label: "setParam",
-            dataType: "string",
-          },
-        ],
-        outputs: [
-          {
-            id: `output-${Date.now()}-1`,
-            type: "output",
-            label: "getData",
-            dataType: "object",
-          },
-        ],
-        executionInputs: [
-          {
-            id: `exec-in-${Date.now()}`,
-            type: "execution",
-            label: "In",
-            acceptsMultipleConnections: true,
-          },
-        ],
-        executionOutputs: [
-          {
-            id: `exec-out-${Date.now()}`,
-            type: "execution",
-            label: "Out",
-            acceptsMultipleConnections: true,
-          },
-        ],
+        inputs: [basicNodeInputPin],
+        outputs: [basicNodeOutputPin],
+        executionInputs: [basicNodeExecInputPin],
+        executionOutputs: [basicNodeExecOutputPin],
       },
     };
 
@@ -143,6 +210,9 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
     );
     if (!selectedComponent) return;
 
+    // Create pins for the app node
+    const pins = createAppPins(selectedComponent);
+
     // Create an app node with information from the selected component
     const nodeData: ApiAppNodeData = {
       label: selectedComponent.type,
@@ -150,40 +220,10 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       description: selectedComponent.description,
       componentId: selectedComponent.id,
       appId: selectedAppId,
-      // Create inputs based on the first action's parameters (if any)
-      inputs:
-        selectedComponent.actions[0]?.parameters?.map((param) => ({
-          id: `input-${Date.now()}-${param.name}`,
-          type: "input" as const,
-          label: param.name,
-          dataType: param.type as PinDataType,
-        })) || [],
-      // Create a generic output for the result
-      outputs: [
-        {
-          id: `output-${Date.now()}-result`,
-          type: "output",
-          label: "Result",
-          dataType: "object",
-        },
-      ],
-      // Standard execution pins
-      executionInputs: [
-        {
-          id: `exec-in-${Date.now()}`,
-          type: "execution",
-          label: "In",
-          acceptsMultipleConnections: true,
-        },
-      ],
-      executionOutputs: [
-        {
-          id: `exec-out-${Date.now()}`,
-          type: "execution",
-          label: "Success",
-          acceptsMultipleConnections: true,
-        },
-      ],
+      inputs: pins.inputs,
+      outputs: pins.outputs,
+      executionInputs: pins.executionInputs,
+      executionOutputs: pins.executionOutputs,
     };
 
     const newNode = createAppNode(nodeData);
@@ -205,14 +245,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       data: {
         label: "Begin Workflow",
         executionInputs: [],
-        executionOutputs: [
-          {
-            id: `exec-output-${Date.now()}`,
-            type: "execution",
-            label: "Next",
-            connections: [],
-          },
-        ],
+        executionOutputs: [beginWorkflowNextPin],
       },
     };
 
@@ -232,14 +265,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       data: {
         label: "String Value",
         value: stringValue,
-        outputs: [
-          {
-            id: `output-${Date.now()}`,
-            type: "output",
-            label: "Value",
-            dataType: "string",
-          },
-        ],
+        outputs: [stringValuePin],
       },
     };
 
@@ -260,14 +286,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       data: {
         label: "Number Value",
         value: numberValue,
-        outputs: [
-          {
-            id: `output-${Date.now()}`,
-            type: "output",
-            label: "Value",
-            dataType: "number",
-          },
-        ],
+        outputs: [numberValuePin],
       },
     };
 
@@ -278,34 +297,22 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
 
   // Handle adding a data type conversion node
   const handleAddDataTypeConversionNode = () => {
+    const nodeData: DataTypeConversionNodeData = {
+      label: `Convert ${inputDataType} to ${outputDataType}`,
+      inputDataType: inputDataType,
+      outputDataType: outputDataType,
+      inputs: [typeCoverterInputPin],
+      outputs: [typeCoverterOutputPin],
+    };
+
     const newNode: Node = {
-      id: `datatype-conversion-${Date.now()}`,
+      id: `data-convert-${Date.now()}`,
       type: "dataTypeConversion",
       position: {
         x: Math.random() * 300 + 50,
         y: Math.random() * 300 + 50,
       },
-      data: {
-        label: `Convert ${inputDataType} to ${outputDataType}`,
-        inputDataType,
-        outputDataType,
-        inputs: [
-          {
-            id: `input-${Date.now()}`,
-            type: "input",
-            label: "Input",
-            dataType: inputDataType,
-          },
-        ],
-        outputs: [
-          {
-            id: `output-${Date.now()}`,
-            type: "output",
-            label: "Output",
-            dataType: outputDataType,
-          },
-        ],
-      } as unknown as Record<string, unknown>,
+      data: nodeData as unknown as Record<string, unknown>,
     };
 
     onAddNode(newNode);
@@ -315,15 +322,17 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   // Render the App Node creation form
   const renderAppNodeForm = () => {
     return (
-      <>
+      <div className="menu-section">
+        <h4 className="text-white font-medium mb-3">API App Node</h4>
+
         <div className="mb-3">
-          <label className="block text-gray-300 text-sm mb-1">Select App</label>
+          <label className="block text-gray-300 text-sm mb-1">App</label>
           <select
             value={selectedAppId}
             onChange={(e) => setSelectedAppId(e.target.value)}
             className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
           >
-            <option value="">Choose an app...</option>
+            <option value="">Select an app...</option>
             {availableApps.map((app) => (
               <option key={app.id} value={app.id}>
                 {app.name}
@@ -333,88 +342,82 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
         </div>
 
         {selectedAppId && (
-          <div className="mb-4">
+          <div className="mb-3">
             <label className="block text-gray-300 text-sm mb-1">
-              Select Component
+              Component
             </label>
             <select
               value={selectedComponentId}
               onChange={(e) => setSelectedComponentId(e.target.value)}
               className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
             >
-              <option value="">Choose a component...</option>
+              <option value="">Select a component...</option>
               {appComponents.map((component) => (
                 <option key={component.id} value={component.id}>
-                  {component.type} ({component.actions.length} actions)
+                  {component.type}
                 </option>
               ))}
             </select>
           </div>
         )}
 
-        <div className="flex justify-between">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAddAppNode}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
-            disabled={!selectedAppId || !selectedComponentId}
-          >
-            Add App Node
-          </button>
-        </div>
-      </>
+        <button
+          onClick={handleAddAppNode}
+          disabled={!selectedAppId || !selectedComponentId}
+          className={`w-full px-3 py-1 ${
+            !selectedAppId || !selectedComponentId
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          } text-white rounded`}
+        >
+          Add API App Node
+        </button>
+      </div>
     );
   };
 
   // Render the Basic node creation form
   const renderBasicNodeForm = () => {
     return (
-      <>
+      <div className="menu-section">
+        <h4 className="text-white font-medium mb-3">Basic API Node</h4>
+
         <div className="mb-3">
-          <label className="block text-gray-300 text-sm mb-1">Node Name</label>
+          <label className="block text-gray-300 text-sm mb-1">Name</label>
           <input
             type="text"
             value={nodeName}
             onChange={(e) => setNodeName(e.target.value)}
             className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-            placeholder="User API"
+            placeholder="Node name"
           />
         </div>
 
-        <div className="mb-4">
+        <div className="mb-3">
           <label className="block text-gray-300 text-sm mb-1">
-            API Endpoint
+            Endpoint URL
           </label>
           <input
             type="text"
             value={endpoint}
             onChange={(e) => setEndpoint(e.target.value)}
             className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-            placeholder="/api/users"
+            placeholder="/api/endpoint"
           />
         </div>
 
-        <div className="flex justify-between">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAddBasicNode}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
-            disabled={!nodeName.trim() || !endpoint.trim()}
-          >
-            Add Node
-          </button>
-        </div>
-      </>
+        <button
+          onClick={handleAddBasicNode}
+          disabled={!nodeName || !endpoint}
+          className={`w-full px-3 py-1 ${
+            !nodeName || !endpoint
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          } text-white rounded`}
+        >
+          Add Basic Node
+        </button>
+      </div>
     );
   };
 
@@ -422,87 +425,62 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   const renderPrimitiveNodeForm = () => {
     return (
       <>
-        <div className="mb-3">
-          <label className="block text-gray-300 text-sm mb-1">
-            Primitive Type
-          </label>
-          <div className="flex space-x-2">
-            <button
-              className={`flex-1 py-1 text-sm ${
-                primitiveType === "string"
-                  ? "bg-blue-600 text-white"
-                  : "bg-[#2D3748] text-gray-300"
-              } rounded`}
-              onClick={() => setPrimitiveType("string")}
-            >
-              String
-            </button>
-            <button
-              className={`flex-1 py-1 text-sm ${
-                primitiveType === "number"
-                  ? "bg-green-600 text-white"
-                  : "bg-[#2D3748] text-gray-300"
-              } rounded`}
-              onClick={() => setPrimitiveType("number")}
-            >
-              Number
-            </button>
-          </div>
-        </div>
+        <div className="menu-section">
+          <h4 className="text-white font-medium mb-3">
+            {primitiveType === "string"
+              ? "String Primitive"
+              : "Number Primitive"}
+          </h4>
 
-        {primitiveType === "string" ? (
-          <div className="mb-4">
-            <label className="block text-gray-300 text-sm mb-1">
-              Initial Value
-            </label>
-            <input
-              type="text"
-              value={stringValue}
-              onChange={(e) => setStringValue(e.target.value)}
+          <div className="mb-3">
+            <label className="block text-gray-300 text-sm mb-1">Type</label>
+            <select
+              value={primitiveType}
+              onChange={(e) =>
+                setPrimitiveType(e.target.value as "string" | "number")
+              }
               className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-              placeholder="Enter string value..."
-            />
+            >
+              <option value="string">String</option>
+              <option value="number">Number</option>
+            </select>
           </div>
-        ) : (
-          <div className="mb-4">
-            <label className="block text-gray-300 text-sm mb-1">
-              Initial Value
-            </label>
-            <input
-              type="number"
-              value={numberValue}
-              onChange={(e) => setNumberValue(Number(e.target.value))}
-              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-              placeholder="0"
-            />
-          </div>
-        )}
 
-        <div className="flex justify-between">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded"
-          >
-            Cancel
-          </button>
           {primitiveType === "string" ? (
-            <button
-              onClick={handleAddStringPrimitiveNode}
-              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
-            >
-              Add String
-            </button>
+            <div className="mb-3">
+              <label className="block text-gray-300 text-sm mb-1">Value</label>
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => setStringValue(e.target.value)}
+                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+                placeholder="Enter string value"
+              />
+            </div>
           ) : (
-            <button
-              onClick={handleAddNumberPrimitiveNode}
-              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded"
-            >
-              Add Number
-            </button>
+            <div className="mb-3">
+              <label className="block text-gray-300 text-sm mb-1">Value</label>
+              <input
+                type="number"
+                value={numberValue}
+                onChange={(e) => setNumberValue(Number(e.target.value))}
+                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              />
+            </div>
           )}
+
+          <button
+            onClick={
+              primitiveType === "string"
+                ? handleAddStringPrimitiveNode
+                : handleAddNumberPrimitiveNode
+            }
+            className="mt-2 w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded"
+          >
+            Add {primitiveType === "string" ? "String" : "Number"} Primitive
+          </button>
         </div>
 
-        {/* Add type conversion section */}
         <div className="mt-6 pt-4 border-t border-gray-600">
           <h4 className="text-white font-medium mb-3">Type Converter</h4>
 
