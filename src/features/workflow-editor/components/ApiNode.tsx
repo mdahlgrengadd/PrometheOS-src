@@ -1,6 +1,7 @@
-
 import React, { memo } from 'react';
+
 import { NodeProps, Position } from '@xyflow/react';
+
 import { ApiNodeData } from '../types/flowTypes';
 import ExecutionPin from './ExecutionPin';
 import InputPin from './InputPin';
@@ -21,11 +22,12 @@ const ApiNode = ({ id, data, isConnectable }: ApiNodeProps) => {
         <span className="text-sm truncate">{data.label}</span>
         <span className="text-xs opacity-70 font-mono">{data.endpoint}</span>
       </div>
-      
+
       {/* Node content with pins */}
       <div className="node-content flex">
-        {/* Left execution pins (input) */}
-        <div className="execution-pins-left py-2 pr-1 flex flex-col justify-start border-r border-[#4A5568]">
+        {/* Left side pin container - holds both execution and data input pins */}
+        <div className="left-pins-container flex flex-col gap-3 py-3 pl-0 pr-3 border-r border-[#4A5568]">
+          {/* Left execution pins (input) */}
           {data.executionInputs.map((pin) => (
             <ExecutionPin
               key={pin.id}
@@ -35,36 +37,26 @@ const ApiNode = ({ id, data, isConnectable }: ApiNodeProps) => {
               isConnectable={isConnectable}
             />
           ))}
+
+          {/* Left data input pins */}
+          {data.inputs.map((pin) => (
+            <InputPin
+              key={pin.id}
+              pin={pin}
+              nodeId={id}
+              isConnectable={isConnectable}
+            />
+          ))}
         </div>
-        
-        <div className="pins-container flex flex-1">
-          {/* Left side for input pins */}
-          <div className="input-pins px-2 py-3 flex-1">
-            {data.inputs.map((pin) => (
-              <InputPin
-                key={pin.id}
-                pin={pin}
-                nodeId={id}
-                isConnectable={isConnectable}
-              />
-            ))}
-          </div>
-          
-          {/* Right side for output pins */}
-          <div className="output-pins px-2 py-3 flex-1">
-            {data.outputs.map((pin) => (
-              <OutputPin
-                key={pin.id}
-                pin={pin}
-                nodeId={id}
-                isConnectable={isConnectable}
-              />
-            ))}
-          </div>
+
+        {/* Center content area */}
+        <div className="node-center-content flex-1 px-3 py-2 flex flex-col items-center justify-center">
+          <div className="text-center text-sm text-gray-300">REST API</div>
         </div>
-        
-        {/* Right execution pins (output) */}
-        <div className="execution-pins-right py-2 pl-1 flex flex-col justify-start border-l border-[#4A5568]">
+
+        {/* Right side pin container - holds both execution and data output pins */}
+        <div className="right-pins-container flex flex-col gap-3 py-3 pl-3 pr-0 border-l border-[#4A5568]">
+          {/* Right execution pins (output) */}
           {data.executionOutputs.map((pin) => (
             <ExecutionPin
               key={pin.id}
@@ -74,9 +66,19 @@ const ApiNode = ({ id, data, isConnectable }: ApiNodeProps) => {
               isConnectable={isConnectable}
             />
           ))}
+
+          {/* Right data output pins */}
+          {data.outputs.map((pin) => (
+            <OutputPin
+              key={pin.id}
+              pin={pin}
+              nodeId={id}
+              isConnectable={isConnectable}
+            />
+          ))}
         </div>
       </div>
-      
+
       {/* Footer with additional info if needed */}
       {data.description && (
         <div className="node-footer px-3 py-1 bg-[#1A202C] text-xs text-gray-400 border-t border-[#4A5568]">

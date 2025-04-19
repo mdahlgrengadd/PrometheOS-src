@@ -48,9 +48,11 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   // Create pins at the component level (React hooks can only be called here)
   // Basic node pins
   const basicNodeInputPin = useDataPin("input", "string", "setParam");
-  const basicNodeOutputPin = useDataPin("output", "object", "getData");
+  const maxTimePin = useDataPin("input", "number", "maxTime");
+  const basicNodeOutputPin = useDataPin("output", "object", "result");
   const basicNodeExecInputPin = useExecPin("In", "in");
-  const basicNodeExecOutputPin = useExecPin("Out", "out");
+  const successExecOutputPin = useExecPin("Success", "out");
+  const failExecOutputPin = useExecPin("Fail", "out");
 
   // Begin workflow pins
   const beginWorkflowNextPin = useExecPin("Next", "out");
@@ -167,7 +169,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
     if (!nodeName.trim() || !endpoint.trim()) return;
 
     const newNode: Node = {
-      id: `node-${Date.now()}`,
+      id: `rest-node-${Date.now()}`,
       type: "apiNode",
       position: {
         x: Math.random() * 300 + 50,
@@ -176,10 +178,11 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
       data: {
         label: nodeName,
         endpoint: endpoint,
-        inputs: [basicNodeInputPin],
+        description: "REST API Node",
+        inputs: [basicNodeInputPin, maxTimePin],
         outputs: [basicNodeOutputPin],
         executionInputs: [basicNodeExecInputPin],
-        executionOutputs: [basicNodeExecOutputPin],
+        executionOutputs: [successExecOutputPin, failExecOutputPin],
       },
     };
 
@@ -380,7 +383,18 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
   const renderBasicNodeForm = () => {
     return (
       <div className="menu-section">
-        <h4 className="text-white font-medium mb-3">Basic API Node</h4>
+        <h4 className="text-white font-medium mb-3">REST API Node</h4>
+
+        <div className="mb-3 text-sm text-gray-300">
+          <p>Creates a REST API call node with:</p>
+          <ul className="list-disc ml-5 mt-1">
+            <li>Execution pin for triggering the call</li>
+            <li>"Success" execution output for successful API calls</li>
+            <li>"Fail" execution output for failed or timed-out calls</li>
+            <li>maxTime input for setting timeout in milliseconds</li>
+            <li>Result output with the API response data</li>
+          </ul>
+        </div>
 
         <div className="mb-3">
           <label className="block text-gray-300 text-sm mb-1">Name</label>
@@ -402,7 +416,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
             value={endpoint}
             onChange={(e) => setEndpoint(e.target.value)}
             className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
-            placeholder="/api/endpoint"
+            placeholder="https://api.example.com/endpoint"
           />
         </div>
 
@@ -415,7 +429,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
               : "bg-blue-600 hover:bg-blue-700"
           } text-white rounded`}
         >
-          Add Basic Node
+          Add REST API Node
         </button>
       </div>
     );
@@ -540,7 +554,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-lg"
           >
-            Add Basic Node
+            Add REST API Node
           </button>
           <button
             onClick={() => {
@@ -565,7 +579,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
         <div className="p-4 bg-[#2D3748] rounded-md shadow-xl border border-[#4A5568] w-64">
           <h3 className="text-white font-bold mb-3">
             {nodeMode === "basic"
-              ? "Add Basic Node"
+              ? "Add REST API Node"
               : nodeMode === "app"
               ? "Add App API Node"
               : "Add Primitive Node"}
@@ -581,7 +595,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
               }`}
               onClick={() => setNodeMode("basic")}
             >
-              Basic
+              REST API
             </button>
             <button
               className={`flex-1 py-1 text-sm ${

@@ -92,6 +92,9 @@ export class WorkflowExecutionService {
       if (node.type === "apiAppNode") {
         // Execute API App Node
         await this.executeApiAppNode(node, context);
+      } else if (node.type === "apiNode") {
+        // Execute REST API Node
+        await this.executeApiNode(node, context);
       } else if (node.type === "stringPrimitive") {
         // Execute String Primitive Node
         await this.executeStringPrimitiveNode(node, context);
@@ -115,26 +118,36 @@ export class WorkflowExecutionService {
       options.onNodeComplete?.(node.id, context.getResult(node.id));
 
       // MODIFIED SECTION: Find outgoing execution edges
-      // For API App nodes with success/fail pins, only follow valid execution paths
-      if (node.type === "apiAppNode" && node.data) {
-        const nodeData = node.data as unknown as ApiAppNodeData;
+      // For nodes with success/fail pins, only follow valid execution paths
+      if (
+        (node.type === "apiNode" || node.type === "apiAppNode") &&
+        node.data
+      ) {
+        const nodeData = node.data as unknown as ApiNodeData;
+        const result = context.getResult(node.id);
 
-        // Only proceed with conditional execution if the node has success/error pins
-        if (nodeData.successPinId && nodeData.errorPinId) {
-          const result = context.getResult(node.id);
-          // Use type assertion to check for success property
-          const isSuccess =
-            result &&
-            typeof result === "object" &&
-            "success" in result &&
-            (result as { success: boolean }).success === true;
+        // Check for success/failure status
+        const isSuccess =
+          result &&
+          typeof result === "object" &&
+          ("success" in result
+            ? (result as { success: boolean }).success === true
+            : true);
 
-          // Get the relevant pin ID based on execution result
-          const activePinId = isSuccess
-            ? nodeData.successPinId
-            : nodeData.errorPinId;
+        // Find execution output pins
+        const executionOutputs = nodeData.executionOutputs || [];
 
-          // Find only the edges that start from the active pin
+        // Find success and fail pins
+        const successPin = executionOutputs.find(
+          (pin) => pin.label === "Success"
+        );
+        const failPin = executionOutputs.find((pin) => pin.label === "Fail");
+
+        if (successPin && failPin) {
+          // Choose the appropriate pin based on success/failure
+          const activePinId = isSuccess ? successPin.id : failPin.id;
+
+          // Find edges that start from the active pin
           const activeEdges = allEdges.filter(
             (edge) =>
               edge.source === node.id && edge.sourceHandle === activePinId
@@ -159,7 +172,7 @@ export class WorkflowExecutionService {
         }
       }
 
-      // Default behavior for other nodes or API nodes without conditional pins
+      // Default behavior for other nodes or nodes without conditional pins
       const executionEdges = allEdges.filter(
         (edge) => edge.source === node.id && edge.sourceHandle?.includes("exec")
       );
@@ -609,6 +622,91 @@ export class WorkflowExecutionService {
       throw new Error(
         result.error || `Action execution failed for node ${node.id}`
       );
+    }
+  }
+
+  /**
+   * Execute a REST API Node by making an HTTP request
+   */
+  private async executeApiNode(
+    node: Node,
+    context: WorkflowExecutionContext
+  ): Promise<void> {
+    if (node.type !== "apiNode" || !node.data) {
+      throw new Error(`Node ${node.id} is not a valid API Node`);
+    }
+
+    const nodeData = node.data as unknown as ApiNodeData;
+    console.log(
+      `Executing REST API node: ${node.id} calling ${nodeData.endpoint}`
+    );
+
+    // Get input parameters
+    let params = {};
+    let maxTime = 10000; // Default timeout: 10 seconds
+
+    if (nodeData.inputs) {
+      for (const input of nodeData.inputs) {
+        const value = context.getVariable(input.id);
+
+        if (input.label === "maxTime" && typeof value === "number") {
+          maxTime = value;
+        } else if (input.label === "setParam" && value !== undefined) {
+          // For now, just use a single parameter value
+          params = { value };
+        }
+      }
+    }
+
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), maxTime);
+
+    try {
+      // Make the REST API call
+      const response = await fetch(nodeData.endpoint, {
+        method: "GET", // We can expand this later to support other methods
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Parse the response
+      const data = await response.json();
+      console.log(`REST API response:`, data);
+
+      // Store the result in the context
+      context.setResult(node.id, {
+        success: true,
+        data: data,
+        status: response.status,
+      });
+
+      // Set output for the result pin
+      if (nodeData.outputs && nodeData.outputs.length > 0) {
+        const resultPin = nodeData.outputs[0];
+        context.addVariable(resultPin.id, data);
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error(`REST API call failed:`, error);
+
+      // Store the error in the context
+      context.setResult(node.id, {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      // Don't throw the error - we'll use the fail execution pin for flow control
     }
   }
 

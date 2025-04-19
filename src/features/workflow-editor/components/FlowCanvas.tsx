@@ -15,7 +15,9 @@ import {
 } from '../../../flowPlugins';
 import { ApiComponentService } from '../services/ApiComponentService';
 import { WorkflowExecutionService } from '../services/WorkflowExecutionService';
-import { ApiAppNodeData, Pin, WorkflowExecutionContext } from '../types/flowTypes';
+import {
+    ApiAppNodeData, Pin, PinType, WorkflowExecutionContext, WorkflowVariableValue
+} from '../types/flowTypes';
 import ApiAppNode from './ApiAppNode';
 import ApiNode from './ApiNode';
 import BeginWorkflowNode from './BeginWorkflowNode';
@@ -38,117 +40,78 @@ const FlowCanvasInner: React.FC = () => {
     apiService.setApiContext(apiContext);
   }, [apiContext]);
 
-  // Set up nodes and edges state with empty initial data
+  // Reference to the workflow execution context
+  const executionContext = useRef<WorkflowExecutionContext>({
+    currentNodeId: null,
+    isExecuting: false,
+    variables: {},
+    results: {},
+    getVariable: function (id: string) {
+      return this.variables[id];
+    },
+    addVariable: function (id: string, value: WorkflowVariableValue) {
+      this.variables[id] = value;
+    },
+    setResult: function (nodeId: string, result: unknown) {
+      this.results[nodeId] = result;
+    },
+    getResult: function (nodeId: string) {
+      return this.results[nodeId];
+    },
+  });
+
   const [nodes, setNodes, onNodesChange] = useNodesState(defaultInitialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(defaultInitialEdges);
 
-  // Workflow execution state
+  // Execution state
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionError, setExecutionError] = useState<string | null>(null);
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
   const [executionResults, setExecutionResults] = useState<
     Record<string, unknown>
   >({});
 
-  // Execution context for sharing data between nodes
-  const executionContext = useRef<WorkflowExecutionContext>({
-    variables: {},
-    results: {},
-    isExecuting: false,
-    addVariable: (name, value) => {
-      executionContext.current.variables[name] = value;
-    },
-    getVariable: (name) => {
-      return executionContext.current.variables[name];
-    },
-    setResult: (nodeId, result) => {
-      executionContext.current.results[nodeId] = result;
-      setExecutionResults({ ...executionContext.current.results });
-    },
-    getResult: (nodeId) => {
-      return executionContext.current.results[nodeId];
-    },
-  });
-
-  // Get the ReactFlow instance to access current nodes and edges
+  // Get the React Flow instance
   const { getNodes, getEdges } = useReactFlow();
 
-  // Handle connections between nodes
+  // Add a Begin Workflow node automatically on init
+  useEffect(() => {
+    // Only add the Begin Workflow node if there are no nodes yet
+    if (nodes.length === 0) {
+      const beginWorkflowNextPin = {
+        id: `exec-out-${Date.now()}`,
+        type: "execution" as PinType,
+        label: "Next",
+        acceptsMultipleConnections: true,
+      };
+
+      const beginWorkflowNode = {
+        id: `begin-workflow-${Date.now()}`,
+        type: "beginWorkflow",
+        position: {
+          x: 50,
+          y: 50,
+        },
+        data: {
+          label: "Begin Workflow",
+          executionInputs: [],
+          executionOutputs: [beginWorkflowNextPin],
+        },
+      };
+
+      setNodes([beginWorkflowNode]);
+    }
+  }, []);
+
+  // Connect nodes
   const onConnect = useCallback(
-    (connection: Connection) => {
-      // Use centralized validation function
-      const validationResult = validateConnection(
-        connection,
-        getNodes(),
-        getEdges()
-      );
-
-      if (!validationResult.valid) {
-        console.warn(`Invalid connection: ${validationResult.reason}`);
-        return; // Don't create the connection
-      }
-
-      // Determine if this is an execution connection
-      const sourceIsExecution =
-        connection.sourceHandle?.includes("exec") || false;
-
-      // Create the connection
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...connection,
-            type: "custom",
-            data: {
-              isExecution: sourceIsExecution,
-            },
-          },
-          eds
-        )
-      );
-
-      // If this is a data connection (not execution), update parameter mappings
-      if (!sourceIsExecution) {
-        const sourceNode = getNodes().find(
-          (node) => node.id === connection.source
-        );
-        const targetNode = getNodes().find(
-          (node) => node.id === connection.target
-        );
-
-        // Check if target is an API app node
-        if (targetNode && targetNode.type === "apiAppNode" && sourceNode) {
-          console.log("Setting up parameter mapping for data connection");
-
-          // Check if source is a primitive node
-          const isPrimitiveSource =
-            sourceNode.type === "stringPrimitive" ||
-            sourceNode.type === "numberPrimitive";
-
-          setNodes((nodes) =>
-            nodes.map((node) => {
-              if (node.id === targetNode.id) {
-                // Cast node.data to ApiAppNodeData
-                const nodeData = node.data as unknown as ApiAppNodeData;
-
-                // Apply mapping and convert back to Record<string, unknown> for node data
-                const updatedData = isPrimitiveSource
-                  ? mapSetValueAction(nodeData, connection.targetHandle!)
-                  : mapGeneralAction(nodeData, connection.targetHandle!);
-
-                return {
-                  ...node,
-                  data: updatedData as unknown as Record<string, unknown>,
-                };
-              }
-              return node;
-            })
-          );
-
-          console.log("Parameter mapping updated", targetNode.id);
-        }
+    (params: Connection) => {
+      // Only create the connection if it's valid
+      if (validateConnection(params, getNodes(), getEdges())) {
+        setEdges((eds) => addEdge(params, eds));
       }
     },
-    [setEdges, getNodes, setNodes]
+    [setEdges, getNodes, getEdges]
   );
 
   // Node selection handling
@@ -192,35 +155,18 @@ const FlowCanvasInner: React.FC = () => {
 
   // Find a starting node (with execution input but no incoming execution edges)
   const findStartNode = useCallback(() => {
-    // First look for beginWorkflow nodes
+    // Only use beginWorkflow nodes as starting points
     const beginWorkflowNodes = nodes.filter(
       (node) => node.type === "beginWorkflow"
     );
+
     if (beginWorkflowNodes.length > 0) {
       return beginWorkflowNodes[0]; // Use the first Begin Workflow node
     }
 
-    // Fall back to the existing logic for other node types
-    const nodesWithExecutionInputs = nodes.filter((node) => {
-      // Safely check for executionInputs array and its length
-      const inputs = node.data?.executionInputs;
-      return inputs && Array.isArray(inputs) && inputs.length > 0;
-    });
-
-    // For each node with execution inputs, check if it has any incoming execution edges
-    for (const node of nodesWithExecutionInputs) {
-      const hasIncomingExecution = edges.some(
-        (edge) => edge.target === node.id && edge.targetHandle?.includes("exec")
-      );
-
-      // If no incoming execution edges, this can be a start node
-      if (!hasIncomingExecution) {
-        return node;
-      }
-    }
-
+    // If no begin workflow node is found, we don't have a valid starting point
     return null;
-  }, [nodes, edges]);
+  }, [nodes]);
 
   // Find nodes that can be executed next from the current node
   const findNextNodes = useCallback(
