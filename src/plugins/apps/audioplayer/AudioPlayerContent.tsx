@@ -2,6 +2,7 @@ import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucid
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
+import { ApiButtonWithHandler } from '@/components/api/ApiButton';
 
 // Define WebkitAudioContext interface if it doesn't exist in TypeScript types
 interface Window {
@@ -519,21 +520,48 @@ const AudioPlayerContent = () => {
   }, []);
 
   return (
-    <AudioPlayerProvider
-      apiId="audio-player-controls"
-      onPlay={handlePlay}
-      onPause={handlePause}
-      onNext={handleNext}
-      onPrevious={handlePrevious}
-      onToggleMute={handleToggleMute}
-      onSetVolume={handleSetVolume}
-      isPlaying={isPlaying}
-      currentTrack={currentTrack}
-      volume={volume}
-      isMuted={isMuted}
-    >
-      <AudioPlayerUI />
-    </AudioPlayerProvider>
+    <>
+      <AudioPlayerProvider
+        apiId="audio-player-controls"
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        onToggleMute={handleToggleMute}
+        onSetVolume={handleSetVolume}
+        isPlaying={isPlaying}
+        currentTrack={currentTrack}
+        volume={volume}
+        isMuted={isMuted}
+      >
+        <AudioPlayerUI />
+      </AudioPlayerProvider>
+
+      <ApiButtonWithHandler
+        apiId="audio-player-controls2"
+        api={{
+          type: "Button",
+          description: "Play button for audio player",
+          actions: [
+            {
+              id: "click",
+              name: "Play Button Click",
+              description: "Starts the audio playback",
+              available: true,
+              parameters: [],
+            },
+          ],
+          path: "/apps/audioplayer/buttons/play",
+          state: {
+            enabled: true,
+            visible: true,
+          },
+        }}
+        onClick={handlePlay}
+      >
+        Play
+      </ApiButtonWithHandler>
+    </>
   );
 };
 

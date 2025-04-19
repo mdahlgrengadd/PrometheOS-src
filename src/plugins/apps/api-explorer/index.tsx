@@ -1,4 +1,4 @@
-import { RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 import { IApiAction, IApiComponent, IApiParameter } from '@/api/core/types';
@@ -258,6 +258,224 @@ const ComponentDetails: React.FC<{ component: IApiComponent }> = ({
 };
 
 /**
+ * Group API components by their path prefix
+ */
+interface PathGroup {
+  name: string;
+  fullPath: string;
+  items: IApiComponent[] | PathGroup[];
+  isLeaf?: boolean;
+}
+
+/**
+ * Groups components by their path prefix hierarchy
+ */
+const groupComponentsByPath = (components: IApiComponent[]): PathGroup[] => {
+  const root: PathGroup[] = [];
+
+  // Sort components by path to ensure proper grouping
+  const sortedComponents = [...components].sort((a, b) =>
+    a.path.localeCompare(b.path)
+  );
+
+  for (const component of sortedComponents) {
+    // Split path into segments
+    const pathSegments = component.path.split("/").filter(Boolean);
+
+    // Don't try to group components without path segments
+    if (pathSegments.length === 0) {
+      root.push({
+        name: component.id,
+        fullPath: component.path,
+        items: [component],
+        isLeaf: true,
+      });
+      continue;
+    }
+
+    // Start at the root level
+    let currentLevel = root;
+    let currentPath = "";
+
+    // Navigate through path segments
+    for (let i = 0; i < pathSegments.length; i++) {
+      const segment = pathSegments[i];
+      currentPath += "/" + segment;
+
+      // Check if this is the last segment (component level)
+      const isLastSegment = i === pathSegments.length - 1;
+
+      // Find existing group at current level
+      let group = currentLevel.find((g) => g.name === segment) as
+        | PathGroup
+        | undefined;
+
+      if (!group) {
+        // Create a new group
+        group = {
+          name: segment,
+          fullPath: currentPath,
+          items: isLastSegment ? [component] : [],
+          isLeaf: isLastSegment,
+        };
+        currentLevel.push(group);
+      } else if (isLastSegment) {
+        // Add component to existing leaf group
+        if (group.isLeaf) {
+          (group.items as IApiComponent[]).push(component);
+        } else {
+          // Convert from non-leaf to mixed type (rare case)
+          const existingGroups = [...group.items] as PathGroup[];
+          // Cast to PathGroup[] to satisfy the type checker
+          group.items = [component] as unknown as PathGroup[];
+          // Then add back the existing groups
+          (group.items as PathGroup[]).push(...existingGroups);
+        }
+      }
+
+      // Move to next level if not at leaf
+      if (!isLastSegment) {
+        if (!Array.isArray(group.items) || group.isLeaf) {
+          // Convert to non-leaf if needed
+          group.items = [];
+          group.isLeaf = false;
+        }
+        currentLevel = group.items as PathGroup[];
+      }
+    }
+  }
+
+  return root;
+};
+
+/**
+ * Recursive component for displaying a path group in the hierarchy
+ */
+const PathGroupItem: React.FC<{
+  group: PathGroup;
+  searchTerm: string;
+  onSelectComponent: (component: IApiComponent) => void;
+  selectedComponentId?: string;
+  level: number;
+}> = ({ group, searchTerm, onSelectComponent, selectedComponentId, level }) => {
+  const [isExpanded, setIsExpanded] = useState(level < 2); // Auto-expand first two levels
+
+  // Filter components and groups based on search term
+  const isLeafGroup = group.isLeaf;
+
+  if (isLeafGroup) {
+    const components = group.items as IApiComponent[];
+    const filteredComponents = searchTerm
+      ? components.filter(
+          (comp) =>
+            comp.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            comp.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            comp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            comp.path.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : components;
+
+    if (filteredComponents.length === 0) return null;
+
+    return (
+      <div>
+        <div
+          className="flex items-center py-2 cursor-pointer hover:bg-gray-50"
+          onClick={() => setIsExpanded(!isExpanded)}
+          title={group.fullPath}
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 mr-1" />
+          ) : (
+            <ChevronRight className="h-4 w-4 mr-1" />
+          )}
+          <div className="font-medium">{group.name}</div>
+          <Badge variant="outline" className="ml-2 text-xs">
+            {filteredComponents.length}
+          </Badge>
+        </div>
+
+        {isExpanded && (
+          <div className="border-l-2 border-gray-200 ml-2 pl-3">
+            {filteredComponents.map((component) => (
+              <Card
+                key={component.id}
+                className={`mb-1 cursor-pointer hover:bg-gray-50 transition-colors ${
+                  component.id === selectedComponentId ? "border-primary" : ""
+                }`}
+                onClick={() => onSelectComponent(component)}
+              >
+                <CardHeader className="py-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-sm">{component.id}</CardTitle>
+                      <CardDescription className="text-xs">
+                        {component.type}
+                      </CardDescription>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {component.path}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {component.actions.length} action
+                      {component.actions.length !== 1 ? "s" : ""}
+                    </Badge>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    // Handle non-leaf group (directory)
+    const childGroups = group.items as PathGroup[];
+    const filteredGroups = childGroups
+      .map((childGroup) => (
+        <PathGroupItem
+          key={childGroup.fullPath}
+          group={childGroup}
+          searchTerm={searchTerm}
+          onSelectComponent={onSelectComponent}
+          selectedComponentId={selectedComponentId}
+          level={level + 1}
+        />
+      ))
+      .filter(Boolean);
+
+    if (filteredGroups.length === 0) return null;
+
+    return (
+      <div>
+        {level > 0 && (
+          <div
+            className="flex items-center py-2 cursor-pointer hover:bg-gray-50"
+            onClick={() => setIsExpanded(!isExpanded)}
+            title={group.fullPath}
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4 mr-1" />
+            ) : (
+              <ChevronRight className="h-4 w-4 mr-1" />
+            )}
+            <div className="font-medium">{group.name}</div>
+          </div>
+        )}
+
+        {(isExpanded || level === 0) && (
+          <div
+            className={level > 0 ? "border-l-2 border-gray-200 ml-2 pl-3" : ""}
+          >
+            {filteredGroups}
+          </div>
+        )}
+      </div>
+    );
+  }
+};
+
+/**
  * Component for displaying a list of API components
  */
 const ComponentsList: React.FC<{
@@ -274,12 +492,18 @@ const ComponentsList: React.FC<{
   setComponents,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grouped" | "flat">("grouped");
 
+  // Get the grouped components
+  const groupedComponents = groupComponentsByPath(components);
+
+  // For flat view, filter components based on search term
   const filteredComponents = components.filter(
     (comp) =>
       comp.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comp.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comp.description.toLowerCase().includes(searchTerm.toLowerCase())
+      comp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comp.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -304,39 +528,94 @@ const ComponentsList: React.FC<{
         </Button>
       </div>
 
+      <div className="mb-4 flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setViewMode("grouped")}
+          className={`text-xs ${
+            viewMode === "grouped"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "hover:bg-secondary hover:text-secondary-foreground"
+          }`}
+        >
+          Grouped
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setViewMode("flat")}
+          className={`text-xs ${
+            viewMode === "flat"
+              ? "bg-primary text-primary-foreground border-primary"
+              : "hover:bg-secondary hover:text-secondary-foreground"
+          }`}
+        >
+          Flat
+        </Button>
+      </div>
+
       <ScrollArea className="flex-1">
-        <div className="space-y-2">
-          {filteredComponents.length > 0 ? (
-            filteredComponents.map((component) => (
-              <Card
-                key={component.id}
-                className={`cursor-pointer hover:bg-gray-50 transition-colors ${
-                  component.id === selectedComponentId ? "border-primary" : ""
-                }`}
-                onClick={() => onSelectComponent(component)}
-              >
-                <CardHeader className="py-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-sm">{component.id}</CardTitle>
-                      <CardDescription className="text-xs">
-                        {component.type}
-                      </CardDescription>
+        {viewMode === "grouped" ? (
+          // Grouped hierarchical view
+          <div className="space-y-2">
+            {groupedComponents.map((group) => (
+              <PathGroupItem
+                key={group.fullPath}
+                group={group}
+                searchTerm={searchTerm}
+                onSelectComponent={onSelectComponent}
+                selectedComponentId={selectedComponentId}
+                level={0}
+              />
+            ))}
+
+            {groupedComponents.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No components found matching "{searchTerm}"
+              </div>
+            )}
+          </div>
+        ) : (
+          // Original flat view
+          <div className="space-y-2">
+            {filteredComponents.length > 0 ? (
+              filteredComponents.map((component) => (
+                <Card
+                  key={component.id}
+                  className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                    component.id === selectedComponentId ? "border-primary" : ""
+                  }`}
+                  onClick={() => onSelectComponent(component)}
+                >
+                  <CardHeader className="py-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-sm">
+                          {component.id}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {component.type}
+                        </CardDescription>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {component.path}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {component.actions.length} action
+                        {component.actions.length !== 1 ? "s" : ""}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {component.actions.length} action
-                      {component.actions.length !== 1 ? "s" : ""}
-                    </Badge>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              No components found matching "{searchTerm}"
-            </div>
-          )}
-        </div>
+                  </CardHeader>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No components found matching "{searchTerm}"
+              </div>
+            )}
+          </div>
+        )}
       </ScrollArea>
     </div>
   );
