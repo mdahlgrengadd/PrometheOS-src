@@ -180,3 +180,69 @@
 .theme-dark .maximized .window-content {
   padding-top: 0 !important;
 }
+
+/* Mobile UI Styles */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure all content adjusts for mobile */
+@media (max-width: 768px) {
+  * {
+    touch-action: manipulation;
+  }
+  
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Override any fixed padding for window-content on mobile */
+  .window-content {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Ensure text and input elements are properly sized for touch */
+  input, button, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Improve scrolling on iOS */
+  .overflow-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Add smooth transitions for mobile components */
+  .mobile-app-header {
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Prevent bounce/overflow scroll on iOS */
+  html, body {
+    overscroll-behavior-y: none;
+    overflow: hidden;
+  }
+}
