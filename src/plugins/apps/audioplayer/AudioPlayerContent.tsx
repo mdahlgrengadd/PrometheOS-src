@@ -537,7 +537,7 @@ const AudioPlayerContent = () => {
         <AudioPlayerUI />
       </AudioPlayerProvider>
 
-      <ApiButtonWithHandler
+      {/*<ApiButtonWithHandler
         apiId="audio-player-controls2"
         api={{
           type: "Button",
@@ -560,7 +560,7 @@ const AudioPlayerContent = () => {
         onClick={handlePlay}
       >
         Play
-      </ApiButtonWithHandler>
+      </ApiButtonWithHandler>*/}
     </>
   );
 };
