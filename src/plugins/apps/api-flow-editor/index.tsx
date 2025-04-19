@@ -38,26 +38,6 @@ const ApiFlowEditorComponent: React.FC = () => {
 
   return (
     <div className="api-flow-editor h-full flex flex-col bg-[#1A1F2C] text-gray-200">
-      {/* Header bar with controls */}
-      <header className="bg-[#2D3748] border-b border-[#4A5568] px-4 py-3 flex justify-between items-center shadow-md">
-        <div className="flex items-center">
-          <h1 className="text-xl font-bold text-white">API Flow Editor</h1>
-          <div className="ml-6 flex gap-2">
-            <button
-              className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm"
-              onClick={() => setShowHelp(!showHelp)}
-            >
-              Help
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
-            Blueprints-Style API Editor
-          </span>
-        </div>
-      </header>
-
       {/* Help modal */}
       {showHelp && (
         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">

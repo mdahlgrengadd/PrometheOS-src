@@ -22,6 +22,7 @@ export const availablePlugins: PluginManifest[] = [
   webllmChatManifest,
   apiExplorerManifest,
   apiFlowEditorManifest,
+  fileBrowserManifest,
 ];
 
 // Helper function to get plugin manifest by ID
