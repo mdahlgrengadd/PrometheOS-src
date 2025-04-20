@@ -1,35 +1,38 @@
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
-import { ApiButtonWithHandler } from '@/components/api/ApiButton';
-
-// Define WebkitAudioContext interface if it doesn't exist in TypeScript types
-interface Window {
-  webkitAudioContext: typeof AudioContext;
-}
+import {
+  AudioPlayerProvider,
+  useAudioPlayer,
+} from "@/components/api/ApiAudioPlayer";
+import { ApiButtonWithHandler } from "@/components/api/ApiButton";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
   {
     title: "Vibe Machine",
     file: "/audio/sample1.mp3",
-    howl: null,
   },
   {
     title: "Rave Digger",
     file: "/audio/sample2.mp3",
-    howl: null,
   },
   // {
   //   title: "80s Vibe",
   //   file: "/audio/sample3.mp3",
-  //   howl: null,
   // },
   // {
   //   title: "Running Out",
   //   file: "/audio/sample4.mp3",
-  //   howl: null,
   // },
 ];
 
@@ -49,30 +52,17 @@ const AudioPlayerUI = () => {
     onSetVolume,
   } = useAudioPlayer();
 
-  const [currentTime, setCurrentTime] = useState("0:00");
-  const [duration, setDuration] = useState("0:00");
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Track which listeners have been added to the audio element
-  const listenersAddedRef = useRef<{
-    timeupdate: boolean;
-    loadedmetadata: boolean;
-    ended: boolean;
-  }>({
-    timeupdate: false,
-    loadedmetadata: false,
-    ended: false,
-  });
-
-  const oscilloscopeRef = useRef<HTMLDivElement>(null);
-  const requestRef = useRef<number | null>(null);
+  const howlRef = useRef<Howl | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const oscilloscopeRef = useRef<HTMLDivElement | null>(null);
+  const requestRef = useRef<number | null>(null);
 
   // Format time in mm:ss
   const formatTime = (time: number) => {
@@ -81,143 +71,107 @@ const AudioPlayerUI = () => {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  // Update progress bar and time display - make it stable with useCallback
-  const updateProgress = useCallback(() => {
-    if (!audioElementRef.current) return;
-    const el = audioElementRef.current;
-    const currentTime = el.currentTime;
-    const duration = el.duration || 0;
-    setCurrentTime(formatTime(currentTime));
-    setProgress((currentTime / duration) * 100);
-  }, []);
-
-  // Initialize audio element and visualization - now only handles track loading
+  // (Re)create Howl whenever currentTrack changes
   useEffect(() => {
-    console.log("Audio reinitializing for track", currentTrack);
-
-    // Create audio element
-    const el = audioElementRef.current ?? document.createElement("audio");
-    if (!audioElementRef.current) {
-      el.crossOrigin = "anonymous";
-      audioElementRef.current = el;
+    // Clean up previous
+    if (howlRef.current) {
+      howlRef.current.unload();
     }
 
-    // Update the source
-    el.src = songs[currentTrack].file;
-    el.preload = "metadata";
+    const howl = new Howl({
+      src: [songs[currentTrack].file],
+      volume: isMuted ? 0 : volume,
+      onload: () => {
+        setDuration(howl.duration());
 
-    // Set up audio context if it doesn't exist
-    if (!audioContextRef.current) {
-      const AudioContext =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
-      const audioContext = new AudioContext();
-      audioContextRef.current = audioContext;
+        // Set up analyser node after Howler has created its graph
+        if (Howler.ctx && !analyserRef.current) {
+          const analyser = Howler.ctx.createAnalyser();
+          analyser.fftSize = 256;
 
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyserRef.current = analyser;
+          // Re-wire the masterGain through your analyser
+          Howler.masterGain.disconnect();
+          Howler.masterGain.connect(analyser);
+          analyser.connect(Howler.ctx.destination);
+          analyserRef.current = analyser;
 
-      const source = audioContext.createMediaElementSource(el);
-      source.connect(analyser);
-      analyser.connect(audioContext.destination);
-      sourceRef.current = source;
-    }
+          // Create canvas for visualization if it doesn't exist
+          if (oscilloscopeRef.current && !canvasRef.current) {
+            const canvas = document.createElement("canvas");
+            canvas.width = oscilloscopeRef.current.clientWidth;
+            canvas.height = Math.min(150, oscilloscopeRef.current.clientHeight);
+            canvas.style.width = "100%";
+            oscilloscopeRef.current.appendChild(canvas);
+            canvasRef.current = canvas;
+          }
+        }
+      },
+      onloaderror: (_, err) => console.error("Load error", err),
+      onend: () => {
+        onNext();
+      },
+    });
 
-    // Create canvas for visualization if it doesn't exist
-    if (oscilloscopeRef.current && !canvasRef.current) {
-      const canvas = document.createElement("canvas");
-      canvas.width = oscilloscopeRef.current.clientWidth;
-      // Set a fixed height for the canvas to prevent layout issues
-      canvas.height = Math.min(150, oscilloscopeRef.current.clientHeight);
-      canvas.style.width = "100%";
-      oscilloscopeRef.current.appendChild(canvas);
-      canvasRef.current = canvas;
-    }
-
-    // Set up event listeners
-    if (!listenersAddedRef.current.timeupdate) {
-      listenersAddedRef.current.timeupdate = true;
-      el.addEventListener("timeupdate", updateProgress);
-    }
-
-    if (!listenersAddedRef.current.loadedmetadata) {
-      listenersAddedRef.current.loadedmetadata = true;
-      el.addEventListener("loadedmetadata", () => {
-        setDuration(formatTime(el.duration));
-      });
-    }
-
-    if (!listenersAddedRef.current.ended) {
-      listenersAddedRef.current.ended = true;
-      el.addEventListener("ended", onNext);
-    }
-  }, [currentTrack, onNext, updateProgress]);
-
-  // Auto-play effect - plays the track when isPlaying is true or currentTrack changes
-  useEffect(() => {
-    const el = audioElementRef.current;
-    if (!el) return;
+    howlRef.current = howl;
+    setCurrentTime(howl.seek() as number);
+    setProgress(((howl.seek() as number) / howl.duration() || 0) * 100);
 
     if (isPlaying) {
-      // Resume AudioContext if it's suspended
-      if (audioContextRef.current?.state === "suspended") {
-        audioContextRef.current.resume();
+      // Resume AudioContext before playing
+      if (Howler.ctx && Howler.ctx.state === "suspended") {
+        Howler.ctx.resume().then(() => howl.play());
+      } else {
+        howl.play();
       }
-      el.play().catch((e) => console.error("Error auto-playing track:", e));
-    }
-  }, [currentTrack, isPlaying]);
-
-  // Sync effect - handles pause and volume adjustments only
-  useEffect(() => {
-    const el = audioElementRef.current;
-    if (!el) return;
-
-    if (!isPlaying && !el.paused) {
-      el.pause();
     }
 
-    // Update volume
-    el.volume = isMuted ? 0 : volume;
-  }, [isPlaying, volume, isMuted]);
-
-  // Clean up on complete unmount
-  useEffect(() => {
     return () => {
-      if (audioElementRef.current) {
-        const audioElement = audioElementRef.current;
-        audioElement.pause();
+      howl.unload();
+    };
+  }, [currentTrack, onNext, isPlaying, isMuted, volume]);
 
-        if (listenersAddedRef.current.timeupdate) {
-          audioElement.removeEventListener("timeupdate", updateProgress);
-          listenersAddedRef.current.timeupdate = false;
-        }
+  // Play/pause effect
+  useEffect(() => {
+    const howl = howlRef.current;
+    if (!howl) return;
 
-        if (sourceRef.current) {
-          sourceRef.current.disconnect();
-        }
+    if (isPlaying) {
+      howl.play();
+    } else {
+      howl.pause();
+    }
+  }, [isPlaying]);
 
-        if (analyserRef.current) {
-          analyserRef.current.disconnect();
-        }
+  // Volume/mute effect
+  useEffect(() => {
+    if (howlRef.current) {
+      howlRef.current.volume(isMuted ? 0 : volume);
+    }
+  }, [volume, isMuted]);
 
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-        }
-
-        audioElement.remove();
+  // Progress polling
+  useEffect(() => {
+    const update = () => {
+      const howl = howlRef.current;
+      if (howl && howl.playing()) {
+        const t = howl.seek() as number;
+        setCurrentTime(t);
+        setProgress((t / (howl.duration() || 1)) * 100);
       }
+      requestRef.current = requestAnimationFrame(update);
+    };
 
-      if (canvasRef.current && oscilloscopeRef.current) {
-        oscilloscopeRef.current.removeChild(canvasRef.current);
+    requestRef.current = requestAnimationFrame(update);
+
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [updateProgress]);
+  }, []);
 
-  // Start visualization loop
+  // Oscilloscope animation loop
   useEffect(() => {
-    // Animation function for the oscilloscope
     const animate = () => {
       if (!analyserRef.current || !canvasRef.current) return;
 
@@ -263,7 +217,7 @@ const AudioPlayerUI = () => {
     };
 
     // Start animation
-    if (isPlaying) {
+    if (isPlaying && analyserRef.current) {
       requestRef.current = requestAnimationFrame(animate);
     } else if (requestRef.current) {
       cancelAnimationFrame(requestRef.current);
@@ -278,6 +232,11 @@ const AudioPlayerUI = () => {
 
   // Play/pause toggle
   const togglePlay = () => {
+    // Resume AudioContext in user gesture
+    if (Howler.ctx && Howler.ctx.state === "suspended") {
+      Howler.ctx.resume();
+    }
+
     if (isPlaying) {
       onPause();
     } else {
@@ -287,21 +246,19 @@ const AudioPlayerUI = () => {
 
   // Handle volume change from UI
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!audioElementRef.current) return;
-
     const newVolume = parseFloat(e.target.value);
     onSetVolume(newVolume);
   };
 
   // Seek to position
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioElementRef.current) return;
+    if (!howlRef.current) return;
 
     const progressBar = e.currentTarget;
     const percent = e.nativeEvent.offsetX / progressBar.clientWidth;
-    const newTime = percent * audioElementRef.current.duration;
+    const newTime = percent * (howlRef.current.duration() || 0);
 
-    audioElementRef.current.currentTime = newTime;
+    howlRef.current.seek(newTime);
     setProgress(percent * 100);
   };
 
@@ -317,7 +274,7 @@ const AudioPlayerUI = () => {
 
   // Play specific track
   const playTrack = (index: number) => {
-    if (!audioElementRef.current || index === currentTrack) return;
+    if (index === currentTrack) return;
 
     // Need to update the track via the context
     // We can't directly set the track, so we need to move to it
@@ -360,23 +317,23 @@ const AudioPlayerUI = () => {
           id="timer"
           className="absolute top-0 left-3 text-white text-lg opacity-90"
         >
-          {currentTime}
+          {formatTime(currentTime)}
         </div>
         <div
           id="duration"
           className="absolute top-0 right-3 text-white text-lg opacity-50"
         >
-          {duration}
+          {formatTime(duration)}
         </div>
       </div>
 
-      {/* Oscilloscope/Waveform - Make it take less vertical space */}
+      {/* Oscilloscope/Waveform */}
       <div
         ref={oscilloscopeRef}
         className="w-full flex-1 flex items-start justify-center pt-4 min-h-0"
       ></div>
 
-      {/* Progress Bar - Reduce bottom margin */}
+      {/* Progress Bar */}
       <div className="w-full px-4 relative mb-2">
         <div
           id="bar"
@@ -391,7 +348,7 @@ const AudioPlayerUI = () => {
         </div>
       </div>
 
-      {/* Controls - Ensure they have enough space */}
+      {/* Controls */}
       <div className="p-2 pb-3 flex items-center justify-between">
         <button
           className="text-white opacity-80 hover:opacity-100 transition-opacity"
