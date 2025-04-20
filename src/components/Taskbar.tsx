@@ -1,9 +1,9 @@
-import { Clock, Home, Maximize2, Minimize2, Monitor } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { Clock, Home, Maximize2, Minimize2, Monitor } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
+import { useTheme } from "@/lib/ThemeProvider";
 
-import { WindowState } from './Desktop';
+import { WindowState } from "./Desktop";
 
 interface TaskbarProps {
   windows: WindowState[];
@@ -14,6 +14,56 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { theme } = useTheme();
   const isBeOSTheme = theme === "beos";
+  const [autoHide, setAutoHide] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Check for auto-hide setting on mount
+  useEffect(() => {
+    const checkAutoHideSetting = () => {
+      const autoHideSetting =
+        localStorage.getItem("taskbar-autohide") === "true";
+      setAutoHide(autoHideSetting);
+      setIsVisible(!autoHideSetting);
+    };
+
+    // Initial check
+    checkAutoHideSetting();
+
+    // Listen for storage changes to update setting
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "taskbar-autohide") {
+        setAutoHide(e.newValue === "true");
+        setIsVisible(e.newValue !== "true");
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also check the document's custom property for auto-hide changes
+    const observeAutoHideProperty = () => {
+      const autoHideValue = getComputedStyle(document.documentElement)
+        .getPropertyValue("--taskbar-auto-hide")
+        .trim();
+      setAutoHide(autoHideValue === "true");
+      setIsVisible(autoHideValue !== "true");
+    };
+
+    // Create a MutationObserver to watch for style attribute changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "style") {
+          observeAutoHideProperty();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      observer.disconnect();
+    };
+  }, []);
 
   // Update clock
   useEffect(() => {
@@ -31,10 +81,61 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
     hour12: true,
   });
 
+  // Handle mouse events for auto-hide behavior
+  const handleMouseEnter = () => {
+    if (autoHide) {
+      setIsVisible(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (autoHide) {
+      setIsVisible(false);
+    }
+  };
+
+  // Taskbar classes based on visibility and auto-hide settings
+  const taskbarClasses = `taskbar ${autoHide ? "taskbar-auto-hide" : ""} ${
+    isVisible ? "taskbar-visible" : "taskbar-hidden"
+  }`;
+
+  // Add CSS for taskbar auto-hide
+  useEffect(() => {
+    // Add CSS for auto-hide only once
+    if (!document.getElementById("taskbar-styles")) {
+      const styleElement = document.createElement("style");
+      styleElement.id = "taskbar-styles";
+      styleElement.textContent = `
+        .taskbar-auto-hide {
+          transition: transform 0.3s ease;
+        }
+        .taskbar-hidden {
+          transform: translateY(100%);
+        }
+        .taskbar-visible {
+          transform: translateY(0);
+        }
+      `;
+      document.head.appendChild(styleElement);
+    }
+
+    return () => {
+      // Clean up on unmount
+      const styleElement = document.getElementById("taskbar-styles");
+      if (styleElement) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
+
   // BeOS style taskbar
   if (isBeOSTheme) {
     return (
-      <div className="taskbar">
+      <div
+        className={taskbarClasses}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="taskbar-start">
           <span>BeOS</span>
         </div>
@@ -67,7 +168,11 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
 
   // Modern style taskbar
   return (
-    <div className="taskbar">
+    <div
+      className={taskbarClasses}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button className="taskbar-start">
         <Home className="w-4 h-4 mr-2" />
         <span>Start</span>

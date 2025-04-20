@@ -8,17 +8,17 @@
     background-color: var(--window-bg);
     transition: box-shadow 0.2s ease;
     overflow: visible; /* Keep overflow visible so titlebar is not clipped */
-    padding-top: var(--window-padding-top); /* Space for the header */
+    padding-top: 0; /* Space for the header */
     resize: both;
 
     /* Theme-specific styles */
     .theme-beos & {
       box-shadow:
-        0 0 0 1px var(--window-border),
-        0 0 0 2px var(--window-border-light),
-        0 0 0 3px var(--window-border-lighter),
-        0 0 0 4px var(--window-border-light),
-        0 0 0 5px var(--window-border),
+        0 0 0 1px #888888,
+        0 0 0 2px #dddddd,
+        0 0 0 3px #ffffff,
+        0 0 0 4px #dddddd,
+        0 0 0 5px #888888,
         0 14px 16px -6px rgba(0,0,0,0.2);
     }
 
@@ -33,11 +33,11 @@
       .theme-beos & {
         /* Apply purple to all frame layers for strong focus indication */
         box-shadow:
-          0 0 0 1px var(--ring),
-          0 0 0 2px color-mix(in srgb, var(--ring) 85%, white),
-          0 0 0 3px color-mix(in srgb, var(--ring) 70%, white),
-          0 0 0 4px color-mix(in srgb, var(--ring) 85%, white),
-          0 0 0 5px var(--ring),
+          0 0 0 1px #7c3aed,
+          0 0 0 2px #9d68f7,
+          0 0 0 3px #c4a4fc,
+          0 0 0 4px #9d68f7,
+          0 0 0 5px #7c3aed,
           0 14px 16px -6px rgba(0,0,0,0.2);
       }
 
@@ -56,15 +56,24 @@
     width: 100%;
     height: 100%;
     position: relative;
-    top: 0;
+    top: 0; /* Account for header height */
     left: 0;
     padding: var(--window-content-padding, 16px);
     
     .theme-beos & {
-      border-top: 1px solid var(--window-border);
+      border-top: 1px solid #888888;
+      background-color: #f0f0f0;
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
+      background-color: hsl(0 0% 100%);
+      color: hsl(224 71% 4%);
+      border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
+    }
+    
+    .theme-dark & {
+      background-color: hsl(220 13% 18%);
+      color: hsl(220 13% 75%);
       border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
     }
   }
@@ -174,21 +183,34 @@
     
     /* Theme-specific styles */
     .theme-beos & {
-      background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end));
-      border: 1px solid var(--title-border);
+      background: linear-gradient(to bottom, #ffda8f, #ffc34e);
+      border: 1px solid #b99100;
       border-bottom: none;
       box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1);
     }
     
-    .theme-light &, .theme-dark & {
-      background-color: var(--title-bg);
-      border-bottom: 1px solid var(--border);
+    .theme-light & {
+      background-color: hsl(240 5% 96%);
+      border-bottom: 1px solid hsl(240 5.9% 90%);
+    }
+    
+    .theme-dark & {
+      background-color: hsl(220 13% 22%);
+      border-bottom: 1px solid hsl(220 13% 15%);
     }
   }
 
   .window-header:hover {
-    .theme-light &, .theme-dark & {
-      background-color: var(--title-hover);
+    .theme-beos & {
+      background: linear-gradient(to bottom, #ffce6f, #ffb82e);
+    }
+    
+    .theme-light & {
+      background-color: hsl(240 4% 90%);
+    }
+    
+    .theme-dark & {
+      background-color: hsl(220 13% 26%);
     }
   }
 
@@ -202,8 +224,8 @@
       content: '';
       width: 13px;
       height: 13px;
-      background: linear-gradient(135deg, var(--dot-color-start) 0%, var(--dot-color-end) 100%);
-      border: 1px solid var(--dot-border);
+      background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
+      border: 1px solid #b99100;
       border-radius: 50%;
     }
     

@@ -55,6 +55,7 @@
     "@tiptap/starter-kit": "^2.2.4",
     "@types/howler": "^2.2.12",
     "@types/uuid": "^10.0.0",
+    "@xyflow/react": "^12.6.0",
     "a": "^3.0.1",
     "all": "^0.0.0",
     "class-variance-authority": "^0.7.1",

@@ -1,4 +1,4 @@
-import { ThemeConfig, ThemeType } from "./theme-types";
+import { ThemeConfig, ThemeType } from './theme-types';
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -59,35 +59,35 @@ const lightTheme: ThemeConfig = {
     "linear-gradient(to bottom right, hsl(240, 75%, 98%), hsl(240, 20%, 95%))",
   cssVariables: {
     // Window variables
-    "--window-bg": "hsl(0 0% 100%)",
-    "--window-border": "hsl(240 5% 84%)",
-    "--window-border-light": "hsl(240 5% 96%)",
-    "--window-border-lighter": "hsl(0 0% 100%)",
-    "--title-bg": "hsl(240 5% 96%)",
-    "--title-hover": "hsl(240 4% 90%)",
-    "--title-active": "hsl(240 5% 96%)",
-    "--title-border": "hsl(240 5% 84%)",
+    "--window-bg": "0 0% 100%",
+    "--window-border": "240 5% 84%",
+    "--window-border-light": "240 5% 96%",
+    "--window-border-lighter": "0 0% 100%",
+    "--title-bg": "240 5% 96%",
+    "--title-hover": "240 4% 90%",
+    "--title-active": "240 5% 96%",
+    "--title-border": "240 5% 84%",
 
     // Text and general colors
-    "--text-primary": "hsl(240 10% 10%)",
-    "--text-secondary": "hsl(240 5% 35%)",
-    "--background": "hsl(0 0% 100%)",
-    "--foreground": "hsl(224 71% 4%)",
+    "--text-primary": "240 10% 10%",
+    "--text-secondary": "240 5% 35%",
+    "--background": "0 0% 100%",
+    "--foreground": "224 71% 4%",
 
     // Default UI colors based on shadcn
-    "--primary": "hsl(262.1 83.3% 57.8%)",
-    "--primary-foreground": "hsl(210 20% 98%)",
-    "--secondary": "hsl(220 14.3% 95.9%)",
-    "--secondary-foreground": "hsl(220.9 39.3% 11%)",
-    "--muted": "hsl(220 14.3% 95.9%)",
-    "--muted-foreground": "hsl(220 8.9% 46.1%)",
-    "--accent": "hsl(220 14.3% 95.9%)",
-    "--accent-foreground": "hsl(220.9 39.3% 11%)",
-    "--destructive": "hsl(0 84.2% 60.2%)",
-    "--destructive-foreground": "hsl(210 20% 98%)",
-    "--border": "hsl(240 5.9% 90%)",
-    "--input": "hsl(240 5.9% 90%)",
-    "--ring": "hsl(262.1 83.3% 57.8%)",
+    "--primary": "262.1 83.3% 57.8%",
+    "--primary-foreground": "210 20% 98%",
+    "--secondary": "220 14.3% 95.9%",
+    "--secondary-foreground": "220.9 39.3% 11%",
+    "--muted": "220 14.3% 95.9%",
+    "--muted-foreground": "220 8.9% 46.1%",
+    "--accent": "220 14.3% 95.9%",
+    "--accent-foreground": "220.9 39.3% 11%",
+    "--destructive": "0 84.2% 60.2%",
+    "--destructive-foreground": "210 20% 98%",
+    "--border": "240 5.9% 90%",
+    "--input": "240 5.9% 90%",
+    "--ring": "262.1 83.3% 57.8%",
 
     // Window header properties
     "--header-position": "absolute",
@@ -102,16 +102,16 @@ const lightTheme: ThemeConfig = {
     "--window-border-radius": "var(--radius)",
 
     // Button and control styles
-    "--button-bg": "hsl(0 0% 98%)",
-    "--button-hover": "hsl(0 0% 96%)",
-    "--button-active": "hsl(0 0% 94%)",
-    "--button-border": "hsl(240 5% 84%)",
-    "--control-bg": "hsl(220 14.3% 95.9%)",
+    "--button-bg": "0 0% 98%",
+    "--button-hover": "0 0% 96%",
+    "--button-active": "0 0% 94%",
+    "--button-border": "240 5% 84%",
+    "--control-bg": "220 14.3% 95.9%",
     "--control-border": "transparent",
 
     // Theme specific
     "--has-window-header-dot": "0",
-    "--taskbar-bg": "hsla(0, 0%, 100%, 0.8)",
+    "--taskbar-bg": "0 0% 100% 0.8",
   },
 };
 
@@ -120,38 +120,38 @@ const darkTheme: ThemeConfig = {
   id: "dark",
   name: "Modern Dark",
   desktopBackground:
-    "linear-gradient(to bottom right, hsl(240, 20%, 10%), hsl(240, 20%, 2%))",
+    "linear-gradient(to bottom right, hsl(220, 13%, 18%), hsl(220, 13%, 12%))",
   cssVariables: {
     // Window variables
-    "--window-bg": "hsl(224 71% 4%)",
-    "--window-border": "hsl(240 3.7% 15.9%)",
-    "--window-border-light": "hsl(240 5.1% 14%)",
-    "--window-border-lighter": "hsl(240 5.1% 18%)",
-    "--title-bg": "hsl(240 5.1% 14%)",
-    "--title-hover": "hsl(240 3.7% 15.9%)",
-    "--title-active": "hsl(240 5.1% 14%)",
-    "--title-border": "hsl(240 3.7% 15.9%)",
+    "--window-bg": "220 13% 18%",
+    "--window-border": "220 13% 15%",
+    "--window-border-light": "220 13% 20%",
+    "--window-border-lighter": "220 13% 22%",
+    "--title-bg": "220 13% 22%",
+    "--title-hover": "220 13% 24%",
+    "--title-active": "220 13% 26%",
+    "--title-border": "220 13% 15%",
 
     // Text and general colors
-    "--text-primary": "hsl(210 20% 98%)",
-    "--text-secondary": "hsl(217.9 10.6% 64.9%)",
-    "--background": "hsl(224 71% 4%)",
-    "--foreground": "hsl(210 20% 98%)",
+    "--text-primary": "220 13% 75%",
+    "--text-secondary": "220 14% 65%",
+    "--background": "220 13% 18%",
+    "--foreground": "220 13% 75%",
 
-    // Default UI colors based on shadcn dark mode
-    "--primary": "hsl(263.4 70% 50.4%)",
-    "--primary-foreground": "hsl(210 20% 98%)",
-    "--secondary": "hsl(215 27.9% 16.9%)",
-    "--secondary-foreground": "hsl(210 20% 98%)",
-    "--muted": "hsl(215 27.9% 25%)", // Increased brightness for better visibility
-    "--muted-foreground": "hsl(217.9 10.6% 64.9%)",
-    "--accent": "hsl(215 27.9% 16.9%)",
-    "--accent-foreground": "hsl(210 20% 98%)",
-    "--destructive": "hsl(0 62.8% 30.6%)",
-    "--destructive-foreground": "hsl(210 20% 98%)",
-    "--border": "hsl(240 3.7% 15.9%)",
-    "--input": "hsl(240 3.7% 15.9%)",
-    "--ring": "hsl(263.4 70% 50.4%)",
+    // Default UI colors - more muted like VS Code
+    "--primary": "210 100% 70%",
+    "--primary-foreground": "220 13% 18%",
+    "--secondary": "220 13% 25%",
+    "--secondary-foreground": "220 13% 75%",
+    "--muted": "220 13% 22%",
+    "--muted-foreground": "220 14% 55%",
+    "--accent": "210 30% 30%",
+    "--accent-foreground": "220 13% 75%",
+    "--destructive": "0 70% 50%",
+    "--destructive-foreground": "220 13% 95%",
+    "--border": "220 13% 15%",
+    "--input": "220 13% 15%",
+    "--ring": "210 100% 70%",
 
     // Window header properties
     "--header-position": "absolute",
@@ -166,16 +166,16 @@ const darkTheme: ThemeConfig = {
     "--window-border-radius": "var(--radius)",
 
     // Button and control styles
-    "--button-bg": "hsl(215 27.9% 16.9%)",
-    "--button-hover": "hsl(215 25% 22%)",
-    "--button-active": "hsl(215 25% 12%)",
-    "--button-border": "hsl(240 3.7% 15.9%)",
-    "--control-bg": "hsl(215 27.9% 16.9%)",
+    "--button-bg": "220 13% 22%",
+    "--button-hover": "220 13% 25%",
+    "--button-active": "220 13% 20%",
+    "--button-border": "220 13% 15%",
+    "--control-bg": "220 13% 22%",
     "--control-border": "transparent",
 
     // Theme specific
     "--has-window-header-dot": "0",
-    "--taskbar-bg": "hsla(240, 10%, 3.9%, 0.8)",
+    "--taskbar-bg": "220 13% 16% 0.8",
   },
 };
 

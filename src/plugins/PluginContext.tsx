@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import ApiExplorerPlugin from './apps/api-explorer';
+import ApiFlowEditorPlugin from './apps/api-flow-editor';
 import AudioPlayerPlugin from './apps/audioplayer';
 import BrowserPlugin from './apps/browser';
 import CalculatorPlugin from './apps/calculator';
@@ -19,6 +19,7 @@ import { Plugin } from './types';
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
   "api-explorer": ApiExplorerPlugin,
+  "api-flow-editor": ApiFlowEditorPlugin,
   notepad: NotepadPlugin,
   calculator: CalculatorPlugin,
   browser: BrowserPlugin,
@@ -26,7 +27,6 @@ const pluginModules: Record<string, Plugin> = {
   WordEditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin,
   "webllm-chat": WebLLMChatPlugin,
-
 };
 
 // Debug: Log available plugins

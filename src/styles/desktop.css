@@ -88,7 +88,9 @@
     
     .theme-light &, .theme-dark & {
       height: 36px;
-      @apply flex bg-background/80 backdrop-blur-lg shadow-sm border-b border-border;
+      @apply flex shadow-sm border-b border-border;
+      background-color: var(--background);
+      backdrop-filter: blur(8px);
     }
   }
 
@@ -107,16 +109,18 @@
     }
     
     .theme-light & {
-      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      @apply border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
       color: var(--text-primary);
       min-width: 200px;
       max-width: 400px;
+      background-color: hsl(0 0% 98%);
       height: 36px;
     }
     
     .theme-dark & {
-      @apply bg-background/70 border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
+      @apply border-r border-border flex items-center justify-between transition-all duration-100 px-3 py-1.5;
       color: var(--foreground);
+      background-color: hsl(215 27.9% 16.9%);
       min-width: 200px;
       max-width: 400px;
       height: 36px;
@@ -128,8 +132,16 @@
       filter: brightness(1.05);
     }
     
-    .theme-light &, .theme-dark & {
+    .theme-light & {
       @apply bg-accent;
+      opacity: 1 !important;
+      background-color: hsl(220 14.3% 95.9%) !important;
+    }
+    
+    .theme-dark & {
+      @apply bg-accent;
+      opacity: 1 !important;
+      background-color: hsl(210 30% 30%) !important;
     }
   }
 
@@ -148,7 +160,7 @@
     
     .theme-dark & {
       @apply text-sm font-medium;
-      color: var(--foreground);
+      color: hsl(220 13% 75%);
     }
   }
 }

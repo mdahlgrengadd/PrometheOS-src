@@ -1,0 +1,100 @@
+import { IActionResult, IApiAction, IApiComponent, IApiParameter } from '../../../api/core/types';
+import { useApi } from '../../../api/hooks/useApi';
+
+/**
+ * Service to retrieve and interact with API components from registered apps
+ */
+export class ApiComponentService {
+  private static instance: ApiComponentService;
+  private apiContext: ReturnType<typeof useApi> | null = null;
+
+  // Private constructor for singleton pattern
+  private constructor() {}
+
+  // Get singleton instance
+  public static getInstance(): ApiComponentService {
+    if (!ApiComponentService.instance) {
+      ApiComponentService.instance = new ApiComponentService();
+    }
+    return ApiComponentService.instance;
+  }
+
+  // Set the API context
+  public setApiContext(apiContext: ReturnType<typeof useApi>): void {
+    this.apiContext = apiContext;
+  }
+
+  // Get all registered API components
+  public getApiComponents(): IApiComponent[] {
+    if (!this.apiContext) {
+      console.error("API context not initialized");
+      return [];
+    }
+
+    return this.apiContext.getComponents();
+  }
+
+  // Get API components by app ID
+  public getApiComponentsByApp(appId: string): IApiComponent[] {
+    const components = this.getApiComponents();
+    return components.filter((component) => component.path.includes(appId));
+  }
+
+  // Get actions for a specific component
+  public getActionsForComponent(componentId: string): IApiAction[] {
+    const components = this.getApiComponents();
+    const component = components.find((comp) => comp.id === componentId);
+    return component?.actions || [];
+  }
+
+  // Execute an action on a component
+  public async executeAction(
+    componentId: string,
+    actionId: string,
+    parameters?: Record<string, unknown>
+  ): Promise<IActionResult> {
+    if (!this.apiContext) {
+      console.error("API context not initialized");
+      return { success: false, error: "API context not initialized" };
+    }
+
+    try {
+      return await this.apiContext.executeAction(
+        componentId,
+        actionId,
+        parameters
+      );
+    } catch (error) {
+      console.error("Error executing action:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  // Get all available apps that have API components
+  public getAvailableApps(): { id: string; name: string }[] {
+    const components = this.getApiComponents();
+
+    // Extract unique app IDs from component paths
+    const appMap = new Map<string, string>();
+
+    components.forEach((component) => {
+      // Extract app ID from the path - typically in format "/apps/{appId}/..."
+      const pathParts = component.path.split("/");
+      if (pathParts.length >= 3 && pathParts[1] === "apps") {
+        const appId = pathParts[2];
+        // Use the app part of the path as the name if we don't have a better one
+        const appName = component.path.split("/")[2] || appId;
+        appMap.set(appId, appName);
+      }
+    });
+
+    // Convert to array of objects
+    return Array.from(appMap.entries()).map(([id, name]) => ({
+      id,
+      name: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize first letter
+    }));
+  }
+}

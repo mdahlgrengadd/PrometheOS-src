@@ -3,15 +3,24 @@
 @import './styles/desktop.css';
 @import './styles/taskbar.css';
 
+/* Disable text selection everywhere except input fields and editable areas */
+*:not(input):not(textarea):not([contenteditable="true"]):not(.allow-select) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 /* Any remaining utility classes */
 .maximized {
   width: 100% !important;
-  height: calc(100vh - 62px) !important;
+  height: calc(100vh - 84px) !important;
+  padding-top: 0 !important;
 }
 
 /* Theme-specific maximized window styles */
 .theme-light .maximized, .theme-dark .maximized {
-  margin: 26px 0 0 0 !important;
+  margin: 36px 0 0 0 !important;
 }
 
 .theme-beos .maximized {
@@ -26,8 +35,8 @@
   width: 100%;
   display: flex;
   z-index: 2; /* Ensure headers are above window content */
-  background: linear-gradient(to bottom, var(--title-gradient-start), var(--title-gradient-end)) !important;
-  border: 1px solid var(--title-border) !important;
+  background: linear-gradient(to bottom, #ffda8f, #ffc34e) !important;
+  border: 1px solid #b99100 !important;
   border-bottom: none !important;
   box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1) !important;
 }
@@ -38,6 +47,14 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    z-index: 3;
+    background-color: #d0d8e8;
+  }
+  
+  .theme-light &, .theme-dark & {
+    background-color: var(--background);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
     z-index: 3;
   }
 }
@@ -58,18 +75,182 @@
   content: '';
   width: 13px;
   height: 13px;
-  background: linear-gradient(135deg, var(--dot-color-start) 0%, var(--dot-color-end) 100%);
-  border: 1px solid var(--dot-border);
+  background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
+  border: 1px solid #b99100;
   border-radius: 50%;
   display: block !important;
 }
 
 /* Ensure BeOS header elements have proper styling when maximized */
 .theme-beos .maximized .window-header * {
-  color: var(--text-primary) !important;
+  color: #000000 !important;
 }
 
 .theme-beos .maximized .window-header .window-title {
   font-weight: bold;
   color: black !important;
+}
+
+/* BeOS theme fixes for UI components */
+
+/* Fix for tabs */
+.theme-beos [role="tablist"] {
+  background-color: #e8e8e8 !important;
+  border: 1px solid #888888 !important;
+  border-radius: 0.375rem !important;
+}
+
+.theme-beos [role="tab"] {
+  background-color: #e8e8e8 !important;
+  color: #000000 !important;
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+.theme-beos [role="tab"][data-state="active"] {
+  background-color: #f0f0f0 !important;
+  box-shadow: inset 0 0 0 1px #888888 !important;
+}
+
+/* Fix for switches */
+.theme-beos [role="switch"][data-state="unchecked"] {
+  background-color: #888888 !important;
+  border-color: #666666 !important;
+}
+
+.theme-beos [role="switch"][data-state="checked"] {
+  background-color: #4a7bea !important;
+  border-color: #3a67c4 !important;
+}
+
+.theme-beos [role="switch"] span {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Fix for radio buttons */
+.theme-beos [role="radiogroup"] [data-state="checked"] + label {
+  border-color: #4a7bea !important;
+}
+
+.theme-beos [data-radix-popper-content-wrapper] {
+  background-color: #f0f0f0 !important;
+}
+
+/* Fix for sliders */
+.theme-beos [role="slider"] {
+  background-color: #888888 !important;
+}
+
+.theme-beos [role="slider"] [data-orientation="horizontal"] div {
+  background-color: #4a7bea !important;
+}
+
+/* Button fixes for BeOS theme */
+.theme-beos button,
+.theme-beos [role="button"],
+.theme-beos [type="button"],
+.theme-beos [type="submit"] {
+  background: linear-gradient(to bottom, #f0f0f0, #d0d0d0) !important;
+  border: 1px solid #888888 !important;
+  color: #000000 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+}
+
+.theme-beos button:hover,
+.theme-beos [role="button"]:hover,
+.theme-beos [type="button"]:hover,
+.theme-beos [type="submit"]:hover {
+  background: linear-gradient(to bottom, #ffffff, #e8e8e8) !important;
+}
+
+/* Fix for text colors and backgrounds */
+.theme-beos [class*="text-muted"] {
+  color: #333333 !important;
+}
+
+.theme-beos [class*="bg-card"] {
+  background-color: #f0f0f0 !important;
+}
+
+/* Fix for window content positioning in light/dark themes - prevents header overlap */
+.theme-light .draggable-window:not(.maximized) .window-content, 
+.theme-dark .draggable-window:not(.maximized) .window-content {
+  padding-top: 36px !important; /* Match the header height to prevent content overlap */
+}
+
+/* When maximized, content already has correct margin */
+.theme-light .maximized .window-content,
+.theme-dark .maximized .window-content {
+  padding-top: 0 !important;
+}
+
+/* Mobile UI Styles */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure all content adjusts for mobile */
+@media (max-width: 768px) {
+  * {
+    touch-action: manipulation;
+  }
+  
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Override any fixed padding for window-content on mobile */
+  .window-content {
+    width: 100% !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Ensure text and input elements are properly sized for touch */
+  input, button, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+  
+  /* Improve scrolling on iOS */
+  .overflow-auto, .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Add smooth transitions for mobile components */
+  .mobile-app-header {
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Prevent bounce/overflow scroll on iOS */
+  html, body {
+    overscroll-behavior-y: none;
+    overflow: hidden;
+  }
 }
