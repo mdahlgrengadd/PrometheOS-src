@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { useTheme } from "@/lib/ThemeProvider";
 import { usePlugins } from "@/plugins/PluginContext";
 
 import MobileAppScreen from "./MobileAppScreen";
@@ -16,6 +17,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
   setActiveApp,
 }) => {
   const { loadedPlugins } = usePlugins();
+  const { wallpaper, backgroundColor } = useTheme();
   const [currentHomeScreen, setCurrentHomeScreen] = useState(0);
 
   // Set up mobile viewport meta tag
@@ -63,10 +65,23 @@ const MobileShell: React.FC<MobileShellProps> = ({
     setActiveApp(null);
   };
 
+  // Set the background style based on theme settings
+  const backgroundStyle = wallpaper
+    ? {
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : { backgroundColor };
+
   return (
     <div
-      className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-purple-500 to-blue-600"
-      style={{ height: "var(--app-height, 100vh)" }}
+      className="relative w-full h-screen overflow-hidden"
+      style={{
+        height: "var(--app-height, 100vh)",
+        ...backgroundStyle,
+      }}
     >
       {/* Home screen (visible when no app is active) */}
       {!activeApp && (

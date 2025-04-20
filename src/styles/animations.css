@@ -1,0 +1,101 @@
+/* Animation styles that are enabled or disabled based on user settings */
+
+/* Animation durations defined at the root level */
+:root {
+  --animation-duration-short: 150ms;
+  --animation-duration-medium: 300ms;
+  --animation-duration-long: 500ms;
+  --enable-animations: true; /* Default value, will be overridden by JS */
+}
+
+/* Window animations */
+.window {
+  transition: opacity var(--animation-duration-medium) ease,
+    transform var(--animation-duration-medium) ease;
+}
+
+/* Disable all animations when animations are turned off */
+html[style*="--enable-animations:false"] *,
+html[style*="--enable-animations: false"] * {
+  transition-duration: 0ms !important;
+  animation-duration: 0ms !important;
+}
+
+/* Window opening animation */
+@keyframes window-open {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Window closing animation */
+@keyframes window-close {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Window maximizing animation */
+@keyframes window-maximize {
+  from {
+    transform: scale(0.95);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Window minimizing animation */
+@keyframes window-minimize {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Apply animations to windows */
+:root:not([style*="--enable-animations:false"]) .window-opening {
+  animation: window-open var(--animation-duration-medium) ease forwards;
+}
+
+:root:not([style*="--enable-animations:false"]) .window-closing {
+  animation: window-close var(--animation-duration-medium) ease forwards;
+}
+
+:root:not([style*="--enable-animations:false"]) .window-maximizing {
+  animation: window-maximize var(--animation-duration-short) ease forwards;
+}
+
+:root:not([style*="--enable-animations:false"]) .window-minimizing {
+  animation: window-minimize var(--animation-duration-short) ease forwards;
+}
+
+/* BeOS window frame highlight for focused windows */
+.theme-beos .window.focused .window-titlebar {
+  border-color: var(--beos-window-focus-color, #a855f7);
+}
+
+/* Taskbar auto-hide behavior */
+.taskbar-auto-hide {
+  transition: transform var(--animation-duration-medium) ease;
+}
+
+/* Desktop icon transitions */
+.desktop-icon {
+  transition: transform var(--animation-duration-short) ease,
+    opacity var(--animation-duration-short) ease;
+} 

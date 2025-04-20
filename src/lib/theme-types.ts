@@ -20,4 +20,6 @@ export interface ThemeContextType {
   setWallpaper: (wallpaper: string | null) => void;
   backgroundColor: string;
   setBackgroundColor: (color: string) => void;
+  primaryColor: string;
+  setPrimaryColor: (color: string) => void;
 }

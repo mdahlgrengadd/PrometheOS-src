@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { themes } from './theme-definitions';
-import { ThemeConfig, ThemeContextType, ThemeType } from './theme-types';
+import { themes } from "./theme-definitions";
+import { ThemeConfig, ThemeContextType, ThemeType } from "./theme-types";
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -14,6 +14,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setWallpaper: () => {},
   backgroundColor: "#6366f1", // Default background color (indigo)
   setBackgroundColor: () => {},
+  primaryColor: "#a855f7", // Default primary color (purple)
+  setPrimaryColor: () => {},
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -43,6 +45,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     return localStorage.getItem("os-background-color") || "#6366f1";
   });
 
+  // Get stored primary color from localStorage or use default
+  const [primaryColor, setPrimaryColorState] = useState<string>(() => {
+    return localStorage.getItem("os-primary-color") || "#a855f7";
+  });
+
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
     localStorage.setItem("os-theme", newTheme);
@@ -67,6 +74,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("os-background-color", newColor);
   };
 
+  const setPrimaryColor = (newColor: string) => {
+    setPrimaryColorState(newColor);
+    localStorage.setItem("os-primary-color", newColor);
+  };
+
   // Apply theme CSS variables when theme changes
   useEffect(() => {
     const root = document.documentElement;
@@ -79,6 +91,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Set window content padding
     root.style.setProperty("--window-content-padding", `${padding}px`);
+
+    // Set primary color for the theme
+    root.style.setProperty("--color-primary", primaryColor);
+
+    // For BeOS theme, set the window frame highlight color
+    if (theme === "beos") {
+      root.style.setProperty("--beos-window-focus-color", primaryColor);
+    }
 
     // Set body background based on wallpaper, solid color, or theme default
     if (wallpaper) {
@@ -100,7 +120,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-  }, [theme, padding, wallpaper, backgroundColor]);
+  }, [theme, padding, wallpaper, backgroundColor, primaryColor]);
 
   return (
     <ThemeContext.Provider
@@ -114,6 +134,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         setWallpaper,
         backgroundColor,
         setBackgroundColor,
+        primaryColor,
+        setPrimaryColor,
       }}
     >
       {children}

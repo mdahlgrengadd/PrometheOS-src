@@ -1,13 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ThemeType } from '@/lib/theme-types';
-import { useTheme } from '@/lib/ThemeProvider';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ThemeType } from "@/lib/theme-types";
+import { useTheme } from "@/lib/ThemeProvider";
 
 const SettingsContent: React.FC = () => {
   const {
@@ -20,11 +31,42 @@ const SettingsContent: React.FC = () => {
     setWallpaper,
     backgroundColor,
     setBackgroundColor,
+    primaryColor,
+    setPrimaryColor,
   } = useTheme();
+
+  const {
+    isMobile: isSmartphoneMode,
+    isEnforced: enforceViewMode,
+    enforcedMode,
+    enforceDesktopMode,
+    enforceSmartphoneMode,
+    disableEnforcedMode,
+  } = useViewMode();
+
   const [availableWallpapers, setAvailableWallpapers] = useState<string[]>([
     "/wallpapers/background_01.png",
     "/wallpapers/background_02.png",
   ]);
+
+  // For view mode confirmation dialog
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<
+    "desktop" | "smartphone" | "disable" | null
+  >(null);
+
+  // Desktop feature states
+  const [showDesktopIcons, setShowDesktopIcons] = useState(() => {
+    return localStorage.getItem("show-desktop-icons") !== "false";
+  });
+
+  const [autoHideTaskbar, setAutoHideTaskbar] = useState(() => {
+    return localStorage.getItem("taskbar-autohide") === "true";
+  });
+
+  const [enableAnimations, setEnableAnimations] = useState(() => {
+    return localStorage.getItem("enable-animations") !== "false";
+  });
 
   // Available background colors
   const backgroundColors = [
@@ -41,6 +83,31 @@ const SettingsContent: React.FC = () => {
     { name: "Gray", value: "#71717a" },
     { name: "Slate", value: "#334155" },
   ];
+
+  // Save desktop feature settings to localStorage
+  useEffect(() => {
+    localStorage.setItem("show-desktop-icons", showDesktopIcons.toString());
+    localStorage.setItem("taskbar-autohide", autoHideTaskbar.toString());
+    localStorage.setItem("enable-animations", enableAnimations.toString());
+
+    // Apply desktop icons setting to the document
+    document.documentElement.style.setProperty(
+      "--desktop-icons-visibility",
+      showDesktopIcons ? "visible" : "hidden"
+    );
+
+    // Apply taskbar auto-hide setting to the document
+    document.documentElement.style.setProperty(
+      "--taskbar-auto-hide",
+      autoHideTaskbar ? "true" : "false"
+    );
+
+    // Apply animations setting to the document
+    document.documentElement.style.setProperty(
+      "--enable-animations",
+      enableAnimations ? "true" : "false"
+    );
+  }, [showDesktopIcons, autoHideTaskbar, enableAnimations]);
 
   const handleThemeChange = (selectedTheme: ThemeType) => {
     setTheme(selectedTheme);
@@ -59,9 +126,94 @@ const SettingsContent: React.FC = () => {
     setWallpaper(null);
   };
 
+  // Apply the confirmed view mode change
+  const applyViewModeChange = () => {
+    if (!pendingMode) return;
+
+    if (pendingMode === "desktop") {
+      enforceDesktopMode();
+    } else if (pendingMode === "smartphone") {
+      enforceSmartphoneMode();
+    } else if (pendingMode === "disable") {
+      disableEnforcedMode();
+    }
+
+    // Reset pending mode
+    setPendingMode(null);
+  };
+
+  // Handle enforced view mode change with confirmation
+  const handleEnforceViewModeChange = (checked: boolean) => {
+    if (checked) {
+      // If enabling enforcement, show confirmation and use current mode as the default
+      if (isSmartphoneMode) {
+        setPendingMode("smartphone");
+      } else {
+        setPendingMode("desktop");
+      }
+      setIsConfirmDialogOpen(true);
+    } else {
+      // If disabling enforcement, show confirmation
+      setPendingMode("disable");
+      setIsConfirmDialogOpen(true);
+    }
+  };
+
+  // Handle enforced mode selection with confirmation
+  const handleEnforcedModeChange = (value: string) => {
+    // Skip confirmation if selecting the current mode
+    if (
+      (value === "desktop" && !isSmartphoneMode) ||
+      (value === "smartphone" && isSmartphoneMode)
+    ) {
+      return;
+    }
+
+    if (value === "desktop") {
+      setPendingMode("desktop");
+    } else {
+      setPendingMode("smartphone");
+    }
+    setIsConfirmDialogOpen(true);
+  };
+
+  // Get the confirmation dialog message based on the pending mode
+  const getConfirmationMessage = () => {
+    if (pendingMode === "desktop") {
+      return "Switching to Desktop view will close all running applications and may disrupt your current workflow. Are you sure you want to continue?";
+    } else if (pendingMode === "smartphone") {
+      return "Switching to Smartphone view will close all running applications and may disrupt your current workflow. Are you sure you want to continue?";
+    } else {
+      return "Disabling enforced view mode will revert to automatic detection based on screen size, which may change your current view and close all running applications. Are you sure you want to continue?";
+    }
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">System Settings</h2>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog
+        open={isConfirmDialogOpen}
+        onOpenChange={setIsConfirmDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change View Mode?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {getConfirmationMessage()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingMode(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={applyViewModeChange}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Tabs defaultValue="appearance" className="w-full">
         <TabsList className="mb-4">
@@ -248,30 +400,40 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
 
-            <div
-              className={`grid grid-cols-3 gap-4 ${
-                theme === "beos" ? "opacity-50 pointer-events-none" : ""
-              }`}
-            >
-              <div
-                className="h-12 bg-primary rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary"
-                title="Primary Color"
-              ></div>
-              <div
-                className="h-12 bg-secondary rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary"
-                title="Secondary Color"
-              ></div>
-              <div
-                className="h-12 bg-accent rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary"
-                title="Accent Color"
-              ></div>
-            </div>
-
-            {theme === "beos" && (
-              <p className="text-sm text-muted-foreground italic">
-                Color customization is not available in BeOS Classic theme
+            <div className="space-y-2">
+              <Label>Primary Color</Label>
+              <div className="grid grid-cols-3 gap-4">
+                <div
+                  className={`h-12 rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary ${
+                    primaryColor === "#a855f7" ? "ring-2 ring-primary" : ""
+                  }`}
+                  style={{ backgroundColor: "#a855f7" }}
+                  onClick={() => setPrimaryColor("#a855f7")}
+                  title="Purple"
+                ></div>
+                <div
+                  className={`h-12 rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary ${
+                    primaryColor === "#71717a" ? "ring-2 ring-primary" : ""
+                  }`}
+                  style={{ backgroundColor: "#71717a" }}
+                  onClick={() => setPrimaryColor("#71717a")}
+                  title="Gray"
+                ></div>
+                <div
+                  className={`h-12 rounded-md cursor-pointer border-2 border-transparent transition hover:border-primary ${
+                    primaryColor === "#3b82f6" ? "ring-2 ring-primary" : ""
+                  }`}
+                  style={{ backgroundColor: "#3b82f6" }}
+                  onClick={() => setPrimaryColor("#3b82f6")}
+                  title="Blue"
+                ></div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {theme === "beos"
+                  ? "Choose the color for focused window frames in BeOS theme"
+                  : "Choose the primary accent color for the interface"}
               </p>
-            )}
+            </div>
           </div>
         </TabsContent>
 
@@ -285,34 +447,162 @@ const SettingsContent: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div
+                className={`flex items-center justify-between ${
+                  isSmartphoneMode ? "opacity-50" : ""
+                }`}
+              >
                 <div>
                   <Label htmlFor="show-desktop-icons">Show desktop icons</Label>
                   <p className="text-sm text-muted-foreground">
                     Display application icons on the desktop
                   </p>
                 </div>
-                <Switch id="show-desktop-icons" defaultChecked={true} />
+                <Switch
+                  id="show-desktop-icons"
+                  checked={showDesktopIcons}
+                  onCheckedChange={setShowDesktopIcons}
+                  disabled={isSmartphoneMode}
+                  title={
+                    isSmartphoneMode
+                      ? "This setting is only available in desktop mode"
+                      : ""
+                  }
+                />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div
+                className={`flex items-center justify-between ${
+                  isSmartphoneMode ? "opacity-50" : ""
+                }`}
+              >
                 <div>
                   <Label htmlFor="taskbar-autohide">Auto-hide taskbar</Label>
                   <p className="text-sm text-muted-foreground">
                     Hide the taskbar when not in use
                   </p>
                 </div>
-                <Switch id="taskbar-autohide" />
+                <Switch
+                  id="taskbar-autohide"
+                  checked={autoHideTaskbar}
+                  onCheckedChange={setAutoHideTaskbar}
+                  disabled={isSmartphoneMode}
+                  title={
+                    isSmartphoneMode
+                      ? "This setting is only available in desktop mode"
+                      : ""
+                  }
+                />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div
+                className={`flex items-center justify-between ${
+                  isSmartphoneMode ? "opacity-50" : ""
+                }`}
+              >
                 <div>
                   <Label htmlFor="animations">Enable animations</Label>
                   <p className="text-sm text-muted-foreground">
                     Show animations when opening and closing windows
                   </p>
                 </div>
-                <Switch id="animations" defaultChecked={true} />
+                <Switch
+                  id="animations"
+                  checked={enableAnimations}
+                  onCheckedChange={setEnableAnimations}
+                  disabled={isSmartphoneMode}
+                  title={
+                    isSmartphoneMode
+                      ? "This setting is only available in desktop mode"
+                      : ""
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">View Mode Settings</h3>
+              <p className="text-sm text-muted-foreground">
+                Override the automatic detection of view mode
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="enforce-view-mode">Enforce view mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Override automatic screen size detection
+                  </p>
+                </div>
+                <Switch
+                  id="enforce-view-mode"
+                  checked={enforceViewMode}
+                  onCheckedChange={handleEnforceViewModeChange}
+                />
+              </div>
+
+              <div
+                className={`space-y-2 ${!enforceViewMode ? "opacity-50" : ""}`}
+              >
+                <Label>Preferred view mode</Label>
+                <RadioGroup
+                  value={enforcedMode || "desktop"}
+                  onValueChange={handleEnforcedModeChange}
+                  className="grid grid-cols-2 gap-4 pt-2"
+                  disabled={!enforceViewMode}
+                >
+                  <div>
+                    <RadioGroupItem
+                      value="desktop"
+                      id="mode-desktop"
+                      className="peer sr-only"
+                      checked={enforcedMode === "desktop"}
+                      disabled={!enforceViewMode}
+                    />
+                    <Label
+                      htmlFor="mode-desktop"
+                      className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
+                        enforceViewMode
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="font-medium">Desktop</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Full desktop experience with windows
+                      </p>
+                    </Label>
+                  </div>
+
+                  <div>
+                    <RadioGroupItem
+                      value="smartphone"
+                      id="mode-smartphone"
+                      className="peer sr-only"
+                      checked={enforcedMode === "smartphone"}
+                      disabled={!enforceViewMode}
+                    />
+                    <Label
+                      htmlFor="mode-smartphone"
+                      className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
+                        enforceViewMode
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="font-medium">Smartphone</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Mobile interface with fullscreen apps
+                      </p>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Changes to view mode are applied after confirmation
+                </p>
               </div>
             </div>
           </div>
@@ -378,6 +668,13 @@ const SettingsContent: React.FC = () => {
               <div className="flex">
                 <span className="font-medium w-32">Current Theme:</span>
                 <span>{themes[theme].name}</span>
+              </div>
+              <div className="flex">
+                <span className="font-medium w-32">View Mode:</span>
+                <span>
+                  {isSmartphoneMode ? "Smartphone" : "Desktop"}{" "}
+                  {enforceViewMode ? "(Enforced)" : "(Auto)"}
+                </span>
               </div>
             </div>
 
