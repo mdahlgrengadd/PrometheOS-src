@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { eventBus } from '../plugins/EventBus';
-import { usePlugins } from '../plugins/PluginContext';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
-import Window from './Window';
+import { eventBus } from "../plugins/EventBus";
+import { usePlugins } from "../plugins/PluginContext";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
+import Window from "./Window";
 
 export interface WindowState {
   id: string;
@@ -30,6 +31,29 @@ const Desktop = () => {
     focusWindow,
   } = usePlugins();
   const [windows, setWindows] = useState<WindowState[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Update URL when active windows change
+  useEffect(() => {
+    // Don't update URL if no windows are open
+    if (activeWindows.length === 0) {
+      if (location.search.includes("open=")) {
+        navigate("", { replace: true });
+      }
+      return;
+    }
+
+    // Create query string from active windows
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("open", activeWindows.join(","));
+
+    // Don't trigger unnecessary navigation if the URL already matches
+    const newSearch = searchParams.toString();
+    if (newSearch !== location.search.replace(/^\?/, "")) {
+      navigate(`?${newSearch}`, { replace: true });
+    }
+  }, [activeWindows, navigate, location]);
 
   // Set up windows based on loaded plugins
   useEffect(() => {
@@ -212,6 +236,11 @@ const Desktop = () => {
   const memoizedOpenWindow = useMemo(() => {
     return (id: string) => openWindow(id);
   }, [openWindow]);
+
+  // Add/update function to get direct launch URL for an app
+  const getAppLaunchUrl = (appId: string) => {
+    return `${window.location.origin}/apps/${appId}`;
+  };
 
   return (
     <div className="desktop">

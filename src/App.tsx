@@ -9,6 +9,7 @@ import MobileIndex from "@/pages/MobileIndex";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ThemeProvider } from "./lib/ThemeProvider";
+import AppLauncher from "./pages/AppLauncher";
 import Index from "./pages/index";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,8 @@ const App = () => {
                 path="/"
                 element={isMobile ? <MobileIndex /> : <Index />}
               />
+              {/* App launcher route */}
+              <Route path="/apps/:appId" element={<AppLauncher />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

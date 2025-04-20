@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+
+import { getAppLaunchUrl } from "@/utils/url";
 
 interface IconWindow {
   id: string;
@@ -14,6 +16,28 @@ interface DesktopIconsProps {
 const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
   console.log("%c[DesktopIcons] Re-rendered", "color: orange");
   const [showIcons, setShowIcons] = useState(true);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    appId: string;
+    visible: boolean;
+  } | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Check if desktop icons should be visible
   useEffect(() => {
@@ -61,6 +85,32 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
     };
   }, []);
 
+  // Handle context menu
+  const handleContextMenu = (e: React.MouseEvent, appId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      appId,
+      visible: true,
+    });
+  };
+
+  // Copy app launch URL
+  const copyAppLaunchUrl = (appId: string) => {
+    const url = getAppLaunchUrl(appId);
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        // Show toast or notification if available
+        console.log(`URL copied: ${url}`);
+      })
+      .catch((err) => {
+        console.error("Could not copy URL: ", err);
+      });
+    setContextMenu(null);
+  };
+
   // If icons should be hidden, don't render anything
   if (!showIcons) {
     return null;
@@ -77,6 +127,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
             className="desktop-icon"
             onDoubleClick={() => openWindow(window.id)}
             onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => handleContextMenu(e, window.id)}
           >
             {window.icon || (
               <div className="h-8 w-8 bg-blue-500 rounded flex items-center justify-center text-white">
@@ -87,6 +138,31 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
           </div>
         );
       })}
+
+      {/* Context Menu */}
+      {contextMenu && contextMenu.visible && (
+        <div
+          ref={menuRef}
+          className="absolute bg-white shadow-md rounded-md py-1 z-50"
+          style={{
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+          }}
+        >
+          <div
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            onClick={() => openWindow(contextMenu.appId)}
+          >
+            Open
+          </div>
+          <div
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            onClick={() => copyAppLaunchUrl(contextMenu.appId)}
+          >
+            Copy Launch URL
+          </div>
+        </div>
+      )}
     </div>
   );
 };
