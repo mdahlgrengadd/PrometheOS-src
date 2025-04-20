@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import InstalledPluginsList from "@/components/InstalledPluginsList";
 import PluginInstaller from "@/components/PluginInstaller";
 import {
   AlertDialog,
@@ -673,6 +674,9 @@ const SettingsContent: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Installed Plugins List */}
+            <InstalledPluginsList />
 
             <div className="border rounded-md p-4">
               <h4 className="font-medium mb-2">Security Warning</h4>

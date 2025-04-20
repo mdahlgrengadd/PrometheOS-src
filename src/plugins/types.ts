@@ -10,6 +10,8 @@ export interface PluginManifest {
   description: string;
   author: string;
   icon: React.ReactNode;
+  // URL to icon image for remote plugins (used instead of icon for dynamic plugins)
+  iconUrl?: string;
   entry: string;
   // Optional entrypoint URL for dynamically loaded plugins
   entrypoint?: string;

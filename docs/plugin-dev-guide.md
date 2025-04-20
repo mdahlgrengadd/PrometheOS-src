@@ -19,7 +19,8 @@ export interface PluginManifest {
   version: string;      // Semantic version (e.g., "1.0.0")
   description: string;  // Brief description
   author: string;       // Author/organization name
-  icon: React.ReactNode; // Icon for the plugin (React component)
+  icon: React.ReactNode; // Icon for the plugin (React component) - for built-in plugins
+  iconUrl?: string;     // URL to icon image - for remote plugins
   entry: string;        // Entry point (relative to the plugin directory)
   entrypoint?: string;  // URL for dynamically loaded plugin (used for remote plugins)
   preferredSize?: {     // Default window size
@@ -74,6 +75,7 @@ my-plugin/
   "version": "1.0.0",
   "description": "This plugin does awesome things",
   "author": "Your Name",
+  "iconUrl": "https://example.com/my-plugin/icon.png",
   "entrypoint": "https://example.com/my-plugin/dist/plugin.js",
   "preferredSize": {
     "width": 600,
@@ -81,6 +83,8 @@ my-plugin/
   }
 }
 ```
+
+> **IMPORTANT**: For third-party plugins, use `iconUrl` instead of `icon` in your manifest. The `icon` property is for built-in plugins only as it requires a React component that can't be serialized in JSON.
 
 ### Sample Plugin Implementation
 
@@ -96,7 +100,7 @@ const MyPlugin = {
     version: "1.0.0",
     description: "This plugin does awesome things",
     author: "Your Name",
-    icon: <div style={{ background: '#ff5722', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>P</div>,
+    iconUrl: "https://example.com/my-plugin/icon.png",
     entry: "",
     entrypoint: "https://example.com/my-plugin/dist/plugin.js",
     preferredSize: {
@@ -136,6 +140,17 @@ To build your plugin for distribution:
 4. Build your plugin
 5. Create the manifest.json file
 6. Host both files on a server or CDN
+
+### CORS Requirements
+
+Since your plugin will be loaded at runtime via a dynamic import, your server must provide the appropriate CORS headers:
+
+```
+Access-Control-Allow-Origin: * (or your specific domain)
+Content-Type: application/javascript
+```
+
+Without these headers, the browser will block loading your plugin due to security restrictions.
 
 ### Sample Vite Configuration
 
@@ -182,6 +197,7 @@ To install your plugin:
 3. Test your plugin thoroughly before publishing
 4. Provide clear documentation for users
 5. Use semantic versioning for updates
+6. Ensure unique plugin IDs to avoid conflicts with built-in plugins
 
 ## Security Considerations
 

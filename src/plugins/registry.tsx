@@ -59,6 +59,20 @@ export async function installPlugin(
     throw new Error("Invalid plugin manifest: missing required fields");
   }
 
+  // Check for ID collisions with static plugins
+  const staticIds = staticPlugins.map((p) => p.id);
+  if (staticIds.includes(manifest.id)) {
+    throw new Error(
+      `Plugin ID '${manifest.id}' conflicts with a built-in plugin. Please use a different ID.`
+    );
+  }
+
+  // Ensure we have an iconUrl for remote plugins if icon is not provided
+  if (!manifest.iconUrl && typeof manifest.icon !== "object") {
+    // Set a default icon URL from an existing icon
+    manifest.iconUrl = "/icons/34794_pictures_pictures.png";
+  }
+
   addDynamicManifest(manifest);
   return manifest;
 }

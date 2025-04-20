@@ -13,7 +13,11 @@ import WebLLMChatPlugin from "./apps/webllm-chat";
 import WordEditorPlugin from "./apps/WordEditor";
 import { eventBus } from "./EventBus";
 import { PluginManager } from "./PluginManager";
-import { availablePlugins, getAllManifests, installPlugin } from "./registry";
+import {
+  getAllManifests,
+  installPlugin,
+  uninstallPlugin as removePluginFromRegistry,
+} from "./registry";
 import { Plugin } from "./types";
 
 // Map of plugin modules for direct access
@@ -45,6 +49,8 @@ type PluginContextType = {
   maximizeWindow: (pluginId: string) => void;
   focusWindow: (pluginId: string) => void;
   installRemoteApp: (url: string) => Promise<void>;
+  uninstallPlugin: (pluginId: string) => Promise<void>;
+  getDynamicPlugins: () => Plugin[];
 };
 
 const PluginContext = createContext<PluginContextType | undefined>(undefined);
@@ -55,21 +61,23 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
   const [pluginManager] = useState(() => new PluginManager());
   const [loadedPlugins, setLoadedPlugins] = useState<Plugin[]>([]);
   const [activeWindows, setActiveWindows] = useState<string[]>([]);
+  const [dynamicPluginIds, setDynamicPluginIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // Initialize plugin manager and load plugins
+    // Register event handler for plugin registration
+    const unsubscribe = eventBus.subscribe(
+      "plugin:registered",
+      (pluginId: string) => {
+        setLoadedPlugins(pluginManager.getAllPlugins());
+      }
+    );
+
+    // Load plugins
     const loadPlugins = async () => {
       try {
-        // Register event handler for plugin registration
-        const unsubscribe = eventBus.subscribe(
-          "plugin:registered",
-          (pluginId: string) => {
-            setLoadedPlugins(pluginManager.getAllPlugins());
-          }
-        );
-
         // Load all manifests (static + dynamic)
         const manifests = getAllManifests();
+        const dynamicIds: string[] = [];
 
         for (const manifest of manifests) {
           try {
@@ -82,7 +90,20 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                 const module = await import(
                   /* @vite-ignore */ manifest.entrypoint
                 );
+
+                // If the plugin has iconUrl but not icon, create a React element for the icon
+                if (manifest.iconUrl && !manifest.icon) {
+                  module.default.manifest.icon = (
+                    <img
+                      src={manifest.iconUrl}
+                      className="h-8 w-8"
+                      alt={manifest.name}
+                    />
+                  );
+                }
+
                 pluginManager.registerPlugin(module.default);
+                dynamicIds.push(manifest.id);
               } catch (error) {
                 console.error(
                   `Failed to load dynamic plugin ${manifest.id}:`,
@@ -99,19 +120,22 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
 
-        return () => {
-          unsubscribe();
-          // Clean up all plugins when unmounting
-          pluginManager.getAllPlugins().forEach((plugin) => {
-            plugin.onDestroy?.();
-          });
-        };
+        setDynamicPluginIds(dynamicIds);
       } catch (error) {
         console.error("Failed to initialize plugins:", error);
       }
     };
 
     loadPlugins();
+
+    // Return cleanup function
+    return () => {
+      unsubscribe();
+      // Clean up all plugins when unmounting
+      pluginManager.getAllPlugins().forEach((plugin) => {
+        plugin.onDestroy?.();
+      });
+    };
   }, [pluginManager]);
 
   const openWindow = (pluginId: string) => {
@@ -177,7 +201,19 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       if (manifest.entrypoint) {
         const module = await import(/* @vite-ignore */ manifest.entrypoint);
         if (module.default) {
+          // Handle icon from URL if needed
+          if (manifest.iconUrl && !module.default.manifest.icon) {
+            module.default.manifest.icon = (
+              <img
+                src={manifest.iconUrl}
+                className="h-8 w-8"
+                alt={manifest.name}
+              />
+            );
+          }
+
           pluginManager.registerPlugin(module.default);
+          setDynamicPluginIds((prev) => [...prev, manifest.id]);
           openWindow(manifest.id);
           return;
         }
@@ -187,6 +223,38 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to install remote app:", error);
       throw error;
     }
+  };
+
+  // Function to uninstall a plugin
+  const uninstallPlugin = async (pluginId: string) => {
+    try {
+      // First close the window if open
+      if (activeWindows.includes(pluginId)) {
+        closeWindow(pluginId);
+      }
+
+      // Unregister the plugin from the manager
+      pluginManager.unregisterPlugin(pluginId);
+
+      // Remove from localStorage (use the imported function)
+      removePluginFromRegistry(pluginId);
+
+      // Update UI state
+      setDynamicPluginIds((prev) => prev.filter((id) => id !== pluginId));
+      setLoadedPlugins(pluginManager.getAllPlugins());
+
+      console.log(`Plugin ${pluginId} has been uninstalled`);
+    } catch (error) {
+      console.error(`Failed to uninstall plugin ${pluginId}:`, error);
+      throw error;
+    }
+  };
+
+  // Get only dynamic plugins
+  const getDynamicPlugins = () => {
+    return loadedPlugins.filter((plugin) =>
+      dynamicPluginIds.includes(plugin.id)
+    );
   };
 
   return (
@@ -201,6 +269,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         maximizeWindow,
         focusWindow,
         installRemoteApp,
+        uninstallPlugin,
+        getDynamicPlugins,
       }}
     >
       {children}
