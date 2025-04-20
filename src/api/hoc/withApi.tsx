@@ -86,40 +86,47 @@ export function withApi<P extends object>(
         return doc;
       }, [api, defaultApiDoc]);
 
-      // IMPORTANT: Register ONCE when mounted, with an empty dependency array
-      // This ensures registration happens only on mount, not on every render
-      useEffect(() => {
-        if (initialMountRef.current) {
-          console.log(
-            `[API] Initial registration of component: ${uniqueId.current} with ${fullApiDoc.actions.length} actions`
-          );
-          registerComponent(fullApiDoc);
-          isRegisteredRef.current = true;
-          initialMountRef.current = false;
-
-          // Initialize the prev state ref with initial state
-          if (api?.state) {
-            prevStateRef.current = { ...api.state };
-          }
-        }
-      }, []); // Empty dependency array - runs ONCE on mount only
-
-      // IMPORTANT: Handle cleanup in a separate useEffect with empty deps
-      // This ensures cleanup happens only on unmount, not on property changes
-      useEffect(() => {
-        // Only cleanup function, no registration here
-        return () => {
-          if (isRegisteredRef.current) {
-            console.log(
-              `[API] Unregistering component: ${uniqueId.current} (final cleanup)`
-            );
-            unregisterComponent(uniqueId.current);
-            isRegisteredRef.current = false;
-          }
+      // Create the static API documentation (without mutable state)
+      const staticApiDoc = useMemo<IApiComponent>(() => {
+        return {
+          id: uniqueId.current,
+          type: fullApiDoc.type,
+          description: fullApiDoc.description,
+          actions: fullApiDoc.actions,
+          path: fullApiDoc.path,
+          metadata: fullApiDoc.metadata,
+          // Default values only, not user state
+          state: {
+            enabled: true,
+            visible: true,
+          },
         };
-      }, []); // Empty dependency array - runs ONCE on unmount
+      }, [
+        fullApiDoc.type,
+        fullApiDoc.description,
+        fullApiDoc.actions,
+        fullApiDoc.path,
+        fullApiDoc.metadata,
+      ]);
 
-      // Handle state updates - but don't re-register the component
+      // Combined register/unregister effect for React StrictMode compatibility
+      // Only registers once on mount with static doc (no dynamic state)
+      useEffect(() => {
+        console.log(
+          `[API] Registering component: ${uniqueId.current} with ${staticApiDoc.actions.length} actions`
+        );
+        registerComponent(staticApiDoc);
+        isRegisteredRef.current = true;
+
+        // Return cleanup function
+        return () => {
+          console.log(`[API] Unregistering component: ${uniqueId.current}`);
+          unregisterComponent(uniqueId.current);
+          isRegisteredRef.current = false;
+        };
+      }, []); // Empty deps array - only runs on mount/unmount
+
+      // Handle state updates separately - don't re-register the component
       useEffect(() => {
         if (isRegisteredRef.current && api?.state) {
           // Check if state has actually changed before updating
@@ -173,31 +180,69 @@ export function useApiComponent(
   // Track previous state to prevent redundant updates
   const prevStateRef = useRef<Record<string, unknown>>({});
 
-  // Register once on mount
-  useEffect(() => {
-    if (!isRegisteredRef.current) {
-      registerComponent({
-        id: apiId,
-        ...apiDoc,
-      });
-      isRegisteredRef.current = true;
+  // Memoize the static component object (without mutable state)
+  const staticComponent = useMemo(() => {
+    // Create a copy of apiDoc without the state property
+    const { state, ...staticApiDoc } = apiDoc;
 
-      // Initialize previous state reference
-      if (apiDoc.state) {
+    return {
+      id: apiId,
+      ...staticApiDoc,
+      // Include only basic state properties that won't change
+      state: {
+        enabled: true,
+        visible: true,
+      },
+    };
+  }, [
+    apiId,
+    apiDoc.type,
+    apiDoc.description,
+    apiDoc.actions,
+    apiDoc.path,
+    apiDoc.metadata,
+  ]);
+
+  // Initialize previous state if available
+  useEffect(() => {
+    if (apiDoc.state) {
+      prevStateRef.current = { ...apiDoc.state };
+    }
+  }, []);
+
+  // Registration effect - only runs on mount/unmount, no dynamic dependencies
+  useEffect(() => {
+    // Always register when mounted
+    registerComponent(staticComponent);
+    isRegisteredRef.current = true;
+
+    // Return cleanup function
+    return () => {
+      unregisterComponent(apiId);
+      isRegisteredRef.current = false;
+    };
+  }, []); // Empty deps - only runs on mount/unmount
+
+  // Handle state updates separately
+  useEffect(() => {
+    if (isRegisteredRef.current && apiDoc.state) {
+      // Check if state has actually changed
+      const hasStateChanged = Object.entries(apiDoc.state).some(
+        ([key, value]) => {
+          return (
+            prevStateRef.current[key] === undefined ||
+            prevStateRef.current[key] !== value
+          );
+        }
+      );
+
+      if (hasStateChanged) {
+        updateComponentState(apiId, apiDoc.state);
+        // Update previous state
         prevStateRef.current = { ...apiDoc.state };
       }
     }
-  }, []); // Empty dependency array - runs once
-
-  // Separate cleanup effect
-  useEffect(() => {
-    return () => {
-      if (isRegisteredRef.current) {
-        unregisterComponent(apiId);
-        isRegisteredRef.current = false;
-      }
-    };
-  }, []); // Empty dependency array - cleanup runs once on unmount
+  }, [apiId, apiDoc.state, updateComponentState]);
 
   // Return functions to update the component state
   return {

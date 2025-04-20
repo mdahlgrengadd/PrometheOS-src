@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 
 interface IconWindow {
   id: string;
@@ -13,6 +13,58 @@ interface DesktopIconsProps {
 
 const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
   console.log("%c[DesktopIcons] Re-rendered", "color: orange");
+  const [showIcons, setShowIcons] = useState(true);
+
+  // Check if desktop icons should be visible
+  useEffect(() => {
+    const checkShowIconsSettings = () => {
+      // Default to true if setting doesn't exist
+      const shouldShowIcons =
+        localStorage.getItem("show-desktop-icons") !== "false";
+      setShowIcons(shouldShowIcons);
+    };
+
+    // Initial check
+    checkShowIconsSettings();
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "show-desktop-icons") {
+        setShowIcons(e.newValue !== "false");
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also check the document's custom property for visibility changes
+    const observeVisibilityProperty = () => {
+      const visibilityValue = getComputedStyle(document.documentElement)
+        .getPropertyValue("--desktop-icons-visibility")
+        .trim();
+      setShowIcons(visibilityValue !== "hidden");
+    };
+
+    // Create a MutationObserver to watch for style attribute changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "style") {
+          observeVisibilityProperty();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  // If icons should be hidden, don't render anything
+  if (!showIcons) {
+    return null;
+  }
 
   return (
     <div className="desktop-icons">

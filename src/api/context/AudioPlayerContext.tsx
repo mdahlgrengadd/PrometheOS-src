@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
-import { useApiComponent } from '@/api/hoc/withApi';
-import { audioPlayerApiDoc } from '@/components/api/ApiAudioPlayer';
+import { useApiComponent } from "@/api/hoc/withApi";
+import { audioPlayerApiDoc } from "@/components/api/ApiAudioPlayer";
 
-import { IActionResult } from '../core/types';
-import { registerApiActionHandler } from './ApiContext';
+import { IActionResult } from "../core/types";
+import { registerApiActionHandler } from "./ApiContext";
 
 type AudioPlayerCtx = {
   isPlaying: boolean;
@@ -25,156 +32,140 @@ export const useAudioPlayer = () => useContext(Ctx)!;
 export const AudioPlayerProvider: React.FC<
   Omit<AudioPlayerCtx, ""> & { apiId: string; children: React.ReactNode }
 > = ({ apiId, children, ...stateAndActions }) => {
-  /** 1️⃣  Register ONCE (on mount) */
-  const { updateState } = useApiComponent(apiId, {
-    ...audioPlayerApiDoc,
-    // initial snapshot
-    state: {
-      ...audioPlayerApiDoc.state,
-      ...pickState(stateAndActions),
-    },
-  });
+  // Create a static version of the API doc (without dynamic state)
+  const staticApiDoc = useMemo(() => {
+    // Extract only the static parts of the audio player API doc
+    const { state, ...staticDoc } = audioPlayerApiDoc;
+    return staticDoc;
+  }, []);
+
+  // Get the state update function from the useApiComponent hook
+  // Pass only the static API doc for registration
+  const { updateState } = useApiComponent(apiId, staticApiDoc);
 
   /** Register action handlers */
   const { onPlay, onPause, onNext, onPrevious, onToggleMute, onSetVolume } =
     stateAndActions;
   const handlersRegisteredRef = useRef(false);
 
+  // Memoize action handlers to maintain stable references
+  const handlers = useMemo(
+    () => ({
+      play: async (): Promise<IActionResult> => {
+        try {
+          onPlay();
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+      pause: async (): Promise<IActionResult> => {
+        try {
+          onPause();
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+      next: async (): Promise<IActionResult> => {
+        try {
+          onNext();
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+      previous: async (): Promise<IActionResult> => {
+        try {
+          onPrevious();
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+      toggleMute: async (): Promise<IActionResult> => {
+        try {
+          onToggleMute();
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+      setVolume: async (
+        params?: Record<string, unknown>
+      ): Promise<IActionResult> => {
+        try {
+          if (!params || typeof params.volume !== "number") {
+            return {
+              success: false,
+              error: "setVolume requires a 'volume' parameter of type number",
+            };
+          }
+
+          const newVolume = Math.max(0, Math.min(1, params.volume as number));
+          onSetVolume(newVolume);
+
+          return { success: true };
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return { success: false, error: errorMessage };
+        }
+      },
+    }),
+    [onPlay, onPause, onNext, onPrevious, onToggleMute, onSetVolume]
+  );
+
+  // Register handlers only once with stable references
   useEffect(() => {
-    // Register handlers only once
     if (!handlersRegisteredRef.current) {
       handlersRegisteredRef.current = true;
       console.log(`[AudioPlayer] Registering action handlers for ${apiId}`);
 
-      // Handler for play action
-      registerApiActionHandler(
-        apiId,
-        "play",
-        async (): Promise<IActionResult> => {
-          try {
-            onPlay();
-            return {
-              success: true,
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
-
-      // Handler for pause action
-      registerApiActionHandler(
-        apiId,
-        "pause",
-        async (): Promise<IActionResult> => {
-          try {
-            onPause();
-            return {
-              success: true,
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
-
-      // Handler for next track action
-      registerApiActionHandler(
-        apiId,
-        "next",
-        async (): Promise<IActionResult> => {
-          try {
-            onNext();
-            return {
-              success: true,
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
-
-      // Handler for previous track action
-      registerApiActionHandler(
-        apiId,
-        "previous",
-        async (): Promise<IActionResult> => {
-          try {
-            onPrevious();
-            return {
-              success: true,
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
-
-      // Handler for toggle mute action
-      registerApiActionHandler(
-        apiId,
-        "toggleMute",
-        async (): Promise<IActionResult> => {
-          try {
-            onToggleMute();
-            return {
-              success: true,
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
-
-      // Handler for set volume action
-      registerApiActionHandler(
-        apiId,
-        "setVolume",
-        async (params?: Record<string, unknown>): Promise<IActionResult> => {
-          try {
-            if (!params || typeof params.volume !== "number") {
-              return {
-                success: false,
-                error: "setVolume requires a 'volume' parameter of type number",
-              };
-            }
-
-            const newVolume = Math.max(0, Math.min(1, params.volume as number));
-            onSetVolume(newVolume);
-
-            return {
-              success: true,
-              // Don't return state data to avoid stale closures
-            };
-          } catch (error) {
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            return { success: false, error: errorMessage };
-          }
-        }
-      );
+      registerApiActionHandler(apiId, "play", handlers.play);
+      registerApiActionHandler(apiId, "pause", handlers.pause);
+      registerApiActionHandler(apiId, "next", handlers.next);
+      registerApiActionHandler(apiId, "previous", handlers.previous);
+      registerApiActionHandler(apiId, "toggleMute", handlers.toggleMute);
+      registerApiActionHandler(apiId, "setVolume", handlers.setVolume);
     }
 
-    // No cleanup needed for action handlers as they're cleaned up when component is unregistered
-  }, [apiId, onPlay, onPause, onNext, onPrevious, onToggleMute, onSetVolume]);
+    return () => {
+      handlersRegisteredRef.current = false;
+      // Action handlers are cleaned up automatically when component is unregistered
+    };
+  }, []); // Empty deps - only runs on mount/unmount
 
-  /** 2️⃣  Push state changes only */
+  /** Push state changes via updateState */
   const { isPlaying, currentTrack, volume, isMuted } = stateAndActions;
+  const prevStateRef = useRef({ isPlaying, currentTrack, volume, isMuted });
+
   useEffect(() => {
-    updateState({ isPlaying, currentTrack, volume, isMuted });
+    const prevState = prevStateRef.current;
+
+    // Only update if state has actually changed
+    if (
+      prevState.isPlaying !== isPlaying ||
+      prevState.currentTrack !== currentTrack ||
+      prevState.volume !== volume ||
+      prevState.isMuted !== isMuted
+    ) {
+      updateState({ isPlaying, currentTrack, volume, isMuted });
+      prevStateRef.current = { isPlaying, currentTrack, volume, isMuted };
+    }
   }, [isPlaying, currentTrack, volume, isMuted, updateState]);
 
-  /** 3️⃣  Memo‑ise the context value so its identity stays stable */
+  /** Memoize the context value so its identity stays stable */
   const ctxValue = useMemo(
     () => ({
       isPlaying,
