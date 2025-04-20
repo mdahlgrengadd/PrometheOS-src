@@ -57,18 +57,30 @@ const AudioPlayerUI = () => {
   const [progress, setProgress] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [hasKicked, setHasKicked] = useState(false);
 
   const howlRef = useRef<Howl | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const oscilloscopeRef = useRef<HTMLDivElement | null>(null);
   const requestRef = useRef<number | null>(null);
+  const silentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Format time in mm:ss
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  // Function to kick iOS media channel
+  const kickMediaChannel = () => {
+    const s = new Audio("/audio/silence.mp3");
+    s.volume = 0;
+    s.loop = true; // Keep it playing forever
+    s.play(); // Must be in the user's tap handler
+    // Store it so it isn't garbage collected
+    silentAudioRef.current = s;
   };
 
   // (Re)create Howl whenever currentTrack changes
@@ -232,15 +244,27 @@ const AudioPlayerUI = () => {
 
   // Play/pause toggle
   const togglePlay = () => {
-    // Resume AudioContext in user gesture
+    // 1) Unlock media channel once (for iOS)
+    if (!hasKicked) {
+      kickMediaChannel();
+      setHasKicked(true);
+    }
+
+    // 2) Resume AudioContext in user gesture
     if (Howler.ctx && Howler.ctx.state === "suspended") {
       Howler.ctx.resume();
     }
 
-    if (isPlaying) {
-      onPause();
-    } else {
-      onPlay();
+    // 3) Play or pause directly for immediate feedback
+    const h = howlRef.current;
+    if (h) {
+      if (isPlaying) {
+        h.pause();
+        onPause();
+      } else {
+        h.play();
+        onPlay();
+      }
     }
   };
 
