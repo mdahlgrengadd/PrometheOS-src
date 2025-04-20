@@ -1,19 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { Node } from '@xyflow/react';
+import { Node } from "@xyflow/react";
 
-import { IApiComponent } from '../../../api/core/types';
-import { useApi } from '../../../api/hooks/useApi';
-import { useDataPin, useExecPin } from '../../../hooks/usePin';
-import { ApiComponentService } from '../services/ApiComponentService';
-import { ApiAppNodeData, Pin, PinDataType, PinType } from '../types/flowTypes';
-import { DataTypeConversionNodeData } from './DataTypeConversionNode';
+import { IApiComponent } from "../../../api/core/types";
+import { useApi } from "../../../api/hooks/useApi";
+import { useDataPin, useExecPin } from "../../../hooks/usePin";
+import { ApiComponentService } from "../services/ApiComponentService";
+import { ApiAppNodeData, Pin, PinDataType, PinType } from "../types/flowTypes";
+import { DataTypeConversionNodeData } from "./DataTypeConversionNode";
 
 interface NodeCreationMenuProps {
   onAddNode: (node: Node) => void;
+  hasBeginWorkflowNode?: boolean;
 }
 
-const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
+const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
+  onAddNode,
+  hasBeginWorkflowNode,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [nodeName, setNodeName] = useState("");
   const [endpoint, setEndpoint] = useState("");
@@ -627,7 +631,12 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({ onAddNode }) => {
             <div className="menu-section mt-4">
               <button
                 onClick={handleAddBeginWorkflowNode}
-                className="menu-button w-full px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded"
+                disabled={hasBeginWorkflowNode}
+                className={`menu-button w-full px-3 py-1 ${
+                  hasBeginWorkflowNode
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                } text-white rounded`}
               >
                 Begin Workflow
               </button>

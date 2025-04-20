@@ -1,9 +1,9 @@
-import '@xyflow/react/dist/style.css';
+import "@xyflow/react/dist/style.css";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import FlowEditor from '../../../features/workflow-editor/FlowEditor';
-import { Plugin, PluginManifest } from '../../types';
+import FlowEditor from "../../../features/workflow-editor/FlowEditor";
+import { Plugin, PluginManifest } from "../../types";
 
 // Define the plugin manifest
 export const manifest: PluginManifest = {
@@ -95,7 +95,7 @@ const ApiFlowEditorComponent: React.FC = () => {
       )}
 
       {/* Main editor area */}
-      <div className="flex-grow overflow-hidden">
+      <div className="flex-grow overflow-hidden h-full">
         <FlowEditor />
       </div>
     </div>

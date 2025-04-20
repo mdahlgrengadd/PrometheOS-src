@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import FlowCanvas from './components/FlowCanvas';
+import FlowCanvas from "./components/FlowCanvas";
 
 export { default as ApiNode } from "./components/ApiNode";
 export { default as CustomEdge } from "./components/CustomEdge";
@@ -13,7 +13,11 @@ export { default as DataTypeConversionNode } from "./components/DataTypeConversi
 export * from "./types/flowTypes";
 
 const FlowEditor: React.FC = () => {
-  return <FlowCanvas />;
+  return (
+    <div className="h-full w-full overflow-hidden">
+      <FlowCanvas />
+    </div>
+  );
 };
 
 export default FlowEditor;
