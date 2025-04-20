@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * Plugin manifest definition that describes a plugin in the system
@@ -11,6 +11,8 @@ export interface PluginManifest {
   author: string;
   icon: React.ReactNode;
   entry: string;
+  // Optional entrypoint URL for dynamically loaded plugins
+  entrypoint?: string;
   preferredSize?: {
     width: number;
     height: number;

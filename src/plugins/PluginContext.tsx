@@ -1,20 +1,20 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import ApiExplorerPlugin from './apps/api-explorer';
-import ApiFlowEditorPlugin from './apps/api-flow-editor';
-import AudioPlayerPlugin from './apps/audioplayer';
-import BrowserPlugin from './apps/browser';
-import CalculatorPlugin from './apps/calculator';
-import FileBrowserPlugin from './apps/filebrowser';
+import ApiExplorerPlugin from "./apps/api-explorer";
+import ApiFlowEditorPlugin from "./apps/api-flow-editor";
+import AudioPlayerPlugin from "./apps/audioplayer";
+import BrowserPlugin from "./apps/browser";
+import CalculatorPlugin from "./apps/calculator";
+import FileBrowserPlugin from "./apps/filebrowser";
 // Import plugins directly for reliable loading
-import NotepadPlugin from './apps/notepad';
-import SettingsPlugin from './apps/settings';
-import WebLLMChatPlugin from './apps/webllm-chat';
-import WordEditorPlugin from './apps/WordEditor';
-import { eventBus } from './EventBus';
-import { PluginManager } from './PluginManager';
-import { availablePlugins } from './registry';
-import { Plugin } from './types';
+import NotepadPlugin from "./apps/notepad";
+import SettingsPlugin from "./apps/settings";
+import WebLLMChatPlugin from "./apps/webllm-chat";
+import WordEditorPlugin from "./apps/WordEditor";
+import { eventBus } from "./EventBus";
+import { PluginManager } from "./PluginManager";
+import { availablePlugins, getAllManifests, installPlugin } from "./registry";
+import { Plugin } from "./types";
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
@@ -27,6 +27,7 @@ const pluginModules: Record<string, Plugin> = {
   WordEditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin,
   "webllm-chat": WebLLMChatPlugin,
+  filebrowser: FileBrowserPlugin,
 };
 
 // Debug: Log available plugins
@@ -43,6 +44,7 @@ type PluginContextType = {
   minimizeWindow: (pluginId: string) => void;
   maximizeWindow: (pluginId: string) => void;
   focusWindow: (pluginId: string) => void;
+  installRemoteApp: (url: string) => Promise<void>;
 };
 
 const PluginContext = createContext<PluginContextType | undefined>(undefined);
@@ -66,15 +68,31 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         );
 
-        // Load the plugins directly from imported modules
-        for (const manifest of availablePlugins) {
+        // Load all manifests (static + dynamic)
+        const manifests = getAllManifests();
+
+        for (const manifest of manifests) {
           try {
-            // Get the plugin module from our direct imports
-            const plugin = pluginModules[manifest.id];
-            if (plugin) {
-              pluginManager.registerPlugin(plugin);
+            if (pluginModules[manifest.id]) {
+              // Static plugin - load from direct import
+              pluginManager.registerPlugin(pluginModules[manifest.id]);
+            } else if (manifest.entrypoint) {
+              // Dynamic plugin - load from entrypoint URL
+              try {
+                const module = await import(
+                  /* @vite-ignore */ manifest.entrypoint
+                );
+                pluginManager.registerPlugin(module.default);
+              } catch (error) {
+                console.error(
+                  `Failed to load dynamic plugin ${manifest.id}:`,
+                  error
+                );
+              }
             } else {
-              console.error(`Plugin module for ${manifest.id} not found`);
+              console.error(
+                `Plugin module for ${manifest.id} not found and no entrypoint provided`
+              );
             }
           } catch (error) {
             console.error(`Failed to load plugin ${manifest.id}:`, error);
@@ -150,6 +168,27 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     eventBus.emit("window:focused", pluginId);
   };
 
+  // Expose an "install" helper for the UI
+  const installRemoteApp = async (url: string) => {
+    try {
+      const manifest = await installPlugin(url);
+
+      // Load & register immediately
+      if (manifest.entrypoint) {
+        const module = await import(/* @vite-ignore */ manifest.entrypoint);
+        if (module.default) {
+          pluginManager.registerPlugin(module.default);
+          openWindow(manifest.id);
+          return;
+        }
+      }
+      throw new Error(`Invalid plugin module at ${url}`);
+    } catch (error) {
+      console.error("Failed to install remote app:", error);
+      throw error;
+    }
+  };
+
   return (
     <PluginContext.Provider
       value={{
@@ -161,6 +200,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         minimizeWindow,
         maximizeWindow,
         focusWindow,
+        installRemoteApp,
       }}
     >
       {children}

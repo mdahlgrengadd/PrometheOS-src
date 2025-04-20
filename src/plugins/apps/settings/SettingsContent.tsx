@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import PluginInstaller from "@/components/PluginInstaller";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +84,9 @@ const SettingsContent: React.FC = () => {
     { name: "Gray", value: "#71717a" },
     { name: "Slate", value: "#334155" },
   ];
+
+  // Plugin installer state
+  const [isPluginInstallerOpen, setIsPluginInstallerOpen] = useState(false);
 
   // Save desktop feature settings to localStorage
   useEffect(() => {
@@ -219,6 +223,7 @@ const SettingsContent: React.FC = () => {
         <TabsList className="mb-4">
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="display">Display</TabsTrigger>
+          <TabsTrigger value="plugins">Plugins</TabsTrigger>
           <TabsTrigger value="about">About</TabsTrigger>
         </TabsList>
 
@@ -635,6 +640,46 @@ const SettingsContent: React.FC = () => {
                   Adjust the padding inside all application windows
                 </p>
               </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="plugins" className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Plugin Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Install and manage third-party plugins
+              </p>
+            </div>
+
+            <div className="border rounded-md p-4 mb-4">
+              <h4 className="font-medium mb-2">Install Plugin</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Install plugins from external sources to extend functionality
+              </p>
+              <Button
+                onClick={() => setIsPluginInstallerOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                Install from URL
+              </Button>
+
+              {isPluginInstallerOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <PluginInstaller
+                    onClose={() => setIsPluginInstallerOpen(false)}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium mb-2">Security Warning</h4>
+              <p className="text-sm text-red-500">
+                Third-party plugins can access your system and data. Only
+                install plugins from trusted sources.
+              </p>
             </div>
           </div>
         </TabsContent>
