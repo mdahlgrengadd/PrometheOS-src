@@ -3,6 +3,14 @@
 @import './styles/desktop.css';
 @import './styles/taskbar.css';
 
+/* Disable text selection everywhere except input fields and editable areas */
+*:not(input):not(textarea):not([contenteditable="true"]):not(.allow-select) {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 /* Any remaining utility classes */
 .maximized {
   width: 100% !important;
