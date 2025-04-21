@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { eventBus } from "../plugins/EventBus";
 import {
   decodeShortCode,
   generatePinCode,
@@ -9,6 +10,8 @@ import {
 import { toast } from "./use-toast";
 import { useWebRTCSession } from "./useWebRTCSession";
 import { useWebRTCStatus } from "./useWebRTCStatus";
+
+let isApplyingRemote = false;
 
 export type SessionStep = "choose" | "host" | "join" | "join:answer" | "done";
 export type DisplayMode = "qr" | "text" | "pin";
@@ -110,6 +113,7 @@ export function useSessionHandshake(): UseSessionHandshakeReturn {
     });
     setGlobalConnected(true);
 
+    // 1) When we get a message from the peer, replay it into eventBus
     setMessageHandler((data) => {
       const trimmed = data.trim();
       if (!trimmed.startsWith("{")) {
@@ -118,21 +122,76 @@ export function useSessionHandshake(): UseSessionHandshakeReturn {
       }
       try {
         const msgObj = JSON.parse(trimmed);
-        if (msgObj.type === "sync") {
-          // handle your session-sync logic...
-        } else if (msgObj.type === "chat") {
-          // optionally push into your chat log or UI
+        switch (msgObj.type) {
+          case "window:opened":
+          case "window:closed":
+          case "window:minimized":
+          case "window:maximized":
+            isApplyingRemote = true;
+            eventBus.emit(msgObj.type, msgObj.id);
+            isApplyingRemote = false;
+            break;
+
+          case "window:position:changed":
+            isApplyingRemote = true;
+            eventBus.emit("window:position:changed", {
+              id: msgObj.id,
+              position: msgObj.position,
+            });
+            isApplyingRemote = false;
+            break;
+
+          case "sync":
+            // handle your session-sync logic...
+            break;
+          case "chat":
+            // optionally push into your chat log or UI
+            break;
+          default:
+            // fall back to existing sync/chat logic
+            break;
         }
       } catch (err) {
         console.warn("Invalid JSON payload:", err);
       }
     });
 
+    // 2) Subscribe locally and forward over WebRTC when not applying remote
+    const subs = [
+      eventBus.subscribe("window:opened", (id) => {
+        if (isApplyingRemote) return;
+        sendMessage(JSON.stringify({ type: "window:opened", id }));
+      }),
+      eventBus.subscribe("window:closed", (id) => {
+        if (isApplyingRemote) return;
+        sendMessage(JSON.stringify({ type: "window:closed", id }));
+      }),
+      eventBus.subscribe("window:minimized", (id) => {
+        if (isApplyingRemote) return;
+        sendMessage(JSON.stringify({ type: "window:minimized", id }));
+      }),
+      eventBus.subscribe("window:maximized", (id) => {
+        if (isApplyingRemote) return;
+        sendMessage(JSON.stringify({ type: "window:maximized", id }));
+      }),
+      eventBus.subscribe("window:position:changed", (data) => {
+        if (isApplyingRemote) return;
+        sendMessage(
+          JSON.stringify({
+            type: "window:position:changed",
+            id: data.id,
+            position: data.position,
+          })
+        );
+      }),
+    ];
+
     // Reset acceptance refs when connection is established
     hasAcceptedOfferRef.current = false;
     hasAcceptedAnswerRef.current = false;
 
     return () => {
+      subs.forEach((unsub) => unsub());
       setGlobalConnected(false);
     };
   }, [connected, setGlobalConnected, setMessageHandler, sendMessage]);
