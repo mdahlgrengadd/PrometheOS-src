@@ -5,8 +5,8 @@ import React, { useEffect, useState } from "react";
 import { ChatMessage, Message, names } from "../types";
 
 // ← set this to whatever your live Worker URL is:
-//const CHAT_HOST = "https://cloudflare-chat.mdahlgrengadd.workers.dev";
-const CHAT_HOST = "http://127.0.0.1:8787";
+const CHAT_HOST = "https://cloudflare-chat.mdahlgrengadd.workers.dev";
+//const CHAT_HOST = "http://127.0.0.1:8787";
 
 interface ChatUIProps {
   roomId: string;
