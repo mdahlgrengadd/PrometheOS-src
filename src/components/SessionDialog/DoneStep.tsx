@@ -1,5 +1,7 @@
 import React from "react";
 
+import { Alert } from "./common";
+
 export interface DoneStepProps {
   connected: boolean;
   messages: string[];
@@ -56,6 +58,7 @@ export function DoneStep({
                 }}
               />
               <button
+                type="button"
                 className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                 onClick={() => {
                   if (testMessage) {
@@ -88,6 +91,7 @@ export function DoneStep({
 
       <div className="flex justify-end">
         <button
+          type="button"
           className="py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-md"
           onClick={onClose}
         >

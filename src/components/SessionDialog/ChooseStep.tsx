@@ -13,12 +13,14 @@ export function ChooseStep({ onHost, onJoin }: ChooseStepProps) {
       </p>
       <div className="flex gap-4">
         <button
+          type="button"
           className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
           onClick={onHost}
         >
           Host a Session
         </button>
         <button
+          type="button"
           className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md"
           onClick={onJoin}
         >
