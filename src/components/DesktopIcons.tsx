@@ -14,7 +14,7 @@ interface DesktopIconsProps {
 }
 
 const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
-  console.log("%c[DesktopIcons] Re-rendered", "color: orange");
+  //console.log("%c[DesktopIcons] Re-rendered", "color: orange");
   const [showIcons, setShowIcons] = useState(true);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -119,7 +119,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
   return (
     <div className="desktop-icons">
       {windows.map((window) => {
-        console.log(`Rendering icon for ${window.id}:`, window.icon);
+        //console.log(`Rendering icon for ${window.id}:`, window.icon);
 
         return (
           <div

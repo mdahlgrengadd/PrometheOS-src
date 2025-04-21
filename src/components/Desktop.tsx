@@ -36,20 +36,25 @@ const Desktop = () => {
 
   // Update URL when active windows change
   useEffect(() => {
-    // Don't update URL if no windows are open
+    const params = new URLSearchParams(location.search);
+
+    // Only clear "open" if there is no handshake or action in the URL:
     if (activeWindows.length === 0) {
-      if (location.search.includes("open=")) {
-        navigate("", { replace: true });
+      if (
+        params.has("open") &&
+        !params.has("handshake") &&
+        !params.has("action")
+      ) {
+        params.delete("open");
+        const newSearch = params.toString();
+        navigate(newSearch ? `?${newSearch}` : "", { replace: true });
       }
       return;
     }
 
-    // Create query string from active windows
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.set("open", activeWindows.join(","));
-
-    // Don't trigger unnecessary navigation if the URL already matches
-    const newSearch = searchParams.toString();
+    // Otherwise sync the "open" param but leave handshake/action alone
+    params.set("open", activeWindows.join(","));
+    const newSearch = params.toString();
     if (newSearch !== location.search.replace(/^\?/, "")) {
       navigate(`?${newSearch}`, { replace: true });
     }
@@ -152,49 +157,86 @@ const Desktop = () => {
       );
     };
 
-    const handleWindowFocused = (pluginId: string) => {
-      setWindows((prev) => {
-        const highestZ = Math.max(...prev.map((w) => w.zIndex), 0);
-
-        return prev.map((window) =>
-          window.id === pluginId
-            ? { ...window, zIndex: highestZ + 1, isMinimized: false }
+    // Add a handler for window position change events
+    const handleWindowPositionChanged = (data: {
+      id: string;
+      position: { x: number; y: number };
+    }) => {
+      setWindows((prev) =>
+        prev.map((window) =>
+          window.id === data.id
+            ? { ...window, position: data.position }
             : window
-        );
+        )
+      );
+    };
+
+    // Add a handler for receiving full windows state sync
+    const handleSyncWindows = (windowsState: WindowState[]) => {
+      // Only update windows that exist in both states
+      setWindows((prev) => {
+        const updatedWindows = [...prev];
+
+        // Update existing windows based on received state
+        for (const syncedWindow of windowsState) {
+          const existingWindowIndex = updatedWindows.findIndex(
+            (w) => w.id === syncedWindow.id
+          );
+          if (existingWindowIndex !== -1) {
+            // Preserve the content and merge other properties
+            updatedWindows[existingWindowIndex] = {
+              ...updatedWindows[existingWindowIndex],
+              ...syncedWindow,
+              content: updatedWindows[existingWindowIndex].content, // Keep the original content
+            };
+          }
+        }
+
+        return updatedWindows;
       });
     };
 
-    // Subscribe to events
-    const unsubscribeOpened = eventBus.subscribe(
-      "window:opened",
-      handleWindowOpened
-    );
-    const unsubscribeClosed = eventBus.subscribe(
-      "window:closed",
-      handleWindowClosed
-    );
-    const unsubscribeMinimized = eventBus.subscribe(
-      "window:minimized",
-      handleWindowMinimized
-    );
-    const unsubscribeMaximized = eventBus.subscribe(
-      "window:maximized",
-      handleWindowMaximized
-    );
-    const unsubscribeFocused = eventBus.subscribe(
-      "window:focused",
-      handleWindowFocused
-    );
+    const subscriptions = [
+      eventBus.subscribe("window:opened", handleWindowOpened),
+      eventBus.subscribe("window:closed", handleWindowClosed),
+      eventBus.subscribe("window:minimized", handleWindowMinimized),
+      eventBus.subscribe("window:maximized", handleWindowMaximized),
+      eventBus.subscribe(
+        "window:position:changed",
+        handleWindowPositionChanged
+      ),
+      eventBus.subscribe("sync:windows", handleSyncWindows),
+    ];
 
     return () => {
-      // Clean up event subscriptions
-      unsubscribeOpened();
-      unsubscribeClosed();
-      unsubscribeMinimized();
-      unsubscribeMaximized();
-      unsubscribeFocused();
+      subscriptions.forEach((unsubscribe) => unsubscribe());
     };
   }, []);
+
+  // Make desktop state available globally for syncing
+  useEffect(() => {
+    // Define a proper type for the window extension
+    interface WindowWithDesktopState extends Window {
+      __DESKTOP_STATE?: {
+        windows: Array<Omit<WindowState, "content">>;
+      };
+    }
+
+    (window as WindowWithDesktopState).__DESKTOP_STATE = {
+      windows: windows.map((w) => ({
+        id: w.id,
+        title: w.title,
+        isOpen: w.isOpen,
+        isMinimized: w.isMinimized,
+        zIndex: w.zIndex,
+        position: w.position,
+        size: w.size,
+        isMaximized: w.isMaximized,
+        previousPosition: w.previousPosition,
+        previousSize: w.previousSize,
+      })),
+    };
+  }, [windows]);
 
   const maximizedWindows = windows
     .filter((w) => w.isOpen && !w.isMinimized && w.isMaximized)
@@ -213,6 +255,9 @@ const Desktop = () => {
         window.id === id ? { ...window, position } : window
       )
     );
+
+    // Emit position change event for syncing
+    eventBus.emit("window:position:changed", { id, position });
   };
 
   const handleTabClick = (id: string) => {

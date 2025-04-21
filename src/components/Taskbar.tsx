@@ -1,8 +1,9 @@
-import { Clock, Home, Maximize2, Minimize2, Monitor } from "lucide-react";
+import { Clock, Home, Maximize2, Minimize2, Monitor, Wifi } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
 
+import { useWebRTCStatus } from "../hooks/useWebRTCStatus";
 import { WindowState } from "./Desktop";
 
 interface TaskbarProps {
@@ -13,11 +14,17 @@ interface TaskbarProps {
 const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { theme } = useTheme();
+  const { isConnected } = useWebRTCStatus();
   const isBeOSTheme = theme === "beos";
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Debug WebRTC connection status
+  useEffect(() => {
+    console.log("Taskbar - WebRTC connection status:", isConnected);
+  }, [isConnected]);
 
   // Check for auto-hide setting on mount
   useEffect(() => {
@@ -238,6 +245,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
 
         <div className="taskbar-separator"></div>
 
+        {isConnected && (
+          <>
+            <div
+              className="px-2 flex items-center text-green-500"
+              title="Connected to Session"
+            >
+              <Wifi className="w-4 h-4" />
+            </div>
+            <div className="taskbar-separator"></div>
+          </>
+        )}
+
         <div className="px-2 text-xs font-bold">{formattedTime}</div>
       </div>
     );
@@ -283,6 +302,18 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
       </div>
 
       <div className="taskbar-separator"></div>
+
+      {isConnected && (
+        <>
+          <div
+            className="flex items-center px-2 text-green-500"
+            title="Connected to Session"
+          >
+            <Wifi className="w-4 h-4" />
+          </div>
+          <div className="taskbar-separator"></div>
+        </>
+      )}
 
       <div className="flex items-center px-3 font-medium">
         <Clock className="w-4 h-4 mr-2 text-primary" />

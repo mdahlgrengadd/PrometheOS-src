@@ -8,6 +8,7 @@ import CalculatorPlugin from "./apps/calculator";
 import FileBrowserPlugin from "./apps/filebrowser";
 // Import plugins directly for reliable loading
 import NotepadPlugin from "./apps/notepad";
+import SessionPlugin from "./apps/session";
 import SettingsPlugin from "./apps/settings";
 import WebLLMChatPlugin from "./apps/webllm-chat";
 import WordEditorPlugin from "./apps/WordEditor";
@@ -32,6 +33,7 @@ const pluginModules: Record<string, Plugin> = {
   audioplayer: AudioPlayerPlugin,
   "webllm-chat": WebLLMChatPlugin,
   filebrowser: FileBrowserPlugin,
+  session: SessionPlugin,
 };
 
 // Debug: Log available plugins

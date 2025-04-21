@@ -6,6 +6,7 @@ import { manifest as calculatorManifest } from "./apps/calculator";
 import { manifest as fileBrowserManifest } from "./apps/filebrowser";
 // Import all plugin manifests
 import { manifest as notepadManifest } from "./apps/notepad";
+import { manifest as sessionManifest } from "./apps/session";
 import { manifest as settingsManifest } from "./apps/settings";
 import { manifest as webllmChatManifest } from "./apps/webllm-chat";
 import { manifest as wordEditorManifest } from "./apps/WordEditor";
@@ -28,6 +29,7 @@ export const staticPlugins: PluginManifest[] = [
   apiExplorerManifest,
   apiFlowEditorManifest,
   fileBrowserManifest,
+  sessionManifest,
 ];
 
 // For backward compatibility

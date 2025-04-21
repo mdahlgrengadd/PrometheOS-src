@@ -3,6 +3,10 @@
 @import './styles/desktop.css';
 @import './styles/taskbar.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Disable text selection everywhere except input fields and editable areas */
 *:not(input):not(textarea):not([contenteditable="true"]):not(.allow-select) {
   -webkit-user-select: none;
@@ -253,4 +257,18 @@
     overscroll-behavior-y: none;
     overflow: hidden;
   }
+}
+
+/* Make text selectable with user-select-all class */
+.user-select-all {
+  -webkit-user-select: all;  /* Safari */
+  -ms-user-select: all;      /* IE/Edge */
+  user-select: all;          /* Standard syntax */
+}
+
+/* Add a global style to make sure specific areas can be selected */
+.selectable-text {
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
