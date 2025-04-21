@@ -3,6 +3,7 @@ import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor";
 import { manifest as audioPlayerManifest } from "./apps/audioplayer";
 import { manifest as browserManifest } from "./apps/browser";
 import { manifest as calculatorManifest } from "./apps/calculator";
+import { manifest as chatManifest } from "./apps/chat";
 import { manifest as fileBrowserManifest } from "./apps/filebrowser";
 // Import all plugin manifests
 import { manifest as notepadManifest } from "./apps/notepad";
@@ -30,6 +31,7 @@ export const staticPlugins: PluginManifest[] = [
   apiFlowEditorManifest,
   fileBrowserManifest,
   sessionManifest,
+  chatManifest,
 ];
 
 // For backward compatibility

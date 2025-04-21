@@ -5,6 +5,7 @@ import ApiFlowEditorPlugin from "./apps/api-flow-editor";
 import AudioPlayerPlugin from "./apps/audioplayer";
 import BrowserPlugin from "./apps/browser";
 import CalculatorPlugin from "./apps/calculator";
+import ChatPlugin from "./apps/chat";
 import FileBrowserPlugin from "./apps/filebrowser";
 // Import plugins directly for reliable loading
 import NotepadPlugin from "./apps/notepad";
@@ -34,6 +35,7 @@ const pluginModules: Record<string, Plugin> = {
   "webllm-chat": WebLLMChatPlugin,
   filebrowser: FileBrowserPlugin,
   session: SessionPlugin,
+  chat: ChatPlugin,
 };
 
 // Debug: Log available plugins
