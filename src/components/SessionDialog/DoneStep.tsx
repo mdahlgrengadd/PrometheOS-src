@@ -52,7 +52,9 @@ export function DoneStep({
                 onChange={(e) => setTestMessage(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && testMessage) {
-                    sendMessage(testMessage);
+                    sendMessage(
+                      JSON.stringify({ type: "chat", payload: testMessage })
+                    );
                     setTestMessage("");
                   }
                 }}
@@ -62,7 +64,9 @@ export function DoneStep({
                 className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                 onClick={() => {
                   if (testMessage) {
-                    sendMessage(testMessage);
+                    sendMessage(
+                      JSON.stringify({ type: "chat", payload: testMessage })
+                    );
                     setTestMessage("");
                   }
                 }}

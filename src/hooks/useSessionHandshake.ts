@@ -111,11 +111,20 @@ export function useSessionHandshake(): UseSessionHandshakeReturn {
     setGlobalConnected(true);
 
     setMessageHandler((data) => {
+      const trimmed = data.trim();
+      if (!trimmed.startsWith("{")) {
+        // it's a plain-text or older-style message—ignore for sync
+        return;
+      }
       try {
-        const msg = JSON.parse(data);
-        // sync logic omitted for brevity; same as original...
-      } catch {
-        console.log("Failed to parse message data");
+        const msgObj = JSON.parse(trimmed);
+        if (msgObj.type === "sync") {
+          // handle your session-sync logic...
+        } else if (msgObj.type === "chat") {
+          // optionally push into your chat log or UI
+        }
+      } catch (err) {
+        console.warn("Invalid JSON payload:", err);
       }
     });
 
