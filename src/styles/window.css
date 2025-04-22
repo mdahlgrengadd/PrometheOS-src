@@ -20,6 +20,13 @@
     &:focus-within {
       box-shadow: 0 4px 15px var(--window-shadow, rgba(0, 0, 0, 0.15));
     }
+    
+    /* Resizing state */
+    &.resizing {
+      box-shadow: 0 6px 20px var(--window-shadow, rgba(0, 0, 0, 0.2));
+      transition: none !important; /* Disable all transitions during resize */
+      z-index: 9999 !important; /* Ensure resizing window is on top */
+    }
   }
 
   /* Drag handle for framer-motion */
@@ -43,27 +50,96 @@
     box-sizing: border-box;
   }
   
-  /* Resize handle */
+  /* Generic resize handle */
   .resize-handle {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px;
-    height: 20px;
-    cursor: nwse-resize;
     background: transparent;
     z-index: 10;
+    touch-action: none;
   }
   
-  .resize-handle::before {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
+  /* Make resize handles more visible on hover */
+  .draggable-window:hover .resize-handle {
+    opacity: 0.15 !important;
+  }
+  
+  .resize-handle:hover {
+    opacity: 0.5 !important;
+    background-color: rgba(0, 120, 255, 0.3);
+  }
+  
+  /* Corner resize handles */
+  .resize-handle-br {
+    bottom: -6px;
+    right: -6px;
+    width: 14px;
+    height: 14px;
+    cursor: nwse-resize;
+    border-radius: 0 0 var(--wm-border-radius) 0;
+  }
+  
+  .resize-handle-bl {
+    bottom: -6px;
+    left: -6px;
+    width: 14px;
+    height: 14px;
+    cursor: nesw-resize;
+    border-radius: 0 0 0 var(--wm-border-radius);
+  }
+  
+  .resize-handle-tr {
+    top: -6px;
+    right: -6px;
+    width: 14px;
+    height: 14px;
+    cursor: nesw-resize;
+    border-radius: 0 var(--wm-border-radius) 0 0;
+  }
+  
+  .resize-handle-tl {
+    top: -6px;
+    left: -6px;
+    width: 14px;
+    height: 14px;
+    cursor: nwse-resize;
+    border-radius: var(--wm-border-radius) 0 0 0;
+  }
+  
+  /* Edge resize handles */
+  .resize-handle-r {
+    top: 50%;
+    right: -6px;
     width: 10px;
+    height: 100px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-l {
+    top: 50%;
+    left: -6px;
+    width: 10px;
+    height: 100px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-b {
+    bottom: -6px;
+    left: 50%;
     height: 10px;
-    border-bottom: 2px solid var(--window-resize-handle, rgba(0, 0, 0, 0.15));
-    border-right: 2px solid var(--window-resize-handle, rgba(0, 0, 0, 0.15));
+    width: 100px;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+  }
+  
+  .resize-handle-t {
+    top: -6px;
+    left: 50%;
+    height: 10px;
+    width: 100px;
+    transform: translateX(-50%);
+    cursor: ns-resize;
   }
   
   /* Window header */

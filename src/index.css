@@ -26,11 +26,15 @@ html, body, #root {
 /* Window shell positioning for maximized windows */
 .maximized {
   width: 100% !important;
-  height: calc(100vh - 84px) !important;
-  padding-top: 0 !important;
+  height: calc(100vh - 44px) !important; /* 44px for taskbar height */
   left: 0 !important;
   top: 0 !important;
   border-radius: 0 !important;
+  transform: none !important; /* Disable framer-motion transform */
+  position: fixed !important; /* Ensure the window is positioned relative to viewport */
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
 }
 
 /* Fix for header layouts when windows are maximized */

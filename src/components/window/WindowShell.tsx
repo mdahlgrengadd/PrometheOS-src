@@ -1,15 +1,20 @@
-import {
-  DragHandlers,
-  motion,
-  PanInfo,
-  useMotionValue,
-  useTransform,
-} from "framer-motion";
+import { DragHandlers, motion, PanInfo, useMotionValue } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
+import { Resizable } from "../window/Resizable";
 import { WindowContent } from "./WindowContent";
 import { WindowHeader } from "./WindowHeader";
 
@@ -53,15 +58,24 @@ export const WindowShell: React.FC<WindowShellProps> = ({
   const { theme } = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const resizeHandleRef = useRef<HTMLDivElement>(null);
-  const [animationState, setAnimationState] = useState<
-    "opening" | "closing" | "minimizing" | "maximizing" | null
-  >("opening");
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeDirection, setResizeDirection] = useState<string | null>(null);
+  const [initialSize, setInitialSize] = useState({ width: 0, height: 0 });
+  const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
 
-  // Use motion values for smooth dragging at 60fps
+  // For framer-motion header dragging
   const x = useMotionValue(position.x);
   const y = useMotionValue(position.y);
+
+  // For dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px of movement required before resize activates
+      },
+    })
+  );
 
   // Update motion values when position prop changes (but not during drag)
   useEffect(() => {
@@ -71,197 +85,38 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     }
   }, [position, isDragging, x, y]);
 
-  // Set up resize observer
+  // Update size when it changes from props
   useEffect(() => {
-    if (!windowRef.current || isMaximized) return;
-
-    // Clean up previous observer if it exists
-    let resizeObserver: ResizeObserver | null = null;
-
-    // Create a debounce function for the resize - only apply for user-initiated resizes
-    let resizeTimeout: NodeJS.Timeout;
-    let initialSize = { width: 0, height: 0 };
-    let resizeInitiated = false;
-
-    const handleResize = (entries: ResizeObserverEntry[]) => {
-      const entry = entries[0];
-      if (!entry) return;
-
-      // Store initial size when the observer is first attached
-      if (initialSize.width === 0) {
-        initialSize = {
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        };
-        return;
+    if (windowRef.current && !isResizing) {
+      if (typeof size.width === "number") {
+        windowRef.current.style.width = `${size.width}px`;
+      } else {
+        windowRef.current.style.width = size.width;
       }
 
-      // Only process resize if user initiated it via the resize handle
-      // or if the size is larger than initial (prevent shrinking)
-      if (
-        resizeInitiated ||
-        entry.contentRect.width > initialSize.width ||
-        entry.contentRect.height > initialSize.height
-      ) {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          // Apply resize only if width/height changed significantly
-          if (
-            Math.abs(entry.contentRect.width - initialSize.width) > 5 ||
-            Math.abs(entry.contentRect.height - initialSize.height) > 5
-          ) {
-            const { width, height } = entry.contentRect;
-            onResize({ width, height });
-
-            // Update our tracked initial size
-            initialSize = { width, height };
-          }
-
-          resizeInitiated = false;
-        }, 100);
+      if (typeof size.height === "number") {
+        windowRef.current.style.height = `${size.height}px`;
+      } else {
+        windowRef.current.style.height = size.height;
       }
-    };
-
-    resizeObserver = new ResizeObserver(handleResize);
-    resizeObserver.observe(windowRef.current);
-
-    // Set flag when user initiates resize via resize handle
-    const handleResizeStart = () => {
-      resizeInitiated = true;
-    };
-
-    if (resizeHandleRef.current) {
-      resizeHandleRef.current.addEventListener("mousedown", handleResizeStart);
     }
+  }, [size, isResizing]);
 
-    return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (resizeHandleRef.current) {
-        resizeHandleRef.current.removeEventListener(
-          "mousedown",
-          handleResizeStart
-        );
-      }
-      clearTimeout(resizeTimeout);
-    };
-  }, [isMaximized, onResize]);
-
-  // Initialize opening animation
-  useEffect(() => {
-    if (isOpen) {
-      setAnimationState("opening");
-      const timer = setTimeout(() => {
-        setAnimationState(null);
-      }, 300); // Match animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  // Handle maximize animation
-  useEffect(() => {
-    if (isMaximized) {
-      setAnimationState("maximizing");
-      const timer = setTimeout(() => {
-        setAnimationState(null);
-      }, 200); // Match animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [isMaximized]);
-
-  // Focus effect
-  useEffect(() => {
-    if (isFocused) {
-      const timer = setTimeout(() => {
-        if (windowRef.current) {
-          windowRef.current.classList.add("window-focused");
-          setTimeout(() => {
-            windowRef.current?.classList.remove("window-focused");
-          }, 300);
-        }
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isFocused]);
-
-  // Custom resize handler
-  useEffect(() => {
-    if (!resizeHandleRef.current || isMaximized || !isOpen || isMinimized)
-      return;
-
-    const handleRef = resizeHandleRef.current;
-    let isResizing = false;
-    let startX = 0;
-    let startY = 0;
-    let startWidth = 0;
-    let startHeight = 0;
-
-    const handleResizeStart = (e: MouseEvent) => {
-      if (!windowRef.current) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      isResizing = true;
-      startX = e.clientX;
-      startY = e.clientY;
-
-      const rect = windowRef.current.getBoundingClientRect();
-      startWidth = rect.width;
-      startHeight = rect.height;
-
-      document.body.style.cursor = "nwse-resize";
-      window.addEventListener("mousemove", handleResizeMove);
-      window.addEventListener("mouseup", handleResizeEnd);
-    };
-
-    const handleResizeMove = (e: MouseEvent) => {
-      if (!isResizing || !windowRef.current) return;
-
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-
-      const newWidth = Math.max(320, startWidth + deltaX);
-      const newHeight = Math.max(200, startHeight + deltaY);
-
-      windowRef.current.style.width = `${newWidth}px`;
-      windowRef.current.style.height = `${newHeight}px`;
-    };
-
-    const handleResizeEnd = () => {
-      if (!isResizing || !windowRef.current) return;
-
-      isResizing = false;
-      document.body.style.cursor = "";
-
-      const rect = windowRef.current.getBoundingClientRect();
-      onResize({
-        width: rect.width,
-        height: rect.height,
-      });
-
-      window.removeEventListener("mousemove", handleResizeMove);
-      window.removeEventListener("mouseup", handleResizeEnd);
-    };
-
-    handleRef.addEventListener("mousedown", handleResizeStart);
-
-    return () => {
-      handleRef.removeEventListener("mousedown", handleResizeStart);
-      window.removeEventListener("mousemove", handleResizeMove);
-      window.removeEventListener("mouseup", handleResizeEnd);
-    };
-  }, [isMaximized, onResize, isOpen, isMinimized]);
-
-  // Handle drag start - used for focusing and tracking state
-  const handleDragStart: DragHandlers["onDragStart"] = () => {
+  // Handle header drag start
+  const handleHeaderDragStart: DragHandlers["onDragStart"] = () => {
     setIsDragging(true);
     onFocus(); // Focus the window when starting to drag
   };
 
-  // Handle drag end - sync state back to store
-  const handleDragEnd: DragHandlers["onDragEnd"] = () => {
+  // Handle header drag with the correct type signature for framer-motion
+  const handleHeaderDrag: DragHandlers["onDrag"] = (event, info) => {
+    // Update the window position based on the drag without constraints
+    x.set(position.x + info.offset.x);
+    y.set(position.y + info.offset.y);
+  };
+
+  // Handle header drag end
+  const handleHeaderDragEnd: DragHandlers["onDragEnd"] = (_e, info) => {
     setIsDragging(false);
 
     // Clamp position to keep on screen
@@ -273,17 +128,18 @@ export const WindowShell: React.FC<WindowShellProps> = ({
       const minVisibleWidth = Math.min(100, rect.width * 0.2);
       const minVisibleHeight = Math.min(50, rect.height * 0.2);
 
-      const currentX = x.get();
-      const currentY = y.get();
+      // Calculate the new position based on the original position plus the drag offset
+      const newX = position.x + info.offset.x;
+      const newY = position.y + info.offset.y;
 
+      // Remove the top constraint entirely (allow negative values)
       const clampedX = Math.max(
         -rect.width + minVisibleWidth,
-        Math.min(currentX, viewportWidth - minVisibleWidth)
+        Math.min(newX, viewportWidth - minVisibleWidth)
       );
-      const clampedY = Math.max(
-        0,
-        Math.min(currentY, viewportHeight - minVisibleHeight)
-      );
+
+      // Allow windows to reach the very top of the screen
+      const clampedY = Math.min(newY, viewportHeight - minVisibleHeight);
 
       // Only update the store if position actually changed
       if (clampedX !== position.x || clampedY !== position.y) {
@@ -297,98 +153,172 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     }
   };
 
-  // Handle minimize with animation
-  const handleMinimize = () => {
-    if (windowRef.current) {
-      setAnimationState("minimizing");
-      // Wait for the animation to complete before actually minimizing
-      setTimeout(() => {
-        onMinimize();
-        setAnimationState(null);
-      }, 200);
-    } else {
-      onMinimize();
-    }
+  // Handle dnd-kit resize start
+  const handleDndResizeStart = (event: DragStartEvent) => {
+    if (!windowRef.current) return;
+
+    setIsResizing(true);
+    onFocus();
+
+    // Get the resize direction from the draggable's data
+    const direction = event.active?.data?.current?.direction || null;
+    setResizeDirection(direction);
+
+    // Store initial window size
+    const rect = windowRef.current.getBoundingClientRect();
+    setInitialSize({
+      width: rect.width,
+      height: rect.height,
+    });
+
+    // Store initial mouse position
+    setInitialMousePos({
+      x: 0,
+      y: 0,
+    });
   };
 
-  // Handle close with animation
-  const handleClose = () => {
+  // Handle dnd-kit resize move
+  const handleDndResizeMove = (event: DragMoveEvent) => {
+    if (!windowRef.current || !resizeDirection) return;
+
+    // Calculate the delta from the initial position
+    const deltaX = event.delta.x;
+    const deltaY = event.delta.y;
+
+    let newWidth = initialSize.width;
+    let newHeight = initialSize.height;
+
+    // Adjust size based on direction
+    if (resizeDirection.includes("right")) {
+      newWidth = Math.max(320, initialSize.width + deltaX);
+    } else if (resizeDirection.includes("left")) {
+      newWidth = Math.max(320, initialSize.width - deltaX);
+    }
+
+    if (resizeDirection.includes("bottom")) {
+      newHeight = Math.max(200, initialSize.height + deltaY);
+    } else if (resizeDirection.includes("top")) {
+      newHeight = Math.max(200, initialSize.height - deltaY);
+    }
+
+    // Apply the new size
+    windowRef.current.style.width = `${newWidth}px`;
+    windowRef.current.style.height = `${newHeight}px`;
+  };
+
+  // Handle dnd-kit resize end
+  const handleDndResizeEnd = (event: DragEndEvent) => {
+    if (!windowRef.current) return;
+
+    setIsResizing(false);
+    setResizeDirection(null);
+
+    // Get the final size
+    const rect = windowRef.current.getBoundingClientRect();
+    onResize({
+      width: rect.width,
+      height: rect.height,
+    });
+  };
+
+  // Handle individual handle resize start from Resizable component
+  const handleResizeStart = () => {
+    setIsResizing(true);
+    onFocus();
+  };
+
+  // Handle individual handle resize end from Resizable component
+  const handleResizeEnd = (event: DragEndEvent, direction: string) => {
+    setIsResizing(false);
+
     if (windowRef.current) {
-      setAnimationState("closing");
-      // Wait for the animation to complete before actually closing
-      setTimeout(() => {
-        onClose();
-        setAnimationState(null);
-      }, 100);
-    } else {
-      onClose();
+      const rect = windowRef.current.getBoundingClientRect();
+      onResize({
+        width: rect.width,
+        height: rect.height,
+      });
     }
   };
 
   if (!isOpen || isMinimized) return null;
 
   return (
-    <motion.div
-      ref={windowRef}
-      className={cn(
-        "draggable-window",
-        isMaximized && "maximized",
-        isFocused && "ring-2 ring-primary/30",
-        isDragging && "dragging",
-        animationState === "opening" && "window-opening animating-transform",
-        animationState === "closing" && "window-closing animating-transform",
-        animationState === "minimizing" &&
-          "window-minimizing animating-transform",
-        animationState === "maximizing" &&
-          "window-maximizing animating-transform"
-      )}
-      style={{
-        zIndex,
-        width: size.width,
-        height: size.height,
-        // Set will-change for better performance hints to browser
-        willChange: isDragging ? "transform" : "auto",
-      }}
-      // Directly use motion values for smooth 60fps animation
-      initial={false}
-      animate={false}
-      // Hardware accelerated positioning using motion values
-      {...(isMaximized
-        ? {}
-        : {
-            x,
-            y,
-            drag: true,
-            dragMomentum: false,
-            dragElastic: 0,
-            dragSnapToOrigin: false,
-            dragTransition: { power: 0, timeConstant: 0 },
-            onDragStart: handleDragStart,
-            onDragEnd: handleDragEnd,
-          })}
+    <DndContext
+      sensors={sensors}
+      modifiers={[restrictToWindowEdges]}
+      onDragStart={handleDndResizeStart}
+      onDragMove={handleDndResizeMove}
+      onDragEnd={handleDndResizeEnd}
     >
-      <div
-        className={!isMaximized ? "window-drag-handle" : ""}
-        onMouseDown={(e) => {
-          if ((e.target as Element).closest(".window-controls")) {
-            // clicking the controls → don't initiate a drag
-            e.stopPropagation();
-          }
+      <motion.div
+        ref={windowRef}
+        className={cn(
+          "draggable-window",
+          isMaximized && "maximized",
+          isFocused && "ring-2 ring-primary/30",
+          isDragging && "dragging",
+          isResizing && "resizing"
+        )}
+        style={{
+          zIndex,
+          width: size.width,
+          height: size.height,
+          willChange:
+            isDragging || isResizing ? "transform, width, height" : "auto",
+          x: x,
+          y: y,
         }}
+        // Only apply framer-motion drag to the entire window if maximized is false
+        initial={false}
+        animate={false}
       >
-        <WindowHeader
-          title={title}
-          onMinimize={handleMinimize}
-          onMaximize={onMaximize}
-          onClose={handleClose}
-          headerRef={headerRef}
-        />
-      </div>
+        {/* Header with drag capability through framer-motion */}
+        <motion.div
+          className={!isMaximized ? "window-drag-handle" : ""}
+          onMouseDown={(e) => {
+            if ((e.target as Element).closest(".window-controls")) {
+              // clicking the controls → don't initiate a drag
+              e.stopPropagation();
+            }
+          }}
+          // Apply framer-motion drag only to the header
+          {...(isMaximized
+            ? {}
+            : {
+                drag: true,
+                dragMomentum: false,
+                dragElastic: 0,
+                // Use dragConstraints to prevent dragging outside screen
+                dragConstraints: { top: 0, left: 0, right: 0, bottom: 0 },
+                // Handle drag events
+                onDragStart: handleHeaderDragStart,
+                onDrag: handleHeaderDrag,
+                onDragEnd: handleHeaderDragEnd,
+                // No transition for immediate response
+                dragTransition: { power: 0 },
+              })}
+        >
+          <WindowHeader
+            title={title}
+            onMinimize={onMinimize}
+            onMaximize={onMaximize}
+            onClose={onClose}
+            headerRef={headerRef}
+          />
+        </motion.div>
 
-      <WindowContent>{children}</WindowContent>
+        <WindowContent>{children}</WindowContent>
 
-      {/* Resize handle */}
-      {!isMaximized && <div ref={resizeHandleRef} className="resize-handle" />}
-    </motion.div>
+        {/* Resizable handles through dnd-kit */}
+        {!isMaximized && (
+          <Resizable
+            onResizeStart={handleResizeStart}
+            onResizeEnd={handleResizeEnd}
+            isResizing={isResizing}
+          />
+        )}
+      </motion.div>
+    </DndContext>
   );
 };

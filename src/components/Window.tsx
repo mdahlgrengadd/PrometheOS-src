@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { useWindowStore } from '@/store/windowStore';
-import { WindowState } from '@/types/window';
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
-import { WindowShell } from './window/WindowShell';
+import { WindowShell } from "./window/WindowShell";
 
 interface WindowProps {
   window: WindowState;
