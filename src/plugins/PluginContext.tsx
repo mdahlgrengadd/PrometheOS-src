@@ -14,6 +14,7 @@ import ApiFlowEditorPlugin from "./apps/api-flow-editor";
 import AudioPlayerPlugin from "./apps/audioplayer";
 import BrowserPlugin from "./apps/browser";
 import CalculatorPlugin from "./apps/calculator";
+import WorkerCalculatorPlugin from "./apps/calculator/workerCalculator";
 import ChatPlugin from "./apps/chat";
 import FileBrowserPlugin from "./apps/filebrowser";
 // Import plugins directly for reliable loading
@@ -37,6 +38,7 @@ const pluginModules: Record<string, Plugin> = {
   "api-flow-editor": ApiFlowEditorPlugin,
   notepad: NotepadPlugin,
   calculator: CalculatorPlugin,
+  "worker-calculator": WorkerCalculatorPlugin,
   browser: BrowserPlugin,
   settings: SettingsPlugin,
   WordEditor: WordEditorPlugin,
