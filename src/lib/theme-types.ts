@@ -1,4 +1,10 @@
-export type ThemeType = "beos" | "light" | "dark";
+export type ThemeType =
+  | "beos"
+  | "light"
+  | "dark"
+  | "macos"
+  | "windows"
+  | "fluxbox";
 
 export interface ThemeConfig {
   id: ThemeType;
@@ -22,4 +28,6 @@ export interface ThemeContextType {
   setBackgroundColor: (color: string) => void;
   primaryColor: string;
   setPrimaryColor: (color: string) => void;
+  loadTheme: (themeId: string) => Promise<boolean>;
+  availableExternalThemes: string[];
 }

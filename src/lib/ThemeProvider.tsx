@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { themes } from "./theme-definitions";
+import { getAvailableExternalThemes, loadExternalTheme } from "./theme-loader";
 import { ThemeConfig, ThemeContextType, ThemeType } from "./theme-types";
 
 // Create context with default values
@@ -16,6 +18,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setBackgroundColor: () => {},
   primaryColor: "#a855f7", // Default primary color (purple)
   setPrimaryColor: () => {},
+  loadTheme: async () => false,
+  availableExternalThemes: [],
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -23,6 +27,15 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  // Track all themes, including dynamically loaded ones
+  const [allThemes, setAllThemes] =
+    useState<Record<string, ThemeConfig>>(themes);
+
+  // External themes that can be loaded
+  const [availableExternalThemes, setAvailableExternalThemes] = useState<
+    string[]
+  >([]);
+
   // Try to get stored theme from localStorage or use 'light' as default
   const [theme, setThemeState] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem("os-theme");
@@ -49,6 +62,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
     return localStorage.getItem("os-primary-color") || "#a855f7";
   });
+
+  // Load available external themes
+  useEffect(() => {
+    const externalThemes = getAvailableExternalThemes();
+    setAvailableExternalThemes(externalThemes.map((theme) => theme.id));
+  }, []);
 
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);
@@ -79,28 +98,69 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("os-primary-color", newColor);
   };
 
+  // Load an external theme
+  const loadTheme = async (themeId: string): Promise<boolean> => {
+    // Store the current theme as a fallback
+    const previousTheme = theme;
+
+    if (allThemes[themeId]) {
+      setTheme(themeId as ThemeType);
+      return true;
+    }
+
+    try {
+      const themeConfig = await loadExternalTheme(themeId);
+      if (themeConfig) {
+        setAllThemes((prev) => ({
+          ...prev,
+          [themeId]: themeConfig,
+        }));
+        setTheme(themeId as ThemeType);
+        return true;
+      }
+
+      // If theme loading failed, revert to previous theme
+      console.error(
+        `Failed to load theme: ${themeId}, reverting to ${previousTheme}`
+      );
+      setTheme(previousTheme);
+      toast.error(`Failed to load theme: ${themeId}`);
+      return false;
+    } catch (error) {
+      console.error(`Error loading theme: ${themeId}`, error);
+      // On error, revert to the previous theme
+      setTheme(previousTheme);
+      toast.error(`Error loading theme: ${themeId}`);
+      return false;
+    }
+  };
+
   // Apply theme CSS variables when theme changes
   useEffect(() => {
     const root = document.documentElement;
-    const themeConfig = themes[theme];
+    const themeConfig = allThemes[theme];
+
+    if (!themeConfig) {
+      console.error(`Theme '${theme}' not found`);
+      return;
+    }
 
     // Set all CSS variables from the theme
     Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
 
-    // Set window content padding
+    // Set our component-specific variables
     root.style.setProperty("--window-content-padding", `${padding}px`);
-
-    // Set primary color for the theme
     root.style.setProperty("--color-primary", primaryColor);
+    root.style.setProperty("--accent-primary", primaryColor);
 
-    // For BeOS theme, set the window frame highlight color
-    if (theme === "beos") {
-      root.style.setProperty("--beos-window-focus-color", primaryColor);
-    }
+    // Set window control button colors
+    root.style.setProperty("--wm-btn-close-bg", "#e74c3c");
+    root.style.setProperty("--wm-btn-minimize-bg", "#f1c40f");
+    root.style.setProperty("--wm-btn-maximize-bg", "#2ecc71");
 
-    // Set body background based on wallpaper, solid color, or theme default
+    // Set background based on wallpaper or color
     if (wallpaper) {
       document.body.style.background = `url(${wallpaper}) no-repeat center center fixed`;
       document.body.style.backgroundSize = "cover";
@@ -110,8 +170,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       document.body.style.background = themeConfig.desktopBackground;
     }
 
-    // Add theme class to root for other selectors
-    root.classList.remove("theme-beos", "theme-light", "theme-dark");
+    // Remove all theme classes
+    root.classList.remove(
+      "theme-beos",
+      "theme-light",
+      "theme-dark",
+      "theme-macos",
+      "theme-windows",
+      "theme-fluxbox"
+    );
+
+    // Add the active theme class
     root.classList.add(`theme-${theme}`);
 
     // If dark theme, add the 'dark' class for Tailwind's dark mode
@@ -120,14 +189,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-  }, [theme, padding, wallpaper, backgroundColor, primaryColor]);
+  }, [theme, allThemes, padding, wallpaper, backgroundColor, primaryColor]);
 
   return (
     <ThemeContext.Provider
       value={{
         theme,
         setTheme,
-        themes,
+        themes: allThemes,
         padding,
         setPadding,
         wallpaper,
@@ -136,6 +205,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         setBackgroundColor,
         primaryColor,
         setPrimaryColor,
+        loadTheme,
+        availableExternalThemes,
       }}
     >
       {children}

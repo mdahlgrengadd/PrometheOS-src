@@ -1,4 +1,4 @@
-import { ThemeConfig, ThemeType } from './theme-types';
+import { ThemeConfig, ThemeType } from "./theme-types";
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -183,4 +183,142 @@ export const themes: Record<ThemeType, ThemeConfig> = {
   beos: beosTheme,
   light: lightTheme,
   dark: darkTheme,
+  macos: {
+    id: "macos",
+    name: "macOS",
+    desktopBackground: "linear-gradient(to bottom, #a0d8ef 0%, #ddf1fa 100%)",
+    cssVariables: {
+      // Window Structure
+      "--wm-border-width": "1px",
+      "--wm-border-color": "rgba(0, 0, 0, 0.1)",
+      "--wm-border-radius": "8px",
+      "--wm-header-height": "28px",
+      "--wm-window-shadow": "0 8px 24px rgba(0, 0, 0, 0.12)",
+      "--window-content-padding": "16px",
+
+      // Colors
+      "--window-background": "#ffffff",
+      "--window-text": "#000000",
+      "--window-header-background": "#f5f5f5",
+      "--window-header-text": "#333333",
+      "--window-header-button-hover": "#e5e5e5",
+      "--window-header-button-active": "#d5d5d5",
+      "--window-resize-handle": "rgba(0, 0, 0, 0.08)",
+
+      // Control Buttons
+      "--wm-btn-size": "12px",
+      "--wm-btn-gap": "8px",
+      "--wm-btn-close-bg": "#ff5f56",
+      "--wm-btn-minimize-bg": "#ffbd2e",
+      "--wm-btn-maximize-bg": "#28c941",
+
+      // Accent Colors
+      "--accent-primary": "#007aff",
+      "--accent-secondary": "#5ac8fa",
+      "--accent-tertiary": "#b4e4ff",
+
+      // Header styling
+      "--header-position": "absolute",
+      "--header-top": "0",
+      "--header-left": "0",
+      "--header-height": "28px",
+      "--header-width": "100%",
+      "--header-border-radius": "8px 8px 0 0",
+      "--header-padding": "0.25rem 0.5rem",
+      "--window-padding-top": "28px",
+      "--window-border-radius": "8px",
+    },
+  },
+  windows: {
+    id: "windows",
+    name: "Windows",
+    desktopBackground: "#0078d7",
+    cssVariables: {
+      // Window Structure
+      "--wm-border-width": "1px",
+      "--wm-border-color": "#0078d7",
+      "--wm-border-radius": "0",
+      "--wm-header-height": "32px",
+      "--wm-window-shadow": "0 4px 12px rgba(0, 0, 0, 0.15)",
+      "--window-content-padding": "16px",
+
+      // Colors
+      "--window-background": "#ffffff",
+      "--window-text": "#000000",
+      "--window-header-background": "#0078d7",
+      "--window-header-text": "#ffffff",
+      "--window-header-button-hover": "#106ebe",
+      "--window-header-button-active": "#005a9e",
+      "--window-resize-handle": "rgba(0, 0, 0, 0.2)",
+
+      // Control Buttons
+      "--wm-btn-size": "14px",
+      "--wm-btn-gap": "0",
+      "--wm-btn-close-bg": "transparent",
+      "--wm-btn-minimize-bg": "transparent",
+      "--wm-btn-maximize-bg": "transparent",
+
+      // Accent Colors
+      "--accent-primary": "#0078d7",
+      "--accent-secondary": "#106ebe",
+      "--accent-tertiary": "#deecf9",
+
+      // Header styling
+      "--header-position": "absolute",
+      "--header-top": "0",
+      "--header-left": "0",
+      "--header-height": "32px",
+      "--header-width": "100%",
+      "--header-border-radius": "0",
+      "--header-padding": "0.25rem 0.75rem",
+      "--window-padding-top": "32px",
+      "--window-border-radius": "0",
+    },
+  },
+  fluxbox: {
+    id: "fluxbox",
+    name: "Linux Fluxbox",
+    desktopBackground: "#333333",
+    cssVariables: {
+      // Window Structure
+      "--wm-border-width": "2px",
+      "--wm-border-color": "#333333",
+      "--wm-border-radius": "2px",
+      "--wm-header-height": "26px",
+      "--wm-window-shadow": "2px 2px 4px rgba(0, 0, 0, 0.3)",
+      "--window-content-padding": "12px",
+
+      // Colors
+      "--window-background": "#eeeeee",
+      "--window-text": "#000000",
+      "--window-header-background": "#444444",
+      "--window-header-text": "#eeeeee",
+      "--window-header-button-hover": "#555555",
+      "--window-header-button-active": "#666666",
+      "--window-resize-handle": "rgba(0, 0, 0, 0.3)",
+
+      // Control Buttons
+      "--wm-btn-size": "10px",
+      "--wm-btn-gap": "3px",
+      "--wm-btn-close-bg": "#ff6b6b",
+      "--wm-btn-minimize-bg": "#feca57",
+      "--wm-btn-maximize-bg": "#1dd1a1",
+
+      // Accent Colors
+      "--accent-primary": "#546de5",
+      "--accent-secondary": "#8c7ae6",
+      "--accent-tertiary": "#c8d6e5",
+
+      // Header styling
+      "--header-position": "absolute",
+      "--header-top": "0",
+      "--header-left": "0",
+      "--header-height": "26px",
+      "--header-width": "100%",
+      "--header-border-radius": "2px 2px 0 0",
+      "--header-padding": "0.25rem 0.5rem",
+      "--window-padding-top": "26px",
+      "--window-border-radius": "2px",
+    },
+  },
 };

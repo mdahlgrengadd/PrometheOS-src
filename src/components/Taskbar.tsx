@@ -1,17 +1,17 @@
 import { Clock, Home, Maximize2, Minimize2, Monitor, Wifi } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
 import { useWebRTCStatus } from "../hooks/useWebRTCStatus";
-import { WindowState } from "./Desktop";
 
 interface TaskbarProps {
-  windows: WindowState[];
   onWindowClick: (id: string) => void;
 }
 
-const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
+const Taskbar: React.FC<TaskbarProps> = ({ onWindowClick }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { theme } = useTheme();
   const { isConnected } = useWebRTCStatus();
@@ -20,6 +20,15 @@ const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Get windows dictionary from the store
+  const windowsDict = useWindowStore((state) => state.windows);
+
+  // Memoize the filtered windows array
+  const windows = useMemo(
+    () => Object.values(windowsDict).filter((window) => window.isOpen),
+    [windowsDict]
+  );
 
   // Debug WebRTC connection status
   useEffect(() => {

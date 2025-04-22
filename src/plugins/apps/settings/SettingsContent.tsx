@@ -1,26 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import InstalledPluginsList from "@/components/InstalledPluginsList";
-import PluginInstaller from "@/components/PluginInstaller";
+import InstalledPluginsList from '@/components/InstalledPluginsList';
+import PluginInstaller from '@/components/PluginInstaller';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useViewMode } from "@/hooks/useViewMode";
-import { ThemeType } from "@/lib/theme-types";
-import { useTheme } from "@/lib/ThemeProvider";
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useViewMode } from '@/hooks/useViewMode';
+import { ThemeType } from '@/lib/theme-types';
+import { useTheme } from '@/lib/ThemeProvider';
+import { resetDesktopState } from '@/utils/resetDesktop';
 
 const SettingsContent: React.FC = () => {
   const {
@@ -688,51 +683,47 @@ const SettingsContent: React.FC = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="about">
+        <TabsContent value="about" className="space-y-6">
           <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium">About this System</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Information about your desktop environment
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">About</h3>
+              <p className="text-sm text-muted-foreground">
+                Draggable Desktop Dreamscape - A modular, customizable browser
+                desktop environment
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Version: 1.0.0
               </p>
             </div>
 
-            <div className="space-y-2 mt-4">
-              <div className="flex">
-                <span className="font-medium w-32">System Name:</span>
-                <span>Draggable Desktop Dreamscape</span>
+            {/* System Reset Section */}
+            <div className="mt-8 pt-6 border-t">
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium text-destructive">
+                  Reset System
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Reset your desktop to a fresh state. This will clear all
+                  window positions, installed plugins, and customized settings.
+                </p>
+                <div className="flex items-center justify-start pt-2">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Are you sure you want to reset your desktop to its initial state?\n\nThis will remove all installed dynamic plugins, window positions, and custom settings."
+                        )
+                      ) {
+                        resetDesktopState(true); // true = reload page after reset
+                      }
+                    }}
+                    className="mr-2"
+                  >
+                    Factory Reset
+                  </Button>
+                </div>
               </div>
-              <div className="flex">
-                <span className="font-medium w-32">Version:</span>
-                <span>1.0.0</span>
-              </div>
-              <div className="flex">
-                <span className="font-medium w-32">Framework:</span>
-                <span>React + TypeScript</span>
-              </div>
-              <div className="flex">
-                <span className="font-medium w-32">UI Libraries:</span>
-                <span>Tailwind CSS, Shadcn/ui</span>
-              </div>
-              <div className="flex">
-                <span className="font-medium w-32">Current Theme:</span>
-                <span>{themes[theme].name}</span>
-              </div>
-              <div className="flex">
-                <span className="font-medium w-32">View Mode:</span>
-                <span>
-                  {isSmartphoneMode ? "Smartphone" : "Desktop"}{" "}
-                  {enforceViewMode ? "(Enforced)" : "(Auto)"}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-8 p-4 bg-muted rounded-md">
-              <p className="text-sm">
-                This is a desktop environment simulator built with modern web
-                technologies. All theme designs and visual elements are for
-                demonstration purposes.
-              </p>
             </div>
           </div>
         </TabsContent>

@@ -1,11 +1,19 @@
 @import './styles/base.css';
+@import './styles/themes.css';
 @import './styles/window.css';
 @import './styles/desktop.css';
 @import './styles/taskbar.css';
+@import './styles/animations.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* FULL‐VIEWPORT LAYOUT: ensure Desktop height:100% actually fills the screen */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
 
 /* Disable text selection everywhere except input fields and editable areas */
 *:not(input):not(textarea):not([contenteditable="true"]):not(.allow-select) {
@@ -15,11 +23,29 @@
   user-select: none;
 }
 
-/* Any remaining utility classes */
+/* Window shell positioning for maximized windows */
 .maximized {
   width: 100% !important;
   height: calc(100vh - 84px) !important;
   padding-top: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Fix for header layouts when windows are maximized */
+.maximized .window-header {
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  z-index: 2; /* Ensure headers are above window content */
+}
+
+/* For themes that need headers to be visible above the window content area */
+.maximized .window-content {
+  height: calc(100% - var(--wm-header-height)) !important;
+  margin-top: var(--wm-header-height);
 }
 
 /* Theme-specific maximized window styles */

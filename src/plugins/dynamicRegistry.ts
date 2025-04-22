@@ -1,6 +1,6 @@
-import { PluginManifest } from "./types";
+import { PluginManifest } from './types';
 
-const STORAGE_KEY = "dynamicPluginManifests";
+export const STORAGE_KEY = "dynamicPluginManifests";
 
 export function loadDynamicManifests(): PluginManifest[] {
   const raw = localStorage.getItem(STORAGE_KEY);

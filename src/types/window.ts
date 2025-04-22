@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 // Represents the state of a single window
 export interface WindowState {
@@ -35,4 +35,9 @@ export interface WindowStore {
   ) => void;
   focus: (id: string) => void;
   close: (id: string) => void;
+  reset: () => void; // Reset the store to initial state
+
+  // New update functions that don't affect z-index
+  updateWindow: (id: string, updates: Partial<WindowState>) => void;
+  updateWindows: (updates: Record<string, Partial<WindowState>>) => void;
 }

@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import { useWindowStore } from "@/store/windowStore";
 
 import ApiExplorerPlugin from "./apps/api-explorer";
 import ApiFlowEditorPlugin from "./apps/api-flow-editor";
@@ -20,7 +29,7 @@ import {
   installPlugin,
   uninstallPlugin as removePluginFromRegistry,
 } from "./registry";
-import { Plugin } from "./types";
+import { Plugin, PluginManifest } from "./types";
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
@@ -46,14 +55,13 @@ console.log("FileBrowserPlugin:", FileBrowserPlugin);
 type PluginContextType = {
   pluginManager: PluginManager;
   loadedPlugins: Plugin[];
-  activeWindows: string[];
   openWindow: (pluginId: string) => void;
   closeWindow: (pluginId: string) => void;
   minimizeWindow: (pluginId: string) => void;
   maximizeWindow: (pluginId: string) => void;
   focusWindow: (pluginId: string) => void;
-  installRemoteApp: (url: string) => Promise<void>;
-  uninstallPlugin: (pluginId: string) => Promise<void>;
+  installRemoteApp: (url: string) => Promise<PluginManifest | undefined>;
+  uninstallPlugin: (pluginId: string) => Promise<boolean>;
   getDynamicPlugins: () => Plugin[];
 };
 
@@ -64,8 +72,12 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [pluginManager] = useState(() => new PluginManager());
   const [loadedPlugins, setLoadedPlugins] = useState<Plugin[]>([]);
-  const [activeWindows, setActiveWindows] = useState<string[]>([]);
   const [dynamicPluginIds, setDynamicPluginIds] = useState<string[]>([]);
+
+  // Get window store actions with selectors to avoid re-renders on store changes
+  const registerWindow = useWindowStore((state) => state.registerWindow);
+  const setOpen = useWindowStore((state) => state.setOpen);
+  const focus = useWindowStore((state) => state.focus);
 
   useEffect(() => {
     // Register event handler for plugin registration
@@ -87,7 +99,31 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
           try {
             if (pluginModules[manifest.id]) {
               // Static plugin - load from direct import
-              pluginManager.registerPlugin(pluginModules[manifest.id]);
+              const plugin = pluginModules[manifest.id];
+              pluginManager.registerPlugin(plugin);
+
+              // Register window in the store immediately after plugin registration
+              const defaultSize = { width: 400, height: 300 };
+              const size = plugin.manifest.preferredSize || defaultSize;
+
+              registerWindow({
+                id: plugin.id,
+                title: plugin.manifest.name,
+                content: plugin.render ? (
+                  plugin.render()
+                ) : (
+                  <div>No content</div>
+                ),
+                isOpen: false,
+                isMinimized: false,
+                zIndex: 1,
+                position: {
+                  x: 100 + Math.random() * 100,
+                  y: 100 + Math.random() * 100,
+                },
+                size,
+                isMaximized: false,
+              });
             } else if (manifest.entrypoint) {
               // Dynamic plugin - load from entrypoint URL
               try {
@@ -108,6 +144,30 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 pluginManager.registerPlugin(module.default);
                 dynamicIds.push(manifest.id);
+
+                // Register window for dynamic plugin too
+                const plugin = module.default;
+                const defaultSize = { width: 400, height: 300 };
+                const size = plugin.manifest.preferredSize || defaultSize;
+
+                registerWindow({
+                  id: plugin.id,
+                  title: plugin.manifest.name,
+                  content: plugin.render ? (
+                    plugin.render()
+                  ) : (
+                    <div>No content</div>
+                  ),
+                  isOpen: false,
+                  isMinimized: false,
+                  zIndex: 1,
+                  position: {
+                    x: 100 + Math.random() * 100,
+                    y: 100 + Math.random() * 100,
+                  },
+                  size,
+                  isMaximized: false,
+                });
               } catch (error) {
                 console.error(
                   `Failed to load dynamic plugin ${manifest.id}:`,
@@ -140,143 +200,169 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         plugin.onDestroy?.();
       });
     };
-  }, [pluginManager]);
+  }, [pluginManager, registerWindow]);
 
-  const openWindow = (pluginId: string) => {
-    const plugin = pluginManager.getPlugin(pluginId);
-    if (plugin) {
-      // If opening API Explorer, make sure notepad is activated first
-      if (pluginId === "api-explorer") {
-        const notepadPlugin = pluginManager.getPlugin("notepad");
-        if (notepadPlugin && !pluginManager.isPluginActive("notepad")) {
-          console.log("Activating notepad plugin for API Explorer");
-          pluginManager.activatePlugin("notepad");
-        }
-      }
-
-      if (!pluginManager.isPluginActive(pluginId)) {
-        pluginManager.activatePlugin(pluginId);
-      }
-      plugin.onOpen?.();
-      setActiveWindows((prev) =>
-        prev.includes(pluginId) ? prev : [...prev, pluginId]
-      );
-      eventBus.emit("window:opened", pluginId);
-      // Ensure the window is focused and brought to the front when opened
-      eventBus.emit("window:focused", pluginId);
-    }
-  };
-
-  const closeWindow = (pluginId: string) => {
-    const plugin = pluginManager.getPlugin(pluginId);
-    if (plugin) {
-      plugin.onClose?.();
-      setActiveWindows((prev) => prev.filter((id) => id !== pluginId));
-      eventBus.emit("window:closed", pluginId);
-    }
-  };
-
-  const minimizeWindow = (pluginId: string) => {
-    const plugin = pluginManager.getPlugin(pluginId);
-    if (plugin) {
-      plugin.onMinimize?.();
-      eventBus.emit("window:minimized", pluginId);
-    }
-  };
-
-  const maximizeWindow = (pluginId: string) => {
-    const plugin = pluginManager.getPlugin(pluginId);
-    if (plugin) {
-      plugin.onMaximize?.();
-      eventBus.emit("window:maximized", pluginId);
-    }
-  };
-
-  const focusWindow = (pluginId: string) => {
-    eventBus.emit("window:focused", pluginId);
-  };
-
-  // Expose an "install" helper for the UI
-  const installRemoteApp = async (url: string) => {
-    try {
-      const manifest = await installPlugin(url);
-
-      // Load & register immediately
-      if (manifest.entrypoint) {
-        const module = await import(/* @vite-ignore */ manifest.entrypoint);
-        if (module.default) {
-          // Handle icon from URL if needed
-          if (manifest.iconUrl && !module.default.manifest.icon) {
-            module.default.manifest.icon = (
-              <img
-                src={manifest.iconUrl}
-                className="h-8 w-8"
-                alt={manifest.name}
-              />
-            );
+  // Wrap callbacks in useCallback to prevent unnecessary re-renders
+  const openWindow = useCallback(
+    (pluginId: string) => {
+      const plugin = pluginManager.getPlugin(pluginId);
+      if (plugin) {
+        // If opening API Explorer, make sure notepad is activated first
+        if (pluginId === "api-explorer") {
+          const notepadPlugin = pluginManager.getPlugin("notepad");
+          if (notepadPlugin && !pluginManager.isPluginActive("notepad")) {
+            console.log("Activating notepad plugin for API Explorer");
+            pluginManager.activatePlugin("notepad");
           }
-
-          pluginManager.registerPlugin(module.default);
-          setDynamicPluginIds((prev) => [...prev, manifest.id]);
-          openWindow(manifest.id);
-          return;
         }
+
+        if (!pluginManager.isPluginActive(pluginId)) {
+          pluginManager.activatePlugin(pluginId);
+        }
+
+        plugin.onOpen?.();
+
+        // Just use the store directly
+        setOpen(pluginId, true);
+        focus(pluginId);
       }
-      throw new Error(`Invalid plugin module at ${url}`);
+    },
+    [pluginManager, setOpen, focus]
+  );
+
+  const closeWindow = useCallback(
+    (pluginId: string) => {
+      const plugin = pluginManager.getPlugin(pluginId);
+      if (plugin) {
+        plugin.onClose?.();
+
+        // Just use the store directly
+        setOpen(pluginId, false);
+      }
+    },
+    [pluginManager, setOpen]
+  );
+
+  const minimizeWindow = useCallback(
+    (pluginId: string) => {
+      const plugin = pluginManager.getPlugin(pluginId);
+      if (plugin) {
+        plugin.onMinimize?.();
+
+        // Use store directly with selector
+        useWindowStore.getState().minimize(pluginId, true);
+      }
+    },
+    [pluginManager]
+  );
+
+  const maximizeWindow = useCallback(
+    (pluginId: string) => {
+      const plugin = pluginManager.getPlugin(pluginId);
+      if (plugin) {
+        plugin.onMaximize?.();
+
+        // Use store directly with selector
+        useWindowStore.getState().maximize(pluginId);
+      }
+    },
+    [pluginManager]
+  );
+
+  const focusWindow = useCallback(
+    (pluginId: string) => {
+      const plugin = pluginManager.getPlugin(pluginId);
+      if (plugin) {
+        // Plugin doesn't have onFocus method
+        focus(pluginId);
+      }
+    },
+    [pluginManager, focus]
+  );
+
+  const installRemoteApp = useCallback(async (url: string) => {
+    try {
+      const pluginInfo = await installPlugin(url);
+      if (pluginInfo) {
+        console.log("Plugin installed:", pluginInfo);
+        // We let the event handler add this to our loaded plugins
+        // The event is triggered from the registry
+      }
+      return pluginInfo;
     } catch (error) {
       console.error("Failed to install remote app:", error);
-      throw error;
+      throw error; // Re-throw to let UI handle it
     }
-  };
+  }, []);
 
-  // Function to uninstall a plugin
-  const uninstallPlugin = async (pluginId: string) => {
-    try {
-      // First close the window if open
-      if (activeWindows.includes(pluginId)) {
+  const uninstallPlugin = useCallback(
+    async (pluginId: string) => {
+      try {
+        // Only allow uninstalling dynamic plugins
+        if (!dynamicPluginIds.includes(pluginId)) {
+          throw new Error("Cannot uninstall built-in plugins");
+        }
+
+        // Close window if open
         closeWindow(pluginId);
+
+        // Deactivate and unregister the plugin
+        pluginManager.deactivatePlugin(pluginId);
+        pluginManager.unregisterPlugin(pluginId);
+
+        // Remove from registry
+        await removePluginFromRegistry(pluginId);
+
+        // Update our dynamic plugins list
+        setDynamicPluginIds((prevIds) =>
+          prevIds.filter((id) => id !== pluginId)
+        );
+
+        return true;
+      } catch (error) {
+        console.error("Failed to uninstall plugin:", error);
+        throw error;
       }
+    },
+    [dynamicPluginIds, closeWindow, pluginManager]
+  );
 
-      // Unregister the plugin from the manager
-      pluginManager.unregisterPlugin(pluginId);
-
-      // Remove from localStorage (use the imported function)
-      removePluginFromRegistry(pluginId);
-
-      // Update UI state
-      setDynamicPluginIds((prev) => prev.filter((id) => id !== pluginId));
-      setLoadedPlugins(pluginManager.getAllPlugins());
-
-      console.log(`Plugin ${pluginId} has been uninstalled`);
-    } catch (error) {
-      console.error(`Failed to uninstall plugin ${pluginId}:`, error);
-      throw error;
-    }
-  };
-
-  // Get only dynamic plugins
-  const getDynamicPlugins = () => {
+  const getDynamicPlugins = useCallback(() => {
     return loadedPlugins.filter((plugin) =>
       dynamicPluginIds.includes(plugin.id)
     );
-  };
+  }, [loadedPlugins, dynamicPluginIds]);
+
+  // Memoize the entire context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      pluginManager,
+      loadedPlugins,
+      openWindow,
+      closeWindow,
+      minimizeWindow,
+      maximizeWindow,
+      focusWindow,
+      installRemoteApp,
+      uninstallPlugin,
+      getDynamicPlugins,
+    }),
+    [
+      pluginManager,
+      loadedPlugins,
+      openWindow,
+      closeWindow,
+      minimizeWindow,
+      maximizeWindow,
+      focusWindow,
+      installRemoteApp,
+      uninstallPlugin,
+      getDynamicPlugins,
+    ]
+  );
 
   return (
-    <PluginContext.Provider
-      value={{
-        pluginManager,
-        loadedPlugins,
-        activeWindows,
-        openWindow,
-        closeWindow,
-        minimizeWindow,
-        maximizeWindow,
-        focusWindow,
-        installRemoteApp,
-        uninstallPlugin,
-        getDynamicPlugins,
-      }}
-    >
+    <PluginContext.Provider value={contextValue}>
       {children}
     </PluginContext.Provider>
   );

@@ -1,19 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { useWindowStore } from "@/store/windowStore";
 import { getAppLaunchUrl } from "@/utils/url";
 
-interface IconWindow {
-  id: string;
-  title: string;
-  icon?: React.ReactNode;
-}
+import { usePlugins } from "../plugins/PluginContext";
 
 interface DesktopIconsProps {
-  windows: IconWindow[];
   openWindow: (id: string) => void;
 }
 
-const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
+const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
   //console.log("%c[DesktopIcons] Re-rendered", "color: orange");
   const [showIcons, setShowIcons] = useState(true);
   const [contextMenu, setContextMenu] = useState<{
@@ -24,6 +20,28 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
   } | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to the raw windows object
+  const windowsDict = useWindowStore((state) => state.windows);
+  // Now memoize your values array
+  const windows = useMemo(() => Object.values(windowsDict), [windowsDict]);
+
+  // Get plugin icons from the plugin context
+  const { loadedPlugins } = usePlugins();
+
+  // Create icon windows with plugin icons
+  const iconWindows = useMemo(
+    () =>
+      windows.map((w) => {
+        const plugin = loadedPlugins.find((p) => p.id === w.id);
+        return {
+          id: w.id,
+          title: w.title,
+          icon: plugin?.manifest.icon,
+        };
+      }),
+    [windows, loadedPlugins]
+  );
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -118,7 +136,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
 
   return (
     <div className="desktop-icons">
-      {windows.map((window) => {
+      {iconWindows.map((window) => {
         //console.log(`Rendering icon for ${window.id}:`, window.icon);
 
         return (
@@ -168,27 +186,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
 };
 
 function areEqual(prev: DesktopIconsProps, next: DesktopIconsProps): boolean {
-  // Compare the openWindow callback
-  if (prev.openWindow !== next.openWindow) return false;
-
-  // Compare windows length
-  if (prev.windows.length !== next.windows.length) return false;
-
-  // Compare each window's properties
-  for (let i = 0; i < prev.windows.length; i++) {
-    const a = prev.windows[i];
-    const b = next.windows[i];
-
-    // Compare basic properties
-    if (a.id !== b.id || a.title !== b.title) return false;
-
-    // We don't compare the actual icon React elements deeply as that's expensive and unnecessary
-    // Just check if both have an icon or both don't have an icon
-    // This works because icons are loaded once and don't change during the app lifecycle
-    if ((a.icon === undefined) !== (b.icon === undefined)) return false;
-  }
-
-  return true;
+  // Only compare the openWindow callback now
+  return prev.openWindow === next.openWindow;
 }
 
 export default React.memo(DesktopIcons, areEqual);
