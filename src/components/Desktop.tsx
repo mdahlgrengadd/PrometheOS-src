@@ -1,25 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
 import { eventBus } from "../plugins/EventBus";
 import { usePlugins } from "../plugins/PluginContext";
 import DesktopIcons from "./DesktopIcons";
 import Taskbar from "./Taskbar";
 import Window from "./Window";
-
-export interface WindowState {
-  id: string;
-  title: string;
-  content: React.ReactNode;
-  isOpen: boolean;
-  isMinimized: boolean;
-  zIndex: number;
-  position: { x: number; y: number };
-  size: { width: number | string; height: number | string };
-  previousPosition?: { x: number; y: number };
-  previousSize?: { width: number | string; height: number | string };
-  isMaximized?: boolean;
-}
 
 const Desktop = () => {
   const {
@@ -30,7 +19,30 @@ const Desktop = () => {
     minimizeWindow,
     focusWindow,
   } = usePlugins();
-  const [windows, setWindows] = useState<WindowState[]>([]);
+
+  // Use more targeted selectors from the store
+  const windowsDict = useWindowStore((s) => s.windows);
+  const registerWindow = useWindowStore((s) => s.registerWindow);
+  const setOpen = useWindowStore((s) => s.setOpen);
+  const minimize = useWindowStore((s) => s.minimize);
+  const focusWin = useWindowStore((s) => s.focus);
+  const move = useWindowStore((s) => s.move);
+  const maximize = useWindowStore((s) => s.maximize);
+
+  // More optimized selectors with memoization
+  const openWindows = useMemo(() => {
+    return Object.values(windowsDict).filter((w) => w.isOpen);
+  }, [windowsDict]);
+
+  const maximizedWindows = useMemo(() => {
+    return Object.values(windowsDict)
+      .filter((w) => w.isOpen && !w.isMinimized && w.isMaximized)
+      .sort((a, b) => b.zIndex - a.zIndex);
+  }, [windowsDict]);
+
+  // Convert dict → array for full window list when needed
+  const windows = useMemo(() => Object.values(windowsDict), [windowsDict]);
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -62,99 +74,51 @@ const Desktop = () => {
 
   // Set up windows based on loaded plugins
   useEffect(() => {
-    // Only create windows that don't already exist
-    const existingWindowIds = windows.map((w) => w.id);
+    // Grab current windows once
+    const { windows } = useWindowStore.getState();
+    const existingIds = Object.keys(windows);
 
-    const newPluginWindows = loadedPlugins
-      .filter((plugin) => !existingWindowIds.includes(plugin.id))
-      .map((plugin) => {
-        // Use preferred size from manifest if available, otherwise use defaults
+    // Register only truly new plugins
+    loadedPlugins.forEach((plugin) => {
+      if (!existingIds.includes(plugin.id)) {
         const defaultSize = { width: 400, height: 300 };
         const size = plugin.manifest.preferredSize || defaultSize;
 
-        return {
+        registerWindow({
           id: plugin.id,
           title: plugin.manifest.name,
           content: plugin.render(),
-          isOpen: activeWindows.includes(plugin.id),
+          isOpen: false,
           isMinimized: false,
           zIndex: 1,
           position: {
             x: 100 + Math.random() * 100,
             y: 100 + Math.random() * 100,
           },
-          size: size,
+          size,
           isMaximized: false,
-        };
-      });
+        });
+      }
+    });
+  }, [loadedPlugins, registerWindow]);
 
-    // Update existing windows' active state without changing positions
-    const updatedExistingWindows = windows.map((window) => ({
-      ...window,
-      isOpen: activeWindows.includes(window.id),
-    }));
-
-    setWindows([...updatedExistingWindows, ...newPluginWindows]);
-  }, [loadedPlugins, activeWindows]);
+  // Updated effect to handle active windows
+  useEffect(() => {
+    // Only update window open state, without modifying anything else
+    activeWindows.forEach((id) => {
+      setOpen(id, true);
+    });
+  }, [activeWindows, setOpen]);
 
   // Set up event listeners
   useEffect(() => {
-    const handleWindowOpened = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId
-            ? { ...window, isOpen: true, isMinimized: false }
-            : window
-        )
-      );
-    };
-
-    const handleWindowClosed = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId ? { ...window, isOpen: false } : window
-        )
-      );
-    };
-
-    const handleWindowMinimized = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId ? { ...window, isMinimized: true } : window
-        )
-      );
-    };
+    const handleWindowOpened = (pluginId: string) => setOpen(pluginId, true);
+    const handleWindowClosed = (pluginId: string) => setOpen(pluginId, false);
+    const handleWindowMinimized = (pluginId: string) =>
+      minimize(pluginId, true);
 
     const handleWindowMaximized = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) => {
-          if (window.id === pluginId) {
-            // Check if window is already maximized
-            if (window.isMaximized) {
-              // Restore previous size and position
-              return {
-                ...window,
-                position: window.previousPosition || { x: 100, y: 100 },
-                size: window.previousSize || { width: 500, height: 400 },
-                isMaximized: false,
-                previousPosition: undefined,
-                previousSize: undefined,
-              };
-            } else {
-              // Save current size and position
-              return {
-                ...window,
-                previousPosition: { ...window.position },
-                previousSize: { ...window.size },
-                position: { x: 0, y: 0 },
-                size: { width: "100%", height: "calc(100vh - 62px)" },
-                isMaximized: true,
-              };
-            }
-          }
-          return window;
-        })
-      );
+      maximize(pluginId);
     };
 
     // Add a handler for window position change events
@@ -162,37 +126,22 @@ const Desktop = () => {
       id: string;
       position: { x: number; y: number };
     }) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === data.id
-            ? { ...window, position: data.position }
-            : window
-        )
-      );
+      move(data.id, data.position);
     };
 
     // Add a handler for receiving full windows state sync
     const handleSyncWindows = (windowsState: WindowState[]) => {
-      // Only update windows that exist in both states
-      setWindows((prev) => {
-        const updatedWindows = [...prev];
-
-        // Update existing windows based on received state
-        for (const syncedWindow of windowsState) {
-          const existingWindowIndex = updatedWindows.findIndex(
-            (w) => w.id === syncedWindow.id
-          );
-          if (existingWindowIndex !== -1) {
-            // Preserve the content and merge other properties
-            updatedWindows[existingWindowIndex] = {
-              ...updatedWindows[existingWindowIndex],
-              ...syncedWindow,
-              content: updatedWindows[existingWindowIndex].content, // Keep the original content
-            };
-          }
+      // Update store with synced windows
+      windowsState.forEach((w) => {
+        if (windowsDict[w.id]) {
+          // Update position and other states except content
+          const { content, ...stateWithoutContent } = w;
+          const updatedWindow = {
+            ...windowsDict[w.id],
+            ...stateWithoutContent,
+          };
+          registerWindow(updatedWindow);
         }
-
-        return updatedWindows;
       });
     };
 
@@ -211,7 +160,7 @@ const Desktop = () => {
     return () => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
     };
-  }, []);
+  }, [windowsDict, setOpen, minimize, maximize, move, registerWindow]);
 
   // Make desktop state available globally for syncing
   useEffect(() => {
@@ -238,31 +187,27 @@ const Desktop = () => {
     };
   }, [windows]);
 
-  const maximizedWindows = windows
-    .filter((w) => w.isOpen && !w.isMinimized && w.isMaximized)
-    .sort((a, b) => b.zIndex - a.zIndex);
-
-  const maximizeWindow = (id: string) => {
+  // Wrap in useCallback to prevent unnecessary re-renders
+  const maximizeWindow = useCallback((id: string) => {
     eventBus.emit("window:maximized", id);
-  };
+  }, []);
 
-  const updateWindowPosition = (
-    id: string,
-    position: { x: number; y: number }
-  ) => {
-    setWindows((prevWindows) =>
-      prevWindows.map((window) =>
-        window.id === id ? { ...window, position } : window
-      )
-    );
+  const updateWindowPosition = useCallback(
+    (id: string, position: { x: number; y: number }) => {
+      move(id, position);
 
-    // Emit position change event for syncing
-    eventBus.emit("window:position:changed", { id, position });
-  };
+      // Emit position change event for syncing
+      eventBus.emit("window:position:changed", { id, position });
+    },
+    [move]
+  );
 
-  const handleTabClick = (id: string) => {
-    focusWindow(id);
-  };
+  const handleTabClick = useCallback(
+    (id: string) => {
+      focusWindow(id);
+    },
+    [focusWindow]
+  );
 
   const iconWindows = useMemo(
     () =>
@@ -283,9 +228,9 @@ const Desktop = () => {
   }, [openWindow]);
 
   // Add/update function to get direct launch URL for an app
-  const getAppLaunchUrl = (appId: string) => {
+  const getAppLaunchUrl = useCallback((appId: string) => {
     return `${window.location.origin}/apps/${appId}`;
-  };
+  }, []);
 
   return (
     <div className="desktop">
@@ -346,24 +291,30 @@ const Desktop = () => {
 
       <DesktopIcons windows={iconWindows} openWindow={memoizedOpenWindow} />
 
-      {windows.map(
-        (window) =>
-          window.isOpen && (
-            <Window
-              key={window.id}
-              window={window}
-              allWindows={windows}
-              onClose={() => closeWindow(window.id)}
-              onMinimize={() => minimizeWindow(window.id)}
-              onMaximize={() => maximizeWindow(window.id)}
-              onFocus={() => focusWindow(window.id)}
-              onDragStop={(position) =>
-                updateWindowPosition(window.id, position)
-              }
-              onTabClick={handleTabClick}
-            />
-          )
-      )}
+      {openWindows.map((w) => {
+        // Look up the matching plugin and re-render its content
+        const plugin = loadedPlugins.find((p) => p.id === w.id);
+        const content = plugin ? plugin.render() : w.content;
+
+        // Spread in fresh content for this render pass
+        const winWithContent = { ...w, content };
+
+        return (
+          <Window
+            key={winWithContent.id}
+            window={winWithContent}
+            allWindows={windows}
+            onClose={() => closeWindow(winWithContent.id)}
+            onMinimize={() => minimizeWindow(winWithContent.id)}
+            onMaximize={() => maximizeWindow(winWithContent.id)}
+            onFocus={() => focusWin(winWithContent.id)}
+            onDragStop={(position) =>
+              updateWindowPosition(winWithContent.id, position)
+            }
+            onTabClick={handleTabClick}
+          />
+        );
+      })}
 
       <Taskbar
         windows={windows}

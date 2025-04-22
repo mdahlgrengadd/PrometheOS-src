@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
-import { WindowState } from './Desktop';
-import { WindowContent } from './window/WindowContent';
-import { WindowHeader } from './window/WindowHeader';
+import { WindowContent } from "./window/WindowContent";
+import { WindowHeader } from "./window/WindowHeader";
 
 interface WindowProps {
   window: WindowState;
@@ -37,13 +38,20 @@ const Window: React.FC<WindowProps> = ({
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
   const [isFocused, setIsFocused] = useState(false);
 
+  // Get store actions directly
+  const focus = useWindowStore((state) => state.focus);
+  const resize = useWindowStore((state) => state.resize);
+
   // Use the isMaximized flag from window state instead of calculating it
   const isMaximized = window.isMaximized === true;
 
   // Handle click to focus
   useEffect(() => {
     const handleClick = () => {
+      // Call both the props callback and store action
       onFocus();
+      focus(window.id);
+
       setIsFocused(true); // Set focus state for animations
 
       // Reset focus state after animation completes
@@ -58,7 +66,7 @@ const Window: React.FC<WindowProps> = ({
       windowElement.addEventListener("mousedown", handleClick);
       return () => windowElement.removeEventListener("mousedown", handleClick);
     }
-  }, [onFocus]);
+  }, [onFocus, focus, window.id]);
 
   // Handle drag events
   useEffect(() => {
@@ -190,6 +198,14 @@ const Window: React.FC<WindowProps> = ({
 
     const handleResizeMouseUp = () => {
       if (resizing) {
+        // When resize is finished, update the store with new size
+        if (windowRef.current) {
+          const rect = windowRef.current.getBoundingClientRect();
+          resize(window.id, {
+            width: rect.width,
+            height: rect.height,
+          });
+        }
         setResizing(false);
       }
     };
@@ -212,6 +228,8 @@ const Window: React.FC<WindowProps> = ({
     resizeStartPos.y,
     startSize.width,
     startSize.height,
+    window.id,
+    resize,
   ]);
 
   if (!window.isOpen || window.isMinimized) return null;
