@@ -1,22 +1,16 @@
-import { DragHandlers, motion, PanInfo, useMotionValue } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
+import { DragHandlers, motion, PanInfo, useMotionValue } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 import {
-  DndContext,
-  DragEndEvent,
-  DragMoveEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
+} from '@dnd-kit/core';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
-import { Resizable } from "../window/Resizable";
-import { WindowContent } from "./WindowContent";
-import { WindowHeader } from "./WindowHeader";
+import { Resizable } from '../window/Resizable';
+import { WindowContent } from './WindowContent';
+import { WindowHeader } from './WindowHeader';
 
 interface WindowShellProps {
   id: string;
@@ -262,12 +256,12 @@ export const WindowShell: React.FC<WindowShellProps> = ({
         )}
         style={{
           zIndex,
-          width: size.width,
-          height: size.height,
+          // When maximized, don't set width/height to let CSS anchors take over
+          ...(isMaximized
+            ? { x, y } // No width/height when maximized
+            : { width: size.width, height: size.height, x, y }),
           willChange:
             isDragging || isResizing ? "transform, width, height" : "auto",
-          x: x,
-          y: y,
         }}
         // Only apply framer-motion drag to the entire window if maximized is false
         initial={false}
@@ -305,6 +299,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({
             onMaximize={onMaximize}
             onClose={onClose}
             headerRef={headerRef}
+            isMaximized={isMaximized}
           />
         </motion.div>
 

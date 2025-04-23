@@ -1,8 +1,8 @@
-import { Grip } from "lucide-react";
-import React from "react";
+import { Grip } from 'lucide-react';
+import React from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { getDecorator } from "@/lib/window-decorators";
+import { useTheme } from '@/lib/ThemeProvider';
+import { getDecorator } from '@/lib/window-decorators';
 
 interface WindowControlsProps {
   onMinimize: () => void;
@@ -57,11 +57,18 @@ interface WindowHeaderProps {
   onMaximize: () => void;
   onClose: () => void;
   headerRef: React.RefObject<HTMLDivElement>;
+  isMaximized?: boolean;
 }
 
 export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
   const { theme } = useTheme();
   const decorator = getDecorator(theme);
+
+  // For BeOS theme, hide the in-window header when maximized
+  // The global tab bar will serve as the header
+  if (theme === "beos" && props.isMaximized) {
+    return null;
+  }
 
   // Use the theme-specific Header component from our decorator
   return <decorator.Header {...props} />;

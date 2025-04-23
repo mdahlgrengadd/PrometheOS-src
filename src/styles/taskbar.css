@@ -9,29 +9,64 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    /* Using the theme variable directly - now all themes will use proper color values */
+    background: var(--taskbar-bg, rgba(240, 240, 240, 0.8));
     
+    /* BeOS specific styling */
     .theme-beos & {
-      @apply bg-gray-200 border-t border-gray-400 p-1;
+      @apply border-t border-gray-400 p-1;
       color: var(--text-primary);
       box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1);
     }
     
-    .theme-light & {
-      @apply bg-background/80 backdrop-blur-lg border-t border-border p-1;
-      color: var(--text-primary);
-      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.05);
+    /* Modern theme styles (Light and Dark) */
+    .theme-light &, .theme-dark & {
+      @apply backdrop-blur-lg border-t border-border p-1;
+      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
     }
     
+    /* Light theme specific text color */
+    .theme-light & {
+      color: var(--text-primary);
+    }
+    
+    /* Dark theme specific text color */
     .theme-dark & {
-      @apply bg-background/80 backdrop-blur-lg border-t border-border p-1;
       color: var(--foreground);
+    }
+    
+    /* macOS and Windows shared styles */
+    .theme-macos &, .theme-windows & {
+      @apply backdrop-blur-lg border-t p-1;
       box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* macOS specific colors */
+    .theme-macos & {
+      border-color: hsla(210, 20%, 80%, 0.5);
+      color: #000000;
+    }
+    
+    /* Windows specific colors */
+    .theme-windows & {
+      backdrop-filter: blur(4px); /* Less blur than macOS */
+      border-color: hsla(210, 100%, 35%, 1);
+      color: #ffffff;
+    }
+    
+    /* Fluxbox specific styling */
+    .theme-fluxbox & {
+      @apply border-t p-1;
+      border-color: hsla(0, 0%, 20%, 1);
+      color: #eeeeee;
+      box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.2);
     }
   }
 
   .taskbar-item {
     @apply cursor-pointer mx-1 flex items-center;
     
+    /* BeOS style */
     .theme-beos & {
       @apply px-3 py-1.5 text-xs font-bold bg-gray-100 hover:bg-white border border-gray-300;
       color: var(--text-primary);
@@ -39,40 +74,79 @@
       height: 36px;
     }
     
-    .theme-light & {
+    /* Modern styles (Light, Dark, macOS) */
+    .theme-light &, .theme-dark &, .theme-macos & {
       @apply px-3 py-1.5 rounded-md text-sm border border-transparent hover:bg-accent hover:text-accent-foreground gap-2 transition-all duration-150;
-      color: var(--text-primary);
       min-width: 120px;
       height: 36px;
       backdrop-filter: blur(8px);
     }
     
+    /* Light theme specific color */
+    .theme-light & {
+      color: var(--text-primary);
+    }
+    
+    /* Dark theme specific color */
     .theme-dark & {
-      @apply px-3 py-1.5 rounded-md text-sm border border-transparent hover:bg-accent hover:text-accent-foreground gap-2 transition-all duration-150;
       color: var(--foreground);
+    }
+    
+    /* macOS specific hover */
+    .theme-macos & {
+      @apply hover:bg-white/20;
+      color: #000000;
+    }
+    
+    /* Windows style */
+    .theme-windows & {
+      @apply px-3 py-1.5 text-sm border border-transparent hover:bg-white/20 gap-2 transition-all duration-150;
+      color: #ffffff;
       min-width: 120px;
       height: 36px;
-      backdrop-filter: blur(8px);
+    }
+    
+    /* Fluxbox style */
+    .theme-fluxbox & {
+      @apply px-3 py-1.5 text-sm border border-gray-700 hover:bg-gray-600 gap-2 transition-all duration-150;
+      color: #eeeeee;
+      min-width: 120px;
+      height: 36px;
+      background-color: #444444;
     }
   }
   
   .taskbar-item:hover {
-    .theme-light &, .theme-dark & {
+    /* Shared hover effect for modern themes */
+    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows & {
       @apply shadow-sm scale-105;
+    }
+    
+    /* Fluxbox specific hover */
+    .theme-fluxbox & {
+      @apply scale-100;
     }
   }
   
   .taskbar-item:active {
-    .theme-light &, .theme-dark & {
+    /* Shared active effect for modern themes */
+    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows & {
       @apply scale-95;
+    }
+    
+    /* Fluxbox specific active state */
+    .theme-fluxbox & {
+      @apply scale-95 bg-gray-700;
     }
   }
   
   .taskbar-item.active {
+    /* BeOS active state */
     .theme-beos & {
       @apply bg-white;
     }
     
+    /* Light active state */
     .theme-light & {
       background-color: hsl(220 14.3% 95.9%) !important;
       color: hsl(220.9 39.3% 11%) !important;
@@ -80,73 +154,162 @@
       opacity: 1 !important;
     }
     
+    /* Dark active state */
     .theme-dark & {
       background-color: hsl(215 27.9% 16.9%) !important;
       color: hsl(210 20% 98%) !important;
       @apply border-border;
       opacity: 1 !important;
     }
+    
+    /* macOS active state */
+    .theme-macos & {
+      background-color: rgba(255, 255, 255, 0.3) !important;
+      color: #000000 !important;
+      @apply border-white/30;
+      opacity: 1 !important;
+    }
+    
+    /* Windows active state */
+    .theme-windows & {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      color: #ffffff !important;
+      @apply border-white/20;
+      opacity: 1 !important;
+    }
+    
+    /* Fluxbox active state */
+    .theme-fluxbox & {
+      background-color: #555555 !important;
+      color: #ffffff !important;
+      @apply border-gray-600;
+      opacity: 1 !important;
+    }
   }
   
   .taskbar-item-icon {
+    /* BeOS icon */
     .theme-beos & {
       @apply w-4 h-4 mr-1;
     }
     
-    .theme-light & {
+    /* Modern icon styles */
+    .theme-light &, .theme-dark & {
       @apply w-5 h-5 text-muted-foreground;
     }
     
-    .theme-dark & {
-      @apply w-5 h-5 text-muted-foreground;
+    /* macOS and Windows icons */
+    .theme-macos &, .theme-windows & {
+      @apply w-5 h-5 opacity-80;
+    }
+    
+    /* Fluxbox icon */
+    .theme-fluxbox & {
+      @apply w-4 h-4 mr-1 opacity-80;
     }
   }
   
   .taskbar-separator {
+    /* BeOS separator */
     .theme-beos & {
       @apply w-px h-4 bg-gray-300 mx-1;
     }
     
-    .theme-light & {
+    /* Modern separators */
+    .theme-light &, .theme-dark & {
       @apply w-px h-6 bg-border mx-2 opacity-50;
     }
     
-    .theme-dark & {
-      @apply w-px h-6 bg-border mx-2 opacity-50;
+    /* macOS separator */
+    .theme-macos & {
+      @apply w-px h-6 bg-black/20 mx-2;
+    }
+    
+    /* Windows separator */
+    .theme-windows & {
+      @apply w-px h-6 bg-white/20 mx-2;
+    }
+    
+    /* Fluxbox separator */
+    .theme-fluxbox & {
+      @apply w-px h-5 bg-gray-600 mx-1;
     }
   }
   
   /* Start button styling */
   .taskbar-start {
+    /* BeOS start button */
     .theme-beos & {
       @apply bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-none px-2 flex items-center mr-auto;
       height: 36px;
     }
     
-    .theme-light & {
-      background-color: hsl(262.1 83.3% 57.8%) !important;
-      color: hsl(210 20% 98%) !important;
-      @apply font-medium rounded-md px-4 flex items-center mr-auto ml-1 transition-all duration-200;
+    /* Common modern start button properties */
+    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows &, .theme-fluxbox & {
+      @apply font-medium px-4 flex items-center mr-auto ml-1 transition-all duration-200;
       height: 36px;
       opacity: 1 !important;
     }
     
+    /* Light theme start button */
+    .theme-light & {
+      background-color: hsl(262.1 83.3% 57.8%) !important;
+      color: hsl(210 20% 98%) !important;
+      @apply rounded-md;
+    }
+    
+    /* Dark theme start button */
     .theme-dark & {
       background-color: hsl(263.4 70% 50.4%) !important;
       color: hsl(210 20% 98%) !important;
-      @apply font-medium rounded-md px-4 flex items-center mr-auto ml-1 transition-all duration-200;
-      height: 36px;
-      opacity: 1 !important;
+      @apply rounded-md;
+    }
+    
+    /* macOS start button */
+    .theme-macos & {
+      background-color: rgba(0, 122, 255, 0.9) !important;
+      color: white !important;
+      @apply rounded-full;
+    }
+    
+    /* Windows start button */
+    .theme-windows & {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      color: white !important;
+    }
+    
+    /* Fluxbox start button */
+    .theme-fluxbox & {
+      background-color: #555555 !important;
+      color: #eeeeee !important;
+      @apply rounded-sm border border-gray-600;
     }
   }
   
   .taskbar-start:hover {
+    /* Light theme start button hover */
     .theme-light & {
       background-color: hsl(262.1 83.3% 52%) !important;
     }
     
+    /* Dark theme start button hover */
     .theme-dark & {
       background-color: hsl(263.4 70% 45%) !important;
+    }
+    
+    /* macOS start button hover */
+    .theme-macos & {
+      background-color: rgba(0, 122, 255, 1) !important;
+    }
+    
+    /* Windows start button hover */
+    .theme-windows & {
+      background-color: rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    /* Fluxbox start button hover */
+    .theme-fluxbox & {
+      background-color: #666666 !important;
     }
   }
 }

@@ -1,13 +1,14 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
-import { WindowState } from "@/types/window";
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
 
-import { usePlugins } from "../plugins/PluginContext";
-import DesktopIcons from "./DesktopIcons";
-import Taskbar from "./Taskbar";
-import ThemeSelector from "./ThemeSelector";
-import Window from "./Window";
+import { usePlugins } from '../plugins/PluginContext';
+import DesktopIcons from './DesktopIcons';
+import Taskbar from './Taskbar';
+import ThemeSelector from './ThemeSelector';
+import Window from './Window';
 
 const Desktop = () => {
   const {
@@ -17,6 +18,9 @@ const Desktop = () => {
     minimizeWindow,
     focusWindow,
   } = usePlugins();
+
+  // Get the current theme
+  const { theme } = useTheme();
 
   // Use store as single source of truth
   const windowsDict = useWindowStore((s) => s.windows);
@@ -99,13 +103,18 @@ const Desktop = () => {
     [windows, focusWindow, minimizeWindow, openWindow]
   );
 
+  // Check if we need to show the desktop-level tab bar (BeOS with maximized windows)
+  const isBeOS = theme === "beos";
+  // Only show the desktop tab bar when BeOS + maximized windows exist
+  const maximizedBeOS = isBeOS && maximizedWindows.length > 0;
+
   return (
     <div className="desktop">
       <div className="absolute top-2 right-2 z-50">
         <ThemeSelector />
       </div>
 
-      {maximizedWindows.length > 0 && (
+      {maximizedBeOS && (
         <div className="window-tab-bar">
           {maximizedWindows.map((window) => (
             <div
@@ -119,7 +128,7 @@ const Desktop = () => {
               onClick={() => handleTabClick(window.id)}
             >
               <span className="window-tab-title">{window.title}</span>
-              {/* Show window controls for all maximized windows, not just the active one */}
+              {/* Show window controls for all maximized windows */}
               <div className="window-controls">
                 <button
                   className="window-control"

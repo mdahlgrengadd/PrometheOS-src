@@ -16,9 +16,31 @@
     border: var(--wm-border-width, 1px) solid var(--wm-border-color, #ccc);
     box-shadow: 0 4px 10px var(--window-shadow, rgba(0, 0, 0, 0.1));
     
+    /* BeOS classic multi-layer bevel styling */
+    .theme-beos & {
+      box-shadow:
+        0 0 0 1px #888888,
+        0 0 0 2px #dddddd,
+        0 0 0 3px #ffffff,
+        0 0 0 4px #dddddd,
+        0 0 0 5px #888888,
+        0 14px 16px -6px rgba(0,0,0,0.2);
+    }
+    
     /* Focus state */
     &:focus-within {
       box-shadow: 0 4px 15px var(--window-shadow, rgba(0, 0, 0, 0.15));
+      
+      /* Maintain BeOS bevel even when focused */
+      .theme-beos & {
+        box-shadow:
+          0 0 0 1px #888888,
+          0 0 0 2px #dddddd,
+          0 0 0 3px #ffffff,
+          0 0 0 4px #dddddd,
+          0 0 0 5px #888888,
+          0 14px 16px -6px rgba(0,0,0,0.3);
+      }
     }
     
     /* Resizing state */
@@ -26,6 +48,17 @@
       box-shadow: 0 6px 20px var(--window-shadow, rgba(0, 0, 0, 0.2));
       transition: none !important; /* Disable all transitions during resize */
       z-index: 9999 !important; /* Ensure resizing window is on top */
+      
+      /* Maintain BeOS bevel even when resizing */
+      .theme-beos & {
+        box-shadow:
+          0 0 0 1px #888888,
+          0 0 0 2px #dddddd,
+          0 0 0 3px #ffffff,
+          0 0 0 4px #dddddd,
+          0 0 0 5px #888888,
+          0 14px 16px -6px rgba(0,0,0,0.4);
+      }
     }
   }
 
@@ -193,6 +226,49 @@
 
   .window-control:active {
     filter: brightness(0.8);
+  }
+  
+  /* ------------------ BeOS in-window tab styling ------------------ */
+  /* Styling for non-maximized BeOS windows header tabs */
+  .theme-beos .draggable-window:not(.maximized) .window-header {
+    position: var(--header-position, absolute);
+    top: var(--header-top, -4px); /* Pull it up slightly to look like a tab */
+    left: var(--header-left, 5px);
+    width: var(--header-width, 210px);
+    height: var(--header-height, 32px);
+    padding: var(--header-padding, 0.25rem 0.5rem);
+    border-radius: var(--header-border-radius, 4px 4px 0 0);
+    z-index: 2; /* Float it above the window content */
+    
+    /* Classic BeOS yellow gradient tab */
+    background: linear-gradient(
+      to bottom,
+      var(--title-gradient-start, #ffda8f),
+      var(--title-gradient-end, #ffc34e)
+    );
+    border: 1px solid var(--title-border, #b99100);
+    border-bottom: none;
+    
+    /* Add the yellow dot */
+    &::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 13px;
+      height: 13px;
+      background: linear-gradient(135deg, var(--dot-color-start, #fff9c9) 0%, var(--dot-color-end, #e7c01d) 100%);
+      border: 1px solid var(--dot-border, #b99100);
+      border-radius: 50%;
+      display: var(--has-window-header-dot, none);
+    }
+  }
+  
+  /* Make the title text bold in BeOS headers */
+  .theme-beos .draggable-window:not(.maximized) .window-header .window-title {
+    font-weight: bold;
+    color: black;
+    padding-left: 16px; /* Add space for the yellow dot */
   }
 }
 

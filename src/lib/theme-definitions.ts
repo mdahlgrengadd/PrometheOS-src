@@ -1,4 +1,4 @@
-import { ThemeConfig, ThemeType } from "./theme-types";
+import { ThemeConfig, ThemeType } from './theme-types';
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -111,7 +111,7 @@ const lightTheme: ThemeConfig = {
 
     // Theme specific
     "--has-window-header-dot": "0",
-    "--taskbar-bg": "0 0% 100% 0.8",
+    "--taskbar-bg": "hsla(0, 0%, 100%, 0.8)",
   },
 };
 
@@ -175,7 +175,7 @@ const darkTheme: ThemeConfig = {
 
     // Theme specific
     "--has-window-header-dot": "0",
-    "--taskbar-bg": "220 13% 16% 0.8",
+    "--taskbar-bg": "hsla(220, 13%, 16%, 0.8)",
   },
 };
 
@@ -227,6 +227,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--header-padding": "0.25rem 0.5rem",
       "--window-padding-top": "28px",
       "--window-border-radius": "8px",
+
+      // Theme specific
+      "--taskbar-bg": "hsla(210, 20%, 95%, 0.8)",
     },
   },
   windows: {
@@ -273,6 +276,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--header-padding": "0.25rem 0.75rem",
       "--window-padding-top": "32px",
       "--window-border-radius": "0",
+
+      // Theme specific
+      "--taskbar-bg": "hsla(210, 100%, 45%, 0.9)",
     },
   },
   fluxbox: {
@@ -319,6 +325,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--header-padding": "0.25rem 0.5rem",
       "--window-padding-top": "26px",
       "--window-border-radius": "2px",
+
+      // Theme specific
+      "--taskbar-bg": "hsla(0, 0%, 26%, 0.9)",
     },
   },
 };
