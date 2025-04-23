@@ -1,5 +1,5 @@
-import themeManifest from "./theme-manifest.json";
-import { ThemeConfig, ThemeType } from "./theme-types";
+import themeManifest from './theme-manifest.json';
+import { ThemeConfig, ThemeType } from './theme-types';
 
 interface ExternalTheme {
   id: string;
@@ -23,6 +23,34 @@ const requiredThemeFields = [
   "cssVariables",
 ];
 
+// All CSS variables that themes should define
+const requiredCssVariables = [
+  // Window structure
+  "--wm-border-width",
+  "--wm-border-color",
+  "--wm-border-radius",
+  "--wm-header-height",
+
+  // Colors
+  "--window-background",
+  "--window-text",
+  "--window-header-background",
+  "--window-header-text",
+  "--window-header-button-hover",
+  "--window-header-button-active",
+  "--window-resize-handle",
+
+  // Control buttons
+  "--wm-btn-close-bg",
+  "--wm-btn-minimize-bg",
+  "--wm-btn-maximize-bg",
+
+  // Theme-specific variables
+  "--taskbar-bg",
+  "--text-primary",
+  "--accent-primary",
+];
+
 // Validate that a theme has all required fields
 const validateTheme = (theme: Partial<ExternalTheme>): boolean => {
   for (const field of requiredThemeFields) {
@@ -32,19 +60,17 @@ const validateTheme = (theme: Partial<ExternalTheme>): boolean => {
     }
   }
 
-  // Check if cssVariables contains the minimum required variables
-  const requiredVars = [
-    "--wm-border-width",
-    "--wm-border-color",
-    "--window-background",
-  ];
-
+  // Check if cssVariables contains all required variables
   const variables = theme.cssVariables || {};
-  for (const varName of requiredVars) {
-    if (!variables[varName]) {
-      console.error(`Theme is missing required CSS variable: ${varName}`);
-      return false;
-    }
+  const missingVars = requiredCssVariables.filter(
+    (varName) => !variables[varName]
+  );
+
+  if (missingVars.length > 0) {
+    console.error(
+      `Theme is missing required CSS variables: ${missingVars.join(", ")}`
+    );
+    return false;
   }
 
   return true;

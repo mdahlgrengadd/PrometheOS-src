@@ -18,10 +18,14 @@
     margin-top: 36px; /* Space for window tab bar */
   }
 
+  /* Base desktop icon styles using CSS variables - applies to all themes including external ones */
   .desktop-icon {
     width: 80px;
     height: 80px;
     @apply flex flex-col items-center justify-center p-1 cursor-pointer transition-all duration-200;
+    background-color: var(--desktop-icon-bg, transparent);
+    border-radius: var(--desktop-icon-radius, 4px);
+    border: var(--desktop-icon-border, none);
     
     .theme-beos & {
       @apply rounded-sm;
@@ -37,6 +41,9 @@
   }
 
   .desktop-icon:hover {
+    background-color: var(--desktop-icon-hover-bg, rgba(255, 255, 255, 0.1));
+    transform: var(--desktop-icon-hover-transform, scale(1.05));
+    
     .theme-beos & {
       @apply bg-white/10;
     }
@@ -47,6 +54,8 @@
   }
 
   .desktop-icon:active {
+    transform: var(--desktop-icon-active-transform, scale(0.95));
+    
     .theme-light &, .theme-dark & {
       @apply scale-95;
     }
@@ -54,6 +63,9 @@
 
   .desktop-icon-label {
     @apply text-center text-xs mt-2 truncate w-full;
+    color: var(--text-primary, #000000);
+    font-weight: var(--desktop-icon-font-weight, 500);
+    text-shadow: var(--desktop-icon-text-shadow, none);
     
     .theme-beos & {
       @apply font-bold;
@@ -74,12 +86,16 @@
     }
   }
 
+  /* Base tab bar style applies to all themes, specific themes can override */
   .window-tab-bar {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     z-index: 900;
+    height: var(--wm-header-height, 36px);
+    border-bottom: 1px solid var(--wm-border-color, #d4d4d4);
+    background-color: var(--window-header-background, #f0f0f0);
     
     .theme-beos & {
       height: 36px;
@@ -95,8 +111,18 @@
     }
   }
 
+  /* Base window tab style that applies to all themes */
   .window-tab {
     cursor: pointer;
+    color: var(--window-header-text, #333333);
+    min-width: 180px;
+    max-width: 360px;
+    height: var(--wm-header-height, 36px);
+    border-right: 1px solid var(--wm-border-color, #d4d4d4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.75rem;
     
     .theme-beos & {
       @apply border-r flex items-center justify-between px-3 py-1.5;
@@ -129,6 +155,8 @@
   }
 
   .window-tab:hover {
+    background-color: var(--window-header-button-hover, #e0e0e0);
+    
     .theme-beos & {
       filter: brightness(1.05);
     }
@@ -148,6 +176,8 @@
 
   .window-tab-title {
     @apply truncate flex-1;
+    color: var(--window-header-text, #333333);
+    font-size: 0.875rem;
     
     .theme-beos & {
       @apply text-xs font-bold;

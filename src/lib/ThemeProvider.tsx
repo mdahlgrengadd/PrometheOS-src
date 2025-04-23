@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { toast } from "sonner";
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
-import { themes } from "./theme-definitions";
-import { getAvailableExternalThemes, loadExternalTheme } from "./theme-loader";
-import { ThemeConfig, ThemeContextType, ThemeType } from "./theme-types";
+import { themes } from './theme-definitions';
+import { getAvailableExternalThemes, loadExternalTheme } from './theme-loader';
+import { ThemeConfig, ThemeContextType, ThemeType } from './theme-types';
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -62,6 +62,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
     return localStorage.getItem("os-primary-color") || "#a855f7";
   });
+
+  // Compute a superset of all variable names used across themes
+  const allCssVariableNames = useMemo(() => {
+    // Get all CSS variable names from built-in themes
+    const variableNames = new Set<string>();
+
+    // Collect from built-in themes
+    Object.values(themes).forEach((themeConfig) => {
+      Object.keys(themeConfig.cssVariables).forEach((key) => {
+        variableNames.add(key);
+      });
+    });
+
+    // Also collect from dynamically loaded themes
+    Object.values(allThemes).forEach((themeConfig) => {
+      if (!themes[themeConfig.id as ThemeType]) {
+        // Only process external themes not in the built-in set
+        Object.keys(themeConfig.cssVariables).forEach((key) => {
+          variableNames.add(key);
+        });
+      }
+    });
+
+    return Array.from(variableNames);
+  }, [allThemes]);
 
   // Load available external themes
   useEffect(() => {
@@ -145,7 +170,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // Set all CSS variables from the theme
+    // 1. Clear all existing CSS variables first to avoid stale values
+    allCssVariableNames.forEach((key) => {
+      root.style.removeProperty(key);
+    });
+
+    // 2. Set all CSS variables from the theme
     Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
@@ -189,7 +219,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-  }, [theme, allThemes, padding, wallpaper, backgroundColor, primaryColor]);
+  }, [
+    theme,
+    allThemes,
+    padding,
+    wallpaper,
+    backgroundColor,
+    primaryColor,
+    allCssVariableNames,
+  ]);
 
   return (
     <ThemeContext.Provider

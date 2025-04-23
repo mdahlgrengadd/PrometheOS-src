@@ -18,9 +18,17 @@
         "--wm-header-height": "24px",
         "--window-header-background": "#000080",
         "--window-header-text": "#ffffff",
+        "--window-background": "#ffffff",
+        "--window-text": "#000000",
+        "--taskbar-bg": "rgba(192, 192, 192, 0.9)",
+        "--text-primary": "#000000",
+        "--accent-primary": "#000080",
         "--wm-btn-close-bg": "#c0c0c0",
         "--wm-btn-minimize-bg": "#c0c0c0",
-        "--wm-btn-maximize-bg": "#c0c0c0"
+        "--wm-btn-maximize-bg": "#c0c0c0",
+        "--window-header-button-hover": "#d0d0d0",
+        "--window-header-button-active": "#a0a0a0",
+        "--window-resize-handle": "rgba(0, 0, 0, 0.1)"
       }
     },
     {
@@ -40,7 +48,17 @@
         "--wm-header-height": "20px",
         "--window-header-background": "#aaaaaa",
         "--window-header-text": "#000000",
-        "--window-background": "#aaaaaa"
+        "--window-background": "#aaaaaa",
+        "--window-text": "#000000",
+        "--taskbar-bg": "rgba(170, 170, 170, 0.9)",
+        "--text-primary": "#000000",
+        "--accent-primary": "#4c75ff",
+        "--wm-btn-close-bg": "#ff5555",
+        "--wm-btn-minimize-bg": "#ffaa55",
+        "--wm-btn-maximize-bg": "#55ff55",
+        "--window-header-button-hover": "#cccccc",
+        "--window-header-button-active": "#999999",
+        "--window-resize-handle": "rgba(0, 0, 0, 0.2)"
       }
     }
   ]

@@ -1,10 +1,29 @@
 @layer components {
+  /* 
+   * WINDOW COMPONENT STYLES
+   * 
+   * CSS Variables used:
+   * --window-background: Main window background color
+   * --window-text: Text color inside windows
+   * --window-header-background: Background color for the window title bar
+   * --window-header-text: Text color for the window title
+   * --window-header-button-hover: Background color for window controls on hover
+   * --window-header-button-active: Background color for window controls when clicked
+   * --wm-border-width: Border width for windows
+   * --wm-border-color: Border color for windows
+   * --wm-border-radius: Border radius for windows
+   * --wm-header-height: Height of the window title bar
+   * --wm-btn-close-bg: Background color for the close button
+   * --wm-btn-minimize-bg: Background color for the minimize button
+   * --wm-btn-maximize-bg: Background color for the maximize button
+   */
+
   /* Window shell container */
   .draggable-window {
     position: absolute;
     min-width: 320px;
     min-height: 200px;
-    border-radius: var(--wm-border-radius);
+    border-radius: var(--wm-border-radius, 4px);
     background-color: var(--window-background, white);
     overflow: visible; /* Keep overflow visible so titlebar is not clipped */
     padding-top: 0; /* Space for the header */
@@ -98,7 +117,7 @@
   
   .resize-handle:hover {
     opacity: 0.5 !important;
-    background-color: rgba(0, 120, 255, 0.3);
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.3));
   }
   
   /* Corner resize handles */
@@ -108,7 +127,7 @@
     width: 14px;
     height: 14px;
     cursor: nwse-resize;
-    border-radius: 0 0 var(--wm-border-radius) 0;
+    border-radius: 0 0 var(--wm-border-radius, 4px) 0;
   }
   
   .resize-handle-bl {
@@ -117,7 +136,7 @@
     width: 14px;
     height: 14px;
     cursor: nesw-resize;
-    border-radius: 0 0 0 var(--wm-border-radius);
+    border-radius: 0 0 0 var(--wm-border-radius, 4px);
   }
   
   .resize-handle-tr {
@@ -126,7 +145,7 @@
     width: 14px;
     height: 14px;
     cursor: nesw-resize;
-    border-radius: 0 var(--wm-border-radius) 0 0;
+    border-radius: 0 var(--wm-border-radius, 4px) 0 0;
   }
   
   .resize-handle-tl {
@@ -135,7 +154,7 @@
     width: 14px;
     height: 14px;
     cursor: nwse-resize;
-    border-radius: var(--wm-border-radius) 0 0 0;
+    border-radius: var(--wm-border-radius, 4px) 0 0 0;
   }
   
   /* Edge resize handles */
@@ -199,6 +218,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1;
+    color: var(--window-header-text, #333);
   }
 
   /* Window controls */
@@ -222,10 +242,12 @@
 
   .window-control:hover {
     filter: brightness(0.9);
+    background-color: var(--window-header-button-hover, #e0e0e0);
   }
 
   .window-control:active {
     filter: brightness(0.8);
+    background-color: var(--window-header-button-active, #d0d0d0);
   }
   
   /* ------------------ BeOS in-window tab styling ------------------ */
