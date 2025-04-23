@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import WordEditorComponent from '@/components/WordEditor';
+import WordEditorComponent from "@/components/WordEditor";
 
-import { Plugin, PluginManifest } from '../../types';
+import { Plugin, PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "WordEditor",
@@ -17,7 +17,7 @@ export const manifest: PluginManifest = {
       alt="Word Editor Pro"
     />
   ),
-  entry: "apps/WordEditor",
+  entry: "apps/wordeditor",
   preferredSize: {
     width: 980,
     height: 750,

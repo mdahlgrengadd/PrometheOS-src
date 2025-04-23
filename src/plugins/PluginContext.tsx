@@ -22,7 +22,7 @@ import NotepadPlugin from "./apps/notepad";
 import SessionPlugin from "./apps/session";
 import SettingsPlugin from "./apps/settings";
 import WebLLMChatPlugin from "./apps/webllm-chat";
-import WordEditorPlugin from "./apps/WordEditor";
+import WordEditorPlugin from "./apps/wordeditor";
 import { eventBus } from "./EventBus";
 import { PluginManager } from "./PluginManager";
 import {

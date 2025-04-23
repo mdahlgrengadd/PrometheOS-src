@@ -11,7 +11,7 @@ import { manifest as notepadManifest } from "./apps/notepad";
 import { manifest as sessionManifest } from "./apps/session";
 import { manifest as settingsManifest } from "./apps/settings";
 import { manifest as webllmChatManifest } from "./apps/webllm-chat";
-import { manifest as wordEditorManifest } from "./apps/WordEditor";
+import { manifest as wordEditorManifest } from "./apps/wordeditor";
 import {
   addDynamicManifest,
   loadDynamicManifests,
