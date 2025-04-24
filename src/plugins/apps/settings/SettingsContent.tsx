@@ -1,21 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import InstalledPluginsList from '@/components/InstalledPluginsList';
-import PluginInstaller from '@/components/PluginInstaller';
+import InstalledPluginsList from "@/components/InstalledPluginsList";
+import PluginInstaller from "@/components/PluginInstaller";
+import ThemeManager from "@/components/ThemeManager";
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useViewMode } from '@/hooks/useViewMode';
-import { ThemeType } from '@/lib/theme-types';
-import { useTheme } from '@/lib/ThemeProvider';
-import { resetDesktopState } from '@/utils/resetDesktop';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ThemeType } from "@/lib/theme-types";
+import { useTheme } from "@/lib/ThemeProvider";
+import { resetDesktopState } from "@/utils/resetDesktop";
 
 const SettingsContent: React.FC = () => {
   const {
@@ -232,86 +239,36 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
 
-            <RadioGroup
-              defaultValue={theme}
-              onValueChange={(value) => handleThemeChange(value as ThemeType)}
-              className="grid grid-cols-3 gap-4 pt-2"
-            >
-              <div>
-                <RadioGroupItem
-                  value="beos"
-                  id="theme-beos"
-                  className="peer sr-only"
-                  checked={theme === "beos"}
-                />
-                <Label
-                  htmlFor="theme-beos"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <div className="mb-2 rounded-md border border-border overflow-hidden w-full">
-                    <div className="h-24 bg-gradient-to-b from-blue-200 to-blue-300 relative">
-                      <div className="absolute top-2 left-0 right-0 mx-auto w-4/5 h-5 bg-yellow-400 border border-yellow-600 rounded-t flex items-center justify-end px-1 space-x-1">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      </div>
-                      <div className="absolute top-7 left-0 right-0 mx-auto w-4/5 h-12 bg-gray-100 border border-gray-400"></div>
-                    </div>
-                  </div>
-                  <span className="font-medium">BeOS Classic</span>
-                </Label>
-              </div>
+            <ThemeManager />
+          </div>
 
-              <div>
-                <RadioGroupItem
-                  value="light"
-                  id="theme-light"
-                  className="peer sr-only"
-                  checked={theme === "light"}
-                />
-                <Label
-                  htmlFor="theme-light"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <div className="mb-2 rounded-md border border-border overflow-hidden w-full">
-                    <div className="h-24 bg-gradient-to-br from-indigo-50 to-slate-100 relative">
-                      <div className="absolute top-2 left-0 right-0 mx-auto w-4/5 h-5 bg-gray-100 border border-gray-200 rounded-t flex items-center justify-end px-1 space-x-1">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                      </div>
-                      <div className="absolute top-7 left-0 right-0 mx-auto w-4/5 h-12 bg-white border border-gray-200 rounded-b"></div>
-                    </div>
-                  </div>
-                  <span className="font-medium">Modern Light</span>
-                </Label>
-              </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">Window Padding</h3>
+              <p className="text-sm text-muted-foreground">
+                Adjust the internal padding of window content
+              </p>
+            </div>
 
-              <div>
-                <RadioGroupItem
-                  value="dark"
-                  id="theme-dark"
-                  className="peer sr-only"
-                  checked={theme === "dark"}
-                />
-                <Label
-                  htmlFor="theme-dark"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                >
-                  <div className="mb-2 rounded-md border border-border overflow-hidden w-full">
-                    <div className="h-24 bg-gradient-to-br from-slate-900 to-slate-800 relative">
-                      <div className="absolute top-2 left-0 right-0 mx-auto w-4/5 h-5 bg-slate-800 border border-slate-700 rounded-t flex items-center justify-end px-1 space-x-1">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                      </div>
-                      <div className="absolute top-7 left-0 right-0 mx-auto w-4/5 h-12 bg-slate-900 border border-slate-700 rounded-b"></div>
-                    </div>
-                  </div>
-                  <span className="font-medium">Modern Dark</span>
-                </Label>
-              </div>
-            </RadioGroup>
+            <Slider
+              id="window-padding"
+              defaultValue={[padding]}
+              onValueChange={handlePaddingChange}
+              min={0}
+              max={24}
+              step={4}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>None</span>
+              <span>Small</span>
+              <span>Medium</span>
+              <span>Large</span>
+              <span>Extra Large</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Changes to padding affect all windows
+            </p>
           </div>
 
           <div className="space-y-4">

@@ -1,6 +1,8 @@
 import { Grip } from "lucide-react";
 import React from "react";
 
+import { ThemeConfig } from "@/lib/theme-types";
+
 // Types for the window decorator components
 export interface HeaderProps {
   title: string;
@@ -252,8 +254,10 @@ export const macosDecorator: WindowDecorator = {
   borderRadius: 8,
 };
 
-// Get the correct decorator based on theme
+// Remove the useTheme hook-based implementation since it won't work outside components
+// Instead, let's create a version that accepts the theme config directly
 export const getDecorator = (theme: string): WindowDecorator => {
+  // Default implementation - this will be overridden when used with external themes
   switch (theme) {
     case "beos":
       return beosDecorator;
@@ -267,4 +271,47 @@ export const getDecorator = (theme: string): WindowDecorator => {
     default:
       return lightDecorator;
   }
+};
+
+// Define a type for checking external decorators
+type PotentialDecorator = {
+  Header?: unknown;
+  Controls?: unknown;
+  borderRadius?: unknown;
+};
+
+// Add a version that can use theme config for external decorators
+export const getDecoratorFromConfig = (
+  theme: string,
+  themeConfig?: ThemeConfig
+): WindowDecorator => {
+  // Check if this theme has a custom decorator module
+  if (themeConfig?.decoratorModule) {
+    try {
+      // Check if the decorator module looks like a WindowDecorator
+      const externalDecorator =
+        themeConfig.decoratorModule as PotentialDecorator;
+
+      if (
+        externalDecorator &&
+        typeof externalDecorator === "object" &&
+        typeof externalDecorator.Header === "function" &&
+        typeof externalDecorator.Controls === "function" &&
+        typeof externalDecorator.borderRadius === "number"
+      ) {
+        return {
+          Header: externalDecorator.Header as React.FC<HeaderProps>,
+          Controls: externalDecorator.Controls as React.FC<ControlProps>,
+          borderRadius: externalDecorator.borderRadius as number,
+        };
+      } else {
+        console.warn("External decorator is missing required components");
+      }
+    } catch (error) {
+      console.error("Error using external decorator:", error);
+    }
+  }
+
+  // Fall back to built-in decorators
+  return getDecorator(theme);
 };

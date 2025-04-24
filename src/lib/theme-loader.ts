@@ -1,94 +1,62 @@
-import themeManifest from './theme-manifest.json';
-import { ThemeConfig, ThemeType } from './theme-types';
+import {
+  isValidThemeManifest,
+  validateThemeManifest,
+} from "@/utils/validateTheme";
 
-interface ExternalTheme {
-  id: string;
-  name: string;
-  author: string;
-  version: string;
-  description: string;
-  cssUrl: string;
-  preview: string;
-  desktopBackground: string;
-  decoratorPath: string;
-  cssVariables: Record<string, string>;
-}
+import themeManifest from "./theme-manifest.json";
+import { ExternalThemeManifest, ThemeConfig, ThemeType } from "./theme-types";
 
-// Required fields for a valid theme
-const requiredThemeFields = [
-  "id",
-  "name",
-  "cssUrl",
-  "desktopBackground",
-  "cssVariables",
-];
+// Storage keys
+const INSTALLED_THEMES_KEY = "installed-themes";
 
-// All CSS variables that themes should define
-const requiredCssVariables = [
-  // Window structure
-  "--wm-border-width",
-  "--wm-border-color",
-  "--wm-border-radius",
-  "--wm-header-height",
-
-  // Colors
-  "--window-background",
-  "--window-text",
-  "--window-header-background",
-  "--window-header-text",
-  "--window-header-button-hover",
-  "--window-header-button-active",
-  "--window-resize-handle",
-
-  // Control buttons
-  "--wm-btn-close-bg",
-  "--wm-btn-minimize-bg",
-  "--wm-btn-maximize-bg",
-
-  // Theme-specific variables
-  "--taskbar-bg",
-  "--text-primary",
-  "--accent-primary",
-];
-
-// Validate that a theme has all required fields
-const validateTheme = (theme: Partial<ExternalTheme>): boolean => {
-  for (const field of requiredThemeFields) {
-    if (!theme[field as keyof ExternalTheme]) {
-      console.error(`Theme is missing required field: ${field}`);
-      return false;
-    }
-  }
-
-  // Check if cssVariables contains all required variables
-  const variables = theme.cssVariables || {};
-  const missingVars = requiredCssVariables.filter(
-    (varName) => !variables[varName]
-  );
-
-  if (missingVars.length > 0) {
-    console.error(
-      `Theme is missing required CSS variables: ${missingVars.join(", ")}`
-    );
+/**
+ * Validate that a theme has all required fields
+ * @param theme The theme to validate
+ * @returns boolean indicating if the theme is valid
+ */
+const validateTheme = (theme: Partial<ExternalThemeManifest>): boolean => {
+  const validationErrors = validateThemeManifest(theme);
+  if (validationErrors.length > 0) {
+    console.error("Theme validation errors:", validationErrors);
     return false;
   }
-
   return true;
 };
 
-// Convert an external theme to our internal ThemeConfig format
-const convertExternalTheme = (externalTheme: ExternalTheme): ThemeConfig => {
+/**
+ * Convert an external theme to our internal ThemeConfig format
+ * @param externalTheme The external theme manifest
+ * @returns ThemeConfig object
+ */
+const convertExternalTheme = (
+  externalTheme: ExternalThemeManifest
+): ThemeConfig => {
   return {
-    id: externalTheme.id as ThemeType,
+    id: externalTheme.id,
     name: externalTheme.name,
     desktopBackground: externalTheme.desktopBackground,
     cssVariables: externalTheme.cssVariables,
+    version: externalTheme.version,
+    author: externalTheme.author,
+    description: externalTheme.description,
+    preview: externalTheme.preview,
   };
 };
 
-// Load CSS for an external theme
+/**
+ * Load CSS for an external theme
+ * @param cssUrl The URL to the CSS file
+ * @returns Promise that resolves when the CSS is loaded
+ */
 const loadThemeCSS = async (cssUrl: string): Promise<void> => {
   return new Promise((resolve, reject) => {
+    // Check if this CSS is already loaded
+    const existingLink = document.querySelector(`link[href="${cssUrl}"]`);
+    if (existingLink) {
+      resolve();
+      return;
+    }
+
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = cssUrl;
@@ -98,7 +66,11 @@ const loadThemeCSS = async (cssUrl: string): Promise<void> => {
   });
 };
 
-// Load decorator module for a theme using a script tag
+/**
+ * Load decorator module for a theme using a script tag
+ * @param decoratorPath The path to the decorator module
+ * @returns Promise that resolves with the decorator module
+ */
 const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
   // Check if the script is already loaded
   const existingScript = document.querySelector(
@@ -110,7 +82,7 @@ const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
     const theme = pathParts[pathParts.length - 2]; // Get the theme name (e.g., "win95")
     const decoratorClassName =
       theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
-    return window[decoratorClassName];
+    return (window as unknown as Record<string, unknown>)[decoratorClassName];
   }
 
   return new Promise((resolve, reject) => {
@@ -129,7 +101,9 @@ const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
 
         // Try to find the decorator class in the global scope
         setTimeout(() => {
-          const decoratorClass = window[decoratorClassName];
+          const decoratorClass = (window as unknown as Record<string, unknown>)[
+            decoratorClassName
+          ];
           if (decoratorClass) {
             resolve(decoratorClass);
           } else {
@@ -153,18 +127,45 @@ const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
   });
 };
 
-// Get all available themes from the manifest
-export const getAvailableExternalThemes = (): ExternalTheme[] => {
-  return themeManifest.themes || [];
+/**
+ * Get all available themes from the manifest and localStorage
+ * @returns Array of external theme manifests
+ */
+export const getAvailableExternalThemes = (): ExternalThemeManifest[] => {
+  // Get themes from manifest
+  const manifestThemes = themeManifest.themes || [];
+
+  // Get any stored theme manifests from localStorage
+  const storedThemesJson = localStorage.getItem(INSTALLED_THEMES_KEY);
+  const storedThemes: ExternalThemeManifest[] = storedThemesJson
+    ? JSON.parse(storedThemesJson)
+    : [];
+
+  // Combine and deduplicate
+  const uniqueThemes = new Map<string, ExternalThemeManifest>();
+
+  manifestThemes.forEach((theme) => {
+    uniqueThemes.set(theme.id, theme);
+  });
+
+  storedThemes.forEach((theme) => {
+    uniqueThemes.set(theme.id, theme);
+  });
+
+  return Array.from(uniqueThemes.values());
 };
 
-// Load an external theme by ID
+/**
+ * Load an external theme by ID
+ * @param themeId The ID of the theme to load
+ * @returns Promise resolving to ThemeConfig or null
+ */
 export const loadExternalTheme = async (
   themeId: string
 ): Promise<ThemeConfig | null> => {
-  const externalTheme = themeManifest.themes.find(
-    (theme) => theme.id === themeId
-  );
+  // Find theme in both manifest and localStorage
+  const externalThemes = getAvailableExternalThemes();
+  const externalTheme = externalThemes.find((theme) => theme.id === themeId);
 
   if (!externalTheme) {
     console.error(`Theme '${themeId}' not found in manifest`);
@@ -172,8 +173,12 @@ export const loadExternalTheme = async (
   }
 
   // Validate the theme has all required fields before attempting to load
-  if (!validateTheme(externalTheme)) {
-    console.error(`Theme '${themeId}' has invalid schema`);
+  const validationErrors = validateThemeManifest(externalTheme);
+  if (validationErrors.length > 0) {
+    console.error(
+      `Theme '${themeId}' has validation errors:`,
+      validationErrors
+    );
     return null;
   }
 
@@ -181,15 +186,134 @@ export const loadExternalTheme = async (
     // Load the theme's CSS
     await loadThemeCSS(externalTheme.cssUrl);
 
+    // Convert and prepare the theme config
+    const themeConfig = convertExternalTheme(externalTheme);
+
     // Load the theme's decorator if it has one
     if (externalTheme.decoratorPath) {
-      await loadThemeDecorator(externalTheme.decoratorPath);
+      const decoratorModule = await loadThemeDecorator(
+        externalTheme.decoratorPath
+      );
+      themeConfig.decoratorModule = decoratorModule;
     }
 
-    // Convert and return the theme config
-    return convertExternalTheme(externalTheme);
+    return themeConfig;
   } catch (error) {
     console.error(`Failed to load theme '${themeId}'`, error);
     return null;
+  }
+};
+
+/**
+ * Install a theme from a remote URL
+ * @param manifestUrl URL to the theme manifest JSON
+ * @returns Promise resolving to {success: boolean, error?: string} indicating success and any error message
+ */
+export const installTheme = async (
+  manifestUrl: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // Fetch the manifest
+    const response = await fetch(manifestUrl);
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Failed to fetch manifest: ${response.statusText} (${response.status})`,
+      };
+    }
+
+    let themeManifest: Partial<ExternalThemeManifest>;
+    try {
+      themeManifest = await response.json();
+    } catch (e) {
+      return {
+        success: false,
+        error: "Invalid JSON in theme manifest",
+      };
+    }
+
+    // Validate the theme
+    const validationErrors = validateThemeManifest(themeManifest);
+    if (validationErrors.length > 0) {
+      console.error("Theme validation errors:", validationErrors);
+      return {
+        success: false,
+        error: `Invalid theme manifest: ${validationErrors
+          .map((e) => `${e.field}: ${e.message}`)
+          .join(", ")}`,
+      };
+    }
+
+    // Add to stored themes
+    const storedThemesJson = localStorage.getItem(INSTALLED_THEMES_KEY);
+    const storedThemes: ExternalThemeManifest[] = storedThemesJson
+      ? JSON.parse(storedThemesJson)
+      : [];
+
+    // Check if theme is already installed
+    const existingIndex = storedThemes.findIndex(
+      (t) => t.id === themeManifest.id
+    );
+    if (existingIndex >= 0) {
+      storedThemes[existingIndex] = themeManifest as ExternalThemeManifest;
+    } else {
+      storedThemes.push(themeManifest as ExternalThemeManifest);
+    }
+
+    // Save updated themes
+    localStorage.setItem(INSTALLED_THEMES_KEY, JSON.stringify(storedThemes));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error installing theme:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unknown error installing theme",
+    };
+  }
+};
+
+/**
+ * Uninstall a theme by ID
+ * @param themeId The ID of the theme to uninstall
+ * @returns Promise resolving to boolean indicating success
+ */
+export const uninstallTheme = async (themeId: string): Promise<boolean> => {
+  try {
+    // Get stored themes
+    const storedThemesJson = localStorage.getItem(INSTALLED_THEMES_KEY);
+    if (!storedThemesJson) {
+      return false;
+    }
+
+    const storedThemes: ExternalThemeManifest[] = JSON.parse(storedThemesJson);
+
+    // Filter out the theme to uninstall
+    const filteredThemes = storedThemes.filter((t) => t.id !== themeId);
+
+    // If no change in length, theme wasn't found
+    if (filteredThemes.length === storedThemes.length) {
+      return false;
+    }
+
+    // Save updated themes
+    localStorage.setItem(INSTALLED_THEMES_KEY, JSON.stringify(filteredThemes));
+
+    // Remove any loaded CSS
+    const theme = storedThemes.find((t) => t.id === themeId);
+    if (theme?.cssUrl) {
+      const cssLink = document.querySelector(`link[href="${theme.cssUrl}"]`);
+      if (cssLink) {
+        cssLink.remove();
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error uninstalling theme:", error);
+    return false;
   }
 };

@@ -1,9 +1,25 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
-import { themes } from './theme-definitions';
-import { getAvailableExternalThemes, loadExternalTheme } from './theme-loader';
-import { ThemeConfig, ThemeContextType, ThemeType } from './theme-types';
+import { themes } from "./theme-definitions";
+import {
+  getAvailableExternalThemes,
+  installTheme as installThemeFromUrl,
+  loadExternalTheme,
+  uninstallTheme as uninstallThemeById,
+} from "./theme-loader";
+import {
+  ThemeConfig,
+  ThemeContextType,
+  ThemeInstallResult,
+  ThemeType,
+} from "./theme-types";
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -20,6 +36,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setPrimaryColor: () => {},
   loadTheme: async () => false,
   availableExternalThemes: [],
+  installTheme: async () => ({ success: false }),
+  uninstallTheme: async () => false,
 });
 
 export const useTheme = () => useContext(ThemeContext);
@@ -92,8 +110,25 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load available external themes
   useEffect(() => {
-    const externalThemes = getAvailableExternalThemes();
-    setAvailableExternalThemes(externalThemes.map((theme) => theme.id));
+    const loadAvailableThemes = () => {
+      const externalThemes = getAvailableExternalThemes();
+      setAvailableExternalThemes(externalThemes.map((theme) => theme.id));
+    };
+
+    // Initial load
+    loadAvailableThemes();
+
+    // Set up a storage event listener to catch changes from other tabs
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "installed-themes") {
+        loadAvailableThemes();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const setTheme = (newTheme: ThemeType) => {
@@ -158,6 +193,71 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       // On error, revert to the previous theme
       setTheme(previousTheme);
       toast.error(`Error loading theme: ${themeId}`);
+      return false;
+    }
+  };
+
+  // Install a theme from a URL
+  const installTheme = async (
+    manifestUrl: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const result = await installThemeFromUrl(manifestUrl);
+
+      if (result.success) {
+        // Refresh the list of available themes
+        const externalThemes = getAvailableExternalThemes();
+        setAvailableExternalThemes(externalThemes.map((theme) => theme.id));
+        toast.success("Theme installed successfully");
+        return { success: true };
+      }
+
+      toast.error(result.error || "Failed to install theme");
+      return result;
+    } catch (error) {
+      console.error("Error installing theme:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Error installing theme: ${errorMessage}`);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  // Uninstall a theme by ID
+  const uninstallTheme = async (themeId: string): Promise<boolean> => {
+    try {
+      // If the theme being uninstalled is the current theme, switch to light theme
+      if (theme === themeId) {
+        setTheme("light");
+      }
+
+      const success = await uninstallThemeById(themeId);
+
+      if (success) {
+        // Remove from loaded themes
+        setAllThemes((prev) => {
+          const newThemes = { ...prev };
+          delete newThemes[themeId];
+          return newThemes;
+        });
+
+        // Refresh available themes list
+        const externalThemes = getAvailableExternalThemes();
+        setAvailableExternalThemes(externalThemes.map((theme) => theme.id));
+
+        toast.success("Theme uninstalled successfully");
+        return true;
+      }
+
+      toast.error("Failed to uninstall theme");
+      return false;
+    } catch (error) {
+      console.error("Error uninstalling theme:", error);
+      toast.error(
+        `Error uninstalling theme: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
       return false;
     }
   };
@@ -265,6 +365,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         setPrimaryColor,
         loadTheme,
         availableExternalThemes,
+        installTheme,
+        uninstallTheme,
       }}
     >
       {children}

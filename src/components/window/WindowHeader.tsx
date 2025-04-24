@@ -1,8 +1,8 @@
-import { Grip } from 'lucide-react';
-import React from 'react';
+import { Grip } from "lucide-react";
+import React from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { getDecorator } from '@/lib/window-decorators';
+import { useTheme } from "@/lib/ThemeProvider";
+import { getDecorator, getDecoratorFromConfig } from "@/lib/window-decorators";
 
 interface WindowControlsProps {
   onMinimize: () => void;
@@ -61,8 +61,13 @@ interface WindowHeaderProps {
 }
 
 export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
-  const { theme } = useTheme();
-  const decorator = getDecorator(theme);
+  const { theme, themes } = useTheme();
+
+  // Get the current theme's config
+  const themeConfig = themes[theme];
+
+  // Use getDecoratorFromConfig if we have external themes
+  const decorator = getDecoratorFromConfig(theme, themeConfig);
 
   // For BeOS theme, hide the in-window header when maximized
   // The global tab bar will serve as the header

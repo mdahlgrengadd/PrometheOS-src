@@ -4,7 +4,8 @@ export type ThemeType =
   | "dark"
   | "macos"
   | "windows"
-  | "fluxbox";
+  | "fluxbox"
+  | string; // Allow for dynamic theme IDs
 
 export interface ThemeConfig {
   id: ThemeType;
@@ -14,12 +15,39 @@ export interface ThemeConfig {
   paddingConfig?: {
     windowContent: number;
   };
+  // Additional properties for external themes
+  version?: string;
+  author?: string;
+  description?: string;
+  preview?: string;
+  decoratorModule?: unknown; // Loaded decorator module reference
+}
+
+export interface ExternalThemeManifest {
+  id: string;
+  name: string;
+  author: string;
+  version: string;
+  description: string;
+  cssUrl: string;
+  preview: string;
+  desktopBackground: string;
+  decoratorPath: string;
+  cssVariables: Record<string, string>;
+  paddingConfig?: {
+    windowContent: number;
+  };
+}
+
+export interface ThemeInstallResult {
+  success: boolean;
+  error?: string;
 }
 
 export interface ThemeContextType {
   theme: ThemeType;
   setTheme: (theme: ThemeType) => void;
-  themes: Record<ThemeType, ThemeConfig>;
+  themes: Record<string, ThemeConfig>;
   setPadding: (padding: number) => void;
   padding: number;
   wallpaper: string | null;
@@ -30,4 +58,6 @@ export interface ThemeContextType {
   setPrimaryColor: (color: string) => void;
   loadTheme: (themeId: string) => Promise<boolean>;
   availableExternalThemes: string[];
+  installTheme: (manifestUrl: string) => Promise<ThemeInstallResult>;
+  uninstallTheme: (themeId: string) => Promise<boolean>;
 }
