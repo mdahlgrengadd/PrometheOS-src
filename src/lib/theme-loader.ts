@@ -98,15 +98,59 @@ const loadThemeCSS = async (cssUrl: string): Promise<void> => {
   });
 };
 
-// Load decorator module for a theme
+// Load decorator module for a theme using a script tag
 const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
-  try {
-    const module = await import(/* @vite-ignore */ decoratorPath);
-    return module.default || module;
-  } catch (error) {
-    console.error(`Failed to load decorator from ${decoratorPath}`, error);
-    return null;
+  // Check if the script is already loaded
+  const existingScript = document.querySelector(
+    `script[data-decorator="${decoratorPath}"]`
+  );
+  if (existingScript) {
+    // Extract the class name from the path (e.g., "Win95Decorator" from "/themes/win95/decorator.js")
+    const pathParts = decoratorPath.split("/");
+    const theme = pathParts[pathParts.length - 2]; // Get the theme name (e.g., "win95")
+    const decoratorClassName =
+      theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
+    return window[decoratorClassName];
   }
+
+  return new Promise((resolve, reject) => {
+    try {
+      const script = document.createElement("script");
+      script.src = decoratorPath;
+      script.type = "module";
+      script.dataset.decorator = decoratorPath;
+
+      script.onload = () => {
+        // Get the theme name from the path (e.g., "win95" from "/themes/win95/decorator.js")
+        const pathParts = decoratorPath.split("/");
+        const theme = pathParts[pathParts.length - 2];
+        const decoratorClassName =
+          theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
+
+        // Try to find the decorator class in the global scope
+        setTimeout(() => {
+          const decoratorClass = window[decoratorClassName];
+          if (decoratorClass) {
+            resolve(decoratorClass);
+          } else {
+            console.warn(
+              `Decorator class ${decoratorClassName} not found in global scope`
+            );
+            resolve(null);
+          }
+        }, 100); // Give a small delay for the script to be evaluated
+      };
+
+      script.onerror = () => {
+        reject(new Error(`Failed to load decorator from ${decoratorPath}`));
+      };
+
+      document.head.appendChild(script);
+    } catch (error) {
+      console.error(`Failed to load decorator from ${decoratorPath}`, error);
+      reject(error);
+    }
+  });
 };
 
 // Get all available themes from the manifest

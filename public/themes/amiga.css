@@ -1,0 +1,168 @@
+/* Amiga Workbench Theme */
+
+.amiga-window {
+  border: var(--wm-border-width) solid var(--wm-border-color);
+  border-radius: var(--wm-border-radius);
+  background-color: var(--window-background);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  font-family: "Topaz", "Courier New", monospace;
+}
+
+.amiga-window .window-header {
+  background-color: var(--window-header-background);
+  color: var(--window-header-text);
+  height: var(--wm-header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  font-weight: bold;
+  position: relative;
+  border-bottom: 1px solid #000;
+}
+
+.amiga-window .window-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  height: 1px;
+  background-color: #fff;
+}
+
+.amiga-window .window-title {
+  margin-left: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amiga-window .window-controls {
+  display: flex;
+  margin-left: auto;
+}
+
+.amiga-window .window-button {
+  width: 14px;
+  height: 14px;
+  margin-left: 3px;
+  border: 1px solid #000;
+  border-radius: 7px;
+  position: relative;
+}
+
+.amiga-window .window-close {
+  background-color: var(--wm-btn-close-bg);
+}
+
+.amiga-window .window-minimize {
+  background-color: var(--wm-btn-minimize-bg);
+}
+
+.amiga-window .window-maximize {
+  background-color: var(--wm-btn-maximize-bg);
+}
+
+.amiga-window .window-button:hover {
+  filter: brightness(110%);
+}
+
+.amiga-window .window-button:active {
+  filter: brightness(90%);
+}
+
+.amiga-window .window-content {
+  padding: 8px;
+  color: var(--window-text);
+  overflow: auto;
+}
+
+/* Taskbar / Dock */
+.amiga-taskbar {
+  background-color: var(--taskbar-bg);
+  border-top: 1px solid #000;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.amiga-taskbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1px;
+  height: 1px;
+  background-color: #fff;
+}
+
+.amiga-menu-button {
+  background-color: var(--window-header-background);
+  color: var(--window-text);
+  border: 1px solid #000;
+  padding: 2px 8px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 11px;
+  box-shadow: 1px 1px 0 #fff;
+}
+
+.amiga-menu-button:active {
+  box-shadow: none;
+  transform: translate(1px, 1px);
+}
+
+/* Desktop icons */
+.amiga-desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70px;
+  margin: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 1px #000;
+}
+
+.amiga-desktop-icon .icon-image {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 5px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.amiga-desktop-icon .icon-label {
+  font-size: 11px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  word-wrap: break-word;
+  background-color: rgba(76, 117, 255, 0.7);
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* Workbench-specific elements */
+.amiga-gadget {
+  border: 1px solid #000;
+  background-color: var(--window-header-background);
+  color: var(--window-text);
+  padding: 2px 4px;
+  font-size: 11px;
+  margin: 3px;
+  box-shadow: 1px 1px 0 #fff;
+}
+
+.amiga-gadget:active {
+  box-shadow: none;
+  transform: translate(1px, 1px);
+} 
