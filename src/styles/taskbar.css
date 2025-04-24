@@ -41,16 +41,18 @@
       color: var(--foreground);
     }
     
-    /* macOS and Windows shared styles */
-    .theme-macos &, .theme-windows & {
-      @apply backdrop-blur-lg border-t p-1;
-      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* macOS specific colors */
+    /* macOS Dock-style taskbar */
     .theme-macos & {
-      border-color: hsla(210, 20%, 80%, 0.5);
-      color: #000000;
+      width: var(--dock-width, 600px);
+      height: var(--dock-height, 64px);
+      margin: 0 auto;
+      border-radius: var(--dock-border-radius, 16px) var(--dock-border-radius, 16px) 0 0;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+      border-width: 1px;
+      border-bottom: none;
+      background-color: rgba(255, 255, 255, 0.75);
+      padding: 0.5rem 1rem;
     }
     
     /* Windows specific colors */
@@ -90,11 +92,23 @@
       height: 36px;
     }
     
-    /* Modern styles (Light, Dark, macOS) */
-    .theme-light &, .theme-dark &, .theme-macos & {
+    /* Modern styles (Light, Dark) */
+    .theme-light &, .theme-dark & {
       @apply px-3 py-1.5 rounded-md text-sm border border-transparent hover:bg-accent hover:text-accent-foreground gap-2 transition-all duration-150;
       min-width: 120px;
       height: 36px;
+      backdrop-filter: blur(8px);
+    }
+    
+    /* macOS Dock-style item */
+    .theme-macos & {
+      @apply px-3 py-1.5 rounded-xl border border-white/20 gap-2 transition-all duration-200;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+      min-width: 64px;
+      max-width: 80px;
+      background-color: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(8px);
     }
     
@@ -106,12 +120,6 @@
     /* Dark theme specific color */
     .theme-dark & {
       color: var(--foreground);
-    }
-    
-    /* macOS specific hover */
-    .theme-macos & {
-      @apply hover:bg-white/20;
-      color: #000000;
     }
     
     /* Windows style */
@@ -138,8 +146,13 @@
     transform: scale(1.05);
     
     /* Shared hover effect for modern themes */
-    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows & {
+    .theme-light &, .theme-dark & {
       @apply shadow-sm scale-105;
+    }
+    
+    /* macOS specific hover with larger scale for dock effect */
+    .theme-macos & {
+      @apply shadow-lg scale-110 bg-white/30;
     }
     
     /* Fluxbox specific hover */
@@ -153,8 +166,13 @@
     transform: scale(0.95);
     
     /* Shared active effect for modern themes */
-    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows & {
+    .theme-light &, .theme-dark & {
       @apply scale-95;
+    }
+    
+    /* macOS active effect */
+    .theme-macos & {
+      @apply scale-90;
     }
     
     /* Fluxbox specific active state */
@@ -193,9 +211,11 @@
     
     /* macOS active state */
     .theme-macos & {
-      background-color: rgba(255, 255, 255, 0.3) !important;
+      background-color: rgba(255, 255, 255, 0.5) !important;
       color: #000000 !important;
-      @apply border-white/30;
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      @apply scale-105;
       opacity: 1 !important;
     }
     
@@ -232,14 +252,33 @@
       @apply w-5 h-5 text-muted-foreground;
     }
     
-    /* macOS and Windows icons */
-    .theme-macos &, .theme-windows & {
+    /* macOS icon - larger for the dock */
+    .theme-macos & {
+      width: var(--dock-icon-size, 32px);
+      height: var(--dock-icon-size, 32px);
+      @apply opacity-90;
+    }
+    
+    /* Windows icons */
+    .theme-windows & {
       @apply w-5 h-5 opacity-80;
     }
     
     /* Fluxbox icon */
     .theme-fluxbox & {
       @apply w-4 h-4 mr-1 opacity-80;
+    }
+  }
+  
+  /* Taskbar item label - for macOS dock */
+  .taskbar-item-label {
+    /* macOS specific styling */
+    .theme-macos & {
+      font-size: 0.75rem;
+      margin-top: var(--dock-item-gap, 8px);
+      color: var(--window-header-text, #333333);
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+      max-width: 100%;
     }
   }
   
@@ -263,7 +302,7 @@
     
     /* macOS separator */
     .theme-macos & {
-      @apply w-px h-6 bg-black/20 mx-2;
+      @apply w-px h-8 bg-black/10 mx-3;
     }
     
     /* Windows separator */
@@ -298,10 +337,24 @@
     }
     
     /* Common modern start button properties */
-    .theme-light &, .theme-dark &, .theme-macos &, .theme-windows &, .theme-fluxbox & {
+    .theme-light &, .theme-dark &, .theme-windows &, .theme-fluxbox & {
       @apply font-medium px-4 flex items-center mr-auto ml-1 transition-all duration-200;
       height: 36px;
       opacity: 1 !important;
+    }
+    
+    /* macOS start button - circular */
+    .theme-macos & {
+      background-color: var(--accent-primary, #007aff) !important;
+      color: white !important;
+      @apply rounded-full flex items-center justify-center;
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      padding: 0;
+      margin: 0 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: none; /* Hide the start button in macOS as it doesn't have one */
     }
     
     /* Light theme start button */
@@ -316,13 +369,6 @@
       background-color: hsl(263.4 70% 50.4%) !important;
       color: hsl(210 20% 98%) !important;
       @apply rounded-md;
-    }
-    
-    /* macOS start button */
-    .theme-macos & {
-      background-color: rgba(0, 122, 255, 0.9) !important;
-      color: white !important;
-      @apply rounded-full;
     }
     
     /* Windows start button */
@@ -355,7 +401,8 @@
     
     /* macOS start button hover */
     .theme-macos & {
-      background-color: rgba(0, 122, 255, 1) !important;
+      @apply scale-110;
+      background-color: var(--accent-primary, #007aff) !important;
     }
     
     /* Windows start button hover */

@@ -62,7 +62,7 @@ export default {
         "beos-yellow": "#ffcb06",
         "beos-darkgrey": "#333333",
         "beos-lightgrey": "#989898",
-        window: "var(--window-bg)",
+        window: "var(--window-background)",
         "window-border": "var(--window-border)",
       },
       borderRadius: {

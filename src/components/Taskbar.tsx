@@ -1,11 +1,11 @@
-import { Clock, Home, Maximize2, Minimize2, Monitor, Wifi } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Clock, Home, Maximize2, Minimize2, Monitor, Wifi } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { useWindowStore } from "@/store/windowStore";
-import { WindowState } from "@/types/window";
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
 
-import { useWebRTCStatus } from "../hooks/useWebRTCStatus";
+import { useWebRTCStatus } from '../hooks/useWebRTCStatus';
 
 interface TaskbarProps {
   onWindowClick: (id: string) => void;
@@ -16,6 +16,7 @@ const Taskbar: React.FC<TaskbarProps> = ({ onWindowClick }) => {
   const { theme } = useTheme();
   const { isConnected } = useWebRTCStatus();
   const isBeOSTheme = theme === "beos";
+  const isMacOSTheme = theme === "macos";
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -190,6 +191,12 @@ const Taskbar: React.FC<TaskbarProps> = ({ onWindowClick }) => {
             opacity: 1;
           }
         }
+        .taskbar-item-label {
+          font-size: 0.75rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       `;
       document.head.appendChild(styleElement);
     }
@@ -271,7 +278,63 @@ const Taskbar: React.FC<TaskbarProps> = ({ onWindowClick }) => {
     );
   }
 
-  // Modern style taskbar
+  // macOS style dock
+  if (isMacOSTheme) {
+    return (
+      <div
+        className={taskbarClasses}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <button className="taskbar-start" onClick={toggleStartMenu}>
+          <Home className="w-5 h-5" />
+        </button>
+
+        {startMenuIframe}
+
+        <div className="taskbar-separator"></div>
+
+        <div className="flex-1 flex justify-center">
+          {windows.map(
+            (window) =>
+              window.isOpen && (
+                <button
+                  key={window.id}
+                  className={`taskbar-item ${
+                    window.isOpen && !window.isMinimized ? "active" : ""
+                  }`}
+                  onClick={() => onWindowClick(window.id)}
+                >
+                  <Monitor className="taskbar-item-icon" />
+                  <span className="taskbar-item-label">{window.title}</span>
+                </button>
+              )
+          )}
+        </div>
+
+        <div className="taskbar-separator"></div>
+
+        {isConnected && (
+          <>
+            <div
+              className="flex items-center px-2 text-green-500"
+              title="Connected to Session"
+            >
+              <Wifi className="w-4 h-4" />
+            </div>
+            <div className="taskbar-separator"></div>
+          </>
+        )}
+
+        <div className="flex items-center px-3 font-medium">
+          <Clock className="w-4 h-4 mr-2 text-primary" />
+          <span>{formattedTime}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Default/modern style taskbar
   return (
     <div
       className={taskbarClasses}

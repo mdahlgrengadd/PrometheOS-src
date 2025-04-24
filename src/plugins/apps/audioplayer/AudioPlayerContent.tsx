@@ -1,20 +1,9 @@
-import { Howl, Howler } from "howler";
-import {
-  List,
-  Pause,
-  Play,
-  SkipBack,
-  SkipForward,
-  Volume,
-  VolumeX,
-} from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Howl, Howler } from 'howler';
+import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import {
-  AudioPlayerProvider,
-  useAudioPlayer,
-} from "@/components/api/ApiAudioPlayer";
-import { ApiButtonWithHandler } from "@/components/api/ApiButton";
+import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
+import { ApiButtonWithHandler } from '@/components/api/ApiButton';
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -361,12 +350,12 @@ const AudioPlayerUI = () => {
       <div className="w-full px-4 relative mb-2">
         <div
           id="bar"
-          className="w-full h-1 bg-white/30 cursor-pointer rounded-full overflow-hidden"
+          className="w-full h-1 bg-foreground/30 cursor-pointer rounded-full overflow-hidden"
           onClick={seek}
         >
           <div
             id="progress"
-            className="h-full bg-white/90 rounded-full"
+            className="h-full bg-foreground/90 rounded-full"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -375,7 +364,7 @@ const AudioPlayerUI = () => {
       {/* Controls */}
       <div className="p-2 pb-3 flex items-center justify-between">
         <button
-          className="text-white opacity-80 hover:opacity-100 transition-opacity"
+          className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
           onClick={togglePlaylist}
         >
           <List size={22} />
@@ -383,14 +372,14 @@ const AudioPlayerUI = () => {
 
         <div className="flex items-center justify-center gap-4">
           <button
-            className="text-white opacity-80 hover:opacity-100 transition-opacity"
+            className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
             onClick={onPrevious}
           >
             <SkipBack size={26} />
           </button>
 
           <button
-            className="text-white bg-white/20 w-10 h-10 rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
+            className="text-foreground bg-foreground/20 w-10 h-10 rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
             onClick={togglePlay}
           >
             {isPlaying ? (
@@ -401,7 +390,7 @@ const AudioPlayerUI = () => {
           </button>
 
           <button
-            className="text-white opacity-80 hover:opacity-100 transition-opacity"
+            className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
             onClick={onNext}
           >
             <SkipForward size={26} />
@@ -409,7 +398,7 @@ const AudioPlayerUI = () => {
         </div>
 
         <button
-          className="text-white opacity-80 hover:opacity-100 transition-opacity"
+          className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
           onClick={toggleVolumeSlider}
         >
           {isMuted ? <VolumeX size={22} /> : <Volume size={22} />}
@@ -418,12 +407,12 @@ const AudioPlayerUI = () => {
 
       {/* Playlist Overlay */}
       {showPlaylist && (
-        <div className="absolute inset-0 bg-black/60 z-20 flex flex-col">
+        <div className="absolute inset-0 bg-background/90 z-20 flex flex-col">
           <div className="flex-1 py-10 overflow-auto">
             {songs.map((song, index) => (
               <div
                 key={index}
-                className={`text-white text-lg py-3 px-6 cursor-pointer hover:bg-white/10 transition ${
+                className={`text-foreground text-lg py-3 px-6 cursor-pointer hover:bg-foreground/10 transition ${
                   index === currentTrack ? "font-bold" : "font-light"
                 }`}
                 onClick={() => playTrack(index)}
@@ -433,7 +422,7 @@ const AudioPlayerUI = () => {
             ))}
           </div>
           <button
-            className="self-center mb-6 text-white py-2 px-6 rounded-full bg-white/20 hover:bg-white/30 transition"
+            className="self-center mb-6 text-foreground py-2 px-6 rounded-full bg-foreground/20 hover:bg-foreground/30 transition"
             onClick={togglePlaylist}
           >
             Close
@@ -443,11 +432,11 @@ const AudioPlayerUI = () => {
 
       {/* Volume Slider Overlay */}
       {showVolumeSlider && (
-        <div className="absolute bottom-16 right-4 bg-black/60 p-3 rounded-lg z-20">
+        <div className="absolute bottom-16 right-4 bg-background/80 p-3 rounded-lg z-20">
           <div className="flex items-center gap-2">
             <button
               onClick={onToggleMute}
-              className="text-white opacity-80 hover:opacity-100"
+              className="text-foreground opacity-80 hover:opacity-100"
             >
               {isMuted ? <VolumeX size={16} /> : <Volume size={16} />}
             </button>
@@ -458,7 +447,7 @@ const AudioPlayerUI = () => {
               step="0.01"
               value={volume}
               onChange={handleVolumeChange}
-              className="w-32 accent-white"
+              className="w-32 accent-foreground"
             />
           </div>
         </div>

@@ -1,16 +1,15 @@
-import "./App.css";
-import "./styles/themes.css";
+import './App.css';
 
-import { useEffect } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useEffect } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import { ThemeProvider } from "@/lib/ThemeProvider";
-import { PluginProvider } from "@/plugins/PluginContext";
+import { ThemeProvider } from '@/lib/ThemeProvider';
+import { PluginProvider } from '@/plugins/PluginContext';
 
-import { WindowDndContext } from "./components/window/WindowDndContext";
-import { useViewMode } from "./hooks/useViewMode";
-import Index from "./pages/index";
-import MobileIndex from "./pages/MobileIndex";
+import { WindowDndContext } from './components/window/WindowDndContext';
+import { useViewMode } from './hooks/useViewMode';
+import Index from './pages/index';
+import MobileIndex from './pages/MobileIndex';
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (

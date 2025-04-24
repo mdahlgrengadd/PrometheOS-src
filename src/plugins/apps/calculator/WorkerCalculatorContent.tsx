@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
 
 const WorkerCalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -95,14 +95,14 @@ const WorkerCalculatorContent: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-gray-100">
+    <div className="p-4">
       <div className="flex justify-between items-center mb-2">
-        <div className="text-xs text-gray-500">Worker Calculator</div>
+        <div className="text-xs text-muted-foreground">Worker Calculator</div>
         {isCalculating && (
           <div className="text-xs text-blue-500">Computing...</div>
         )}
       </div>
-      <div className="bg-white p-2 mb-2 text-right text-xl h-10 overflow-hidden">
+      <div className="bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
         {display}
       </div>
       <div className="grid grid-cols-4 gap-1">
@@ -114,56 +114,83 @@ const WorkerCalculatorContent: React.FC = () => {
         </button>
         <button
           onClick={() => performOperation("/")}
-          className="bg-gray-300 p-2"
+          className="bg-muted p-2 text-foreground"
         >
           /
         </button>
         <button
           onClick={() => performOperation("*")}
-          className="bg-gray-300 p-2"
+          className="bg-muted p-2 text-foreground"
         >
           ×
         </button>
 
-        <button onClick={() => inputDigit("7")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("7")}
+          className="bg-card p-2 text-foreground"
+        >
           7
         </button>
-        <button onClick={() => inputDigit("8")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("8")}
+          className="bg-card p-2 text-foreground"
+        >
           8
         </button>
-        <button onClick={() => inputDigit("9")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("9")}
+          className="bg-card p-2 text-foreground"
+        >
           9
         </button>
         <button
           onClick={() => performOperation("-")}
-          className="bg-gray-300 p-2"
+          className="bg-muted p-2 text-foreground"
         >
           -
         </button>
 
-        <button onClick={() => inputDigit("4")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("4")}
+          className="bg-card p-2 text-foreground"
+        >
           4
         </button>
-        <button onClick={() => inputDigit("5")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("5")}
+          className="bg-card p-2 text-foreground"
+        >
           5
         </button>
-        <button onClick={() => inputDigit("6")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("6")}
+          className="bg-card p-2 text-foreground"
+        >
           6
         </button>
         <button
           onClick={() => performOperation("+")}
-          className="bg-gray-300 p-2"
+          className="bg-muted p-2 text-foreground"
         >
           +
         </button>
 
-        <button onClick={() => inputDigit("1")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("1")}
+          className="bg-card p-2 text-foreground"
+        >
           1
         </button>
-        <button onClick={() => inputDigit("2")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("2")}
+          className="bg-card p-2 text-foreground"
+        >
           2
         </button>
-        <button onClick={() => inputDigit("3")} className="bg-white p-2">
+        <button
+          onClick={() => inputDigit("3")}
+          className="bg-card p-2 text-foreground"
+        >
           3
         </button>
         <button
@@ -175,11 +202,11 @@ const WorkerCalculatorContent: React.FC = () => {
 
         <button
           onClick={() => inputDigit("0")}
-          className="bg-white p-2 col-span-2"
+          className="bg-card p-2 col-span-2 text-foreground"
         >
           0
         </button>
-        <button onClick={inputDecimal} className="bg-white p-2">
+        <button onClick={inputDecimal} className="bg-card p-2 text-foreground">
           .
         </button>
       </div>

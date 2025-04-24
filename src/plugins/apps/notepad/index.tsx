@@ -44,7 +44,7 @@ const NotepadComponent: React.FC = () => {
     <div className="p-4 h-full flex flex-col">
       <div className="mb-2 flex justify-between items-center">
         <h2 className="text-lg font-medium">Notepad</h2>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-muted-foreground">
           {noteContent.length} characters
         </div>
       </div>
@@ -52,7 +52,7 @@ const NotepadComponent: React.FC = () => {
       {/* API-enabled textarea for AI interaction */}
       <ApiTextareaWithHandler
         apiId="notepad-text-editor"
-        className="flex-1 w-full p-2 border border-gray-300 rounded resize-none"
+        className="flex-1 w-full p-2 border border-border rounded resize-none bg-background text-foreground"
         placeholder="Type your notes here..."
         value={noteContent}
         onChange={handleTextChange}

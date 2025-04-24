@@ -571,7 +571,7 @@ const ComponentsList: React.FC<{
             ))}
 
             {groupedComponents.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No components found matching "{searchTerm}"
               </div>
             )}
@@ -583,7 +583,7 @@ const ComponentsList: React.FC<{
               filteredComponents.map((component) => (
                 <Card
                   key={component.id}
-                  className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                  className={`cursor-pointer hover:bg-muted transition-colors ${
                     component.id === selectedComponentId ? "border-primary" : ""
                   }`}
                   onClick={() => onSelectComponent(component)}
@@ -597,7 +597,7 @@ const ComponentsList: React.FC<{
                         <CardDescription className="text-xs">
                           {component.type}
                         </CardDescription>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           {component.path}
                         </div>
                       </div>
@@ -610,7 +610,7 @@ const ComponentsList: React.FC<{
                 </Card>
               ))
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No components found matching "{searchTerm}"
               </div>
             )}
@@ -658,10 +658,10 @@ const ApiExplorerComponent: React.FC = () => {
   }, [getComponents, selectedComponent]);
 
   return (
-    <div className="h-full flex flex-col bg-white text-black p-4">
+    <div className="h-full flex flex-col bg-background text-foreground p-4">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">API Explorer</h1>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           {components.length} component{components.length !== 1 ? "s" : ""}{" "}
           available
         </div>
@@ -700,7 +700,7 @@ const ApiExplorerComponent: React.FC = () => {
                       <Badge>{selectedComponent.type}</Badge>
                       <Badge variant="outline">{selectedComponent.path}</Badge>
                     </div>
-                    <p className="mt-2 text-gray-600">
+                    <p className="mt-2 text-muted-foreground">
                       {selectedComponent.description}
                     </p>
                   </div>
@@ -710,7 +710,7 @@ const ApiExplorerComponent: React.FC = () => {
                   </ScrollArea>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-500">
+                <div className="h-full flex items-center justify-center text-muted-foreground">
                   Select a component to view details
                 </div>
               )}
@@ -727,7 +727,7 @@ const ApiExplorerComponent: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-muted-foreground text-center py-8">
                 The activity log feature is under development
               </p>
             </CardContent>

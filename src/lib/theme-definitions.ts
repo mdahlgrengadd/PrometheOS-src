@@ -7,7 +7,7 @@ const beosTheme: ThemeConfig = {
   desktopBackground: "linear-gradient(to bottom, #a0c1e0 0%, #c0d0e8 100%)",
   cssVariables: {
     // Window variables
-    "--window-bg": "#f0f0f0",
+    "--window-background": "#f0f0f0",
     "--window-border": "#888888",
     "--window-border-light": "#dddddd",
     "--window-border-lighter": "#ffffff",
@@ -28,7 +28,6 @@ const beosTheme: ThemeConfig = {
     "--button-hover": "#f0f0f0",
     "--button-active": "#d0d0d0",
     "--button-border": "#888888",
-    "--control-bg": "linear-gradient(to bottom, #f0f0f0, #d0d0d0)",
     "--control-border": "#888888",
 
     // Window header properties
@@ -48,6 +47,14 @@ const beosTheme: ThemeConfig = {
     "--dot-color-end": "#e7c01d",
     "--dot-border": "#b99100",
     "--taskbar-bg": "#ececec",
+
+    // Global app styling
+    "--app-bg": "#d0d8e8",
+    "--app-text": "#000000",
+    "--control-bg": "linear-gradient(to bottom, #f0f0f0, #d0d0d0)",
+    "--control-fg": "#000000",
+    "--slider-track": "#cccccc",
+    "--slider-thumb": "#888888",
   },
 };
 
@@ -59,35 +66,35 @@ const lightTheme: ThemeConfig = {
     "linear-gradient(to bottom right, hsl(240, 75%, 98%), hsl(240, 20%, 95%))",
   cssVariables: {
     // Window variables
-    "--window-bg": "0 0% 100%",
-    "--window-border": "240 5% 84%",
-    "--window-border-light": "240 5% 96%",
-    "--window-border-lighter": "0 0% 100%",
-    "--title-bg": "240 5% 96%",
-    "--title-hover": "240 4% 90%",
-    "--title-active": "240 5% 96%",
-    "--title-border": "240 5% 84%",
+    "--window-background": "hsl(0 0% 100%)",
+    "--window-border": "240, 5%, 84%",
+    "--window-border-light": "240, 5%, 96%",
+    "--window-border-lighter": "0, 0%, 100%",
+    "--title-bg": "240, 5%, 96%",
+    "--title-hover": "240, 4%, 90%",
+    "--title-active": "240, 5%, 96%",
+    "--title-border": "240, 5%, 84%",
 
     // Text and general colors
-    "--text-primary": "240 10% 10%",
-    "--text-secondary": "240 5% 35%",
-    "--background": "0 0% 100%",
-    "--foreground": "224 71% 4%",
+    "--text-primary": "240, 10%, 10%",
+    "--text-secondary": "240, 5%, 35%",
+    "--background": "0, 0%, 100%",
+    "--foreground": "224, 71%, 4%",
 
     // Default UI colors based on shadcn
-    "--primary": "262.1 83.3% 57.8%",
-    "--primary-foreground": "210 20% 98%",
-    "--secondary": "220 14.3% 95.9%",
-    "--secondary-foreground": "220.9 39.3% 11%",
-    "--muted": "220 14.3% 95.9%",
-    "--muted-foreground": "220 8.9% 46.1%",
-    "--accent": "220 14.3% 95.9%",
-    "--accent-foreground": "220.9 39.3% 11%",
-    "--destructive": "0 84.2% 60.2%",
-    "--destructive-foreground": "210 20% 98%",
-    "--border": "240 5.9% 90%",
-    "--input": "240 5.9% 90%",
-    "--ring": "262.1 83.3% 57.8%",
+    "--primary": "262.1, 83.3%, 57.8%",
+    "--primary-foreground": "210, 20%, 98%",
+    "--secondary": "220, 14.3%, 95.9%",
+    "--secondary-foreground": "220.9, 39.3%, 11%",
+    "--muted": "220, 14.3%, 95.9%",
+    "--muted-foreground": "220, 8.9%, 46.1%",
+    "--accent": "220, 14.3%, 95.9%",
+    "--accent-foreground": "220.9, 39.3%, 11%",
+    "--destructive": "0, 84.2%, 60.2%",
+    "--destructive-foreground": "210, 20%, 98%",
+    "--border": "240, 5.9%, 90%",
+    "--input": "240, 5.9%, 90%",
+    "--ring": "262.1, 83.3%, 57.8%",
 
     // Window header properties
     "--header-position": "absolute",
@@ -106,12 +113,19 @@ const lightTheme: ThemeConfig = {
     "--button-hover": "0 0% 96%",
     "--button-active": "0 0% 94%",
     "--button-border": "240 5% 84%",
-    "--control-bg": "220 14.3% 95.9%",
     "--control-border": "transparent",
 
     // Theme specific
     "--has-window-header-dot": "0",
     "--taskbar-bg": "hsla(0, 0%, 100%, 0.8)",
+
+    // Global app styling
+    "--app-bg": "hsl(240, 20%, 98%)",
+    "--app-text": "hsl(240, 10%, 10%)",
+    "--control-bg": "hsl(220, 14.3%, 95.9%)",
+    "--control-fg": "hsl(220.9, 39.3%, 11%)",
+    "--slider-track": "hsl(220, 14.3%, 90%)",
+    "--slider-thumb": "hsl(262.1, 83.3%, 57.8%)",
   },
 };
 
@@ -123,35 +137,35 @@ const darkTheme: ThemeConfig = {
     "linear-gradient(to bottom right, hsl(220, 13%, 18%), hsl(220, 13%, 12%))",
   cssVariables: {
     // Window variables
-    "--window-bg": "220 13% 18%",
-    "--window-border": "220 13% 15%",
-    "--window-border-light": "220 13% 20%",
-    "--window-border-lighter": "220 13% 22%",
-    "--title-bg": "220 13% 22%",
-    "--title-hover": "220 13% 24%",
-    "--title-active": "220 13% 26%",
-    "--title-border": "220 13% 15%",
+    "--window-background": "hsl(220 13% 18%)",
+    "--window-border": "220, 13%, 15%",
+    "--window-border-light": "220, 13%, 20%",
+    "--window-border-lighter": "220, 13%, 22%",
+    "--title-bg": "220, 13%, 22%",
+    "--title-hover": "220, 13%, 24%",
+    "--title-active": "220, 13%, 26%",
+    "--title-border": "220, 13%, 15%",
 
     // Text and general colors
-    "--text-primary": "220 13% 75%",
-    "--text-secondary": "220 14% 65%",
-    "--background": "220 13% 18%",
-    "--foreground": "220 13% 75%",
+    "--text-primary": "220, 13%, 75%",
+    "--text-secondary": "220, 14%, 65%",
+    "--background": "220, 13%, 18%",
+    "--foreground": "220, 13%, 75%",
 
     // Default UI colors - more muted like VS Code
-    "--primary": "210 100% 70%",
-    "--primary-foreground": "220 13% 18%",
-    "--secondary": "220 13% 25%",
-    "--secondary-foreground": "220 13% 75%",
-    "--muted": "220 13% 22%",
-    "--muted-foreground": "220 14% 55%",
-    "--accent": "210 30% 30%",
-    "--accent-foreground": "220 13% 75%",
-    "--destructive": "0 70% 50%",
-    "--destructive-foreground": "220 13% 95%",
-    "--border": "220 13% 15%",
-    "--input": "220 13% 15%",
-    "--ring": "210 100% 70%",
+    "--primary": "210, 100%, 70%",
+    "--primary-foreground": "220, 13%, 18%",
+    "--secondary": "220, 13%, 25%",
+    "--secondary-foreground": "220, 13%, 75%",
+    "--muted": "220, 13%, 22%",
+    "--muted-foreground": "220, 14%, 55%",
+    "--accent": "210, 30%, 30%",
+    "--accent-foreground": "220, 13%, 75%",
+    "--destructive": "0, 70%, 50%",
+    "--destructive-foreground": "220, 13%, 95%",
+    "--border": "220, 13%, 15%",
+    "--input": "220, 13%, 15%",
+    "--ring": "210, 100%, 70%",
 
     // Window header properties
     "--header-position": "absolute",
@@ -170,12 +184,19 @@ const darkTheme: ThemeConfig = {
     "--button-hover": "220 13% 25%",
     "--button-active": "220 13% 20%",
     "--button-border": "220 13% 15%",
-    "--control-bg": "220 13% 22%",
     "--control-border": "transparent",
 
     // Theme specific
     "--has-window-header-dot": "0",
     "--taskbar-bg": "hsla(220, 13%, 16%, 0.8)",
+
+    // Global app styling - more muted dark theme
+    "--app-bg": "hsl(220, 10%, 15%)",
+    "--app-text": "hsl(220, 13%, 75%)",
+    "--control-bg": "hsl(220, 13%, 22%)",
+    "--control-fg": "hsl(220, 13%, 75%)",
+    "--slider-track": "hsl(220, 13%, 25%)",
+    "--slider-thumb": "hsl(210, 100%, 70%)",
   },
 };
 
@@ -217,6 +238,13 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--accent-secondary": "#5ac8fa",
       "--accent-tertiary": "#b4e4ff",
 
+      // Button and control styles
+      "--button-bg": "#f8f8f8",
+      "--button-hover": "#f0f0f0",
+      "--button-active": "#e8e8e8",
+      "--button-border": "rgba(0, 0, 0, 0.1)",
+      "--control-border": "rgba(0, 0, 0, 0.15)",
+
       // Header styling
       "--header-position": "absolute",
       "--header-top": "0",
@@ -230,12 +258,27 @@ export const themes: Record<ThemeType, ThemeConfig> = {
 
       // Theme specific
       "--taskbar-bg": "hsla(210, 20%, 95%, 0.8)",
+
+      // macOS Dock styling
+      "--dock-width": "600px",
+      "--dock-height": "64px",
+      "--dock-icon-size": "32px",
+      "--dock-item-gap": "16px",
+      "--dock-border-radius": "16px",
+
+      // Global app styling
+      "--app-bg": "#f5f5f7",
+      "--app-text": "#333333",
+      "--control-bg": "#ffffff",
+      "--control-fg": "#000000",
+      "--slider-track": "#e0e0e0",
+      "--slider-thumb": "#007aff",
     },
   },
   windows: {
     id: "windows",
     name: "Windows",
-    desktopBackground: "#0078d7",
+    desktopBackground: "#c0c0c0",
     cssVariables: {
       // Window Structure
       "--wm-border-width": "1px",
@@ -254,6 +297,11 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--window-header-button-active": "#005a9e",
       "--window-resize-handle": "rgba(0, 0, 0, 0.2)",
 
+      // Windows XP style gradient titlebar
+      "--title-gradient-start": "#e0e0e0",
+      "--title-gradient-end": "#c8c8c8",
+      "--title-border": "#999999",
+
       // Control Buttons
       "--wm-btn-size": "14px",
       "--wm-btn-gap": "0",
@@ -265,6 +313,13 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--accent-primary": "#0078d7",
       "--accent-secondary": "#106ebe",
       "--accent-tertiary": "#deecf9",
+
+      // Button and control styles
+      "--button-bg": "#ece9d8",
+      "--button-hover": "#f5f4ea",
+      "--button-active": "#d8d2b8",
+      "--button-border": "#aca899",
+      "--control-border": "#7f9db9",
 
       // Header styling
       "--header-position": "absolute",
@@ -279,6 +334,14 @@ export const themes: Record<ThemeType, ThemeConfig> = {
 
       // Theme specific
       "--taskbar-bg": "hsla(210, 100%, 45%, 0.9)",
+
+      // Global app styling
+      "--app-bg": "#d4d0c8", // Classic Windows gray background
+      "--app-text": "#000000",
+      "--control-bg": "#ece9d8", // Classic Windows control background
+      "--control-fg": "#000000",
+      "--slider-track": "#c0c0c0",
+      "--slider-thumb": "#0078d7",
     },
   },
   fluxbox: {
@@ -315,6 +378,13 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--accent-secondary": "#8c7ae6",
       "--accent-tertiary": "#c8d6e5",
 
+      // Button and control styles
+      "--button-bg": "#444444",
+      "--button-hover": "#555555",
+      "--button-active": "#333333",
+      "--button-border": "#555555",
+      "--control-border": "#666666",
+
       // Header styling
       "--header-position": "absolute",
       "--header-top": "0",
@@ -328,6 +398,14 @@ export const themes: Record<ThemeType, ThemeConfig> = {
 
       // Theme specific
       "--taskbar-bg": "hsla(0, 0%, 26%, 0.9)",
+
+      // Global app styling
+      "--app-bg": "#333333",
+      "--app-text": "#eeeeee",
+      "--control-bg": "#444444",
+      "--control-fg": "#eeeeee",
+      "--slider-track": "#555555",
+      "--slider-thumb": "#8c7ae6",
     },
   },
 };

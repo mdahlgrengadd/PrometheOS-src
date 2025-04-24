@@ -24,7 +24,7 @@
     min-width: 320px;
     min-height: 200px;
     border-radius: var(--wm-border-radius, 4px);
-    background-color: var(--window-background, white);
+    background-color: var(--window-background, var(--window-bg, white));
     overflow: visible; /* Keep overflow visible so titlebar is not clipped */
     padding-top: 0; /* Space for the header */
     /* native CSS resize disabled—use your custom handle instead */
@@ -46,6 +46,15 @@
         0 14px 16px -6px rgba(0,0,0,0.2);
     }
     
+    /* Windows XP multi-layer bevel styling */
+    .theme-windows & {
+      box-shadow:
+        0 0 0 1px #ffffff,
+        0 0 0 2px #999999,
+        0 4px 8px rgba(0, 0, 0, 0.15);
+      border-radius: 0;
+    }
+    
     /* Focus state */
     &:focus-within {
       box-shadow: 0 4px 15px var(--window-shadow, rgba(0, 0, 0, 0.15));
@@ -59,6 +68,14 @@
           0 0 0 4px #dddddd,
           0 0 0 5px #888888,
           0 14px 16px -6px rgba(0,0,0,0.3);
+      }
+      
+      /* Maintain Windows bevel when focused */
+      .theme-windows & {
+        box-shadow:
+          0 0 0 1px #ffffff,
+          0 0 0 2px #999999,
+          0 4px 12px rgba(0, 0, 0, 0.2);
       }
     }
     
@@ -77,6 +94,14 @@
           0 0 0 4px #dddddd,
           0 0 0 5px #888888,
           0 14px 16px -6px rgba(0,0,0,0.4);
+      }
+      
+      /* Maintain Windows bevel when resizing */
+      .theme-windows & {
+        box-shadow:
+          0 0 0 1px #ffffff,
+          0 0 0 2px #999999,
+          0 6px 16px rgba(0, 0, 0, 0.25);
       }
     }
   }
@@ -97,7 +122,7 @@
     top: 0;
     left: 0;
     padding: var(--window-content-padding, 16px);
-    background-color: var(--window-background, white);
+    background-color: var(--window-background, var(--window-bg, white));
     color: var(--window-text, black);
     box-sizing: border-box;
   }
@@ -211,6 +236,22 @@
     background-color: var(--window-header-background, #f0f0f0);
     color: var(--window-header-text, #333);
   }
+  
+  /* Windows style title bar */
+  .theme-windows .window-header {
+    background: linear-gradient(
+      to bottom,
+      var(--title-gradient-start, #e0e0e0),
+      var(--title-gradient-end, #c8c8c8)
+    );
+    border: 1px solid var(--title-border, #999999);
+    border-bottom: none;
+    height: var(--wm-header-height, 32px);
+    color: #000000;
+    font-weight: bold;
+    border-radius: 0;
+    padding: 0.25rem 0.5rem;
+  }
 
   .window-title {
     font-weight: 500;
@@ -248,6 +289,27 @@
   .window-control:active {
     filter: brightness(0.8);
     background-color: var(--window-header-button-active, #d0d0d0);
+  }
+  
+  /* Windows style close, minimize, maximize buttons */
+  .theme-windows .window-controls {
+    gap: 2px;
+  }
+  
+  .theme-windows .window-control {
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
+    background-color: var(--title-gradient-end, #c8c8c8);
+    border: 1px solid var(--title-border, #999999);
+  }
+  
+  .theme-windows .window-control:hover {
+    background-color: var(--window-header-button-hover, #d0d0d0);
+  }
+  
+  .theme-windows .window-control:active {
+    background-color: var(--window-header-button-active, #b0b0b0);
   }
   
   /* ------------------ BeOS in-window tab styling ------------------ */

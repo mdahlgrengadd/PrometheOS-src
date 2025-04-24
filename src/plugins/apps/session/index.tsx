@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { SessionDialog } from "@/components/SessionDialog";
+import { SessionDialog } from '@/components/SessionDialog';
 
-import { Plugin, PluginManifest } from "../../types";
+import { Plugin, PluginManifest } from '../../types';
 
 export const manifest: PluginManifest = {
   id: "session",
-  name: "Session",
+  name: "P2P Session",
   version: "1.0.0",
   description: "Share your desktop with others using WebRTC",
   author: "Desktop System",
@@ -62,7 +62,7 @@ const SessionComponent: React.FC = () => {
         <SessionDialog onClose={handleClose} />
       ) : (
         <div className="h-full flex flex-col items-center justify-center">
-          <h2 className="text-xl font-semibold mb-4">Session Manager</h2>
+          <h2 className="text-xl font-semibold mb-4">P2P Session Manager</h2>
           <p className="text-gray-600 text-center mb-6">
             WebRTC connection is running in the background.
           </p>
@@ -82,7 +82,7 @@ const SessionPlugin: Plugin = {
   id: manifest.id,
   manifest,
   init: async () => {
-    console.log("Session plugin initialized");
+    console.log("P2P Session plugin initialized");
   },
   render: () => {
     return <SessionComponent />;

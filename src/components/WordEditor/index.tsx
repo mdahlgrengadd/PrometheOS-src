@@ -67,37 +67,35 @@ const WordEditor = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
-      <Menubar className="rounded-none border-b border-gray-200">
+    <div className="flex flex-col h-full bg-background text-foreground">
+      <Menubar className="rounded-none border-b border-border">
         <MenubarMenu>
           <MenubarTrigger className="font-normal">File</MenubarTrigger>
-          <MenubarContent className="bg-white border rounded-md shadow-md z-50">
-            <MenubarItem className="hover:bg-gray-100">
+          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+            <MenubarItem className="hover:bg-muted">
               New Document
               <MenubarShortcut>⌘N</MenubarShortcut>
             </MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">
+            <MenubarItem className="hover:bg-muted">
               Open...
               <MenubarShortcut>⌘O</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">
+            <MenubarItem className="hover:bg-muted">
               Save
               <MenubarShortcut>⌘S</MenubarShortcut>
             </MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">
-              Export as PDF
-            </MenubarItem>
+            <MenubarItem className="hover:bg-muted">Export as PDF</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">Print</MenubarItem>
+            <MenubarItem className="hover:bg-muted">Print</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
           <MenubarTrigger className="font-normal">Edit</MenubarTrigger>
-          <MenubarContent className="bg-white border rounded-md shadow-md z-50">
+          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
             <MenubarItem
-              className="hover:bg-gray-100"
+              className="hover:bg-muted"
               onClick={() => editor?.commands.undo()}
               disabled={!editor?.can().chain().focus().undo().run()}
             >
@@ -105,7 +103,7 @@ const WordEditor = () => {
               <MenubarShortcut>⌘Z</MenubarShortcut>
             </MenubarItem>
             <MenubarItem
-              className="hover:bg-gray-100"
+              className="hover:bg-muted"
               onClick={() => editor?.commands.redo()}
               disabled={!editor?.can().chain().focus().redo().run()}
             >
@@ -114,7 +112,7 @@ const WordEditor = () => {
             </MenubarItem>
             <MenubarSeparator />
             <MenubarItem
-              className="hover:bg-gray-100"
+              className="hover:bg-muted"
               onClick={() => {
                 editor?.chain().focus().selectAll().run();
                 document.execCommand("copy");
@@ -124,7 +122,7 @@ const WordEditor = () => {
               <MenubarShortcut>⌘C</MenubarShortcut>
             </MenubarItem>
             <MenubarItem
-              className="hover:bg-gray-100"
+              className="hover:bg-muted"
               onClick={() => {
                 editor?.chain().focus().selectAll().run();
                 document.execCommand("cut");
@@ -134,7 +132,7 @@ const WordEditor = () => {
               <MenubarShortcut>⌘X</MenubarShortcut>
             </MenubarItem>
             <MenubarItem
-              className="hover:bg-gray-100"
+              className="hover:bg-muted"
               onClick={() => document.execCommand("paste")}
             >
               Paste
@@ -145,46 +143,40 @@ const WordEditor = () => {
 
         <MenubarMenu>
           <MenubarTrigger className="font-normal">View</MenubarTrigger>
-          <MenubarContent className="bg-white border rounded-md shadow-md z-50">
-            <MenubarItem className="hover:bg-gray-100">Zoom In</MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">Zoom Out</MenubarItem>
+          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+            <MenubarItem className="hover:bg-muted">Zoom In</MenubarItem>
+            <MenubarItem className="hover:bg-muted">Zoom Out</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">Full Screen</MenubarItem>
+            <MenubarItem className="hover:bg-muted">Full Screen</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
           <MenubarTrigger className="font-normal">Format</MenubarTrigger>
-          <MenubarContent className="bg-white border rounded-md shadow-md z-50">
-            <MenubarItem className="hover:bg-gray-100">Font...</MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">
-              Paragraph...
-            </MenubarItem>
+          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+            <MenubarItem className="hover:bg-muted">Font...</MenubarItem>
+            <MenubarItem className="hover:bg-muted">Paragraph...</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">
+            <MenubarItem className="hover:bg-muted">
               Bullets & Numbering
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">
+            <MenubarItem className="hover:bg-muted">
               Headers & Footers
             </MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">
-              Page Setup...
-            </MenubarItem>
+            <MenubarItem className="hover:bg-muted">Page Setup...</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
           <MenubarTrigger className="font-normal">Help</MenubarTrigger>
-          <MenubarContent className="bg-white border rounded-md shadow-md z-50">
-            <MenubarItem className="hover:bg-gray-100">
-              Documentation
-            </MenubarItem>
-            <MenubarItem className="hover:bg-gray-100">
+          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+            <MenubarItem className="hover:bg-muted">Documentation</MenubarItem>
+            <MenubarItem className="hover:bg-muted">
               Keyboard Shortcuts
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem className="hover:bg-gray-100">
+            <MenubarItem className="hover:bg-muted">
               About Word Editor
             </MenubarItem>
           </MenubarContent>
@@ -193,11 +185,11 @@ const WordEditor = () => {
 
       <WordEditorToolbar editor={editor} />
 
-      <div className="flex-grow overflow-auto bg-white">
+      <div className="flex-grow overflow-auto bg-background">
         <WordEditorContent editor={editor} documentName={documentName} />
       </div>
 
-      <div className="border-t border-gray-200 px-4 py-1 text-xs flex justify-between items-center bg-gray-50">
+      <div className="border-t border-border px-4 py-1 text-xs flex justify-between items-center bg-muted/50">
         <div className="flex items-center space-x-4">
           <span>Words: {editor?.storage.characterCount.words() || 0}</span>
           <span>

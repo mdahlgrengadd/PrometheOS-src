@@ -28,9 +28,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <div className="p-3 border-t border-gray-200">
+    <div className="p-3 border-t border-border">
       {isTyping && (
-        <div className="text-xs text-gray-500 mb-2">
+        <div className="text-xs text-muted-foreground mb-2">
           <span className="inline-block mr-1">AI is typing</span>
           <span className="inline-flex">
             <span className="animate-bounce mx-0.5">.</span>
@@ -42,7 +42,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       <div className="flex items-end space-x-2">
         <textarea
-          className="flex-1 min-h-[40px] max-h-[120px] p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="flex-1 min-h-[40px] max-h-[120px] p-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-background text-foreground"
           placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}

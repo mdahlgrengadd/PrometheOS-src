@@ -54,9 +54,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   // Get stored background color from localStorage or use default
-  const [backgroundColor, setBackgroundColorState] = useState<string>(() => {
-    return localStorage.getItem("os-background-color") || "#6366f1";
-  });
+  const [backgroundColor, setBackgroundColorState] = useState<string | null>(
+    () => {
+      return localStorage.getItem("os-background-color") || null;
+    }
+  );
 
   // Get stored primary color from localStorage or use default
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
@@ -190,14 +192,32 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     root.style.setProperty("--wm-btn-minimize-bg", "#f1c40f");
     root.style.setProperty("--wm-btn-maximize-bg", "#2ecc71");
 
-    // Set background based on wallpaper or color
+    // Handle background via CSS variables instead of direct style manipulation
     if (wallpaper) {
-      document.body.style.background = `url(${wallpaper}) no-repeat center center fixed`;
-      document.body.style.backgroundSize = "cover";
+      // Custom wallpaper takes priority - set as background image
+      root.style.setProperty("--app-bg-image", `url(${wallpaper})`);
+      root.style.setProperty("--app-bg-size", "cover");
+      root.style.setProperty("--app-bg-position", "center center");
+      root.style.setProperty("--app-bg-repeat", "no-repeat");
+      root.style.setProperty("--app-bg-attachment", "fixed");
     } else if (wallpaper === null && backgroundColor) {
-      document.body.style.background = backgroundColor;
+      // User-selected background color - override --app-bg
+      root.style.setProperty("--app-bg", backgroundColor);
+      // Clear any background image variables
+      root.style.removeProperty("--app-bg-image");
+      root.style.removeProperty("--app-bg-size");
+      root.style.removeProperty("--app-bg-position");
+      root.style.removeProperty("--app-bg-repeat");
+      root.style.removeProperty("--app-bg-attachment");
     } else {
-      document.body.style.background = themeConfig.desktopBackground;
+      // Default to theme's --app-bg CSS variable
+      // Make sure no background image is set
+      root.style.removeProperty("--app-bg-image");
+      root.style.removeProperty("--app-bg-size");
+      root.style.removeProperty("--app-bg-position");
+      root.style.removeProperty("--app-bg-repeat");
+      root.style.removeProperty("--app-bg-attachment");
+      // Note: --app-bg is already set from theme.cssVariables above
     }
 
     // Remove all theme classes
