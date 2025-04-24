@@ -1,14 +1,14 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { useWindowStore } from '@/store/windowStore';
-import { WindowState } from '@/types/window';
+import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
-import { usePlugins } from '../plugins/PluginContext';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
-import ThemeSelector from './ThemeSelector';
-import Window from './Window';
+import { usePlugins } from "../plugins/PluginContext";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
+import ThemeSelector from "./ThemeSelector";
+import Window from "./Window";
 
 const Desktop = () => {
   const {
@@ -107,6 +107,11 @@ const Desktop = () => {
   const isBeOS = theme === "beos";
   // Only show the desktop tab bar when BeOS + maximized windows exist
   const maximizedBeOS = isBeOS && maximizedWindows.length > 0;
+
+  // Check if Webamp plugin is available
+  const hasWebampPlugin = loadedPlugins.some(
+    (plugin) => plugin.id === "webamp"
+  );
 
   return (
     <div className="desktop">

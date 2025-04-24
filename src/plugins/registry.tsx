@@ -10,6 +10,7 @@ import { manifest as fileBrowserManifest } from "./apps/filebrowser";
 import { manifest as notepadManifest } from "./apps/notepad";
 import { manifest as sessionManifest } from "./apps/session";
 import { manifest as settingsManifest } from "./apps/settings";
+import { manifest as webampManifest } from "./apps/webamp";
 import { manifest as webllmChatManifest } from "./apps/webllm-chat";
 import { manifest as wordEditorManifest } from "./apps/wordeditor";
 import {
@@ -28,6 +29,7 @@ export const staticPlugins: PluginManifest[] = [
   browserManifest,
   settingsManifest,
   wordEditorManifest,
+  webampManifest,
   webllmChatManifest,
   apiExplorerManifest,
   apiFlowEditorManifest,
