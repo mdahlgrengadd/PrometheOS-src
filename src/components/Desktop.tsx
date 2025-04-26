@@ -9,6 +9,7 @@ import DesktopIcons from "./DesktopIcons";
 import Taskbar from "./Taskbar";
 import ThemeSelector from "./ThemeSelector";
 import Window from "./Window";
+import { WindowsTaskbar } from "./windows/Taskbar";
 
 const Desktop = () => {
   const {
@@ -21,6 +22,10 @@ const Desktop = () => {
 
   // Get the current theme
   const { theme } = useTheme();
+
+  // Check if using a Windows theme
+  const isWindowsTheme =
+    theme === "win98" || theme === "winxp" || theme === "win7";
 
   // Use store as single source of truth
   const windowsDict = useWindowStore((s) => s.windows);
@@ -202,7 +207,13 @@ const Desktop = () => {
         );
       })}
 
-      <Taskbar onWindowClick={handleTaskbarWindowClick} />
+      {isWindowsTheme ? (
+        <WindowsTaskbar onWindowClick={handleTaskbarWindowClick}>
+          {/* You can add Windows taskbar content here */}
+        </WindowsTaskbar>
+      ) : (
+        <Taskbar onWindowClick={handleTaskbarWindowClick} />
+      )}
     </div>
   );
 };

@@ -5,6 +5,9 @@ export type ThemeType =
   | "macos"
   | "windows"
   | "fluxbox"
+  | "win98"
+  | "winxp"
+  | "win7"
   | string; // Allow for dynamic theme IDs
 
 export interface ThemeConfig {

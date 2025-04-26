@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from 'tailwindcss-animate';
-import { fontFamily } from 'tailwindcss/defaultTheme';
+import tailwindcssAnimate from "tailwindcss-animate";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
-import tailwindcssTypography from '@tailwindcss/typography';
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -93,11 +93,23 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        // Windows theme animations
+        "window-appear": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "taskbar-slide": {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
+        // Windows theme animations
+        "window-appear": "window-appear 0.2s ease-out",
+        "taskbar-slide": "taskbar-slide 0.3s ease-out",
       },
       textColor: {
         "taskbar-foreground": "white",

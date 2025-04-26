@@ -431,4 +431,22 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--ring": "231, 57%, 67%",
     },
   },
+  win98: {
+    id: "win98",
+    name: "Windows 98",
+    desktopBackground: "",
+    cssVariables: {},
+  },
+  winxp: {
+    id: "winxp",
+    name: "Windows XP",
+    desktopBackground: "",
+    cssVariables: {},
+  },
+  win7: {
+    id: "win7",
+    name: "Windows 7",
+    desktopBackground: "",
+    cssVariables: {},
+  },
 };

@@ -4,10 +4,14 @@ import { ThemeInstallResult } from "@/lib/theme-types";
 import { useTheme } from "@/lib/ThemeProvider";
 
 interface ThemeInstallerProps {
-  onClose: () => void;
+  onInstall?: () => void;
+  onCancel?: () => void;
 }
 
-const ThemeInstaller: React.FC<ThemeInstallerProps> = ({ onClose }) => {
+const ThemeInstaller: React.FC<ThemeInstallerProps> = ({
+  onInstall,
+  onCancel,
+}) => {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,7 @@ const ThemeInstaller: React.FC<ThemeInstallerProps> = ({ onClose }) => {
 
         // Auto close after success
         setTimeout(() => {
-          onClose();
+          onInstall?.();
         }, 1500);
       } else {
         setError(
@@ -53,7 +57,7 @@ const ThemeInstaller: React.FC<ThemeInstallerProps> = ({ onClose }) => {
       <div className="flex justify-between items-center mb-4 pb-2 border-b">
         <h2 className="text-xl font-semibold text-foreground">Install Theme</h2>
         <button
-          onClick={onClose}
+          onClick={onCancel}
           className="text-muted-foreground hover:text-foreground"
           aria-label="Close"
         >
@@ -94,7 +98,7 @@ const ThemeInstaller: React.FC<ThemeInstallerProps> = ({ onClose }) => {
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={onCancel}
             disabled={isLoading}
             className="px-3 py-1.5 border border-border rounded-md text-foreground"
           >

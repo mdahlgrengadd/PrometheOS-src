@@ -1,16 +1,23 @@
-import { DragHandlers, motion, PanInfo, useMotionValue } from 'framer-motion';
-import React, { useEffect, useRef, useState } from 'react';
+import { DragHandlers, motion, PanInfo, useMotionValue } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { cn } from '@/lib/utils';
+import { WindowsWindow } from "@/components/windows/Window";
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
 import {
-    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
-} from '@dnd-kit/core';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
-import { Resizable } from '../window/Resizable';
-import { WindowContent } from './WindowContent';
-import { WindowHeader } from './WindowHeader';
+import { Resizable } from "../window/Resizable";
+import { WindowContent } from "./WindowContent";
+import { WindowHeader } from "./WindowHeader";
 
 interface WindowShellProps {
   id: string;
@@ -57,6 +64,10 @@ export const WindowShell: React.FC<WindowShellProps> = ({
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [initialSize, setInitialSize] = useState({ width: 0, height: 0 });
   const [initialMousePos, setInitialMousePos] = useState({ x: 0, y: 0 });
+
+  // Check if using a Windows theme
+  const isWindowsTheme =
+    theme === "win98" || theme === "winxp" || theme === "win7";
 
   // For framer-motion header dragging
   const x = useMotionValue(position.x);
@@ -236,6 +247,31 @@ export const WindowShell: React.FC<WindowShellProps> = ({
   };
 
   if (!isOpen || isMinimized) return null;
+
+  // If using a Windows theme, render the WindowsWindow component
+  if (isWindowsTheme) {
+    return (
+      <WindowsWindow
+        id={id}
+        title={title}
+        zIndex={zIndex}
+        position={position}
+        size={size}
+        isMaximized={isMaximized}
+        isOpen={isOpen}
+        isMinimized={isMinimized}
+        isFocused={isFocused}
+        onClose={onClose}
+        onMinimize={onMinimize}
+        onMaximize={onMaximize}
+        onFocus={onFocus}
+        onDragEnd={onDragEnd}
+        onResize={onResize}
+      >
+        {children}
+      </WindowsWindow>
+    );
+  }
 
   return (
     <DndContext

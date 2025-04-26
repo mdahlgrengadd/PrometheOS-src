@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { toast } from "sonner";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { themes } from "./theme-definitions";
 import {
   getAvailableExternalThemes,
@@ -82,6 +84,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [primaryColor, setPrimaryColorState] = useState<string>(() => {
     return localStorage.getItem("os-primary-color") || "#a855f7";
   });
+
+  // State for CSS loading indicator
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Compute a superset of all variable names used across themes
   const allCssVariableNames = useMemo(() => {
@@ -165,13 +170,60 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Store the current theme as a fallback
     const previousTheme = theme;
 
+    // Windows-specific CSS injection
+    if (["win98", "winxp", "win7"].includes(themeId)) {
+      // Set loading state to true
+      setLoading(true);
+
+      document.getElementById("win-theme-css")?.remove();
+      const link = document.createElement("link");
+      link.id = "win-theme-css";
+      link.rel = "stylesheet";
+      link.href =
+        themeId === "win98"
+          ? "https://jdan.github.io/98.css/98.css"
+          : themeId === "winxp"
+          ? "https://botoxparty.github.io/XP.css/XP.css"
+          : "https://unpkg.com/7.css@0.13.0/dist/7.css";
+
+      // Add onload and onerror handlers
+      link.onload = () => {
+        setLoading(false);
+        toast(
+          `Windows ${
+            themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
+          } theme loaded`,
+          {
+            description: "Theme changed successfully",
+            position: "bottom-right",
+          }
+        );
+        setTheme(themeId as ThemeType);
+      };
+
+      link.onerror = () => {
+        setLoading(false);
+        toast.error(`Failed to load Windows theme`, {
+          description: "Please try again",
+          position: "bottom-right",
+        });
+        setTheme(previousTheme);
+      };
+
+      document.head.appendChild(link);
+      return true;
+    }
+
     if (allThemes[themeId]) {
       setTheme(themeId as ThemeType);
       return true;
     }
 
     try {
+      setLoading(true);
       const themeConfig = await loadExternalTheme(themeId);
+      setLoading(false);
+
       if (themeConfig) {
         setAllThemes((prev) => ({
           ...prev,
@@ -189,6 +241,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       toast.error(`Failed to load theme: ${themeId}`);
       return false;
     } catch (error) {
+      setLoading(false);
       console.error(`Error loading theme: ${themeId}`, error);
       // On error, revert to the previous theme
       setTheme(previousTheme);
@@ -262,9 +315,82 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Add scrollbar fixes for Windows themes
+  useEffect(() => {
+    // Only apply scrollbar fixes for Windows themes
+    if (!["win98", "winxp", "win7"].includes(theme)) {
+      document.getElementById("scrollbar-fixes")?.remove();
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = "scrollbar-fixes";
+
+    // Compute horizontal gutter based on theme
+    const gutterMap = {
+      win7: "8px",
+      winxp: "4px",
+      win98: "1px",
+    };
+    const gutter = gutterMap[theme as "win7" | "winxp" | "win98"];
+
+    // Preserve bottom margin in win7, otherwise remove it
+    const bottomMarginCss =
+      theme === "win7" ? "" : "margin-bottom: 0 !important;";
+
+    style.textContent = `
+      /* — existing scrollbar‐button & track fixes — */
+      .has-scrollbar::-webkit-scrollbar-button:vertical:start:increment,
+      .has-scrollbar::-webkit-scrollbar-button:vertical:end:decrement {
+        display: none !important;
+      }
+      .has-scrollbar::-webkit-scrollbar-button:vertical:start:decrement,
+      .has-scrollbar::-webkit-scrollbar-button:vertical:end:increment {
+        width: 16px !important;
+        height: 16px !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+      }
+      .has-scrollbar::-webkit-scrollbar {
+        width: 16px !important;
+        height: 16px !important;
+      }
+      .has-scrollbar::-webkit-scrollbar-corner {
+        background-color: transparent !important;
+      }
+      .has-scrollbar::-webkit-scrollbar-track {
+        margin: 0 !important;
+        background-clip: padding-box !important;
+      }
+
+      /* — adjust content‐window margins (no top gap, gutter on sides, keep bottom for win7) — */
+      .window-body.has-scrollbar {
+        margin-top: 0 !important;
+        margin-left: ${gutter} !important;
+        margin-right: ${gutter} !important;
+        ${bottomMarginCss}
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+      }
+    `;
+
+    document.head.appendChild(style);
+    return () => void style.remove();
+  }, [theme]);
+
   // Apply theme CSS variables when theme changes
   useEffect(() => {
     const root = document.documentElement;
+
+    // ⇒ RESET EVERYTHING from any prior theme
+    // Remove the entire style attribute so no old CSS-vars or inline rules remain
+    root.removeAttribute("style");
+
+    // Remove external Windows theme CSS if not using a Windows theme
+    if (!["win98", "winxp", "win7"].includes(theme)) {
+      document.getElementById("win-theme-css")?.remove();
+    }
+
     const themeConfig = allThemes[theme];
 
     if (!themeConfig) {
@@ -272,12 +398,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // 1. Clear all existing CSS variables first to avoid stale values
-    allCssVariableNames.forEach((key) => {
-      root.style.removeProperty(key);
-    });
-
-    // 2. Set all CSS variables from the theme
+    // Now set all CSS variables from the theme on a clean slate
     Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
@@ -349,6 +470,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     allCssVariableNames,
   ]);
 
+  // Determine what to render based on loading state and theme
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-lg p-6 bg-white rounded shadow-lg space-y-4">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-5/6" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+        </div>
+      );
+    }
+
+    // Add specific wrapping for Windows themes
+    if (theme === "win7") {
+      return <div className="win7">{children}</div>;
+    } else if (theme === "win98" || theme === "winxp") {
+      return <>{children}</>;
+    } else {
+      return <>{children}</>;
+    }
+  };
+
   return (
     <ThemeContext.Provider
       value={{
@@ -369,7 +515,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
         uninstallTheme,
       }}
     >
-      {children}
+      {renderContent()}
     </ThemeContext.Provider>
   );
 };
