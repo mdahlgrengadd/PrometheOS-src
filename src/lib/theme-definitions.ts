@@ -1,4 +1,4 @@
-import { ThemeConfig, ThemeType } from './theme-types';
+import { ThemeConfig, ThemeType } from "./theme-types";
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -20,7 +20,7 @@ const beosTheme: ThemeConfig = {
     // Text and general colors
     "--text-primary": "#000000",
     "--text-secondary": "#333333",
-    "--background": "#d0d8e8",
+    "--background": "hsla(216, 41%, 83%, 1)",
     "--foreground": "#000000",
 
     // Buttons and controls
@@ -55,6 +55,11 @@ const beosTheme: ThemeConfig = {
     "--control-fg": "#000000",
     "--slider-track": "#cccccc",
     "--slider-thumb": "#888888",
+
+    // for Switch unchecked/checked & focus styling:
+    "--input": "0, 0%, 91%", // ~#e8e8e8 → HSL
+    "--primary": "262.1, 83.3%, 57.8%", // match light/dark purple
+    "--ring": "262.1, 83.3%, 57.8%",
   },
 };
 
@@ -78,7 +83,7 @@ const lightTheme: ThemeConfig = {
     // Text and general colors
     "--text-primary": "240, 10%, 10%",
     "--text-secondary": "240, 5%, 35%",
-    "--background": "0, 0%, 100%",
+    "--background": "hsla(0, 0%, 100%, 1)",
     "--foreground": "224, 71%, 4%",
 
     // Default UI colors based on shadcn
@@ -149,7 +154,7 @@ const darkTheme: ThemeConfig = {
     // Text and general colors
     "--text-primary": "220, 13%, 75%",
     "--text-secondary": "220, 14%, 65%",
-    "--background": "220, 13%, 18%",
+    "--background": "hsla(220, 13%, 18%, 1)",
     "--foreground": "220, 13%, 75%",
 
     // Default UI colors - more muted like VS Code
@@ -267,12 +272,18 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--dock-border-radius": "16px",
 
       // Global app styling
+      "--background": "hsla(240, 10%, 96%, 1)",
       "--app-bg": "#f5f5f7",
       "--app-text": "#333333",
       "--control-bg": "#ffffff",
       "--control-fg": "#000000",
       "--slider-track": "#e0e0e0",
       "--slider-thumb": "#007aff",
+
+      // for Switch unchecked/checked & focus styling:
+      "--input": "0, 0%, 100%", // #ffffff
+      "--primary": "211, 100%, 50%", // #007aff → HSL ≈211,100%,50%
+      "--ring": "211, 100%, 50%",
     },
   },
   windows: {
@@ -336,12 +347,18 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--taskbar-bg": "hsla(210, 100%, 45%, 0.9)",
 
       // Global app styling
+      "--background": "hsla(39, 10%, 81%, 1)",
       "--app-bg": "#d4d0c8", // Classic Windows gray background
       "--app-text": "#000000",
       "--control-bg": "#ece9d8", // Classic Windows control background
       "--control-fg": "#000000",
       "--slider-track": "#c0c0c0",
       "--slider-thumb": "#0078d7",
+
+      // for Switch unchecked/checked & focus styling:
+      "--input": "51, 88%, 88%", // ~#ece9d8
+      "--primary": "207, 100%, 58%", // #0078d7 → HSL ≈207,100%,58%
+      "--ring": "207, 100%, 58%",
     },
   },
   fluxbox: {
@@ -400,12 +417,18 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--taskbar-bg": "hsla(0, 0%, 26%, 0.9)",
 
       // Global app styling
+      "--background": "hsla(0, 0%, 20%, 1)",
       "--app-bg": "#333333",
       "--app-text": "#eeeeee",
       "--control-bg": "#444444",
       "--control-fg": "#eeeeee",
       "--slider-track": "#555555",
       "--slider-thumb": "#8c7ae6",
+
+      // for Switch unchecked/checked & focus styling:
+      "--input": "0, 0%, 27%", // #444444
+      "--primary": "231, 57%, 67%", // #546de5 → HSL ≈231,57%,67%
+      "--ring": "231, 57%, 67%",
     },
   },
 };

@@ -307,3 +307,32 @@ html, body, #root {
   -ms-user-select: text;
   user-select: text;
 }
+
+/* —————————————————————————————————————
+   GLOBAL SWITCH FIX FOR ALL THEMES
+   ————————————————————————————————————— */
+
+[role="switch"] {
+  /* make sure it stays a flex container with items at the edges */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+[role="switch"] span {
+  /* enforce exact dimensions & perfect circle */
+  width: 1.25rem !important;   /* 20px */
+  height: 1.25rem !important;  /* 20px */
+  border-radius: 9999px !important;
+  transition: transform 0.2s !important;
+}
+
+/* unchecked = thumb on the left */
+[role="switch"][data-state="unchecked"] span {
+  transform: translateX(0) !important;
+}
+
+/* checked = thumb on the right */
+[role="switch"][data-state="checked"] span {
+  transform: translateX(1.25rem) !important; /* move it 20px over */
+}

@@ -112,3 +112,13 @@
     color: var(--foreground);
   }
 }
+
+/* make .bg-background work with hsla() values */
+@layer utilities {
+  .bg-background {
+    /* Use the complete hsla() value */
+    background-color: var(--background);
+  }
+} 
+
+

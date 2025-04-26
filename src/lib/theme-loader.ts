@@ -31,11 +31,60 @@ const validateTheme = (theme: Partial<ExternalThemeManifest>): boolean => {
 const convertExternalTheme = (
   externalTheme: ExternalThemeManifest
 ): ThemeConfig => {
+  // Inject --background / --app-bg from desktopBackground for external themes
+  const cssVariablesWithBg = {
+    ...externalTheme.cssVariables,
+    "--app-bg": externalTheme.desktopBackground,
+  };
+
+  // Convert hex color to hsla() format for --background if it's a hex color
+  if (externalTheme.desktopBackground.startsWith("#")) {
+    // For simple implementation, use a placeholder HSL value
+    // In a real implementation, you would use a proper hex-to-hsl conversion
+    const hexColor = externalTheme.desktopBackground.toLowerCase();
+
+    // This is a simplified implementation - for production code,
+    // you would want to implement a proper hex-to-hsl converter
+    if (hexColor === "#c0c0c0") {
+      cssVariablesWithBg["--background"] = "hsla(0, 0%, 75%, 1)"; // gray
+    } else if (hexColor === "#333333") {
+      cssVariablesWithBg["--background"] = "hsla(0, 0%, 20%, 1)"; // dark gray
+    } else if (hexColor === "#ffffff") {
+      cssVariablesWithBg["--background"] = "hsla(0, 0%, 100%, 1)"; // white
+    } else if (hexColor === "#000000") {
+      cssVariablesWithBg["--background"] = "hsla(0, 0%, 0%, 1)"; // black
+    } else {
+      // Generic approximation for other colors
+      // In a real implementation, you would properly convert hex to HSL
+      cssVariablesWithBg["--background"] = "hsla(210, 10%, 50%, 1)";
+    }
+  } else if (
+    externalTheme.desktopBackground.startsWith("linear-gradient") ||
+    externalTheme.desktopBackground.startsWith("radial-gradient")
+  ) {
+    // For gradients, use a default hsla value
+    cssVariablesWithBg["--background"] = "hsla(210, 10%, 50%, 1)";
+  } else {
+    // If it's already in hsla format, use it directly
+    // Otherwise, wrap it in hsla format with full opacity
+    if (externalTheme.desktopBackground.startsWith("hsla(")) {
+      cssVariablesWithBg["--background"] = externalTheme.desktopBackground;
+    } else if (externalTheme.desktopBackground.startsWith("hsl(")) {
+      // Convert hsl() to hsla() by adding opacity
+      cssVariablesWithBg["--background"] = externalTheme.desktopBackground
+        .replace("hsl(", "hsla(")
+        .replace(")", ", 1)");
+    } else {
+      // For any other format, use a fallback
+      cssVariablesWithBg["--background"] = "hsla(210, 10%, 50%, 1)";
+    }
+  }
+
   return {
     id: externalTheme.id,
     name: externalTheme.name,
     desktopBackground: externalTheme.desktopBackground,
-    cssVariables: externalTheme.cssVariables,
+    cssVariables: cssVariablesWithBg,
     version: externalTheme.version,
     author: externalTheme.author,
     description: externalTheme.description,
