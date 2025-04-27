@@ -6,17 +6,47 @@
     overflow: hidden;
     padding: 0;
     transition: background-color 0.3s ease;
+    /* Make sure the desktop is a positioned parent for absolute children */
+    position: relative;
+    width: 100%;
+    height: 100%;
 
     /* Background is set through JavaScript by ThemeProvider */
   }
 
   .desktop-icons {
+    /* Position icons absolutely to take them out of normal flow */
+    position: absolute;
+    top: 36px;      /* Space for window tab bar */
+    left: 0;
+    right: 0;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(auto-fill, 80px);
     grid-gap: 16px;
     padding: 48px 24px;
-    margin-top: 36px; /* Space for window tab bar */
+    pointer-events: auto;    
   }
+
+  /* Wrapper for all Window instances */
+  .windows-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: var(--taskbar-height, 48px);
+    z-index: 2;
+    pointer-events: none;  /* let each window handle its own events */
+  }
+
+  /* ensure each Window is still absolute inside that wrapper */
+/* opt every real window container back in */
+.windows-wrapper .window,
+.windows-wrapper .window *,
+.windows-wrapper .draggable-window,
+.windows-wrapper .draggable-window * {
+  pointer-events: auto !important;
+}
 
   /* Base desktop icon styles using CSS variables - applies to all themes including external ones */
   .desktop-icon {
@@ -195,3 +225,4 @@
     }
   }
 }
+

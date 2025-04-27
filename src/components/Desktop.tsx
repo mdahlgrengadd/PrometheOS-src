@@ -1,14 +1,14 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { useWindowStore } from '@/store/windowStore';
-import { WindowState } from '@/types/window';
+import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
-import { usePlugins } from '../plugins/PluginContext';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
-import ThemeSelector from './ThemeSelector';
-import Window from './Window';
+import { usePlugins } from "../plugins/PluginContext";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
+import ThemeSelector from "./ThemeSelector";
+import Window from "./Window";
 
 const Desktop = () => {
   const {
@@ -174,33 +174,36 @@ const Desktop = () => {
         </div>
       )}
 
+      {/* Desktop Icons Layer - only visible when showIcons is true */}
       <DesktopIcons openWindow={openWindow} />
 
-      {/* Windows are now self-managed with framer-motion */}
-      {openWindows.map((w) => {
-        // Look up the matching plugin and re-render its content
-        const plugin = loadedPlugins.find((p) => p.id === w.id);
-        const content = plugin ? plugin.render() : w.content;
+      {/* Windows Layer - absolute positioned, won't move when icons visibility changes */}
+      <div className="windows-wrapper">
+        {openWindows.map((w) => {
+          // Look up the matching plugin and re-render its content
+          const plugin = loadedPlugins.find((p) => p.id === w.id);
+          const content = plugin ? plugin.render() : w.content;
 
-        // Spread in fresh content for this render pass
-        const winWithContent = { ...w, content };
+          // Spread in fresh content for this render pass
+          const winWithContent = { ...w, content };
 
-        return (
-          <Window
-            key={winWithContent.id}
-            window={winWithContent}
-            allWindows={windows}
-            onClose={() => closeWindow(winWithContent.id)}
-            onMinimize={() => minimizeWindow(winWithContent.id)}
-            onMaximize={() => maximizeWindow(winWithContent.id)}
-            onFocus={() => focusWin(winWithContent.id)}
-            onDragStop={(position) =>
-              updateWindowPosition(winWithContent.id, position)
-            }
-            onTabClick={handleTabClick}
-          />
-        );
-      })}
+          return (
+            <Window
+              key={winWithContent.id}
+              window={winWithContent}
+              allWindows={windows}
+              onClose={() => closeWindow(winWithContent.id)}
+              onMinimize={() => minimizeWindow(winWithContent.id)}
+              onMaximize={() => maximizeWindow(winWithContent.id)}
+              onFocus={() => focusWin(winWithContent.id)}
+              onDragStop={(position) =>
+                updateWindowPosition(winWithContent.id, position)
+              }
+              onTabClick={handleTabClick}
+            />
+          );
+        })}
+      </div>
 
       <Taskbar onWindowClick={handleTaskbarWindowClick} />
     </div>

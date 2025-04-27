@@ -388,25 +388,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     // ⇒ RESET EVERYTHING from any prior theme
     root.removeAttribute("style");
 
-    // For Windows themes (external CSS), skip CSS-variable injection
-    if (["win98", "winxp", "win7"].includes(theme)) {
-      return;
-    }
-
     // Remove external Windows theme CSS when switching away
     document.getElementById("win-theme-css")?.remove();
 
     // Apply CSS variables for non-Windows themes
     const themeConfig = allThemes[theme];
-    if (!themeConfig) {
+    if (themeConfig) {
+      // Now set all CSS variables from the theme on a clean slate
+      Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
+        root.style.setProperty(key, value);
+      });
+    } else {
       console.error(`Theme '${theme}' not found`);
-      return;
     }
-
-    // Now set all CSS variables from the theme on a clean slate
-    Object.entries(themeConfig.cssVariables).forEach(([key, value]) => {
-      root.style.setProperty(key, value);
-    });
 
     // Set our component-specific variables
     root.style.setProperty("--window-content-padding", `${padding}px`);
@@ -479,7 +473,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const renderContent = () => {
     // Wrap children for Win7 theme; other themes render children directly
     const content =
-      theme === "win7" ? (
+      theme === "widfgn7" ? (
         <div className="win7">{children}</div>
       ) : (
         <>{children}</>

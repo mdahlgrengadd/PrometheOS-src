@@ -1,4 +1,4 @@
-import { DragHandlers, motion } from "framer-motion";
+import { DragHandlers, motion, useDragControls } from "framer-motion";
 import React, { useRef } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
@@ -45,7 +45,7 @@ export function WindowsWindow({
   onClose,
   onMinimize,
   onMaximize,
-  controls = ["minimize", "maximize", "close"],
+  controls: controlList = ["minimize", "maximize", "close"], // ← renamed
   controlsPosition = "right",
   active = false,
   activeOnHover,
@@ -69,6 +69,7 @@ export function WindowsWindow({
   const [hovered, setHovered] = React.useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const controls = useDragControls();
   const [isDragging, setIsDragging] = React.useState(false);
 
   // Determine if this is a Windows theme
@@ -81,38 +82,18 @@ export function WindowsWindow({
   // Set active state based on hover or explicit active prop
   const isActive = shouldActivateOnHover ? hovered : active;
 
-  // For framer-motion header dragging
-  const x = position?.x ?? 0;
-  const y = position?.y ?? 0;
-
   // Handle drag start
   const handleDragStart: DragHandlers["onDragStart"] = () => {
     setIsDragging(true);
     onFocus();
   };
-
-  // Handle drag
-  const handleDrag: DragHandlers["onDrag"] = (event, info) => {
-    if (position && windowRef.current) {
-      // Update the window position based on the drag
-      const newX = position.x + info.offset.x;
-      const newY = position.y + info.offset.y;
-      windowRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
-    }
-  };
-
-  // Handle drag end
+  // on release, persist position
   const handleDragEnd: DragHandlers["onDragEnd"] = (_e, info) => {
     setIsDragging(false);
-
-    if (position && onDragEnd) {
-      // Calculate new position
-      const newX = position.x + info.offset.x;
-      const newY = position.y + info.offset.y;
-
-      // Update position in store
-      onDragEnd({ x: newX, y: newY });
-    }
+    onDragEnd({
+      x: (position?.x || 0) + info.offset.x,
+      y: (position?.y || 0) + info.offset.y,
+    });
   };
 
   const renderControl = (control: "minimize" | "maximize" | "close") => {
@@ -134,22 +115,23 @@ export function WindowsWindow({
     );
   };
 
-  const controlButtons = <>{controls.map(renderControl)}</>;
+  const controlButtons = <>{controlList.map(renderControl)}</>;
 
   if (!isOpen || isMinimized) return null;
 
   return (
     <motion.div
       ref={windowRef}
-      {...(shouldActivateOnHover
-        ? {
-            onMouseEnter: () => setHovered(true),
-            onMouseLeave: () => setHovered(false),
-          }
-        : {})}
+      drag
+      dragControls={controls}
+      dragListener={false}
+      dragMomentum={false}
+      dragElastic={0}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      dragTransition={{ power: 0 }}
       className={cn(
-        "window animate-window-appear hardware-accelerated",
-        "flex flex-col",
+        "window flex flex-col",
         className,
         activeTarget === "window" && isActive && "active",
         isFocused && "ring-2 ring-primary/30",
@@ -160,38 +142,20 @@ export function WindowsWindow({
         height: size?.height || height,
         zIndex,
         position: "absolute",
-        transform: `translate(${x}px, ${y}px)`,
+        transform: `translate(${position?.x}px, ${position?.y}px)`,
         willChange: isDragging ? "transform" : "auto",
       }}
-      initial={false}
-      animate={false}
     >
       {/* Title bar */}
-      <motion.div
+      <div
         ref={headerRef}
+        //onPointerDown={(e) => controls.start(e)}
         className={cn(
           "title-bar flex items-center justify-between",
           activeTarget === "titlebar" && isActive && "active",
           !isMaximized && "window-drag-handle"
         )}
         style={theme === "winxp" ? { minHeight: "1.5rem" } : undefined}
-        {...(!isMaximized
-          ? {
-              drag: true,
-              dragMomentum: false,
-              dragElastic: 0,
-              onDragStart: handleDragStart,
-              onDrag: handleDrag,
-              onDragEnd: handleDragEnd,
-              dragTransition: { power: 0 },
-            }
-          : {})}
-        onMouseDown={(e) => {
-          if ((e.target as Element).closest(".title-bar-controls")) {
-            // clicking the controls → don't initiate a drag
-            e.stopPropagation();
-          }
-        }}
       >
         {controlsPosition === "left" && (
           <div className="title-bar-controls">{controlButtons}</div>
@@ -200,7 +164,7 @@ export function WindowsWindow({
         {controlsPosition === "right" && (
           <div className="title-bar-controls">{controlButtons}</div>
         )}
-      </motion.div>
+      </div>
 
       {/* Content area */}
       <div className="window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto has-scrollbar">

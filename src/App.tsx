@@ -1,25 +1,26 @@
-import './App.css';
+import "./App.css";
 
-import { useEffect } from 'react';
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { useEffect } from "react";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 
-import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
-import { PluginProvider } from '@/plugins/PluginContext';
+import { ThemeProvider, useTheme } from "@/lib/ThemeProvider";
+import { PluginProvider } from "@/plugins/PluginContext";
 
-import { WindowDndContext } from './components/window/WindowDndContext';
-import { useViewMode } from './hooks/useViewMode';
-import Index from './pages/index';
-import MobileIndex from './pages/MobileIndex';
-import Windows7DemoPage from './pages/Windows7Demo';
-import Demo from './pages/WindowsDemo';
+import { WindowDndContext } from "./components/window/WindowDndContext";
+import { useViewMode } from "./hooks/useViewMode";
+import Index from "./pages/index";
+import MobileIndex from "./pages/MobileIndex";
+import Windows7DemoPage from "./pages/Windows7Demo";
+import Demo from "./pages/WindowsDemo";
 
 function ThemedWindowWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
 
   // Only Win7 needs to be wrapped in a .win7 class
   // Win98 and WinXP are global CSS resets that don't need a wrapper
+  console.log("ThemedWindowWrapper: ", theme);
   if (theme === "win7") {
-    return <div className="win7">{children}</div>;
+    return <div className="win7 theme-light">{children}</div>;
   }
 
   // For Win98, WinXP and other themes, just render children directly
@@ -29,9 +30,7 @@ function ThemedWindowWrapper({ children }: { children: React.ReactNode }) {
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <WindowDndContext>
-        <ThemedWindowWrapper>{children}</ThemedWindowWrapper>
-      </WindowDndContext>
+      <WindowDndContext>{children}</WindowDndContext>
     </ThemeProvider>
   );
 }
