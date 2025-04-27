@@ -5,12 +5,36 @@ import { useTheme } from "@/lib/ThemeProvider";
 import ThemeInstaller from "./ThemeInstaller";
 
 const ThemeManager: React.FC = () => {
-  const { themes, theme: activeTheme, setTheme, uninstallTheme } = useTheme();
+  const {
+    themes,
+    theme: activeTheme,
+    setTheme,
+    installTheme,
+    uninstallTheme,
+  } = useTheme();
   const [isUninstallDialogOpen, setIsUninstallDialogOpen] = useState(false);
   const [themeToUninstall, setThemeToUninstall] = useState<string | null>(null);
   const [isUninstalling, setIsUninstalling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInstallerOpen, setIsInstallerOpen] = useState(false);
+
+  // One-click install for Windows 7 theme
+  const handleInstallWin7 = async () => {
+    setError(null);
+    try {
+      const result = await installTheme("/themes/win7/manifest.json");
+      if (!result.success) {
+        setError(result.error || "Failed to install Windows 7 theme");
+        return;
+      }
+      // Activate it immediately
+      setTheme("win7");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error installing Windows 7 theme"
+      );
+    }
+  };
 
   // Split themes into built-in and external
   const builtInThemes = Object.entries(themes).filter(
@@ -67,12 +91,20 @@ const ThemeManager: React.FC = () => {
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Theme Manager</h2>
-        <button
-          onClick={() => setIsInstallerOpen(true)}
-          className="px-3 py-1.5 border border-border text-sm rounded-md"
-        >
-          Install New Theme
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleInstallWin7}
+            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md"
+          >
+            Install Windows 7
+          </button>
+          <button
+            onClick={() => setIsInstallerOpen(true)}
+            className="px-3 py-1.5 border border-border text-sm rounded-md"
+          >
+            Install New Theme
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -207,7 +239,7 @@ const ThemeManager: React.FC = () => {
 
       {isInstallerOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <ThemeInstaller onClose={() => setIsInstallerOpen(false)} />
+          <ThemeInstaller onCancel={() => setIsInstallerOpen(false)} />
         </div>
       )}
     </div>

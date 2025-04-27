@@ -1,27 +1,14 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { toast } from "sonner";
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton';
 
-import { themes } from "./theme-definitions";
+import { themes } from './theme-definitions';
 import {
-  getAvailableExternalThemes,
-  installTheme as installThemeFromUrl,
-  loadExternalTheme,
-  uninstallTheme as uninstallThemeById,
-} from "./theme-loader";
-import {
-  ThemeConfig,
-  ThemeContextType,
-  ThemeInstallResult,
-  ThemeType,
-} from "./theme-types";
+    getAvailableExternalThemes, installTheme as installThemeFromUrl, loadExternalTheme,
+    uninstallTheme as uninstallThemeById
+} from './theme-loader';
+import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './theme-types';
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -167,51 +154,50 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load an external theme
   const loadTheme = async (themeId: string): Promise<boolean> => {
-    // Store the current theme as a fallback
+    // Store current theme as a fallback
     const previousTheme = theme;
 
-    // Windows-specific CSS injection
+    // Windows-specific CSS injection (98.css, XP.css, 7.css)
     if (["win98", "winxp", "win7"].includes(themeId)) {
-      // Set loading state to true
       setLoading(true);
-
-      document.getElementById("win-theme-css")?.remove();
-      const link = document.createElement("link");
-      link.id = "win-theme-css";
-      link.rel = "stylesheet";
-      link.href =
+      const url =
         themeId === "win98"
           ? "https://jdan.github.io/98.css/98.css"
           : themeId === "winxp"
           ? "https://botoxparty.github.io/XP.css/XP.css"
           : "https://unpkg.com/7.css@0.13.0/dist/7.css";
-
-      // Add onload and onerror handlers
-      link.onload = () => {
-        setLoading(false);
-        toast(
-          `Windows ${
-            themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
-          } theme loaded`,
-          {
-            description: "Theme changed successfully",
+      // Remove existing Windows theme CSS if present
+      document.getElementById("win-theme-css")?.remove();
+      const link = document.createElement("link");
+      link.id = "win-theme-css";
+      link.rel = "stylesheet";
+      link.href = url;
+      return new Promise((resolve) => {
+        link.onload = () => {
+          setLoading(false);
+          toast(
+            `Windows ${
+              themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
+            } theme loaded`,
+            {
+              description: "Theme changed successfully",
+              position: "bottom-right",
+            }
+          );
+          setTheme(themeId as ThemeType);
+          resolve(true);
+        };
+        link.onerror = () => {
+          setLoading(false);
+          toast.error("Failed to load Windows theme", {
+            description: "Please try again",
             position: "bottom-right",
-          }
-        );
-        setTheme(themeId as ThemeType);
-      };
-
-      link.onerror = () => {
-        setLoading(false);
-        toast.error(`Failed to load Windows theme`, {
-          description: "Please try again",
-          position: "bottom-right",
-        });
-        setTheme(previousTheme);
-      };
-
-      document.head.appendChild(link);
-      return true;
+          });
+          setTheme(previousTheme);
+          resolve(false);
+        };
+        document.head.appendChild(link);
+      });
     }
 
     if (allThemes[themeId]) {
@@ -378,21 +364,36 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => void style.remove();
   }, [theme]);
 
+  // Inject Windows CSS when theme changes, only if not already loaded
+  useEffect(() => {
+    if (["win98", "winxp", "win7"].includes(theme)) {
+      // Only inject if CSS file is missing
+      if (!document.getElementById("win-theme-css")) {
+        loadTheme(theme);
+      }
+    } else {
+      // Remove Windows CSS when switching away
+      document.getElementById("win-theme-css")?.remove();
+    }
+  }, [theme, loadTheme]);
+
   // Apply theme CSS variables when theme changes
   useEffect(() => {
     const root = document.documentElement;
 
     // ⇒ RESET EVERYTHING from any prior theme
-    // Remove the entire style attribute so no old CSS-vars or inline rules remain
     root.removeAttribute("style");
 
-    // Remove external Windows theme CSS if not using a Windows theme
-    if (!["win98", "winxp", "win7"].includes(theme)) {
-      document.getElementById("win-theme-css")?.remove();
+    // For Windows themes (external CSS), skip CSS-variable injection
+    if (["win98", "winxp", "win7"].includes(theme)) {
+      return;
     }
 
-    const themeConfig = allThemes[theme];
+    // Remove external Windows theme CSS when switching away
+    document.getElementById("win-theme-css")?.remove();
 
+    // Apply CSS variables for non-Windows themes
+    const themeConfig = allThemes[theme];
     if (!themeConfig) {
       console.error(`Theme '${theme}' not found`);
       return;
@@ -470,29 +471,34 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     allCssVariableNames,
   ]);
 
-  // Determine what to render based on loading state and theme
+  // Determine what to render based on theme, and overlay loading indicator when loading
   const renderContent = () => {
+    // Wrap children for Win7 theme; other themes render children directly
+    const content =
+      theme === "win7" ? (
+        <div className="win7">{children}</div>
+      ) : (
+        <>{children}</>
+      );
+
+    // If loading, overlay the loading indicator on top of content
     if (loading) {
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="w-full max-w-lg p-6 bg-white rounded shadow-lg space-y-4">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-5/6" />
-            <Skeleton className="h-48 w-full" />
+        <>
+          {content}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="w-full max-w-lg p-6 bg-white rounded shadow-lg space-y-4">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-5/6" />
+              <Skeleton className="h-48 w-full" />
+            </div>
           </div>
-        </div>
+        </>
       );
     }
 
-    // Add specific wrapping for Windows themes
-    if (theme === "win7") {
-      return <div className="win7">{children}</div>;
-    } else if (theme === "win98" || theme === "winxp") {
-      return <>{children}</>;
-    } else {
-      return <>{children}</>;
-    }
+    return content;
   };
 
   return (

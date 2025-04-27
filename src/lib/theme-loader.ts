@@ -97,7 +97,7 @@ const convertExternalTheme = (
  * @param cssUrl The URL to the CSS file
  * @returns Promise that resolves when the CSS is loaded
  */
-const loadThemeCSS = async (cssUrl: string): Promise<void> => {
+export const loadThemeCSS = async (cssUrl: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if this CSS is already loaded
     const existingLink = document.querySelector(`link[href="${cssUrl}"]`);

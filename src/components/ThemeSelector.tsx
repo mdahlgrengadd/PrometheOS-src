@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { ThemeType } from "@/lib/theme-types";
-import { useTheme } from "@/lib/ThemeProvider";
+import { ThemeType } from '@/lib/theme-types';
+import { useTheme } from '@/lib/ThemeProvider';
 
-import ThemeInstaller from "./ThemeInstaller";
-import { WindowsDemo } from "./WindowsDemo";
+import ThemeInstaller from './ThemeInstaller';
+import { WindowsDemo } from './WindowsDemo';
 
 interface InstalledThemeItemProps {
   themeId: string;
@@ -75,6 +75,22 @@ const ThemeSelector: React.FC = () => {
 
   const handleThemeChange = async (themeId: string) => {
     setError(null);
+    // If selected a Windows theme, load its external CSS
+    if (["win98", "winxp", "win7"].includes(themeId)) {
+      setLoading(true);
+      try {
+        const success = await loadTheme(themeId);
+        if (!success) {
+          setError(`Failed to load Windows theme: ${themeId}`);
+        }
+      } catch (e) {
+        setError("Error loading Windows theme");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     // If theme is already loaded, just set it
     if (themes[themeId]) {

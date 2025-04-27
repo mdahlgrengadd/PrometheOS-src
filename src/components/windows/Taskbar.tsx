@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 
-import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 
 interface TaskbarProps {
   children?: React.ReactNode;
@@ -9,18 +9,13 @@ interface TaskbarProps {
 }
 
 export function WindowsTaskbar({ children, className }: TaskbarProps) {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
 
   // Fix status-bar class based on theme
   return (
     <div
       className={cn(
         "fixed bottom-0 left-0 right-0 z-50 animate-taskbar-slide hardware-accelerated",
-        theme === "win98"
-          ? "status-bar"
-          : theme === "winxp"
-          ? "status-bar"
-          : "status-bar",
         className
       )}
     >

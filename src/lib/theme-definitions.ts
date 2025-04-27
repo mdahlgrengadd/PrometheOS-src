@@ -1,4 +1,4 @@
-import { ThemeConfig, ThemeType } from "./theme-types";
+import { ThemeConfig, ThemeType } from './theme-types';
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -286,81 +286,6 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--ring": "211, 100%, 50%",
     },
   },
-  windows: {
-    id: "windows",
-    name: "Windows",
-    desktopBackground: "#c0c0c0",
-    cssVariables: {
-      // Window Structure
-      "--wm-border-width": "1px",
-      "--wm-border-color": "#0078d7",
-      "--wm-border-radius": "0",
-      "--wm-header-height": "32px",
-      "--wm-window-shadow": "0 4px 12px rgba(0, 0, 0, 0.15)",
-      "--window-content-padding": "16px",
-
-      // Colors
-      "--window-background": "#ffffff",
-      "--window-text": "#000000",
-      "--window-header-background": "#0078d7",
-      "--window-header-text": "#ffffff",
-      "--window-header-button-hover": "#106ebe",
-      "--window-header-button-active": "#005a9e",
-      "--window-resize-handle": "rgba(0, 0, 0, 0.2)",
-
-      // Windows XP style gradient titlebar
-      "--title-gradient-start": "#e0e0e0",
-      "--title-gradient-end": "#c8c8c8",
-      "--title-border": "#999999",
-
-      // Control Buttons
-      "--wm-btn-size": "14px",
-      "--wm-btn-gap": "0",
-      "--wm-btn-close-bg": "transparent",
-      "--wm-btn-minimize-bg": "transparent",
-      "--wm-btn-maximize-bg": "transparent",
-
-      // Accent Colors
-      "--accent-primary": "#0078d7",
-      "--accent-secondary": "#106ebe",
-      "--accent-tertiary": "#deecf9",
-
-      // Button and control styles
-      "--button-bg": "#ece9d8",
-      "--button-hover": "#f5f4ea",
-      "--button-active": "#d8d2b8",
-      "--button-border": "#aca899",
-      "--control-border": "#7f9db9",
-
-      // Header styling
-      "--header-position": "absolute",
-      "--header-top": "0",
-      "--header-left": "0",
-      "--header-height": "32px",
-      "--header-width": "100%",
-      "--header-border-radius": "0",
-      "--header-padding": "0.25rem 0.75rem",
-      "--window-padding-top": "32px",
-      "--window-border-radius": "0",
-
-      // Theme specific
-      "--taskbar-bg": "hsla(210, 100%, 45%, 0.9)",
-
-      // Global app styling
-      "--background": "hsla(39, 10%, 81%, 1)",
-      "--app-bg": "#d4d0c8", // Classic Windows gray background
-      "--app-text": "#000000",
-      "--control-bg": "#ece9d8", // Classic Windows control background
-      "--control-fg": "#000000",
-      "--slider-track": "#c0c0c0",
-      "--slider-thumb": "#0078d7",
-
-      // for Switch unchecked/checked & focus styling:
-      "--input": "51, 88%, 88%", // ~#ece9d8
-      "--primary": "207, 100%, 58%", // #0078d7 → HSL ≈207,100%,58%
-      "--ring": "207, 100%, 58%",
-    },
-  },
   fluxbox: {
     id: "fluxbox",
     name: "Linux Fluxbox",
@@ -443,10 +368,10 @@ export const themes: Record<ThemeType, ThemeConfig> = {
     desktopBackground: "",
     cssVariables: {},
   },
-  win7: {
+  /*   win7: {
     id: "win7",
     name: "Windows 7",
     desktopBackground: "",
     cssVariables: {},
-  },
+  }, */
 };
