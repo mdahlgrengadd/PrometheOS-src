@@ -471,32 +471,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Determine what to render based on theme, and overlay loading indicator when loading
   const renderContent = () => {
-    // Wrap children for Win7 theme; other themes render children directly
-    const content =
-      theme === "widfgn7" ? (
-        <div className="win7">{children}</div>
-      ) : (
-        <>{children}</>
-      );
-
-    // If loading, overlay the loading indicator on top of content
-    if (loading) {
-      return (
-        <>
-          {content}
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="w-full max-w-lg p-6 bg-white rounded shadow-lg space-y-4">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-6 w-5/6" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-          </div>
-        </>
-      );
-    }
-
-    return content;
+    return children;
   };
 
   return (
