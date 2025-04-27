@@ -1,22 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import { createNoise2D } from "simplex-noise";
+import React, { useEffect, useRef, useState } from 'react';
+import { createNoise2D } from 'simplex-noise';
 
-import { WindowsButton } from "@/components/windows/Button";
-import { WindowsCheckbox } from "@/components/windows/Checkbox";
-import { WinProgress } from "@/components/windows/Progress";
-import { WindowsRadioGroup } from "@/components/windows/RadioGroup";
-import { WindowsSwitch } from "@/components/windows/Switch";
-import {
-  WinTabs,
-  WinTabsContent,
-  WinTabsList,
-  WinTabsTrigger,
-} from "@/components/windows/Tabs";
-import { WindowsTaskbar } from "@/components/windows/Taskbar";
-import { WindowsThemeSwitcher } from "@/components/windows/ThemeSwitcher";
-import { WindowsWindow } from "@/components/windows/Window";
-import { WindowSlider } from "@/components/windows/WindowSlider";
-import { WindowsThemeProvider } from "@/providers/WindowsThemeProvider";
+import { WindowsButton } from '@/components/windows/Button';
+import { WindowsCheckbox } from '@/components/windows/Checkbox';
+import { WinProgress } from '@/components/windows/Progress';
+import { WindowsRadioGroup } from '@/components/windows/RadioGroup';
+import { WindowsSwitch } from '@/components/windows/Switch';
+import { WinTabs, WinTabsContent, WinTabsList, WinTabsTrigger } from '@/components/windows/Tabs';
+import { WindowsThemeSwitcher } from '@/components/windows/ThemeSwitcher';
+import { WindowsWindow } from '@/components/windows/Window';
+import { WindowSlider } from '@/components/windows/WindowSlider';
+import { WindowsThemeProvider } from '@/providers/WindowsThemeProvider';
 
 export default function Demo() {
   const [showWindow, setShowWindow] = useState(false);
@@ -346,11 +340,6 @@ export default function Demo() {
             </WindowsWindow>
           </div>
         )}
-
-        <WindowsTaskbar>
-          <div>Start</div>
-          <div>{currentTime}</div>
-        </WindowsTaskbar>
       </div>
     </WindowsThemeProvider>
   );

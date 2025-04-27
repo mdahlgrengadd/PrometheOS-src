@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -153,88 +153,92 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Load an external theme
-  const loadTheme = async (themeId: string): Promise<boolean> => {
-    // Store current theme as a fallback
-    const previousTheme = theme;
+  const loadTheme = useCallback(
+    async (themeId: string): Promise<boolean> => {
+      // Store current theme as a fallback
+      const previousTheme = theme;
 
-    // Windows-specific CSS injection (98.css, XP.css, 7.css)
-    if (["win98", "winxp", "win7"].includes(themeId)) {
-      setLoading(true);
-      const url =
-        themeId === "win98"
-          ? "https://jdan.github.io/98.css/98.css"
-          : themeId === "winxp"
-          ? "https://botoxparty.github.io/XP.css/XP.css"
-          : "https://unpkg.com/7.css@0.13.0/dist/7.css";
-      // Remove existing Windows theme CSS if present
-      document.getElementById("win-theme-css")?.remove();
-      const link = document.createElement("link");
-      link.id = "win-theme-css";
-      link.rel = "stylesheet";
-      link.href = url;
-      return new Promise((resolve) => {
-        link.onload = () => {
-          setLoading(false);
-          toast(
-            `Windows ${
-              themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
-            } theme loaded`,
-            {
-              description: "Theme changed successfully",
+      // Windows-specific CSS injection (98.css, XP.css, 7.css)
+      if (["win98", "winxp", "win7"].includes(themeId)) {
+        setLoading(true);
+        const url =
+          themeId === "win98"
+            ? "https://jdan.github.io/98.css/98.css"
+            : themeId === "winxp"
+            ? "https://botoxparty.github.io/XP.css/XP.css"
+            : "https://unpkg.com/7.css@0.13.0/dist/7.css";
+        // Remove existing Windows theme CSS if present
+        document.getElementById("win-theme-css")?.remove();
+        const link = document.createElement("link");
+        link.id = "win-theme-css";
+        link.rel = "stylesheet";
+        link.href = url;
+
+        return new Promise((resolve) => {
+          link.onload = () => {
+            setLoading(false);
+            toast(
+              `Windows ${
+                themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
+              } theme loaded`,
+              {
+                description: "Theme changed successfully",
+                position: "bottom-right",
+              }
+            );
+            setTheme(themeId as ThemeType);
+            resolve(true);
+          };
+          link.onerror = () => {
+            setLoading(false);
+            toast.error("Failed to load Windows theme", {
+              description: "Please try again",
               position: "bottom-right",
-            }
-          );
-          setTheme(themeId as ThemeType);
-          resolve(true);
-        };
-        link.onerror = () => {
-          setLoading(false);
-          toast.error("Failed to load Windows theme", {
-            description: "Please try again",
-            position: "bottom-right",
-          });
-          setTheme(previousTheme);
-          resolve(false);
-        };
-        document.head.appendChild(link);
-      });
-    }
+            });
+            setTheme(previousTheme);
+            resolve(false);
+          };
+          document.head.appendChild(link);
+        });
+      }
 
-    if (allThemes[themeId]) {
-      setTheme(themeId as ThemeType);
-      return true;
-    }
-
-    try {
-      setLoading(true);
-      const themeConfig = await loadExternalTheme(themeId);
-      setLoading(false);
-
-      if (themeConfig) {
-        setAllThemes((prev) => ({
-          ...prev,
-          [themeId]: themeConfig,
-        }));
+      if (allThemes[themeId]) {
         setTheme(themeId as ThemeType);
         return true;
       }
 
-      // If theme loading failed, revert to previous theme
-      console.error(
-        `Failed to load theme: ${themeId}, reverting to ${previousTheme}`
-      );
-      setTheme(previousTheme);
-      toast.error(`Failed to load theme: ${themeId}`);
-      return false;
-    } catch (error) {
-      setLoading(false);
-      console.error(`Error loading theme: ${themeId}`, error);
-      // On error, revert to the previous theme
-      setTheme(previousTheme);
-      toast.error(`Error loading theme: ${themeId}`);
-      return false;
-    }
-  };
+      try {
+        setLoading(true);
+        const themeConfig = await loadExternalTheme(themeId);
+        setLoading(false);
+
+        if (themeConfig) {
+          setAllThemes((prev) => ({
+            ...prev,
+            [themeId]: themeConfig,
+          }));
+          setTheme(themeId as ThemeType);
+          return true;
+        }
+
+        // If theme loading failed, revert to previous theme
+        console.error(
+          `Failed to load theme: ${themeId}, reverting to ${previousTheme}`
+        );
+        setTheme(previousTheme);
+        toast.error(`Failed to load theme: ${themeId}`);
+        return false;
+      } catch (error) {
+        setLoading(false);
+        console.error(`Error loading theme: ${themeId}`, error);
+        // On error, revert to the previous theme
+        setTheme(previousTheme);
+        toast.error(`Error loading theme: ${themeId}`);
+        return false;
+      }
+    },
+    [theme, setTheme, setLoading, allThemes, setAllThemes]
+  );
 
   // Install a theme from a URL
   const installTheme = async (

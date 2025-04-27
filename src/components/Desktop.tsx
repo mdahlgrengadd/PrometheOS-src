@@ -1,15 +1,14 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { useWindowStore } from "@/store/windowStore";
-import { WindowState } from "@/types/window";
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
 
-import { usePlugins } from "../plugins/PluginContext";
-import DesktopIcons from "./DesktopIcons";
-import Taskbar from "./Taskbar";
-import ThemeSelector from "./ThemeSelector";
-import Window from "./Window";
-import { WindowsTaskbar } from "./windows/Taskbar";
+import { usePlugins } from '../plugins/PluginContext';
+import DesktopIcons from './DesktopIcons';
+import Taskbar from './Taskbar';
+import ThemeSelector from './ThemeSelector';
+import Window from './Window';
 
 const Desktop = () => {
   const {
@@ -22,10 +21,6 @@ const Desktop = () => {
 
   // Get the current theme
   const { theme } = useTheme();
-
-  // Check if using a Windows theme
-  const isWindowsTheme =
-    theme === "win98" || theme === "winxp" || theme === "win7";
 
   // Use store as single source of truth
   const windowsDict = useWindowStore((s) => s.windows);
@@ -207,13 +202,7 @@ const Desktop = () => {
         );
       })}
 
-      {isWindowsTheme ? (
-        <WindowsTaskbar onWindowClick={handleTaskbarWindowClick}>
-          {/* You can add Windows taskbar content here */}
-        </WindowsTaskbar>
-      ) : (
-        <Taskbar onWindowClick={handleTaskbarWindowClick} />
-      )}
+      <Taskbar onWindowClick={handleTaskbarWindowClick} />
     </div>
   );
 };
