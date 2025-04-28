@@ -24,6 +24,9 @@ export interface ThemeConfig {
   description?: string;
   preview?: string;
   decoratorModule?: unknown; // Loaded decorator module reference
+  // New optional hooks
+  preload?: (previousTheme: ThemeType) => Promise<boolean>;
+  postload?: () => void;
 }
 
 export interface ExternalThemeManifest {
@@ -55,7 +58,7 @@ export interface ThemeContextType {
   padding: number;
   wallpaper: string | null;
   setWallpaper: (wallpaper: string | null) => void;
-  backgroundColor: string;
+  backgroundColor: string | null;
   setBackgroundColor: (color: string) => void;
   primaryColor: string;
   setPrimaryColor: (color: string) => void;

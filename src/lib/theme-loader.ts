@@ -1,13 +1,18 @@
-import {
-  isValidThemeManifest,
-  validateThemeManifest,
-} from "@/utils/validateTheme";
+import { isValidThemeManifest, validateThemeManifest } from '@/utils/validateTheme';
 
-import themeManifest from "./theme-manifest.json";
-import { ExternalThemeManifest, ThemeConfig, ThemeType } from "./theme-types";
+import themeManifest from './theme-manifest.json';
+import { ExternalThemeManifest, ThemeConfig, ThemeType } from './theme-types';
 
 // Storage keys
 const INSTALLED_THEMES_KEY = "installed-themes";
+
+// Define type for theme decorator module
+interface ThemeDecoratorModule {
+  preload?: (previousTheme: ThemeType) => Promise<boolean>;
+  postload?: () => void;
+  cleanup?: () => void;
+  [key: string]: unknown;
+}
 
 /**
  * Validate that a theme has all required fields
@@ -120,7 +125,9 @@ export const loadThemeCSS = async (cssUrl: string): Promise<void> => {
  * @param decoratorPath The path to the decorator module
  * @returns Promise that resolves with the decorator module
  */
-const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
+const loadThemeDecorator = async (
+  decoratorPath: string
+): Promise<ThemeDecoratorModule | null> => {
   // Check if the script is already loaded
   const existingScript = document.querySelector(
     `script[data-decorator="${decoratorPath}"]`
@@ -131,7 +138,11 @@ const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
     const theme = pathParts[pathParts.length - 2]; // Get the theme name (e.g., "win95")
     const decoratorClassName =
       theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
-    return (window as unknown as Record<string, unknown>)[decoratorClassName];
+    return (
+      (window as unknown as Record<string, ThemeDecoratorModule>)[
+        decoratorClassName
+      ] || null
+    );
   }
 
   return new Promise((resolve, reject) => {
@@ -152,8 +163,18 @@ const loadThemeDecorator = async (decoratorPath: string): Promise<unknown> => {
         setTimeout(() => {
           const decoratorClass = (window as unknown as Record<string, unknown>)[
             decoratorClassName
-          ];
+          ] as ThemeDecoratorModule | undefined;
+
           if (decoratorClass) {
+            // Check for newer style preload/postload exports
+            if (
+              typeof decoratorClass === "object" &&
+              (decoratorClass.preload || decoratorClass.postload)
+            ) {
+              resolve(decoratorClass);
+              return;
+            }
+
             resolve(decoratorClass);
           } else {
             console.warn(
@@ -243,12 +264,24 @@ export const loadExternalTheme = async (
       const decoratorModule = await loadThemeDecorator(
         externalTheme.decoratorPath
       );
-      themeConfig.decoratorModule = decoratorModule;
+
+      if (decoratorModule) {
+        // Store the decorator module reference
+        themeConfig.decoratorModule = decoratorModule;
+
+        // Map decorator module functions to theme config hooks
+        if (typeof decoratorModule.preload === "function") {
+          themeConfig.preload = decoratorModule.preload;
+        }
+        if (typeof decoratorModule.postload === "function") {
+          themeConfig.postload = decoratorModule.postload;
+        }
+      }
     }
 
     return themeConfig;
   } catch (error) {
-    console.error(`Failed to load theme '${themeId}'`, error);
+    console.error(`Failed to load theme '${themeId}':`, error);
     return null;
   }
 };

@@ -1,3 +1,6 @@
+import * as win7Decorator from './decorators/win7.decorator';
+import * as win98Decorator from './decorators/win98.decorator';
+import * as winxpDecorator from './decorators/winxp.decorator';
 import { ThemeConfig, ThemeType } from './theme-types';
 
 // BeOS Theme
@@ -356,86 +359,62 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--ring": "231, 57%, 67%",
     },
   },
-  /*   win98: {
+  win98: {
     id: "win98",
     name: "Windows 98",
-    desktopBackground: "",
-    cssVariables: {},
+    desktopBackground: "#008080",
+    cssVariables: {
+      // Basic window structure
+      "--window-background": "#c0c0c0",
+      "--window-border": "#808080",
+      "--text-primary": "#000000",
+      "--app-bg": "#008080",
+      // Common UI elements
+      "--taskbar-bg": "#c0c0c0",
+      "--button-bg": "#c0c0c0",
+      "--button-hover": "#c0c0c0",
+      "--button-active": "#c0c0c0",
+    },
+    preload: win98Decorator.preload,
+    postload: win98Decorator.postload,
   },
   winxp: {
     id: "winxp",
     name: "Windows XP",
-    desktopBackground: "",
-    cssVariables: {},
+    desktopBackground:
+      "linear-gradient(to bottom, #236B8E, #3A8FB7, #78CFEB, #C2E3F1)",
+    cssVariables: {
+      // Basic window structure
+      "--window-background": "#ECE9D8",
+      "--window-border": "#0054E3",
+      "--text-primary": "#000000",
+      "--app-bg": "#236B8E",
+      // Common UI elements
+      "--taskbar-bg": "linear-gradient(to bottom, #2A5889, #3A6EA5)",
+      "--button-bg": "#ECE9D8",
+      "--button-hover": "#ECE9D8",
+      "--button-active": "#ECE9D8",
+    },
+    preload: winxpDecorator.preload,
+    postload: winxpDecorator.postload,
   },
   win7: {
     id: "win7",
     name: "Windows 7",
-    desktopBackground: "",
+    desktopBackground: "linear-gradient(to bottom, #1F5D9A, #66AAD7)",
     cssVariables: {
-      // Window Structure
-      "--wm-border-width": "2px",
-      "--wm-border-color": "#333333",
-      "--wm-border-radius": "2px",
-      "--wm-header-height": "26px",
-      "--wm-window-shadow": "2px 2px 4px rgba(0, 0, 0, 0.3)",
-      "--window-content-padding": "12px",
-
-      // Colors
-      "--window-background": "#eeeeee",
-      "--window-text": "#000000",
-      "--window-header-background": "#444444",
-      "--window-header-text": "#eeeeee",
-      "--window-header-button-hover": "#555555",
-      "--window-header-button-active": "#666666",
-      "--window-resize-handle": "rgba(0, 0, 0, 0.3)",
-
-      // Control Buttons
-      "--wm-btn-size": "10px",
-      "--wm-btn-gap": "3px",
-      "--wm-btn-close-bg": "#ff6b6b",
-      "--wm-btn-minimize-bg": "#feca57",
-      "--wm-btn-maximize-bg": "#1dd1a1",
-
-      // Accent Colors
-      "--accent-primary": "#546de5",
-      "--accent-secondary": "#8c7ae6",
-      "--accent-tertiary": "#c8d6e5",
-
-      // Button and control styles
-      "--button-bg": "#444444",
-      "--button-hover": "#555555",
-      "--button-active": "#333333",
-      "--button-border": "#555555",
-      "--control-border": "#666666",
-
-      // Header styling
-      "--header-position": "absolute",
-      "--header-top": "0",
-      "--header-left": "0",
-      "--header-height": "26px",
-      "--header-width": "100%",
-      "--header-border-radius": "2px 2px 0 0",
-      "--header-padding": "0.25rem 0.5rem",
-      "--window-padding-top": "26px",
-      "--window-border-radius": "2px",
-
-      // Theme specific
-      "--taskbar-bg": "hsla(0, 0%, 26%, 0.9)",
-
-      // Global app styling
-      "--background": "hsla(0, 0%, 20%, 1)",
-      "--app-bg": "#333333",
-      "--app-text": "#eeeeee",
-      "--control-bg": "#444444",
-      "--control-fg": "#eeeeee",
-      "--slider-track": "#555555",
-      "--slider-thumb": "#8c7ae6",
-
-      // for Switch unchecked/checked & focus styling:
-      "--input": "0, 0%, 27%", // #444444
-      "--primary": "231, 57%, 67%", // #546de5 → HSL ≈231,57%,67%
-      "--ring": "231, 57%, 67%",
+      // Basic window structure
+      "--window-background": "#FFFFFF",
+      "--window-border": "#AAAAAA",
+      "--text-primary": "#000000",
+      "--app-bg": "#1F5D9A",
+      // Common UI elements
+      "--taskbar-bg": "linear-gradient(to bottom, #2B5D97, #3A73B7, #2B5D97)",
+      "--button-bg": "#E1E1E1",
+      "--button-hover": "#E5F1FB",
+      "--button-active": "#CCE4F7",
     },
-  }, */
+    preload: win7Decorator.preload,
+    postload: win7Decorator.postload,
+  },
 };

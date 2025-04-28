@@ -158,66 +158,111 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       // Store current theme as a fallback
       const previousTheme = theme;
 
-      // Windows-specific CSS injection (98.css, XP.css, 7.css)
-      if (["win98", "winxp", "win7"].includes(themeId)) {
-        setLoading(true);
-        const url =
-          themeId === "win98"
-            ? "https://jdan.github.io/98.css/98.css"
-            : themeId === "winxp"
-            ? "https://botoxparty.github.io/XP.css/XP.css"
-            : "https://unpkg.com/7.css@0.13.0/dist/7.css";
-        // Remove existing Windows theme CSS if present
-        document.getElementById("win-theme-css")?.remove();
-        const link = document.createElement("link");
-        link.id = "win-theme-css";
-        link.rel = "stylesheet";
-        link.href = url;
-
-        return new Promise((resolve) => {
-          link.onload = () => {
-            setLoading(false);
-            toast(
-              `Windows ${
-                themeId === "win7" ? "7" : themeId === "winxp" ? "XP" : "98"
-              } theme loaded`,
-              {
-                description: "Theme changed successfully",
-                position: "bottom-right",
-              }
-            );
-            setTheme(themeId as ThemeType);
-            resolve(true);
-          };
-          link.onerror = () => {
-            setLoading(false);
-            toast.error("Failed to load Windows theme", {
-              description: "Please try again",
-              position: "bottom-right",
-            });
-            setTheme(previousTheme);
-            resolve(false);
-          };
-          document.head.appendChild(link);
-        });
+      // Run cleanup for the previous theme if it has a cleanup function
+      const prevThemeConfig = allThemes[previousTheme];
+      if (prevThemeConfig?.decoratorModule) {
+        try {
+          // @ts-expect-error - We know this might not exist on all themes
+          if (typeof prevThemeConfig.decoratorModule.cleanup === "function") {
+            // @ts-expect-error - Calling cleanup method from dynamically loaded module
+            prevThemeConfig.decoratorModule.cleanup();
+          }
+        } catch (error) {
+          console.error(
+            `Error cleaning up previous theme: ${previousTheme}`,
+            error
+          );
+        }
       }
 
-      if (allThemes[themeId]) {
+      // Get theme config (built-in or load external)
+      const themeConfig = allThemes[themeId];
+
+      if (themeConfig) {
+        // Theme exists in built-in themes or already loaded
+        if (themeConfig.preload) {
+          // Theme has a preload hook, call it
+          setLoading(true);
+          try {
+            const success = await themeConfig.preload(previousTheme);
+            setLoading(false);
+
+            if (!success) {
+              // If preload failed, revert to previous theme and show error
+              console.error(
+                `Failed to load theme: ${themeId}, preload hook failed`
+              );
+              toast.error(`Failed to load theme: ${themeId}`);
+              return false;
+            }
+          } catch (error) {
+            setLoading(false);
+            console.error(`Error in theme preload hook: ${themeId}`, error);
+            toast.error(`Error loading theme: ${themeId}`);
+            return false;
+          }
+        }
+
+        // Set the theme
         setTheme(themeId as ThemeType);
+
+        // Run postload hook if it exists
+        if (themeConfig.postload) {
+          try {
+            themeConfig.postload();
+          } catch (error) {
+            console.error(`Error in theme postload hook: ${themeId}`, error);
+          }
+        }
+
         return true;
       }
 
+      // Theme not loaded yet, try to load it as an external theme
       try {
         setLoading(true);
-        const themeConfig = await loadExternalTheme(themeId);
+        const loadedThemeConfig = await loadExternalTheme(themeId);
         setLoading(false);
 
-        if (themeConfig) {
+        if (loadedThemeConfig) {
+          // Add loaded theme to available themes
           setAllThemes((prev) => ({
             ...prev,
-            [themeId]: themeConfig,
+            [themeId]: loadedThemeConfig,
           }));
+
+          // Run preload hook if it exists
+          if (loadedThemeConfig.preload) {
+            try {
+              const success = await loadedThemeConfig.preload(previousTheme);
+              if (!success) {
+                console.error(
+                  `Failed to load theme: ${themeId}, preload hook failed`
+                );
+                toast.error(`Failed to load theme: ${themeId}`);
+                setTheme(previousTheme);
+                return false;
+              }
+            } catch (error) {
+              console.error(`Error in theme preload hook: ${themeId}`, error);
+              toast.error(`Error loading theme: ${themeId}`);
+              setTheme(previousTheme);
+              return false;
+            }
+          }
+
+          // Set the theme
           setTheme(themeId as ThemeType);
+
+          // Run postload hook if it exists
+          if (loadedThemeConfig.postload) {
+            try {
+              loadedThemeConfig.postload();
+            } catch (error) {
+              console.error(`Error in theme postload hook: ${themeId}`, error);
+            }
+          }
+
           return true;
         }
 
@@ -305,82 +350,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Add scrollbar fixes for Windows themes
-  useEffect(() => {
-    // Only apply scrollbar fixes for Windows themes
-    if (!["win98", "winxp", "win7"].includes(theme)) {
-      document.getElementById("scrollbar-fixes")?.remove();
-      return;
-    }
-
-    const style = document.createElement("style");
-    style.id = "scrollbar-fixes";
-
-    // Compute horizontal gutter based on theme
-    const gutterMap = {
-      win7: "8px",
-      winxp: "4px",
-      win98: "1px",
-    };
-    const gutter = gutterMap[theme as "win7" | "winxp" | "win98"];
-
-    // Preserve bottom margin in win7, otherwise remove it
-    const bottomMarginCss =
-      theme === "win7" ? "" : "margin-bottom: 0 !important;";
-
-    style.textContent = `
-      /* — existing scrollbar‐button & track fixes — */
-      .has-scrollbar::-webkit-scrollbar-button:vertical:start:increment,
-      .has-scrollbar::-webkit-scrollbar-button:vertical:end:decrement {
-        display: none !important;
-      }
-      .has-scrollbar::-webkit-scrollbar-button:vertical:start:decrement,
-      .has-scrollbar::-webkit-scrollbar-button:vertical:end:increment {
-        width: 16px !important;
-        height: 16px !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-      }
-      .has-scrollbar::-webkit-scrollbar {
-        width: 16px !important;
-        height: 16px !important;
-      }
-      .has-scrollbar::-webkit-scrollbar-corner {
-        background-color: transparent !important;
-      }
-      .has-scrollbar::-webkit-scrollbar-track {
-        margin: 0 !important;
-        background-clip: padding-box !important;
-      }
-
-      /* — adjust content‐window margins (no top gap, gutter on sides, keep bottom for win7) — */
-      .window-body.has-scrollbar {
-        margin-top: 0 !important;
-        margin-left: ${gutter} !important;
-        margin-right: ${gutter} !important;
-        ${bottomMarginCss}
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-      }
-    `;
-
-    document.head.appendChild(style);
-    return () => void style.remove();
-  }, [theme]);
-
-  // Inject Windows CSS when theme changes, only if not already loaded
-  useEffect(() => {
-    if (["win98", "winxp", "win7"].includes(theme)) {
-      // Only inject if CSS file is missing
-      if (!document.getElementById("win-theme-css")) {
-        loadTheme(theme);
-      }
-    } else {
-      // Remove Windows CSS when switching away
-      document.getElementById("win-theme-css")?.remove();
-    }
-  }, [theme, loadTheme]);
-
   // Apply theme CSS variables when theme changes
   useEffect(() => {
     const root = document.documentElement;
@@ -388,10 +357,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     // ⇒ RESET EVERYTHING from any prior theme
     root.removeAttribute("style");
 
-    // Remove external Windows theme CSS when switching away
-    document.getElementById("win-theme-css")?.remove();
-
-    // Apply CSS variables for non-Windows themes
+    // Apply CSS variables for themes
     const themeConfig = allThemes[theme];
     if (themeConfig) {
       // Now set all CSS variables from the theme on a clean slate
@@ -447,7 +413,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       "theme-dark",
       "theme-macos",
       "theme-windows",
-      "theme-fluxbox"
+      "theme-fluxbox",
+      "theme-win98",
+      "theme-winxp",
+      "theme-win7"
     );
 
     // Add the active theme class
