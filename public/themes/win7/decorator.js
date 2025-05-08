@@ -57,7 +57,14 @@ function Win7Controls({ onMinimize, onMaximize, onClose }) {
 function Win7Header({ title, onMinimize, onMaximize, onClose, headerRef }) {
   return React.createElement(
     "div",
-    { ref: headerRef, className: "window-header win7-header" },
+    { 
+      ref: headerRef, 
+      className: "window-header win7-header", 
+      style: { 
+        cursor: "move",
+        pointerEvents: "auto" // Ensure pointer events work
+      }
+    },
     React.createElement("div", { className: "window-title" }, title),
     React.createElement(Win7Controls, { onMinimize, onMaximize, onClose })
   );

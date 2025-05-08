@@ -1,0 +1,131 @@
+/* Windows98 Theme Styles for shadcn/ui components */
+
+/* Button styles */
+.windows-btn-win98 {
+  border: 2px solid #000;
+  border-right-color: #424242;
+  border-bottom-color: #424242;
+  background-color: #c0c0c0;
+  color: black;
+  box-shadow: inset 1px 1px 0px #fff, inset -1px -1px 0px #828282;
+  border-radius: 0;
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+  padding: 4px 8px;
+  font-weight: normal;
+}
+
+.windows-btn-win98:hover:not(:disabled) {
+  background-color: #c0c0c0;
+}
+
+.windows-btn-win98:active:not(:disabled) {
+  border: 2px solid #000;
+  border-left-color: #424242;
+  border-top-color: #424242;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  box-shadow: inset 1px 1px 0px #828282, inset -1px -1px 0px #fff;
+}
+
+/* Input styles */
+.windows-input-win98 {
+  border: 2px solid;
+  border-left-color: #424242;
+  border-top-color: #424242;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  background-color: #fff;
+  color: #000;
+  border-radius: 0;
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+  box-shadow: inset 1px 1px 0px #9c9c9c;
+}
+
+/* Card styles */
+.windows-card-win98 {
+  border: 2px solid;
+  border-left-color: #fff;
+  border-top-color: #fff;
+  border-right-color: #424242;
+  border-bottom-color: #424242;
+  background-color: #c0c0c0;
+  border-radius: 0;
+  box-shadow: inset -1px -1px 0px #9c9c9c, inset 1px 1px 0px #fff;
+}
+
+.windows-card-header-win98 {
+  background-color: #000080;
+  color: #fff;
+  padding: 2px 4px;
+  margin: 0;
+}
+
+.windows-card-title-win98 {
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.windows-card-content-win98 {
+  padding: 8px;
+}
+
+/* Select styles */
+.windows-select-trigger-win98 {
+  border: 2px solid;
+  border-left-color: #424242;
+  border-top-color: #424242;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  background-color: #c0c0c0;
+  color: #000;
+  border-radius: 0;
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+  box-shadow: inset 1px 1px 0px #9c9c9c;
+}
+
+.windows-select-content-win98 {
+  border: 2px solid;
+  border-left-color: #424242;
+  border-top-color: #424242;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  background-color: #c0c0c0;
+  color: #000;
+  border-radius: 0;
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+  box-shadow: 1px 1px 0px #9c9c9c;
+}
+
+/* Tabs styles */
+.windows-tabs-list-win98 {
+  background-color: #c0c0c0;
+  border-bottom: 1px solid #424242;
+  border-radius: 0;
+  padding: 0;
+}
+
+.windows-tabs-trigger-win98 {
+  border: 2px solid;
+  border-left-color: #fff;
+  border-top-color: #fff;
+  border-right-color: #424242;
+  border-bottom-color: #424242;
+  background-color: #c0c0c0;
+  color: #000;
+  border-radius: 0;
+  font-family: "MS Sans Serif", "Segoe UI", sans-serif;
+}
+
+.windows-tabs-trigger-win98[data-state="active"] {
+  background-color: #d3d3d3;
+  border-bottom-color: #d3d3d3;
+}
+
+.windows-tabs-content-win98 {
+  border: 1px solid #424242;
+  border-top: none;
+  background-color: #c0c0c0;
+  padding: 8px;
+}

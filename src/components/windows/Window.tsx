@@ -149,13 +149,17 @@ export function WindowsWindow({
       {/* Title bar */}
       <div
         ref={headerRef}
-        //onPointerDown={(e) => controls.start(e)}
+        onPointerDown={(e) => controls.start(e)}
         className={cn(
           "title-bar flex items-center justify-between",
           activeTarget === "titlebar" && isActive && "active",
           !isMaximized && "window-drag-handle"
         )}
-        style={theme === "winxp" ? { minHeight: "1.5rem" } : undefined}
+        style={{
+          minHeight: theme === "winxp" ? "1.5rem" : undefined,
+          cursor: "move",
+          pointerEvents: "auto" // Ensure pointer events work
+        }}
       >
         {controlsPosition === "left" && (
           <div className="title-bar-controls">{controlButtons}</div>
@@ -167,7 +171,10 @@ export function WindowsWindow({
       </div>
 
       {/* Content area */}
-      <div className="window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto has-scrollbar">
+      <div className={cn(
+        "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
+        isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
+      )}>
         {children}
       </div>
     </motion.div>
