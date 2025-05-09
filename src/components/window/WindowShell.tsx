@@ -194,13 +194,17 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     const deltaY = event.delta.y;
 
     let newWidth = initialSize.width;
-    let newHeight = initialSize.height;
-
-    // Adjust size based on direction
+    let newHeight = initialSize.height; // Adjust size based on direction
     if (resizeDirection.includes("right")) {
       newWidth = Math.max(320, initialSize.width + deltaX);
     } else if (resizeDirection.includes("left")) {
       newWidth = Math.max(320, initialSize.width - deltaX);
+
+      // When resizing from the left, also move the window to keep right edge fixed
+      if (resizeDirection === "left" || resizeDirection.includes("left")) {
+        // Calculate position based on the original position + delta to prevent cumulative movements
+        x.set(position.x + deltaX);
+      }
     }
     if (resizeDirection.includes("bottom")) {
       newHeight = Math.max(200, initialSize.height + deltaY);
@@ -223,17 +227,20 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     if (!windowRef.current) return;
 
     setIsResizing(false);
-    setResizeDirection(null);
-
-    // Get the final size
+    setResizeDirection(null); // Get the final size
     const rect = windowRef.current.getBoundingClientRect();
     onResize({
       width: rect.width,
       height: rect.height,
     });
 
-    // If we were resizing from the top, we need to also finalize the position
-    if (resizeDirection === "top" || resizeDirection?.includes("top")) {
+    // If we were resizing from the top or left, we need to also finalize the position
+    if (
+      resizeDirection === "top" ||
+      resizeDirection?.includes("top") ||
+      resizeDirection === "left" ||
+      resizeDirection?.includes("left")
+    ) {
       onDragEnd({
         x: x.get(),
         y: y.get(),
