@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
+import { WindowsButton } from "@/components/windows/Button";
+import { cn } from "@/lib/utils";
 
 import ThemeInstaller from "./ThemeInstaller";
+import styles from "./ThemeManager.module.css";
 
 const ThemeManager: React.FC = () => {
   const {
@@ -92,18 +95,20 @@ const ThemeManager: React.FC = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Theme Manager</h2>
         <div className="flex space-x-2">
-          <button
+          <WindowsButton
             onClick={handleInstallWin7}
-            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md"
+            variant="default"
+            className={styles.themeButton}
           >
             Install Windows 7
-          </button>
-          <button
+          </WindowsButton>
+          <WindowsButton
             onClick={() => setIsInstallerOpen(true)}
-            className="px-3 py-1.5 border border-border text-sm rounded-md"
+            variant="outline"
+            className={styles.themeButton}
           >
             Install New Theme
-          </button>
+          </WindowsButton>
         </div>
       </div>
 
@@ -166,22 +171,24 @@ const ThemeManager: React.FC = () => {
                     />
                     <h4 className="font-medium">{themeConfig.name}</h4>
                   </div>
-                  <button
-                    className="text-xs text-red-600 hover:text-red-800 hover:underline"
+                  <WindowsButton
+                    variant="ghost" 
+                    className={cn(styles.removeButton, "text-red-600 hover:text-red-800")}
                     onClick={() => handleUninstallClick(themeId)}
                   >
                     Remove
-                  </button>
+                  </WindowsButton>
                 </div>
                 <div className="text-xs text-gray-500 mb-2">
                   {themeConfig.description || "External theme"}
                 </div>
-                <div
-                  className="text-xs px-2 py-1 bg-gray-100 inline-block rounded cursor-pointer"
+                <WindowsButton 
+                  variant={activeTheme === themeId ? "secondary" : "default"}
                   onClick={() => setTheme(themeId)}
+                  className={styles.themeActivateButton}
                 >
                   {activeTheme === themeId ? "Active" : "Activate"}
-                </div>
+                </WindowsButton>
                 {themeConfig.author && (
                   <div className="text-xs text-gray-500 mt-2">
                     By: {themeConfig.author}
@@ -216,22 +223,25 @@ const ThemeManager: React.FC = () => {
               </div>
             )}
             <div className="flex justify-end gap-2">
-              <button
+              <WindowsButton
                 onClick={() => setIsUninstallDialogOpen(false)}
                 disabled={isUninstalling}
-                className="px-3 py-1.5 border border-gray-300 rounded-md"
+                variant="outline"
+                className={styles.themeButton}
               >
                 Cancel
-              </button>
-              <button
+              </WindowsButton>
+              <WindowsButton
                 onClick={confirmUninstall}
                 disabled={isUninstalling}
-                className={`px-3 py-1.5 bg-red-600 text-white rounded-md ${
+                variant="destructive"
+                className={cn(
+                  styles.themeButton,
                   isUninstalling ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                )}
               >
                 {isUninstalling ? "Removing..." : "Remove Theme"}
-              </button>
+              </WindowsButton>
             </div>
           </div>
         </div>

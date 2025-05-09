@@ -9,8 +9,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/windows/AlertDialog";
+import { WindowsButton } from "@/components/windows/Button";
 
 import { usePlugins } from "../plugins/PluginContext";
 
@@ -85,14 +85,14 @@ const InstalledPluginsList: React.FC = () => {
                     v{plugin.manifest.version} • {plugin.manifest.author}
                   </p>
                 </div>
-              </div>
-              <Button
+              </div>{" "}
+              <WindowsButton
                 variant="outline"
                 size="sm"
                 onClick={() => handleUninstallClick(plugin.id)}
               >
                 Uninstall
-              </Button>
+              </WindowsButton>
             </div>
           ))}
         </div>

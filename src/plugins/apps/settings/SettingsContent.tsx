@@ -3,22 +3,27 @@ import React, { useEffect, useState } from "react";
 import InstalledPluginsList from "@/components/InstalledPluginsList";
 import PluginInstaller from "@/components/PluginInstaller";
 import ThemeManager from "@/components/ThemeManager";
+import { Label } from "@/components/ui/label";
+// Import Windows components
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/components/windows/AlertDialog";
+import { WindowsButton } from "@/components/windows/Button";
+import { WindowsRadioGroup } from "@/components/windows/RadioGroup";
+import { WindowsSwitch } from "@/components/windows/Switch";
+import {
+  WinTabs,
+  WinTabsContent,
+  WinTabsList,
+  WinTabsTrigger,
+} from "@/components/windows/Tabs";
+import { WindowSlider } from "@/components/windows/WindowSlider";
 import { useViewMode } from "@/hooks/useViewMode";
 import { ThemeType } from "@/lib/theme-types";
 import { useTheme } from "@/lib/ThemeProvider";
@@ -194,10 +199,9 @@ const SettingsContent: React.FC = () => {
       return "Disabling enforced view mode will revert to automatic detection based on screen size, which may change your current view and close all running applications. Are you sure you want to continue?";
     }
   };
-
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">System Settings</h2>
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-3">System Settings</h2>
 
       {/* Confirmation Dialog */}
       <AlertDialog
@@ -210,27 +214,33 @@ const SettingsContent: React.FC = () => {
             <AlertDialogDescription>
               {getConfirmationMessage()}
             </AlertDialogDescription>
-          </AlertDialogHeader>
+          </AlertDialogHeader>{" "}
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingMode(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={applyViewModeChange}>
-              Continue
-            </AlertDialogAction>
+            {" "}
+            <div className="flex justify-end gap-2">
+              <WindowsButton
+                variant="outline"
+                onClick={() => setPendingMode(null)}
+              >
+                Cancel
+              </WindowsButton>
+              <WindowsButton onClick={applyViewModeChange}>
+                Continue
+              </WindowsButton>
+            </div>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Tabs defaultValue="appearance" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="display">Display</TabsTrigger>
-          <TabsTrigger value="plugins">Plugins</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
-        </TabsList>
+      <WinTabs defaultValue="appearance" className="w-full">
+        <WinTabsList className="mb-4">
+          <WinTabsTrigger value="appearance">Appearance</WinTabsTrigger>
+          <WinTabsTrigger value="display">Display</WinTabsTrigger>
+          <WinTabsTrigger value="plugins">Plugins</WinTabsTrigger>
+          <WinTabsTrigger value="about">About</WinTabsTrigger>
+        </WinTabsList>
 
-        <TabsContent value="appearance" className="space-y-6">
+        <WinTabsContent value="appearance" className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Theme</h3>
@@ -248,12 +258,11 @@ const SettingsContent: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Adjust the internal padding of window content
               </p>
-            </div>
-
-            <Slider
+            </div>{" "}
+            <WindowSlider
               id="window-padding"
-              defaultValue={[padding]}
-              onValueChange={handlePaddingChange}
+              defaultValue={padding}
+              onChange={(e) => handlePaddingChange([parseInt(e.target.value)])}
               min={0}
               max={24}
               step={4}
@@ -393,9 +402,9 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
           </div>
-        </TabsContent>
+        </WinTabsContent>
 
-        <TabsContent value="display" className="space-y-6">
+        <WinTabsContent value="display" className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Desktop Preferences</h3>
@@ -416,7 +425,7 @@ const SettingsContent: React.FC = () => {
                     Display application icons on the desktop
                   </p>
                 </div>
-                <Switch
+                <WindowsSwitch
                   id="show-desktop-icons"
                   checked={showDesktopIcons}
                   onCheckedChange={setShowDesktopIcons}
@@ -440,7 +449,7 @@ const SettingsContent: React.FC = () => {
                     Hide the taskbar when not in use
                   </p>
                 </div>
-                <Switch
+                <WindowsSwitch
                   id="taskbar-autohide"
                   checked={autoHideTaskbar}
                   onCheckedChange={setAutoHideTaskbar}
@@ -464,7 +473,7 @@ const SettingsContent: React.FC = () => {
                     Show animations when opening and closing windows
                   </p>
                 </div>
-                <Switch
+                <WindowsSwitch
                   id="animations"
                   checked={enableAnimations}
                   onCheckedChange={setEnableAnimations}
@@ -495,7 +504,7 @@ const SettingsContent: React.FC = () => {
                     Override automatic screen size detection
                   </p>
                 </div>
-                <Switch
+                <WindowsSwitch
                   id="enforce-view-mode"
                   checked={enforceViewMode}
                   onCheckedChange={handleEnforceViewModeChange}
@@ -505,59 +514,24 @@ const SettingsContent: React.FC = () => {
               <div
                 className={`space-y-2 ${!enforceViewMode ? "opacity-50" : ""}`}
               >
+                {" "}
                 <Label>Preferred view mode</Label>
-                <RadioGroup
+                <WindowsRadioGroup
+                  name="view-mode"
                   value={enforcedMode || "desktop"}
-                  onValueChange={handleEnforcedModeChange}
-                  className="grid grid-cols-2 gap-4 pt-2"
-                  disabled={!enforceViewMode}
-                >
-                  <div>
-                    <RadioGroupItem
-                      value="desktop"
-                      id="mode-desktop"
-                      className="peer sr-only"
-                      checked={enforcedMode === "desktop"}
-                      disabled={!enforceViewMode}
-                    />
-                    <Label
-                      htmlFor="mode-desktop"
-                      className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
-                        enforceViewMode
-                          ? "cursor-pointer"
-                          : "cursor-not-allowed"
-                      }`}
-                    >
-                      <span className="font-medium">Desktop</span>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Full desktop experience with windows
-                      </p>
-                    </Label>
-                  </div>
-
-                  <div>
-                    <RadioGroupItem
-                      value="smartphone"
-                      id="mode-smartphone"
-                      className="peer sr-only"
-                      checked={enforcedMode === "smartphone"}
-                      disabled={!enforceViewMode}
-                    />
-                    <Label
-                      htmlFor="mode-smartphone"
-                      className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary ${
-                        enforceViewMode
-                          ? "cursor-pointer"
-                          : "cursor-not-allowed"
-                      }`}
-                    >
-                      <span className="font-medium">Smartphone</span>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Mobile interface with fullscreen apps
-                      </p>
-                    </Label>
-                  </div>
-                </RadioGroup>
+                  onChange={handleEnforcedModeChange}
+                  options={[
+                    { id: "mode-desktop", label: "Desktop", value: "desktop" },
+                    {
+                      id: "mode-smartphone",
+                      label: "Smartphone",
+                      value: "smartphone",
+                    },
+                  ]}
+                  legend="Display Mode"
+                  fieldset={false}
+                  className="mb-2"
+                />
                 <p className="text-xs text-muted-foreground mt-1">
                   Changes to view mode are applied after confirmation
                 </p>
@@ -580,14 +554,16 @@ const SettingsContent: React.FC = () => {
                   <span className="text-sm text-muted-foreground">
                     {padding}px
                   </span>
-                </div>
-                <Slider
+                </div>{" "}
+                <WindowSlider
                   id="window-padding"
                   min={0}
                   max={32}
                   step={1}
-                  value={[padding]}
-                  onValueChange={handlePaddingChange}
+                  value={padding}
+                  onChange={(e) =>
+                    handlePaddingChange([parseInt(e.target.value)])
+                  }
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Adjust the padding inside all application windows
@@ -595,9 +571,9 @@ const SettingsContent: React.FC = () => {
               </div>
             </div>
           </div>
-        </TabsContent>
+        </WinTabsContent>
 
-        <TabsContent value="plugins" className="space-y-6">
+        <WinTabsContent value="plugins" className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Plugin Management</h3>
@@ -610,14 +586,13 @@ const SettingsContent: React.FC = () => {
               <h4 className="font-medium mb-2">Install Plugin</h4>
               <p className="text-sm text-muted-foreground mb-4">
                 Install plugins from external sources to extend functionality
-              </p>
-              <Button
+              </p>{" "}
+              <WindowsButton
+                variant="default"
                 onClick={() => setIsPluginInstallerOpen(true)}
-                className="w-full sm:w-auto"
               >
                 Install from URL
-              </Button>
-
+              </WindowsButton>
               {isPluginInstallerOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                   <PluginInstaller
@@ -638,9 +613,9 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
           </div>
-        </TabsContent>
+        </WinTabsContent>
 
-        <TabsContent value="about" className="space-y-6">
+        <WinTabsContent value="about" className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <h3 className="text-lg font-medium">About</h3>
@@ -662,9 +637,9 @@ const SettingsContent: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Reset your desktop to a fresh state. This will clear all
                   window positions, installed plugins, and customized settings.
-                </p>
+                </p>{" "}
                 <div className="flex items-center justify-start pt-2">
-                  <Button
+                  <WindowsButton
                     variant="destructive"
                     onClick={() => {
                       if (
@@ -678,13 +653,13 @@ const SettingsContent: React.FC = () => {
                     className="mr-2"
                   >
                     Factory Reset
-                  </Button>
+                  </WindowsButton>
                 </div>
               </div>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </WinTabsContent>
+      </WinTabs>
     </div>
   );
 };
