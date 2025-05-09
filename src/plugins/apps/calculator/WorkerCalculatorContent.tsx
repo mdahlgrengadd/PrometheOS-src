@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import { workerPluginManager } from "../../WorkerPluginManagerClient";
 
 const WorkerCalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -95,7 +95,7 @@ const WorkerCalculatorContent: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 calculator-root">
       <div className="flex justify-between items-center mb-2">
         <div className="text-xs text-muted-foreground">Worker Calculator</div>
         {isCalculating && (
