@@ -155,6 +155,11 @@
   border-color: transparent !important;
   color: #333 !important; /* Dark text for better readability */
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important; /* Subtle text shadow for better readability */
+  box-shadow: none !important; /* Remove any box-shadow that might extend beyond the border */
+  padding: 2px 6px !important; /* Consistent padding */
+  box-sizing: border-box !important;
+  border-radius: 3px !important;
+  overflow: hidden !important; /* Contain any inner shadows */
 }
 
 .win-ghost:hover {
@@ -191,4 +196,53 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+/* Windows 7 specific fixes */
+:global([data-theme="win7"]) button.button[class*="win-ghost"] {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 2px 6px !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  border-radius: 3px !important;
+}
+
+/* Make .removeButton with Windows 7 theme display properly */
+:global([data-theme="win7"]) button.button[class*="removeButton"] {
+  max-width: 70px !important;
+  padding: 2px 4px !important;
+  margin: 0 0 0 4px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+}
+
+/* Specifically target ghost button in Windows 7 theme to contain its chrome */
+:global([data-theme="win7"]) .win-ghost {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding: 2px 6px !important;
+}
+
+/* Handle ghost buttons that have the remove class */
+:global([data-theme="win7"]) .removeButton.win-ghost {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 0 0 4px !important;
+  padding: 2px 4px !important;
+  max-width: 65px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-import { useTheme } from "@/lib/ThemeProvider";
 import { WindowsButton } from "@/components/windows/Button";
+import { useTheme } from "@/lib/ThemeProvider";
 import { cn } from "@/lib/utils";
 
 import ThemeInstaller from "./ThemeInstaller";
@@ -12,6 +12,7 @@ const ThemeManager: React.FC = () => {
     themes,
     theme: activeTheme,
     setTheme,
+    loadTheme,
     installTheme,
     uninstallTheme,
   } = useTheme();
@@ -30,8 +31,8 @@ const ThemeManager: React.FC = () => {
         setError(result.error || "Failed to install Windows 7 theme");
         return;
       }
-      // Activate it immediately
-      setTheme("win7");
+      // Activate it immediately using loadTheme to ensure CSS and decorators are loaded
+      loadTheme("win7");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error installing Windows 7 theme"
@@ -130,7 +131,23 @@ const ThemeManager: React.FC = () => {
                     ? "border-blue-500 bg-blue-50"
                     : "border-gray-200 hover:border-blue-300"
                 }`}
-                onClick={() => setTheme(themeId)}
+                onClick={async () => {
+                  // Use loadTheme for Windows themes to properly load CSS and decorators
+                  if (["win98", "winxp", "win7"].includes(themeId)) {
+                    setError(null);
+                    try {
+                      const success = await loadTheme(themeId);
+                      if (!success) {
+                        setError(`Failed to load Windows theme: ${themeId}`);
+                      }
+                    } catch (err) {
+                      setError(`Error loading theme: ${themeId}`);
+                      console.error("Error loading theme:", err);
+                    }
+                  } else {
+                    setTheme(themeId);
+                  }
+                }}
               >
                 <div className="flex items-center mb-2">
                   <div
@@ -156,39 +173,59 @@ const ThemeManager: React.FC = () => {
             {externalThemes.map(([themeId, themeConfig]) => (
               <div
                 key={themeId}
-                className={`border p-4 rounded-lg transition-all ${
-                  activeTheme === themeId
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200"
-                }`}
+                className={cn(
+                  styles.themeCard,
+                  `border p-4 rounded-lg transition-all ${
+                    activeTheme === themeId
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200"
+                  }`
+                )}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
+                <div className="mb-2">
+                  <div className="flex items-center min-w-0 overflow-hidden">
                     <div
-                      className={`w-3 h-3 rounded-full mr-2 ${
+                      className={`w-3 h-3 rounded-full mr-2 flex-shrink-0 ${
                         activeTheme === themeId ? "bg-blue-500" : "bg-gray-300"
                       }`}
                     />
-                    <h4 className="font-medium">{themeConfig.name}</h4>
+                    <h4 className="font-medium truncate">{themeConfig.name}</h4>
                   </div>
-                  <WindowsButton
-                    variant="ghost" 
-                    className={cn(styles.removeButton, "text-red-600 hover:text-red-800")}
-                    onClick={() => handleUninstallClick(themeId)}
-                  >
-                    Remove
-                  </WindowsButton>
                 </div>
                 <div className="text-xs text-gray-500 mb-2">
                   {themeConfig.description || "External theme"}
                 </div>
-                <WindowsButton 
-                  variant={activeTheme === themeId ? "secondary" : "default"}
-                  onClick={() => setTheme(themeId)}
-                  className={styles.themeActivateButton}
-                >
-                  {activeTheme === themeId ? "Active" : "Activate"}
-                </WindowsButton>
+                <div className={styles.themeButtonsContainer}>
+                  <WindowsButton
+                    variant={activeTheme === themeId ? "secondary" : "default"}
+                    onClick={() => {
+                      // Use loadTheme for Windows themes to properly load CSS and decorators
+                      if (["win98", "winxp", "win7"].includes(themeId)) {
+                        loadTheme(themeId);
+                      } else {
+                        setTheme(themeId);
+                      }
+                    }}
+                    className={styles.themeActivateButton}
+                  >
+                    {activeTheme === themeId ? "Active" : "Activate"}
+                  </WindowsButton>
+                  <WindowsButton
+                    variant="ghost"
+                    className={cn(
+                      styles.removeButton,
+                      "text-red-600 hover:text-red-800",
+                      activeTheme === "win7" ? "win7-remove-button" : ""
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent theme activation
+                      handleUninstallClick(themeId);
+                    }}
+                    title="Remove Theme" // Add title attribute for accessibility
+                  >
+                    Remove
+                  </WindowsButton>
+                </div>
                 {themeConfig.author && (
                   <div className="text-xs text-gray-500 mt-2">
                     By: {themeConfig.author}

@@ -29,8 +29,7 @@ import { ThemeType } from "@/lib/theme-types";
 import { useTheme } from "@/lib/ThemeProvider";
 import { resetDesktopState } from "@/utils/resetDesktop";
 
-const SettingsContent: React.FC = () => {
-  const {
+const SettingsContent: React.FC = () => {  const {
     theme,
     setTheme,
     themes,
@@ -42,6 +41,7 @@ const SettingsContent: React.FC = () => {
     setBackgroundColor,
     primaryColor,
     setPrimaryColor,
+    loadTheme,
   } = useTheme();
 
   const {
@@ -120,9 +120,21 @@ const SettingsContent: React.FC = () => {
       enableAnimations ? "true" : "false"
     );
   }, [showDesktopIcons, autoHideTaskbar, enableAnimations]);
-
-  const handleThemeChange = (selectedTheme: ThemeType) => {
-    setTheme(selectedTheme);
+  const handleThemeChange = async (selectedTheme: ThemeType) => {
+    // Windows themes require loadTheme to properly load external CSS and decorators
+    if (["win98", "winxp", "win7"].includes(selectedTheme)) {
+      try {
+        const success = await loadTheme(selectedTheme);
+        if (!success) {
+          console.error(`Failed to load Windows theme: ${selectedTheme}`);
+        }
+      } catch (err) {
+        console.error("Error loading Windows theme:", err);
+      }
+    } else {
+      // For non-Windows themes, just use setTheme
+      setTheme(selectedTheme);
+    }
   };
 
   const handlePaddingChange = (value: number[]) => {

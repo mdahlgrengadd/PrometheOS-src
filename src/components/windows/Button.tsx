@@ -90,14 +90,27 @@ export function WindowsButton({
     if (variant === "ghost") variantClass = styles["win-ghost"];
     if (variant === "link") variantClass = styles["win-link"];
   }
+  let dataAttributes = {};
+  // Check if this button has the "removeButton" class or contains "Remove" text
+  if (
+    className?.includes("removeButton") ||
+    (typeof props.children === "string" && props.children === "Remove")
+  ) {
+    // Add a data attribute to target with CSS
+    dataAttributes = { "data-remove-button": true };
+  }
   return (
     <Comp
       className={cn(
         themeClass,
         variantClass,
-        windowsButtonVariants({ variant, size, className })
+        windowsButtonVariants({ variant, size, className }),
+        windowsTheme === "win7" && variant === "ghost"
+          ? "win7-ghost-button"
+          : ""
       )}
       {...props}
+      {...dataAttributes}
     />
   );
 }
