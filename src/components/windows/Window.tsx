@@ -1,4 +1,9 @@
-import { DragHandlers, motion, useDragControls } from "framer-motion";
+import {
+  DragHandlers,
+  motion,
+  useDragControls,
+  useMotionValue,
+} from "framer-motion";
 import React, { useRef } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
@@ -71,6 +76,17 @@ export function WindowsWindow({
   const headerRef = useRef<HTMLDivElement>(null);
   const controls = useDragControls();
   const [isDragging, setIsDragging] = React.useState(false);
+  // Motion values for controlled dragging
+  const x = useMotionValue(position?.x || 0);
+  const y = useMotionValue(position?.y || 0);
+
+  // Sync motion values when position prop changes and not dragging
+  React.useEffect(() => {
+    if (!isDragging) {
+      x.set(position?.x || 0);
+      y.set(position?.y || 0);
+    }
+  }, [position, isDragging, x, y]);
 
   // Determine if this is a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
@@ -87,13 +103,21 @@ export function WindowsWindow({
     setIsDragging(true);
     onFocus();
   };
+  // Handle drag move to update motion values
+  const handleDrag: DragHandlers["onDrag"] = (_e, info) => {
+    const baseX = position?.x || 0;
+    const baseY = position?.y || 0;
+    x.set(baseX + info.offset.x);
+    y.set(baseY + info.offset.y);
+  };
   // on release, persist position
   const handleDragEnd: DragHandlers["onDragEnd"] = (_e, info) => {
     setIsDragging(false);
-    onDragEnd({
-      x: (position?.x || 0) + info.offset.x,
-      y: (position?.y || 0) + info.offset.y,
-    });
+    const newX = (position?.x || 0) + info.offset.x;
+    const newY = (position?.y || 0) + info.offset.y;
+    x.set(newX);
+    y.set(newY);
+    onDragEnd({ x: newX, y: newY });
   };
 
   const renderControl = (control: "minimize" | "maximize" | "close") => {
@@ -128,6 +152,7 @@ export function WindowsWindow({
       dragMomentum={false}
       dragElastic={0}
       onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       dragTransition={{ power: 0 }}
       className={cn(
@@ -142,7 +167,8 @@ export function WindowsWindow({
         height: size?.height || height,
         zIndex,
         position: "absolute",
-        transform: `translate(${position?.x}px, ${position?.y}px)`,
+        x,
+        y,
         willChange: isDragging ? "transform" : "auto",
       }}
     >
@@ -158,7 +184,7 @@ export function WindowsWindow({
         style={{
           minHeight: theme === "winxp" ? "1.5rem" : undefined,
           cursor: "move",
-          pointerEvents: "auto" // Ensure pointer events work
+          pointerEvents: "auto", // Ensure pointer events work
         }}
       >
         {controlsPosition === "left" && (
@@ -171,10 +197,12 @@ export function WindowsWindow({
       </div>
 
       {/* Content area */}
-      <div className={cn(
-        "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
-        isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
-      )}>
+      <div
+        className={cn(
+          "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
+          isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
+        )}
+      >
         {children}
       </div>
     </motion.div>
