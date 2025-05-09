@@ -59,11 +59,10 @@ WindowsSelectContent.displayName = "WindowsSelectContent";
 // Export pre-composed WindowsSelect with appropriate styling
 export function WindowsSelect({
   children,
-  className,
   triggerClassName,
   contentClassName,
   ...props
-}: React.ComponentPropsWithoutRef<typeof Select> & {
+}: Omit<React.ComponentPropsWithoutRef<typeof Select>, "className"> & {
   triggerClassName?: string;
   contentClassName?: string;
 }) {

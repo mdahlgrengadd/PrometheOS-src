@@ -117,9 +117,9 @@ const Desktop = () => {
 
   return (
     <div className="desktop">
-      <div className="absolute top-2 right-2 z-50">
+      {/*<div className="absolute top-2 right-2 z-50">
         <ThemeSelector />
-      </div>
+      </div> */}
 
       {maximizedBeOS && (
         <div className="window-tab-bar">

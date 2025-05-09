@@ -2,7 +2,7 @@ import { manifest as apiExplorerManifest } from "./apps/api-explorer";
 import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor";
 import { manifest as audioPlayerManifest } from "./apps/audioplayer";
 import { manifest as browserManifest } from "./apps/browser";
-import { manifest as calculatorManifest } from "./apps/calculator";
+// import { manifest as calculatorManifest } from "./apps/calculator";
 import { manifest as workerCalculatorManifest } from "./apps/calculator/workerCalculator";
 import { manifest as chatManifest } from "./apps/chat";
 import { manifest as fileBrowserManifest } from "./apps/filebrowser";
@@ -23,7 +23,7 @@ import { PluginManifest } from "./types";
 // Static plugins list - keep this unchanged
 export const staticPlugins: PluginManifest[] = [
   notepadManifest,
-  calculatorManifest,
+  //calculatorManifest,
   workerCalculatorManifest,
   audioPlayerManifest,
   browserManifest,

@@ -20,12 +20,21 @@
     top: 36px;      /* Space for window tab bar */
     left: 0;
     right: 0;
+    bottom: var(--taskbar-height, 48px); /* Ensure we don't overlap the taskbar */
     z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 80px);
-    grid-gap: 16px;
-    padding: 48px 24px;
-    pointer-events: auto;    
+    display: flex;  /* Use flexbox instead of grid for more natural column layout */
+    flex-direction: column; /* Stack icons vertically first */
+    flex-wrap: wrap;        /* Wrap to next column when reaching bottom */
+    align-content: flex-start; /* Start from left side */
+    gap: 16px;              /* Gap between all icons */
+    column-gap: 24px;       /* Wider space between columns */
+    padding-left: 16px;     /* Left padding to give space from edge */
+    padding-top: 24px;      /* Top padding for better spacing */
+    align-items: flex-start; /* Start from top of container */
+    padding: 16px 24px;
+    pointer-events: auto;
+    height: calc(100vh - 100px);    /* Calculate height based on viewport minus tab bar and taskbar */
+    overflow-y: auto;              /* Allow scrolling if we have many icons */
   }
 
   /* Wrapper for all Window instances */
@@ -50,9 +59,10 @@
 
   /* Base desktop icon styles using CSS variables - applies to all themes including external ones */
   .desktop-icon {
-    width: 80px;
-    height: 80px;
-    @apply flex flex-col items-center justify-center p-1 cursor-pointer transition-all duration-200;
+    width: 90px; /* Slightly wider to better accommodate the text */
+    height: auto; /* Auto height to accommodate labels with varying length */
+    min-height: 96px; /* Minimum height to ensure consistent sizing */
+    @apply flex flex-col items-center p-2 cursor-pointer transition-all duration-200;
     background-color: var(--desktop-icon-bg, transparent);
     border-radius: var(--desktop-icon-radius, 4px);
     border: var(--desktop-icon-border, none);
@@ -92,10 +102,20 @@
   }
 
   .desktop-icon-label {
-    @apply text-center text-xs mt-2 truncate w-full;
+    @apply text-center text-xs mt-2 w-full;
     color: var(--text-primary, #000000);
     font-weight: var(--desktop-icon-font-weight, 500);
     text-shadow: var(--desktop-icon-text-shadow, none);
+    white-space: normal; /* Allow text to wrap */
+    overflow-wrap: break-word; /* Break words that are too long */
+    word-break: break-word; /* Allow words to break if needed */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limit to 3 lines maximum */
+    line-clamp: 3; /* Standard property for compatibility */
+    -webkit-box-orient: vertical;
+    max-height: 3.6em; /* Approximately 3 lines of text */
+    overflow: hidden; /* Hide any text beyond the line limit */
+    padding: 0 4px; /* Add a small padding to prevent text touching edges */
     
     .theme-beos & {
       @apply font-bold;
