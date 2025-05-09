@@ -8,6 +8,18 @@ import React, { useRef } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+
+import { Resizable } from "../window/Resizable";
 
 interface WindowProps {
   title: string;
@@ -80,6 +92,61 @@ export function WindowsWindow({
   const x = useMotionValue(position?.x || 0);
   const y = useMotionValue(position?.y || 0);
 
+  // Resizing state and handlers
+  const [isResizing, setIsResizing] = React.useState(false);
+  const [resizeDirection, setResizeDirection] = React.useState<string | null>(
+    null
+  );
+  const [initialSize, setInitialSize] = React.useState({ width: 0, height: 0 });
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleResizeStart = () => {
+    setIsResizing(true);
+    if (onFocus) {
+      onFocus();
+    }
+    if (windowRef.current) {
+      const rect = windowRef.current.getBoundingClientRect();
+      setInitialSize({ width: rect.width, height: rect.height });
+    }
+  };
+  const handleDndResizeStart = (event: DragStartEvent) => {
+    const direction = event.active?.data?.current?.direction || null;
+    setResizeDirection(direction);
+    handleResizeStart();
+  };
+  const handleDndResizeMove = (event: DragMoveEvent) => {
+    if (!windowRef.current || !resizeDirection) return;
+    const deltaX = event.delta.x;
+    const deltaY = event.delta.y;
+    let newWidth = initialSize.width;
+    let newHeight = initialSize.height;
+    if (resizeDirection.includes("right")) {
+      newWidth = Math.max(100, initialSize.width + deltaX);
+    } else if (resizeDirection.includes("left")) {
+      newWidth = Math.max(100, initialSize.width - deltaX);
+    }
+    if (resizeDirection.includes("bottom")) {
+      newHeight = Math.max(100, initialSize.height + deltaY);
+    } else if (resizeDirection.includes("top")) {
+      newHeight = Math.max(50, initialSize.height - deltaY);
+    }
+    windowRef.current.style.width = `${newWidth}px`;
+    windowRef.current.style.height = `${newHeight}px`;
+  };
+  const handleDndResizeEnd = (event: DragEndEvent) => {
+    setIsResizing(false);
+    setResizeDirection(null);
+    if (windowRef.current) {
+      const rect = windowRef.current.getBoundingClientRect();
+      if (onResize) {
+        onResize({ width: rect.width, height: rect.height });
+      }
+    }
+  };
+
   // Sync motion values when position prop changes and not dragging
   React.useEffect(() => {
     if (!isDragging) {
@@ -143,68 +210,86 @@ export function WindowsWindow({
 
   if (!isOpen || isMinimized) return null;
 
+  // Wrap in DndContext to support resizing handles
   return (
-    <motion.div
-      ref={windowRef}
-      drag
-      dragControls={controls}
-      dragListener={false}
-      dragMomentum={false}
-      dragElastic={0}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
-      dragTransition={{ power: 0 }}
-      className={cn(
-        "window flex flex-col",
-        className,
-        activeTarget === "window" && isActive && "active",
-        isFocused && "ring-2 ring-primary/30",
-        isDragging && "dragging"
-      )}
-      style={{
-        width: size?.width || width,
-        height: size?.height || height,
-        zIndex,
-        position: "absolute",
-        x,
-        y,
-        willChange: isDragging ? "transform" : "auto",
-      }}
+    <DndContext
+      sensors={sensors}
+      modifiers={[restrictToWindowEdges]}
+      onDragStart={handleDndResizeStart}
+      onDragMove={handleDndResizeMove}
+      onDragEnd={handleDndResizeEnd}
     >
-      {/* Title bar */}
-      <div
-        ref={headerRef}
-        onPointerDown={(e) => controls.start(e)}
+      <motion.div
+        ref={windowRef}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        drag
+        dragControls={controls}
+        dragListener={false}
+        dragMomentum={false}
+        dragElastic={0}
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        dragTransition={{ power: 0 }}
         className={cn(
-          "title-bar flex items-center justify-between",
-          activeTarget === "titlebar" && isActive && "active",
-          !isMaximized && "window-drag-handle"
+          "window flex flex-col",
+          className,
+          activeTarget === "window" && isActive && "active",
+          isFocused && "ring-2 ring-primary/30",
+          isDragging && "dragging"
         )}
         style={{
-          minHeight: theme === "winxp" ? "1.5rem" : undefined,
-          cursor: "move",
-          pointerEvents: "auto", // Ensure pointer events work
+          width: size?.width || width,
+          height: size?.height || height,
+          zIndex,
+          position: "absolute",
+          x,
+          y,
+          willChange: isDragging ? "transform" : "auto",
         }}
       >
-        {controlsPosition === "left" && (
-          <div className="title-bar-controls">{controlButtons}</div>
-        )}
-        <div className="title-bar-text">{title}</div>
-        {controlsPosition === "right" && (
-          <div className="title-bar-controls">{controlButtons}</div>
-        )}
-      </div>
+        {/* Title bar */}
+        <div
+          ref={headerRef}
+          onPointerDown={(e) => controls.start(e)}
+          className={cn(
+            "title-bar flex items-center justify-between",
+            activeTarget === "titlebar" && isActive && "active",
+            !isMaximized && "window-drag-handle"
+          )}
+          style={{
+            minHeight: theme === "winxp" ? "1.5rem" : undefined,
+            cursor: "move",
+            pointerEvents: "auto", // Ensure pointer events work
+          }}
+        >
+          {controlsPosition === "left" && (
+            <div className="title-bar-controls">{controlButtons}</div>
+          )}
+          <div className="title-bar-text">{title}</div>
+          {controlsPosition === "right" && (
+            <div className="title-bar-controls">{controlButtons}</div>
+          )}
+        </div>
 
-      {/* Content area */}
-      <div
-        className={cn(
-          "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
-          isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
+        {/* Content area */}
+        <div
+          className={cn(
+            "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
+            isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
+          )}
+        >
+          {children}
+        </div>
+        {!isMaximized && (
+          <Resizable
+            onResizeStart={handleResizeStart}
+            onResizeEnd={handleDndResizeEnd}
+            isResizing={isResizing}
+          />
         )}
-      >
-        {children}
-      </div>
-    </motion.div>
+      </motion.div>
+    </DndContext>
   );
 }
