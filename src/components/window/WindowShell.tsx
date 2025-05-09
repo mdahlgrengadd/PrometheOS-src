@@ -157,7 +157,6 @@ export const WindowShell: React.FC<WindowShellProps> = ({
       }
     }
   };
-
   // Handle dnd-kit resize start
   const handleDndResizeStart = (event: DragStartEvent) => {
     if (!windowRef.current) return;
@@ -181,8 +180,11 @@ export const WindowShell: React.FC<WindowShellProps> = ({
       x: 0,
       y: 0,
     });
-  };
 
+    // Make sure we're starting with the correct position
+    x.set(position.x);
+    y.set(position.y);
+  };
   // Handle dnd-kit resize move
   const handleDndResizeMove = (event: DragMoveEvent) => {
     if (!windowRef.current || !resizeDirection) return;
@@ -200,18 +202,22 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     } else if (resizeDirection.includes("left")) {
       newWidth = Math.max(320, initialSize.width - deltaX);
     }
-
     if (resizeDirection.includes("bottom")) {
       newHeight = Math.max(200, initialSize.height + deltaY);
     } else if (resizeDirection.includes("top")) {
       newHeight = Math.max(200, initialSize.height - deltaY);
+
+      // When resizing from the top, also move the window to keep bottom edge fixed
+      if (resizeDirection === "top" || resizeDirection.includes("top")) {
+        // Calculate position based on the original position + delta to prevent cumulative movements
+        y.set(position.y + deltaY);
+      }
     }
 
     // Apply the new size
     windowRef.current.style.width = `${newWidth}px`;
     windowRef.current.style.height = `${newHeight}px`;
   };
-
   // Handle dnd-kit resize end
   const handleDndResizeEnd = (event: DragEndEvent) => {
     if (!windowRef.current) return;
@@ -225,6 +231,14 @@ export const WindowShell: React.FC<WindowShellProps> = ({
       width: rect.width,
       height: rect.height,
     });
+
+    // If we were resizing from the top, we need to also finalize the position
+    if (resizeDirection === "top" || resizeDirection?.includes("top")) {
+      onDragEnd({
+        x: x.get(),
+        y: y.get(),
+      });
+    }
   };
 
   // Handle individual handle resize start from Resizable component
@@ -245,6 +259,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({
       });
     }
   };
+  // We don't need this function anymore as the movement is handled in handleDndResizeMove
 
   if (!isOpen || isMinimized) return null;
 
@@ -338,9 +353,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({
             isMaximized={isMaximized}
           />
         </motion.div>
-
-        <WindowContent>{children}</WindowContent>
-
+        <WindowContent>{children}</WindowContent>{" "}
         {/* Resizable handles through dnd-kit */}
         {!isMaximized && (
           <Resizable

@@ -7,6 +7,7 @@ interface ResizableProps {
   onResizeStart: () => void;
   onResizeEnd: (event: DragEndEvent, direction: string) => void;
   isResizing: boolean;
+  onMove?: (deltaY: number, direction: string) => void;
 }
 
 // Handle directions
@@ -33,6 +34,7 @@ export const Resizable: React.FC<ResizableProps> = ({
   onResizeStart,
   onResizeEnd,
   isResizing,
+  onMove,
 }) => {
   return (
     <>
@@ -45,6 +47,7 @@ export const Resizable: React.FC<ResizableProps> = ({
           onResizeStart={onResizeStart}
           onResizeEnd={(e) => onResizeEnd(e, direction)}
           isResizing={isResizing}
+          onMove={onMove}
         />
       ))}
     </>
@@ -58,6 +61,7 @@ interface ResizeHandleProps {
   onResizeStart: () => void;
   onResizeEnd: (event: DragEndEvent) => void;
   isResizing: boolean;
+  onMove?: (deltaY: number, direction: string) => void;
 }
 
 const ResizeHandle: React.FC<ResizeHandleProps> = ({
@@ -67,6 +71,7 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({
   onResizeStart,
   onResizeEnd,
   isResizing,
+  onMove,
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `resize-${id}`,
@@ -94,14 +99,12 @@ const ResizeHandle: React.FC<ResizeHandleProps> = ({
         return "nwse-resize";
     }
   };
-
   return (
     <div
       ref={setNodeRef}
       className={`resize-handle ${className}`}
       style={{
         cursor: getCursor(),
-        transform: CSS.Translate.toString(transform),
         opacity: isResizing ? 0.5 : 0,
       }}
       {...listeners}
