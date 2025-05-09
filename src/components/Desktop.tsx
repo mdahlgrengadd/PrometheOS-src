@@ -93,6 +93,8 @@ const Desktop = () => {
     (id: string) => {
       const window = windows.find((w) => w.id === id);
       if (window?.isMinimized) {
+        // For minimized windows, we should focus and restore them
+        useWindowStore.getState().minimize(id, false);
         focusWindow(id);
       } else if (window?.isOpen) {
         minimizeWindow(id);

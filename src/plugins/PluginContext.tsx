@@ -279,6 +279,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       if (plugin) {
         // Plugin doesn't have onFocus method
         focus(pluginId);
+        // Also un-minimize the window
+        useWindowStore.getState().minimize(pluginId, false);
       }
     },
     [pluginManager, focus]
