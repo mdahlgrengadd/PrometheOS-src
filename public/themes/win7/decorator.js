@@ -83,6 +83,8 @@ const Win7Decorator = {
 export async function preload(previousTheme) {
   // Remove existing Windows theme CSS if present
   document.getElementById("win-theme-css")?.remove();
+  // Remove existing override CSS if present
+  document.getElementById("win7-override-css")?.remove();
 
   const link = document.createElement("link");
   link.id = "win-theme-css";
@@ -92,6 +94,12 @@ export async function preload(previousTheme) {
   return new Promise((resolve) => {
     link.onload = () => {
       console.log("Windows 7 theme CSS loaded");
+      // Load local override CSS
+      const overrideLink = document.createElement("link");
+      overrideLink.id = "win7-override-css";
+      overrideLink.rel = "stylesheet";
+      overrideLink.href = "/themes/win7/win7.css";
+      document.head.appendChild(overrideLink);
       resolve(true);
     };
     link.onerror = () => {
@@ -147,12 +155,31 @@ export function postload() {
   `;
 
   document.head.appendChild(style);
+  // Add calculator-specific button overrides
+  const calcOverrideStyle = document.createElement("style");
+  calcOverrideStyle.id = "win7-calc-overrides";
+  calcOverrideStyle.textContent = `
+    .theme-win7 .calculator-root button {
+      box-sizing: border-box !important;
+      display: block !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      height: auto !important;
+      padding: 0.5rem !important;
+    }
+  `;
+  document.head.appendChild(calcOverrideStyle);
 }
 
 // Cleanup function - called when switching away from the theme
 export function cleanup() {
   console.log("Win7 cleanup called");
   document.getElementById("win-theme-css")?.remove();
+  // Remove override CSS
+  document.getElementById("win7-override-css")?.remove();
+  // Remove calculator override style
+  document.getElementById("win7-calc-overrides")?.remove();
   document.getElementById("scrollbar-fixes")?.remove();
 }
 

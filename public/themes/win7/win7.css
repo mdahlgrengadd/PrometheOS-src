@@ -8,3 +8,14 @@
  */
 
 /* Any custom CSS overrides can be added here */ 
+
+/* Override button styling for Windows 7 theme inside calculator */
+.theme-win7 .calculator-root button {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0.5rem !important;
+} 

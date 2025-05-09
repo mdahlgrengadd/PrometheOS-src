@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const CalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -82,7 +82,7 @@ const CalculatorContent: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 calculator-root">
       <div className="bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
         {display}
       </div>
