@@ -29,7 +29,8 @@ import { ThemeType } from "@/lib/theme-types";
 import { useTheme } from "@/lib/ThemeProvider";
 import { resetDesktopState } from "@/utils/resetDesktop";
 
-const SettingsContent: React.FC = () => {  const {
+const SettingsContent: React.FC = () => {
+  const {
     theme,
     setTheme,
     themes,
@@ -76,6 +77,7 @@ const SettingsContent: React.FC = () => {  const {
   const [enableAnimations, setEnableAnimations] = useState(() => {
     return localStorage.getItem("enable-animations") !== "false";
   });
+  // Windows animations are now disabled by default and this setting is no longer needed
 
   // Available background colors
   const backgroundColors = [
@@ -101,6 +103,7 @@ const SettingsContent: React.FC = () => {  const {
     localStorage.setItem("show-desktop-icons", showDesktopIcons.toString());
     localStorage.setItem("taskbar-autohide", autoHideTaskbar.toString());
     localStorage.setItem("enable-animations", enableAnimations.toString());
+    // Windows animations are permanently disabled
 
     // Apply desktop icons setting to the document
     document.documentElement.style.setProperty(
@@ -118,6 +121,12 @@ const SettingsContent: React.FC = () => {  const {
     document.documentElement.style.setProperty(
       "--enable-animations",
       enableAnimations ? "true" : "false"
+    );
+
+    // Windows animations are always disabled for better performance
+    document.documentElement.style.setProperty(
+      "--disable-windows-animations",
+      "true"
     );
   }, [showDesktopIcons, autoHideTaskbar, enableAnimations]);
   const handleThemeChange = async (selectedTheme: ThemeType) => {
@@ -449,7 +458,6 @@ const SettingsContent: React.FC = () => {  const {
                   }
                 />
               </div>
-
               <div
                 className={`flex items-center justify-between ${
                   isSmartphoneMode ? "opacity-50" : ""
@@ -473,7 +481,6 @@ const SettingsContent: React.FC = () => {  const {
                   }
                 />
               </div>
-
               <div
                 className={`flex items-center justify-between ${
                   isSmartphoneMode ? "opacity-50" : ""
@@ -496,7 +503,17 @@ const SettingsContent: React.FC = () => {  const {
                       : ""
                   }
                 />
-              </div>
+              </div>{" "}
+              {/* Information about Windows animations being disabled */}
+              {["win98", "winxp", "win7"].includes(theme) && (
+                <div className="border rounded p-3 bg-muted/30">
+                  <p className="text-sm font-medium">Windows Animations</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Window animations are permanently disabled in Windows themes
+                    for better performance during resize and drag operations.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

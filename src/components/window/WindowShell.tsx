@@ -184,8 +184,7 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     // Make sure we're starting with the correct position
     x.set(position.x);
     y.set(position.y);
-  };
-  // Handle dnd-kit resize move
+  };  // Handle dnd-kit resize move
   const handleDndResizeMove = (event: DragMoveEvent) => {
     if (!windowRef.current || !resizeDirection) return;
 
@@ -194,16 +193,23 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     const deltaY = event.delta.y;
 
     let newWidth = initialSize.width;
-    let newHeight = initialSize.height; // Adjust size based on direction
+    let newHeight = initialSize.height;
+    
+    // Track if we need to update position
+    let needPositionUpdate = false;
+    let newX = position.x;
+    let newY = position.y;
+    
+    // Adjust size based on direction
     if (resizeDirection.includes("right")) {
       newWidth = Math.max(320, initialSize.width + deltaX);
     } else if (resizeDirection.includes("left")) {
       newWidth = Math.max(320, initialSize.width - deltaX);
 
-      // When resizing from the left, also move the window to keep right edge fixed
+      // When resizing from the left, move window to keep right edge fixed
       if (resizeDirection === "left" || resizeDirection.includes("left")) {
-        // Calculate position based on the original position + delta to prevent cumulative movements
-        x.set(position.x + deltaX);
+        newX = position.x + deltaX;
+        needPositionUpdate = true;
       }
     }
     if (resizeDirection.includes("bottom")) {
@@ -211,16 +217,26 @@ export const WindowShell: React.FC<WindowShellProps> = ({
     } else if (resizeDirection.includes("top")) {
       newHeight = Math.max(200, initialSize.height - deltaY);
 
-      // When resizing from the top, also move the window to keep bottom edge fixed
+      // When resizing from the top, move window to keep bottom edge fixed
       if (resizeDirection === "top" || resizeDirection.includes("top")) {
-        // Calculate position based on the original position + delta to prevent cumulative movements
-        y.set(position.y + deltaY);
+        newY = position.y + deltaY;
+        needPositionUpdate = true;
       }
     }
 
     // Apply the new size
     windowRef.current.style.width = `${newWidth}px`;
     windowRef.current.style.height = `${newHeight}px`;
+    
+    // Apply position changes directly if needed
+    if (needPositionUpdate) {
+      // Use immediate positioning with no animation
+      x.set(newX);
+      y.set(newY);
+      
+      // Update DOM directly for immediate visual feedback
+      windowRef.current.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
+    }
   };
   // Handle dnd-kit resize end
   const handleDndResizeEnd = (event: DragEndEvent) => {

@@ -116,6 +116,10 @@ export function WindowsWindow({
     const direction = event.active?.data?.current?.direction || null;
     setResizeDirection(direction);
     handleResizeStart();
+
+    // Make sure we're starting with the correct position
+    x.set(position?.x || 0);
+    y.set(position?.y || 0);
   };
   const handleDndResizeMove = (event: DragMoveEvent) => {
     if (!windowRef.current || !resizeDirection) return;
@@ -123,26 +127,57 @@ export function WindowsWindow({
     const deltaY = event.delta.y;
     let newWidth = initialSize.width;
     let newHeight = initialSize.height;
+
     if (resizeDirection.includes("right")) {
       newWidth = Math.max(100, initialSize.width + deltaX);
     } else if (resizeDirection.includes("left")) {
       newWidth = Math.max(100, initialSize.width - deltaX);
+
+      // When resizing from the left, also move the window to keep right edge fixed
+      if (resizeDirection === "left" || resizeDirection.includes("left")) {
+        // Calculate position based on the original position + delta to prevent cumulative movements
+        x.set((position?.x || 0) + deltaX);
+      }
     }
+
     if (resizeDirection.includes("bottom")) {
       newHeight = Math.max(100, initialSize.height + deltaY);
     } else if (resizeDirection.includes("top")) {
       newHeight = Math.max(50, initialSize.height - deltaY);
+
+      // When resizing from the top, also move the window to keep bottom edge fixed
+      if (resizeDirection === "top" || resizeDirection.includes("top")) {
+        // Calculate position based on the original position + delta to prevent cumulative movements
+        y.set((position?.y || 0) + deltaY);
+      }
     }
+
     windowRef.current.style.width = `${newWidth}px`;
     windowRef.current.style.height = `${newHeight}px`;
   };
   const handleDndResizeEnd = (event: DragEndEvent) => {
     setIsResizing(false);
     setResizeDirection(null);
+
     if (windowRef.current) {
       const rect = windowRef.current.getBoundingClientRect();
       if (onResize) {
         onResize({ width: rect.width, height: rect.height });
+      }
+
+      // If we were resizing from the top or left, we need to also finalize the position
+      if (
+        resizeDirection === "top" ||
+        resizeDirection?.includes("top") ||
+        resizeDirection === "left" ||
+        resizeDirection?.includes("left")
+      ) {
+        if (onDragEnd) {
+          onDragEnd({
+            x: x.get(),
+            y: y.get(),
+          });
+        }
       }
     }
   };

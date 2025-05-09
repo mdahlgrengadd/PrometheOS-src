@@ -49,12 +49,7 @@ export function WindowsWindow({
 
   return (
     <div
-      className={cn(
-        "window",
-        isFocused && "active",
-        "animate-window-appear",
-        className
-      )}
+      className={cn("window", isFocused && "active", className)}
       role="dialog"
       aria-modal="true"
       aria-labelledby="window-title"

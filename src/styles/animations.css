@@ -6,12 +6,7 @@
   --animation-duration-medium: 300ms;
   --animation-duration-long: 500ms;
   --enable-animations: true; /* Default value, will be overridden by JS */
-}
-
-/* Window animations */
-.window {
-  transition: opacity var(--animation-duration-medium) ease,
-    transform var(--animation-duration-medium) ease;
+  --disable-windows-animations: false; /* Windows-specific animations disable */
 }
 
 /* Disable all animations when animations are turned off */
@@ -21,8 +16,14 @@ html[style*="--enable-animations: false"] * {
   animation-duration: 0ms !important;
 }
 
-/* Window animations and transitions */
-/* Base animation timings */
+/* All window animations are disabled by default */
+.window, .draggable-window {
+  transition: none !important;
+  animation: none !important;
+  will-change: transform; /* Hint to browser to use GPU acceleration */
+}
+
+/* Base animation timings - kept for non-window elements */
 :root {
   --anim-duration-fast: 100ms;
   --anim-duration-normal: 200ms;
@@ -30,117 +31,9 @@ html[style*="--enable-animations: false"] * {
   --anim-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Window animations */
-.draggable-window {
-  transition: 
-    box-shadow var(--anim-duration-normal) var(--anim-easing),
-    border-color var(--anim-duration-normal) var(--anim-easing),
-    opacity var(--anim-duration-normal) var(--anim-easing);
-  will-change: transform, opacity; /* Hint to browser to use GPU acceleration */
-}
+/* Window animations have been removed to improve performance */
 
-/* Important: No transform transition by default */
-.draggable-window:not(.animating-transform) {
-  transition-property: box-shadow, border-color, opacity;
-}
-
-/* Only enable transform transitions when explicitly animating */
-.animating-transform {
-  transition: transform var(--anim-duration-normal) var(--anim-easing);
-}
-
-/* Disable transition during drag */
-.dragging {
-  transition: none !important;
-}
-
-/* Window opening animation */
-@keyframes window-open {
-  from {
-    opacity: 0;
-    transform: scale3d(0.95, 0.95, 1);
-  }
-  to {
-    opacity: 1;
-    transform: scale3d(1, 1, 1);
-  }
-}
-
-/* Window closing animation */
-@keyframes window-close {
-  from {
-    opacity: 1;
-    transform: scale3d(1, 1, 1);
-  }
-  to {
-    opacity: 0;
-    transform: scale3d(0.95, 0.95, 1);
-  }
-}
-
-/* Window minimize animation */
-@keyframes window-minimize {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
-  }
-  to {
-    opacity: 0;
-    transform: translate3d(0, 100%, 0) scale3d(0.5, 0.5, 1);
-  }
-}
-
-/* Window maximize animation */
-@keyframes window-maximize {
-  from {
-    transform: scale3d(0.95, 0.95, 1);
-  }
-  to {
-    transform: scale3d(1, 1, 1);
-  }
-}
-
-/* Apply animations */
-.window-opening {
-  animation: window-open var(--anim-duration-normal) var(--anim-easing);
-  will-change: transform, opacity;
-}
-
-.window-closing {
-  animation: window-close var(--anim-duration-fast) var(--anim-easing) forwards;
-  will-change: transform, opacity;
-}
-
-.window-minimizing {
-  animation: window-minimize var(--anim-duration-normal) var(--anim-easing) forwards;
-  will-change: transform, opacity;
-}
-
-.window-maximizing {
-  animation: window-maximize var(--anim-duration-normal) var(--anim-easing);
-  will-change: transform;
-}
-
-/* Focus ring animation */
-@keyframes focus-ring-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb, 0, 102, 204), 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(var(--accent-primary-rgb, 0, 102, 204), 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb, 0, 102, 204), 0);
-  }
-}
-
-/* Apply focus animation */
-.window-focused {
-  animation: focus-ring-pulse var(--anim-duration-slow) var(--anim-easing);
-  will-change: box-shadow;
-}
-
-/* BeOS window frame highlight for focused windows */
+/* Focus styling for windows - static only, no animations */
 .theme-beos .window.focused .window-titlebar {
   border-color: var(--beos-window-focus-color, #a855f7);
 }
@@ -156,4 +49,4 @@ html[style*="--enable-animations: false"] * {
   transition: transform var(--animation-duration-short) ease,
     opacity var(--animation-duration-short) ease;
   will-change: transform, opacity;
-} 
+}
