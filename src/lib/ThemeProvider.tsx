@@ -1,14 +1,28 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { themes } from './theme-definitions';
+import { themes } from "./theme-definitions";
 import {
-    getAvailableExternalThemes, installTheme as installThemeFromUrl, loadExternalTheme,
-    uninstallTheme as uninstallThemeById
-} from './theme-loader';
-import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './theme-types';
+  getAvailableExternalThemes,
+  installTheme as installThemeFromUrl,
+  loadExternalTheme,
+  uninstallTheme as uninstallThemeById,
+} from "./theme-loader";
+import {
+  ThemeConfig,
+  ThemeContextType,
+  ThemeInstallResult,
+  ThemeType,
+} from "./theme-types";
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -34,25 +48,27 @@ export const useTheme = () => useContext(ThemeContext);
 // Function to load Windows UI component styles
 const loadWindowsUIComponentStyles = (windowsTheme: string | null) => {
   // Remove any existing Windows UI component styles
-  document.querySelectorAll('link[data-windows-ui-styles]').forEach(el => el.remove());
+  document
+    .querySelectorAll("link[data-windows-ui-styles]")
+    .forEach((el) => el.remove());
 
   if (!windowsTheme) return;
 
   // Only load styles for Windows themes
-  if (['win98', 'winxp', 'win7'].includes(windowsTheme)) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.setAttribute('data-windows-ui-styles', 'true');
-    
+  if (["win98", "winxp", "win7"].includes(windowsTheme)) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.setAttribute("data-windows-ui-styles", "true");
+
     // Load the appropriate Windows UI styles based on the theme
-    if (windowsTheme === 'win98') {
-      link.href = '/src/styles/windows98-ui.css';
-    } else if (windowsTheme === 'winxp') {
-      link.href = '/src/styles/windowsxp-ui.css';
-    } else if (windowsTheme === 'win7') {
-      link.href = '/src/styles/windows7-ui.css';
+    if (windowsTheme === "win98") {
+      link.href = "/src/styles/windows98-ui.css";
+    } else if (windowsTheme === "winxp") {
+      link.href = "/src/styles/windowsxp-ui.css";
+    } else if (windowsTheme === "win7") {
+      link.href = "/src/styles/windows7-ui.css";
     }
-    
+
     document.head.appendChild(link);
   }
 };
@@ -78,12 +94,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   // Load Windows UI styles on initial render and when theme changes
   useEffect(() => {
     const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
-    
+
     // Apply Window-specific CSS classes to the document body for global styling
     if (isWindowsTheme) {
-      document.body.classList.add('windows-theme', `theme-${theme}`);
+      document.body.classList.add("windows-theme", `theme-${theme}`);
     } else {
-      document.body.classList.remove('windows-theme', 'theme-win98', 'theme-winxp', 'theme-win7');
+      document.body.classList.remove(
+        "windows-theme",
+        "theme-win98",
+        "theme-winxp",
+        "theme-win7"
+      );
     }
   }, [theme]);
 
@@ -162,11 +183,31 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const setTheme = (newTheme: ThemeType) => {
+    // 1) Run cleanup on the old theme's decorator
+    const prev = allThemes[theme];
+    if (prev?.decoratorModule) {
+      try {
+        // @ts-expect-error - We know this might not exist on all themes
+        if (typeof prev.decoratorModule.cleanup === "function") {
+          // @ts-expect-error - Calling cleanup method from dynamically loaded module
+          prev.decoratorModule.cleanup();
+        }
+      } catch (e) {
+        console.error(`Error cleaning up previous theme: ${theme}`, e);
+      }
+    }
+
+    // 2) Only remove Windows theme CSS link when NOT switching to a Windows theme
+    const isWindowsTheme = ["win98", "winxp", "win7"].includes(newTheme);
+    if (!isWindowsTheme) {
+      document.getElementById("win-theme-css")?.remove();
+    }
+
+    // 3) Update theme state and localStorage
     setThemeState(newTheme);
     localStorage.setItem("os-theme", newTheme);
-    
-    // Load Windows UI component styles when theme changes
-    const isWindowsTheme = ["win98", "winxp", "win7"].includes(newTheme);
+
+    // 4) Load Windows UI component styles when theme changes
     loadWindowsUIComponentStyles(isWindowsTheme ? newTheme : null);
   };
 
@@ -199,6 +240,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     async (themeId: string): Promise<boolean> => {
       // Store current theme as a fallback
       const previousTheme = theme;
+
+      // Only remove Windows theme CSS link when NOT switching to a Windows theme
+      const isWindowsTheme = ["win98", "winxp", "win7"].includes(themeId);
+      if (!isWindowsTheme) {
+        document.getElementById("win-theme-css")?.remove();
+      }
 
       // Run cleanup for the previous theme if it has a cleanup function
       const prevThemeConfig = allThemes[previousTheme];
@@ -358,7 +405,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // If the theme being uninstalled is the current theme, switch to light theme
       if (theme === themeId) {
-        setTheme("light");
+        // Get the theme config to access its cleanup function
+        const themeConfig = allThemes[themeId];
+
+        // Call cleanup function if it exists
+        if (themeConfig?.decoratorModule) {
+          try {
+            // @ts-expect-error - We know this might not exist on all themes
+            if (typeof themeConfig.decoratorModule.cleanup === "function") {
+              // @ts-expect-error - Calling cleanup method from dynamically loaded module
+              themeConfig.decoratorModule.cleanup();
+            }
+          } catch (error) {
+            console.error(`Error cleaning up theme: ${themeId}`, error);
+          }
+        }
+
+        // Always use loadTheme instead of setTheme to ensure proper cleanup
+        await loadTheme("light");
       }
 
       const success = await uninstallThemeById(themeId);

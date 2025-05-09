@@ -6,6 +6,7 @@
 @import './styles/windows98-ui.css';
 @import './styles/windowsxp-ui.css';
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

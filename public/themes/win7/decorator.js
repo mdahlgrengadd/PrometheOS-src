@@ -57,13 +57,13 @@ function Win7Controls({ onMinimize, onMaximize, onClose }) {
 function Win7Header({ title, onMinimize, onMaximize, onClose, headerRef }) {
   return React.createElement(
     "div",
-    { 
-      ref: headerRef, 
-      className: "window-header win7-header", 
-      style: { 
+    {
+      ref: headerRef,
+      className: "window-header win7-header",
+      style: {
         cursor: "move",
-        pointerEvents: "auto" // Ensure pointer events work
-      }
+        pointerEvents: "auto", // Ensure pointer events work
+      },
     },
     React.createElement("div", { className: "window-title" }, title),
     React.createElement(Win7Controls, { onMinimize, onMaximize, onClose })
@@ -81,31 +81,24 @@ const Win7Decorator = {
 
 // Preload function - called before setting the theme
 export async function preload(previousTheme) {
-  // Remove existing Windows theme CSS elements if present
-  document.getElementById("win-theme-css")?.remove(); 
-  document.getElementById("win-custom-css")?.remove();
+  // Remove existing Windows theme CSS if present
+  document.getElementById("win-theme-css")?.remove();
 
-  // The base 7.css will be loaded by the theme system based on the cssUrl in manifest.json
-  
-  // Create link for our custom CSS overrides
-  const customLink = document.createElement("link");
-  customLink.id = "win-custom-css"; 
-  customLink.rel = "stylesheet";
-  customLink.href = "/themes/win7/win7.css";
+  const link = document.createElement("link");
+  link.id = "win-theme-css";
+  link.rel = "stylesheet";
+  link.href = "https://unpkg.com/7.css@0.13.0/dist/7.css";
 
   return new Promise((resolve) => {
-    // We're loading our custom CSS here rather than relying on the manifest
-    // This allows us to keep the manifest validator happy (which expects a string),
-    // while still loading our custom styles
-    customLink.onload = () => {
-      console.log("Windows 7 custom CSS loaded by decorator");
+    link.onload = () => {
+      console.log("Windows 7 theme CSS loaded");
       resolve(true);
     };
-    customLink.onerror = () => {
-      console.error("Failed to load Windows 7 custom CSS");
-      resolve(true); // Still resolve so theme can be applied
+    link.onerror = () => {
+      console.error("Failed to load Windows 7 theme CSS");
+      resolve(false);
     };
-    document.head.appendChild(customLink);
+    document.head.appendChild(link);
   });
 }
 
@@ -113,16 +106,6 @@ export async function preload(previousTheme) {
 export function postload() {
   // Add scrollbar fixes for Windows 7
   document.getElementById("scrollbar-fixes")?.remove();
-
-  // Ensure our custom CSS is loaded - sometimes the theme loader can reset things
-  if (!document.getElementById("win-custom-css")) {
-    const customLink = document.createElement("link");
-    customLink.id = "win-custom-css";
-    customLink.rel = "stylesheet";
-    customLink.href = "/themes/win7/win7.css";
-    document.head.appendChild(customLink);
-    console.log("Re-applying Windows 7 custom CSS in postload");
-  }
 
   const style = document.createElement("style");
   style.id = "scrollbar-fixes";
@@ -168,11 +151,9 @@ export function postload() {
 
 // Cleanup function - called when switching away from the theme
 export function cleanup() {
-  // The win-theme-css will be removed by the theme system
-  // We need to clean up our custom CSS and scrollbar fixes
-  document.getElementById("win-custom-css")?.remove();
+  console.log("Win7 cleanup called");
+  document.getElementById("win-theme-css")?.remove();
   document.getElementById("scrollbar-fixes")?.remove();
-  console.log("Windows 7 custom CSS and fixes removed");
 }
 
 // For module-style loading

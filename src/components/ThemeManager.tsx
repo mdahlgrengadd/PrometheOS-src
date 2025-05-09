@@ -72,9 +72,9 @@ const ThemeManager: React.FC = () => {
 
     setIsUninstalling(true);
     try {
-      // If we're uninstalling the active theme, switch to light theme
+      // If we're uninstalling the active theme, switch to light theme using loadTheme
       if (activeTheme === themeToUninstall) {
-        setTheme("light");
+        await loadTheme("light");
       }
 
       const success = await uninstallTheme(themeToUninstall);
@@ -132,20 +132,16 @@ const ThemeManager: React.FC = () => {
                     : "border-gray-200 hover:border-blue-300"
                 }`}
                 onClick={async () => {
-                  // Use loadTheme for Windows themes to properly load CSS and decorators
-                  if (["win98", "winxp", "win7"].includes(themeId)) {
-                    setError(null);
-                    try {
-                      const success = await loadTheme(themeId);
-                      if (!success) {
-                        setError(`Failed to load Windows theme: ${themeId}`);
-                      }
-                    } catch (err) {
-                      setError(`Error loading theme: ${themeId}`);
-                      console.error("Error loading theme:", err);
+                  // Always use loadTheme for proper cleanup of resources
+                  setError(null);
+                  try {
+                    const success = await loadTheme(themeId);
+                    if (!success) {
+                      setError(`Failed to load theme: ${themeId}`);
                     }
-                  } else {
-                    setTheme(themeId);
+                  } catch (err) {
+                    setError(`Error loading theme: ${themeId}`);
+                    console.error("Error loading theme:", err);
                   }
                 }}
               >
@@ -198,12 +194,17 @@ const ThemeManager: React.FC = () => {
                 <div className={styles.themeButtonsContainer}>
                   <WindowsButton
                     variant={activeTheme === themeId ? "secondary" : "default"}
-                    onClick={() => {
-                      // Use loadTheme for Windows themes to properly load CSS and decorators
-                      if (["win98", "winxp", "win7"].includes(themeId)) {
-                        loadTheme(themeId);
-                      } else {
-                        setTheme(themeId);
+                    onClick={async () => {
+                      // Always use loadTheme for proper cleanup of resources
+                      setError(null);
+                      try {
+                        const success = await loadTheme(themeId);
+                        if (!success) {
+                          setError(`Failed to load theme: ${themeId}`);
+                        }
+                      } catch (err) {
+                        setError(`Error loading theme: ${themeId}`);
+                        console.error("Error loading theme:", err);
                       }
                     }}
                     className={styles.themeActivateButton}
