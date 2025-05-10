@@ -5,7 +5,7 @@
   flex-direction: column;
   background-color: var(--window-bg, #fff);
   border: var(--window-border, 1px solid #333);
-  box-shadow: none;
+  /* box-shadow intentionally omitted to allow content shadow */
   border-radius: var(--window-border-radius, 3px);
   overflow: hidden;
   transform-origin: center;
@@ -326,4 +326,26 @@
   .unified-window:not(.maximized) .window-content {
     box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.28);
   }
+}
+
+/* Always-on drop shadow for window content per theme */
+.theme-light .unified-window:not(.maximized) .window-content {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
+}
+.theme-dark .unified-window:not(.maximized) .window-content {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28) !important;
+}
+.theme-fluxbox .unified-window:not(.maximized) .window-content {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+}
+.theme-macos .unified-window:not(.maximized) .window-content {
+  box-shadow: 0 16px 40px 0 rgba(0,0,0,0.18), 0 1.5px 6px 0 rgba(0,0,0,0.08) !important;
+}
+
+/* Ensure window-content shadow is visible for all themes by allowing overflow */
+.theme-light .unified-window,
+.theme-dark .unified-window,
+.theme-fluxbox .unified-window,
+.theme-macos .unified-window {
+  overflow: visible !important;
 }
