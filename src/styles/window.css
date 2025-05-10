@@ -300,10 +300,10 @@
 
   /* Top-left corner handle for BeOS */
   .theme-beos .resize-handle-tl {
-    top: 37px !important; /* 32px titlebar + 5px frame border */
+    top: 25px !important; /* 32px titlebar + 5px frame border */
     right: auto !important;
     bottom: auto !important;
-    left: 5px !important; /* Account for 5px frame border */
+    left: -7px !important; /* Account for 5px frame border */
     width: 16px !important;
     height: 16px !important;
     cursor: nwse-resize;
