@@ -1,17 +1,16 @@
-import "./App.css";
+import './App.css';
 
-import { useEffect } from "react";
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { useEffect } from 'react';
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 
-import { ThemeProvider, useTheme } from "@/lib/ThemeProvider";
-import { PluginProvider } from "@/plugins/PluginContext";
+import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
+import { PluginProvider } from '@/plugins/PluginContext';
 
-import { WindowDndContext } from "./components/window/WindowDndContext";
-import { useViewMode } from "./hooks/useViewMode";
-import Index from "./pages/index";
-import MobileIndex from "./pages/MobileIndex";
-import Windows7DemoPage from "./pages/Windows7Demo";
-
+import { WindowDndContext } from './components/shelley-wm/WindowDndContext';
+import { useViewMode } from './hooks/useViewMode';
+import Index from './pages/index';
+import MobileIndex from './pages/MobileIndex';
+import Windows7DemoPage from './pages/Windows7Demo';
 
 function ThemedWindowWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

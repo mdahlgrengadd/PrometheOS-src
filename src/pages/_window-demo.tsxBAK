@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UnifiedWindowShell } from "@/components/window/UnifiedWindowShell";
+import { UnifiedWindowShell } from "@/components/shelley-wm/UnifiedWindowShell";
 
 export default function UnifiedWindowDemo() {
   const [windowState, setWindowState] = useState({

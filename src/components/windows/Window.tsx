@@ -8,7 +8,7 @@ import {
 } from '@dnd-kit/core';
 import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
-import { Resizable } from '../window/Resizable';
+import { Resizable } from '../shelley-wm/Resizable';
 
 interface WindowProps {
   title: string;
@@ -259,8 +259,12 @@ export function WindowsWindow({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onPointerDown={(e) => {
-          const isDraggableTarget = !!(e.target as Element).closest('[data-draggable="true"]');
-          const isControlsClick = !!(e.target as Element).closest('.title-bar-controls');
+          const isDraggableTarget = !!(e.target as Element).closest(
+            '[data-draggable="true"]'
+          );
+          const isControlsClick = !!(e.target as Element).closest(
+            ".title-bar-controls"
+          );
           if (isDraggableTarget && !isControlsClick && !isMaximized) {
             onFocus();
             controls.start(e);
