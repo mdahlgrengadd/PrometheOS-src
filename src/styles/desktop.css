@@ -53,7 +53,8 @@
 .windows-wrapper .window,
 .windows-wrapper .draggable-window {
   pointer-events: auto !important;
-  z-index: auto !important; /* Ensure z-index works properly */
+  /* Let inline styles decide stacking order */
+  /* Removed z-index override so individual windows can control their own z-index via inline style */
 }
 
 /* Ensure all child elements of windows receive pointer events */
