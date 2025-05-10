@@ -45,7 +45,6 @@ const AudioPlayerUI = () => {
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [hasKicked, setHasKicked] = useState(false);
 
   const howlRef = useRef<Howl | null>(null);
@@ -54,6 +53,7 @@ const AudioPlayerUI = () => {
   const oscilloscopeRef = useRef<HTMLDivElement | null>(null);
   const requestRef = useRef<number | null>(null);
   const silentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const soundIdRef = useRef<number | null>(null);
 
   // Format time in mm:ss
   const formatTime = (time: number) => {
@@ -114,22 +114,17 @@ const AudioPlayerUI = () => {
     });
 
     howlRef.current = howl;
+    // Initially store soundId if should autoplay
+    if (isPlaying) {
+      soundIdRef.current = howl.play();
+    }
     setCurrentTime(howl.seek() as number);
     setProgress(((howl.seek() as number) / howl.duration() || 0) * 100);
-
-    if (isPlaying) {
-      // Resume AudioContext before playing
-      if (Howler.ctx && Howler.ctx.state === "suspended") {
-        Howler.ctx.resume().then(() => howl.play());
-      } else {
-        howl.play();
-      }
-    }
 
     return () => {
       howl.unload();
     };
-  }, [currentTrack, onNext, isPlaying, isMuted, volume]);
+  }, [currentTrack, onNext]);
 
   // Play/pause effect
   useEffect(() => {
@@ -137,9 +132,15 @@ const AudioPlayerUI = () => {
     if (!howl) return;
 
     if (isPlaying) {
-      howl.play();
+      if (soundIdRef.current !== null) {
+        howl.play(soundIdRef.current);
+      } else {
+        soundIdRef.current = howl.play();
+      }
     } else {
-      howl.pause();
+      if (soundIdRef.current !== null) {
+        howl.pause(soundIdRef.current);
+      }
     }
   }, [isPlaying]);
 
@@ -248,19 +249,19 @@ const AudioPlayerUI = () => {
     const h = howlRef.current;
     if (h) {
       if (isPlaying) {
-        h.pause();
+        if (soundIdRef.current !== null) {
+          h.pause(soundIdRef.current);
+        }
         onPause();
       } else {
-        h.play();
+        if (soundIdRef.current !== null) {
+          h.play(soundIdRef.current);
+        } else {
+          soundIdRef.current = h.play();
+        }
         onPlay();
       }
     }
-  };
-
-  // Handle volume change from UI
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    onSetVolume(newVolume);
   };
 
   // Seek to position
@@ -278,11 +279,6 @@ const AudioPlayerUI = () => {
   // Toggle playlist visibility
   const togglePlaylist = () => {
     setShowPlaylist(!showPlaylist);
-  };
-
-  // Toggle volume slider visibility
-  const toggleVolumeSlider = () => {
-    setShowVolumeSlider(!showVolumeSlider);
   };
 
   // Play specific track
@@ -320,7 +316,10 @@ const AudioPlayerUI = () => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600" data-draggable="true"> 
+    <div
+      className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600"
+      data-draggable="true"
+    >
       {/* Title and Time */}
       <div className="absolute top-0 w-full p-2 z-10">
         <div id="title" className="text-center text-white font-light text-xl">
@@ -364,92 +363,75 @@ const AudioPlayerUI = () => {
       {/* Controls */}
       <div className="p-2 pb-3 flex items-center justify-between">
         <button
-          className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
+          data-draggable="false"
+          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           onClick={togglePlaylist}
         >
-          <List size={22} />
+          <List size={24} />
         </button>
 
         <div className="flex items-center justify-center gap-4">
           <button
-            className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
+            data-draggable="false"
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
             onClick={onPrevious}
           >
-            <SkipBack size={26} />
+            <SkipBack size={24} />
           </button>
 
           <button
-            className="text-foreground bg-foreground/20 w-10 h-10 rounded-full flex items-center justify-center opacity-90 hover:opacity-100 transition-opacity"
+            data-draggable="false"
+            className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
             onClick={togglePlay}
           >
-            {isPlaying ? (
-              <Pause size={22} />
-            ) : (
-              <Play size={22} className="ml-1" />
-            )}
+            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </button>
 
           <button
-            className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
+            data-draggable="false"
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
             onClick={onNext}
           >
-            <SkipForward size={26} />
+            <SkipForward size={24} />
           </button>
         </div>
 
         <button
-          className="text-foreground opacity-80 hover:opacity-100 transition-opacity"
-          onClick={toggleVolumeSlider}
+          data-draggable="false"
+          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          onClick={onToggleMute}
         >
-          {isMuted ? <VolumeX size={22} /> : <Volume size={22} />}
+          {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
         </button>
       </div>
 
       {/* Playlist Overlay */}
       {showPlaylist && (
-        <div className="absolute inset-0 bg-background/90 z-20 flex flex-col">
+        <div
+          data-draggable="false"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 flex flex-col"
+        >
           <div className="flex-1 py-10 overflow-auto">
             {songs.map((song, index) => (
               <div
                 key={index}
-                className={`text-foreground text-lg py-3 px-6 cursor-pointer hover:bg-foreground/10 transition ${
+                className={`text-white text-lg py-3 px-6 cursor-pointer hover:bg-white/10 transition ${
                   index === currentTrack ? "font-bold" : "font-light"
                 }`}
                 onClick={() => playTrack(index)}
+                data-draggable="false"
               >
                 {song.title}
               </div>
             ))}
           </div>
           <button
-            className="self-center mb-6 text-foreground py-2 px-6 rounded-full bg-foreground/20 hover:bg-foreground/30 transition"
+            data-draggable="false"
+            className="self-center mb-6 text-white py-2 px-6 rounded-full bg-transparent border border-white/30 hover:bg-white/10 transition"
             onClick={togglePlaylist}
           >
             Close
           </button>
-        </div>
-      )}
-
-      {/* Volume Slider Overlay */}
-      {showVolumeSlider && (
-        <div className="absolute bottom-16 right-4 bg-background/80 p-3 rounded-lg z-20">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onToggleMute}
-              className="text-foreground opacity-80 hover:opacity-100"
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume size={16} />}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolumeChange}
-              className="w-32 accent-foreground"
-            />
-          </div>
         </div>
       )}
     </div>
