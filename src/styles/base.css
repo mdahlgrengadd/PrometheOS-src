@@ -47,6 +47,22 @@
     overflow: hidden;
   }
 
+  /* Menu reset - to override button styling in menus */
+  .reset-menu-style {
+    all: unset !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-family: inherit !important;
+    cursor: default !important;
+  }
+
   /* Core app styling for controls */
   button, .btn {
     background: var(--button-bg, #e0e0e0);

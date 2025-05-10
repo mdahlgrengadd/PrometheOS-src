@@ -1,10 +1,11 @@
-import { Code, Type } from 'lucide-react';
 import React, { useState } from 'react';
 
 import {
-    Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut,
-    MenubarTrigger
+    MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut
 } from '@/components/ui/menubar';
+import {
+    WindowsMenubar, WindowsMenubarContent, WindowsMenubarTrigger
+} from '@/components/ui/windows';
 import CharacterCount from '@tiptap/extension-character-count';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
@@ -14,9 +15,10 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Underline from '@tiptap/extension-underline';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
+// Internal components (toolbar + page view)
 import WordEditorContent from './WordEditorContent';
 import WordEditorToolbar from './WordEditorToolbar';
 
@@ -68,10 +70,21 @@ const WordEditor = () => {
 
   return (
     <div className="flex flex-col h-full bg-background text-foreground">
-      <Menubar className="rounded-none border-b border-border">
+      {/* Top application menubar */}
+      <WindowsMenubar>
         <MenubarMenu>
-          <MenubarTrigger className="font-normal">File</MenubarTrigger>
-          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+          <WindowsMenubarTrigger
+            className="!bg-transparent !border-0"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
+            }}
+          >
+            File
+          </WindowsMenubarTrigger>
+          <WindowsMenubarContent>
             <MenubarItem className="hover:bg-muted">
               New Document
               <MenubarShortcut>⌘N</MenubarShortcut>
@@ -88,12 +101,22 @@ const WordEditor = () => {
             <MenubarItem className="hover:bg-muted">Export as PDF</MenubarItem>
             <MenubarSeparator />
             <MenubarItem className="hover:bg-muted">Print</MenubarItem>
-          </MenubarContent>
+          </WindowsMenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
-          <MenubarTrigger className="font-normal">Edit</MenubarTrigger>
-          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+          <WindowsMenubarTrigger
+            className="!bg-transparent !border-0"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
+            }}
+          >
+            Edit
+          </WindowsMenubarTrigger>
+          <WindowsMenubarContent>
             <MenubarItem
               className="hover:bg-muted"
               onClick={() => editor?.commands.undo()}
@@ -138,22 +161,42 @@ const WordEditor = () => {
               Paste
               <MenubarShortcut>⌘V</MenubarShortcut>
             </MenubarItem>
-          </MenubarContent>
+          </WindowsMenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
-          <MenubarTrigger className="font-normal">View</MenubarTrigger>
-          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+          <WindowsMenubarTrigger
+            className="!bg-transparent !border-0"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
+            }}
+          >
+            View
+          </WindowsMenubarTrigger>
+          <WindowsMenubarContent>
             <MenubarItem className="hover:bg-muted">Zoom In</MenubarItem>
             <MenubarItem className="hover:bg-muted">Zoom Out</MenubarItem>
             <MenubarSeparator />
             <MenubarItem className="hover:bg-muted">Full Screen</MenubarItem>
-          </MenubarContent>
+          </WindowsMenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
-          <MenubarTrigger className="font-normal">Format</MenubarTrigger>
-          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+          <WindowsMenubarTrigger
+            className="!bg-transparent !border-0"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
+            }}
+          >
+            Format
+          </WindowsMenubarTrigger>
+          <WindowsMenubarContent>
             <MenubarItem className="hover:bg-muted">Font...</MenubarItem>
             <MenubarItem className="hover:bg-muted">Paragraph...</MenubarItem>
             <MenubarSeparator />
@@ -165,12 +208,22 @@ const WordEditor = () => {
               Headers & Footers
             </MenubarItem>
             <MenubarItem className="hover:bg-muted">Page Setup...</MenubarItem>
-          </MenubarContent>
+          </WindowsMenubarContent>
         </MenubarMenu>
 
         <MenubarMenu>
-          <MenubarTrigger className="font-normal">Help</MenubarTrigger>
-          <MenubarContent className="bg-popover border rounded-md shadow-md z-50">
+          <WindowsMenubarTrigger
+            className="!bg-transparent !border-0"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+              appearance: "none",
+            }}
+          >
+            Help
+          </WindowsMenubarTrigger>
+          <WindowsMenubarContent>
             <MenubarItem className="hover:bg-muted">Documentation</MenubarItem>
             <MenubarItem className="hover:bg-muted">
               Keyboard Shortcuts
@@ -179,16 +232,19 @@ const WordEditor = () => {
             <MenubarItem className="hover:bg-muted">
               About Word Editor
             </MenubarItem>
-          </MenubarContent>
+          </WindowsMenubarContent>
         </MenubarMenu>
-      </Menubar>
+      </WindowsMenubar>
 
+      {/* Toolbar with Windows-styled controls */}
       <WordEditorToolbar editor={editor} />
 
+      {/* Document page view */}
       <div className="flex-grow overflow-auto bg-background">
         <WordEditorContent editor={editor} documentName={documentName} />
       </div>
 
+      {/* Status bar */}
       <div className="border-t border-border px-4 py-1 text-xs flex justify-between items-center bg-muted/50">
         <div className="flex items-center space-x-4">
           <span>Words: {editor?.storage.characterCount.words() || 0}</span>

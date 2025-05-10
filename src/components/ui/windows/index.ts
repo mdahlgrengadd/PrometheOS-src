@@ -8,3 +8,4 @@ export * from "./input";
 export * from "./card";
 export * from "./select";
 export * from "./tabs";
+export * from "./menubar";

@@ -1,8 +1,7 @@
 import React from 'react';
 
-import WordEditorComponent from '@/components/ms-word';
-
 import { Plugin, PluginManifest } from '../../types';
+import WordEditorComponent from './WordEditor';
 
 export const manifest: PluginManifest = {
   id: "WordEditor",

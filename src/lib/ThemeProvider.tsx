@@ -530,6 +530,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Load Windows UI component styles if applicable
     loadWindowsUIComponentStyles(theme);
+
+    // -------------- Ensure fallback variables for shadcn UI --------------
+    const ensureCssVar = (name: string, fallback: string) => {
+      if (!root.style.getPropertyValue(name)) {
+        root.style.setProperty(name, fallback);
+      }
+    };
+
+    // Provide sensible defaults so hover:bg-muted etc. still work even when theme doesn't supply them.
+    ensureCssVar("--muted", "0, 0%, 88%"); // light grey
+    ensureCssVar("--muted-foreground", "0, 0%, 10%");
+    ensureCssVar("--accent", "220, 14.3%, 95.9%");
+    ensureCssVar("--accent-foreground", "220.9, 39.3%, 11%");
+    ensureCssVar("--popover", "0, 0%, 100%");
+    ensureCssVar("--popover-foreground", "0, 0%, 10%");
+    // --------------------------------------------------------------------
   }, [
     theme,
     allThemes,

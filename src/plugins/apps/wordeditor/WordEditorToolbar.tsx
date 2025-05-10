@@ -1,16 +1,17 @@
 import {
-    AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Code, Heading1, Heading2, Highlighter,
-    Image, Italic, Link, List, ListOrdered, Redo, RotateCcw, Strikethrough, Underline, Undo
+    AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Code as CodeIcon, Heading1, Heading2,
+    Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListOrdered, Redo, RotateCcw,
+    Strikethrough, Underline as UnderlineIcon
 } from 'lucide-react';
 import React from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-    Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue
-} from '@/components/ui/select';
+import { SelectContent, SelectTrigger } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+// Windows-themed components
+import {
+    Button as WindowsButton, SelectGroup, SelectItem, SelectValue, WindowsSelect
+} from '@/components/ui/windows';
 import { cn } from '@/lib/utils';
 import { Editor } from '@tiptap/react';
 
@@ -52,7 +53,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
     <div className="border-b border-border px-3 py-1 flex flex-wrap gap-1 items-center bg-muted/50">
       {/* Font Family & Size */}
       <div className="flex items-center gap-1">
-        <Select>
+        <WindowsSelect>
           <SelectTrigger className="h-8 w-[100px]">
             <SelectValue placeholder="Arial" />
           </SelectTrigger>
@@ -64,9 +65,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               <SelectItem value="courier">Courier New</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </WindowsSelect>
 
-        <Select>
+        <WindowsSelect>
           <SelectTrigger className="h-8 w-[60px]">
             <SelectValue placeholder="12" />
           </SelectTrigger>
@@ -80,31 +81,31 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               <SelectItem value="24">24</SelectItem>
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </WindowsSelect>
       </div>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Basic Formatting */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn("px-2 h-8 w-8", editor.isActive("bold") && "bg-muted")}
         onClick={() => editor.chain().focus().toggleBold().run()}
       >
         <Bold className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn("px-2 h-8 w-8", editor.isActive("italic") && "bg-muted")}
         onClick={() => editor.chain().focus().toggleItalic().run()}
       >
         <Italic className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -113,22 +114,22 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         )}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
       >
-        <Underline className="h-4 w-4" />
-      </Button>
+        <UnderlineIcon className="h-4 w-4" />
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn("px-2 h-8 w-8", editor.isActive("strike") && "bg-muted")}
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
         <Strikethrough className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Heading Styles */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -138,9 +139,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
       >
         <Heading1 className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -150,12 +151,12 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >
         <Heading2 className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Lists */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -165,9 +166,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleBulletList().run()}
       >
         <List className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -177,12 +178,12 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
       >
         <ListOrdered className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Alignment */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -192,9 +193,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().setTextAlign("left").run()}
       >
         <AlignLeft className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -204,9 +205,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().setTextAlign("center").run()}
       >
         <AlignCenter className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -216,9 +217,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().setTextAlign("right").run()}
       >
         <AlignRight className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -228,42 +229,42 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().setTextAlign("justify").run()}
       >
         <AlignJustify className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Link and Media */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn("px-2 h-8 w-8", editor.isActive("link") && "bg-muted")}
         onClick={setLink}
       >
-        <Link className="h-4 w-4" />
-      </Button>
+        <LinkIcon className="h-4 w-4" />
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className="px-2 h-8 w-8"
         onClick={addImage}
       >
-        <Image className="h-4 w-4" />
-      </Button>
+        <ImageIcon className="h-4 w-4" />
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Code and Highlight */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn("px-2 h-8 w-8", editor.isActive("code") && "bg-muted")}
         onClick={() => editor.chain().focus().toggleCode().run()}
       >
-        <Code className="h-4 w-4" />
-      </Button>
+        <CodeIcon className="h-4 w-4" />
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -273,16 +274,16 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleHighlight().run()}
       >
         <Highlighter className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Text Color */}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm" className="px-2 h-8">
+          <WindowsButton variant="ghost" size="sm" className="px-2 h-8">
             <div className="w-4 h-4 rounded bg-black" />
-          </Button>
+          </WindowsButton>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-2">
           <div className="grid grid-cols-5 gap-1">
@@ -312,7 +313,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       <Separator orientation="vertical" className="h-6 mx-1" />
 
       {/* Undo and Redo */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className="px-2 h-8 w-8"
@@ -320,9 +321,9 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         disabled={!editor.can().chain().focus().undo().run()}
       >
         <RotateCcw className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className="px-2 h-8 w-8"
@@ -330,10 +331,10 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         disabled={!editor.can().chain().focus().redo().run()}
       >
         <Redo className="h-4 w-4" />
-      </Button>
+      </WindowsButton>
 
       {/* Clear Styling */}
-      <Button
+      <WindowsButton
         variant="ghost"
         size="sm"
         className="px-2 h-8"
@@ -342,7 +343,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         }
       >
         Clear formatting
-      </Button>
+      </WindowsButton>
     </div>
   );
 };

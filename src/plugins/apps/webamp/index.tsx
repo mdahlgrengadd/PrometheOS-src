@@ -1,15 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
+import { useWindowStore } from '@/store/windowStore';
 
-import { eventBus } from "../../EventBus";
-import { Plugin, PluginManifest } from "../../types";
-import {
-  WebampInstance,
-  WebampOptions,
-  WebampState,
-  WebampTrack,
-} from "./types";
+import { eventBus } from '../../EventBus';
+import { Plugin, PluginManifest } from '../../types';
+import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
 
 // Define the plugin manifest
 export const manifest: PluginManifest = {
@@ -28,6 +23,7 @@ export const manifest: PluginManifest = {
     width: 275,
     height: 350,
   },
+  hideWindowChrome: true,
 };
 
 // CSS preload helper
