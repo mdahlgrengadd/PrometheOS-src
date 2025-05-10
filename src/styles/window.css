@@ -570,6 +570,26 @@
     height: 8px;
     cursor: ns-resize;
   }
+
+  /* Keep resize handles visible while actively resizing */
+  .draggable-window.resizing .resize-handle,
+  .unified-window.resizing .resize-handle {
+    opacity: 0.8 !important; /* Override any inline opacity */
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.4)) !important;
+    transition: none !important; /* Prevent fade in/out during drag */
+  }
+
+  /* Also keep the specific handle under the cursor clearly visible */
+  .resize-handle:active {
+    opacity: 0.9 !important;
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.5)) !important;
+    transition: none !important;
+  }
+
+  /* Optional: when a window is both hovered and resizing, prefer the stronger opacity */
+  .draggable-window.resizing:hover .resize-handle {
+    opacity: 0.8 !important;
+  }
 }
 
 
