@@ -14,6 +14,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { useDragControls } from "framer-motion";
 
 import { Resizable } from "./Resizable";
 import { WindowContent } from "./WindowContent";
@@ -327,6 +328,8 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     }
   };
 
+  const dragControls = useDragControls();
+
   if (!isOpen || isMinimized) return null;
 
   return (
@@ -339,6 +342,9 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     >
       <motion.div
         ref={windowRef}
+        drag
+        dragListener={false}
+        dragControls={dragControls}
         className={cn(
           "unified-window",
           className,
@@ -356,6 +362,30 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onPointerDown={(e) => {
+          // Only start drag if the target or its ancestor has data-draggable="true"
+          const isDraggableTarget = !!(e.target as Element).closest('[data-draggable="true"]');
+          
+          // Don't start drag when clicking controls
+          const isControlsClick = !!(e.target as Element).closest('.window-controls');
+          
+          if (isDraggableTarget && !isControlsClick && !isMaximized) {
+            // Add this to ensure window gets focus when dragging starts
+            onFocus();
+            
+            // Start the drag operation
+            dragControls.start(e);
+            
+            // Set drag state immediately for visual feedback
+            setIsDragging(true);
+          }
+        }}
+        dragMomentum={false}
+        dragElastic={0}
+        onDragStart={handleDragStart}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        dragTransition={{ power: 0 }}
         style={{
           zIndex,
           willChange: isDragging || isResizing ? "transform, width, height" : "auto",
@@ -376,8 +406,8 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
           y, // Use this syntax for motion values
         }}
       >
-        {/* Header with drag capability */}
-        <motion.div
+        {/* Header (now just a div, still draggable via data-draggable) */}
+        <div
           ref={headerRef}
           className={cn(
             "window-header",
@@ -385,15 +415,6 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
             activeTarget === "titlebar" && isActive && "active"
           )}
           data-draggable="true"
-          onPointerDown={(e) => {
-            // Ensure window is focused
-            onFocus();
-            
-            // Don't initiate drag when clicking controls
-            if ((e.target as Element).closest(".window-controls")) {
-              e.stopPropagation();
-            }
-          }}
           style={{
             cursor: "move",
             userSelect: "none", // Prevent text selection during drag
@@ -402,21 +423,6 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
             zIndex: 1, // Ensure the header is above the content
             position: "relative", // Establish a stacking context
           }}
-          // Apply drag only when not maximized
-          {...(isMaximized 
-            ? {} 
-            : {
-                drag: true,
-                dragMomentum: false,
-                dragElastic: 0,
-                onDragStart: handleDragStart,
-                onDrag: handleDrag,
-                onDragEnd: handleDragEnd,
-                // Disable default constraints, we'll handle in onDragEnd
-                dragConstraints: { top: 0, left: 0, right: 0, bottom: 0 },
-                dragTransition: { power: 0 },
-              }
-          )}
         >
           <WindowHeader
             title={title}
@@ -428,7 +434,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
             controlsPosition={controlsPosition}
             controls={controls}
           />
-        </motion.div>
+        </div>
         
         {/* Window Content */}
         <WindowContent className={isWindowsTheme ? "has-scrollbar" : ""}>

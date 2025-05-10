@@ -320,7 +320,7 @@ const AudioPlayerUI = () => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600">
+    <div className="flex flex-col h-full overflow-hidden relative bg-gradient-to-br from-purple-500 via-purple-400 to-indigo-600" data-draggable="true"> 
       {/* Title and Time */}
       <div className="absolute top-0 w-full p-2 z-10">
         <div id="title" className="text-center text-white font-light text-xl">
