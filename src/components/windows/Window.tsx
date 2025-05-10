@@ -291,7 +291,14 @@ export function WindowsWindow({
         {/* Title bar */}
         <div
           ref={headerRef}
-          onPointerDown={(e) => controls.start(e)}
+          onPointerDown={(e) => {
+            // Ensure the window is focused when starting a drag
+            onFocus();
+            // Only start drag when not clicking on controls
+            if (!(e.target as Element).closest('.title-bar-controls')) {
+              controls.start(e);
+            }
+          }}
           className={cn(
             "title-bar flex items-center justify-between",
             activeTarget === "titlebar" && isActive && "active",
@@ -301,7 +308,11 @@ export function WindowsWindow({
             minHeight: theme === "winxp" ? "1.5rem" : undefined,
             cursor: "move",
             pointerEvents: "auto", // Ensure pointer events work
+            userSelect: "none", // Prevent text selection during drag
+            touchAction: "none", // Prevent default touch actions
+            WebkitUserSelect: "none", // Ensure text isn't selectable in Safari
           }}
+          data-draggable="true"
         >
           {controlsPosition === "left" && (
             <div className="title-bar-controls">{controlButtons}</div>

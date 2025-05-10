@@ -5,6 +5,7 @@
 @import './styles/animations.css';
 @import './styles/windows98-ui.css';
 @import './styles/windowsxp-ui.css';
+@import './styles/window-fixes.css';
 
 
 @tailwind base;

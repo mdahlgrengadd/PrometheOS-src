@@ -51,10 +51,22 @@
   /* ensure each Window is still absolute inside that wrapper */
 /* opt every real window container back in */
 .windows-wrapper .window,
+.windows-wrapper .draggable-window {
+  pointer-events: auto !important;
+  z-index: auto !important; /* Ensure z-index works properly */
+}
+
+/* Ensure all child elements of windows receive pointer events */
 .windows-wrapper .window *,
-.windows-wrapper .draggable-window,
 .windows-wrapper .draggable-window * {
   pointer-events: auto !important;
+}
+
+/* Specific fix for Windows theme windows */
+.theme-win98 .window, .theme-winxp .window, .theme-win7 .window,
+.theme-win98 .title-bar, .theme-winxp .title-bar, .theme-win7 .title-bar {
+  pointer-events: auto !important;
+  cursor: move; /* Show move cursor on titlebar */
 }
 
   /* Base desktop icon styles using CSS variables - applies to all themes including external ones */
