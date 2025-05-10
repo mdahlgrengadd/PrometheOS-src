@@ -1,12 +1,12 @@
-import { cva, type, VariantProps } from "class-variance-authority";
-import React from "react";
+import { cva, VariantProps } from 'class-variance-authority';
+import React from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
-import { Slot } from "@radix-ui/react-slot";
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
+import { Slot } from '@radix-ui/react-slot';
 
 // Import the CSS module
-import styles from "./styles/Button.module.css";
+import styles from './Button.module.css';
 
 const windowsButtonVariants = cva("", {
   variants: {

@@ -1,18 +1,12 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/windows/AlertDialog";
-import { WindowsButton } from "@/components/windows/Button";
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/franky-ui-kit/AlertDialog';
+import { WindowsButton } from '@/components/franky-ui-kit/Button';
 
-import { usePlugins } from "../plugins/PluginContext";
+import { usePlugins } from '../plugins/PluginContext';
 
 const InstalledPluginsList: React.FC = () => {
   const { getDynamicPlugins, uninstallPlugin } = usePlugins();

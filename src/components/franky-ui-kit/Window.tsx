@@ -290,8 +290,10 @@ export function WindowsWindow({
           activeTarget === "window" && isActive && "active",
           isFocused && "ring-2 ring-primary/30",
           isDragging && "dragging",
-          isMaximized && "maximized"
+          isMaximized && "maximized",
+          hideWindowChrome && "no-window-chrome"
         )}
+        data-hide-chrome={hideWindowChrome}
         style={{
           width: isMaximized ? "100vw" : size?.width || width,
           height: isMaximized ? "100vh" : size?.height || height,

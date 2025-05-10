@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { WindowsButton } from "@/components/windows/Button";
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
+import { WindowsButton } from '@/components/franky-ui-kit/Button';
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 
-import ThemeInstaller from "./ThemeInstaller";
-import styles from "./ThemeManager.module.css";
+import ThemeInstaller from './ThemeInstaller';
+import styles from './ThemeManager.module.css';
 
 const ThemeManager: React.FC = () => {
   const {

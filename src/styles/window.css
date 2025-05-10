@@ -590,6 +590,77 @@
   .draggable-window.resizing:hover .resize-handle {
     opacity: 0.8 !important;
   }
+
+  /* =====================================================================
+     HIDE WINDOW CHROME SUPPORT
+     When the container sets data-hide-chrome="true" or the class
+     .no-window-chrome is present, strip away all decorative chrome such as
+     borders, shadows, headers and control buttons. This is respected across
+     all themes by using high‐specificity selectors and !important flags.
+     ===================================================================== */
+
+  [data-hide-chrome="true"],
+  .no-window-chrome {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide title / header bars and control buttons */
+  [data-hide-chrome="true"] .window-header,
+  [data-hide-chrome="true"] .title-bar,
+  [data-hide-chrome="true"] .window-controls,
+  [data-hide-chrome="true"] .title-bar-controls,
+  [data-hide-chrome="true"] .window-control,
+  .no-window-chrome .window-header,
+  .no-window-chrome .title-bar,
+  .no-window-chrome .window-controls,
+  .no-window-chrome .title-bar-controls,
+  .no-window-chrome .window-control {
+    display: none !important;
+  }
+
+  /* Ensure content fills full area when chrome is hidden */
+  [data-hide-chrome="true"] .window-content,
+  .no-window-chrome .window-content,
+  [data-hide-chrome="true"] .window-body,
+  .no-window-chrome .window-body {
+    height: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;          /* NEW: clear any leftover gutters */
+    border: none !important;       /* NEW: remove inner borders */
+    box-shadow: none !important;   /* NEW: remove inner shadows */
+    background: transparent !important; /* avoid double backgrounds */
+  }
+
+  [data-hide-chrome="true"] .window-body.has-scrollbar,
+  .no-window-chrome .window-body.has-scrollbar {
+    margin: 0 !important;
+  }
+
+  /* Remove BeOS bevel specifically when chrome hidden */
+  .theme-beos [data-hide-chrome="true"],
+  .theme-beos [data-hide-chrome="true"]::before,
+  .theme-beos [data-hide-chrome="true"]::after,
+  .theme-beos .no-window-chrome,
+  .theme-beos .no-window-chrome::before,
+  .theme-beos .no-window-chrome::after {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Improve top resize/grab area when chrome is hidden */
+  [data-hide-chrome="true"] .resize-handle-t,
+  .no-window-chrome .resize-handle-t {
+    top: -8px !important;   /* raise above content */
+    height: 16px !important;
+  }
+  [data-hide-chrome="true"] .resize-handle-tl,
+  .no-window-chrome .resize-handle-tl,
+  [data-hide-chrome="true"] .resize-handle-tr,
+  .no-window-chrome .resize-handle-tr {
+    top: -8px !important;
+  }
 }
 
 

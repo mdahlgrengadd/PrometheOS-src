@@ -1,31 +1,25 @@
-import { DragHandlers, motion, MotionStyle, useMotionValue } from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import '@/styles/unified-window.css';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
-import "@/styles/unified-window.css";
+import { DragHandlers, motion, MotionStyle, useDragControls, useMotionValue } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 import {
-  DndContext,
-  DragEndEvent,
-  DragMoveEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-import { useDragControls } from "framer-motion";
+    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
+} from '@dnd-kit/core';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
-import { Resizable } from "./Resizable";
-import { WindowContent } from "./WindowContent";
-import { WindowHeader } from "./WindowHeader";
+import { Resizable } from './Resizable';
+import { WindowContent } from './WindowContent';
+import { WindowHeader } from './WindowHeader';
 
 interface WindowShellProps {
   id: string;
   title: string;
   children: React.ReactNode;
   className?: string;
-  
+
   // Window state props
   zIndex?: number;
   position?: { x: number; y: number };
@@ -34,23 +28,26 @@ interface WindowShellProps {
   isOpen?: boolean;
   isMinimized?: boolean;
   isFocused?: boolean;
-  
+
   // Window behavior
   active?: boolean;
   activeOnHover?: boolean;
   activeTarget?: "window" | "titlebar";
-  
+
   // Window controls
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
-  
+
   // Event handlers
   onClose?: () => void;
   onMinimize?: () => void;
   onMaximize?: () => void;
   onFocus?: () => void;
   onDragEnd?: (position: { x: number; y: number }) => void;
-  onResize?: (size: { width: number | string; height: number | string }) => void;
+  onResize?: (size: {
+    width: number | string;
+    height: number | string;
+  }) => void;
   hideWindowChrome?: boolean;
 }
 
@@ -59,7 +56,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   title,
   children,
   className,
-  
+
   // Window state props with defaults
   zIndex = 1,
   position = { x: 0, y: 0 },
@@ -68,16 +65,16 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   isOpen = true,
   isMinimized = false,
   isFocused = false,
-  
+
   // Window behavior with defaults
   active = false,
   activeOnHover,
   activeTarget = "window",
-  
+
   // Window controls with defaults
   controls = ["minimize", "maximize", "close"],
   controlsPosition = "right",
-  
+
   // Event handlers with empty defaults
   onClose = () => {},
   onMinimize = () => {},
@@ -226,7 +223,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     x.set(position.x);
     y.set(position.y);
   };
-  
+
   // Handle dnd-kit resize move
   const handleDndResizeMove = (event: DragMoveEvent) => {
     if (!windowRef.current || !resizeDirection) return;
@@ -237,12 +234,12 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
 
     let newWidth = initialSize.width;
     let newHeight = initialSize.height;
-    
+
     // Track if we need to update position
     let needPositionUpdate = false;
     let newX = position.x;
     let newY = position.y;
-    
+
     // Adjust size based on direction
     if (resizeDirection.includes("right")) {
       newWidth = Math.max(320, initialSize.width + deltaX);
@@ -255,7 +252,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
         needPositionUpdate = true;
       }
     }
-    
+
     if (resizeDirection.includes("bottom")) {
       newHeight = Math.max(200, initialSize.height + deltaY);
     } else if (resizeDirection.includes("top")) {
@@ -271,25 +268,25 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     // Apply the new size
     windowRef.current.style.width = `${newWidth}px`;
     windowRef.current.style.height = `${newHeight}px`;
-    
+
     // Apply position changes directly if needed
     if (needPositionUpdate) {
       // Use immediate positioning with no animation
       x.set(newX);
       y.set(newY);
-      
+
       // Update DOM directly for immediate visual feedback
       windowRef.current.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
     }
   };
-  
+
   // Handle dnd-kit resize end
   const handleDndResizeEnd = (event: DragEndEvent) => {
     if (!windowRef.current) return;
 
     setIsResizing(false);
     setResizeDirection(null);
-    
+
     // Get the final size
     const rect = windowRef.current.getBoundingClientRect();
     onResize({
@@ -347,8 +344,12 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onPointerDown={(e) => {
-          const isDraggableTarget = !!(e.target as Element).closest('[data-draggable="true"]');
-          const isControlsClick = !!(e.target as Element).closest('.window-controls');
+          const isDraggableTarget = !!(e.target as Element).closest(
+            '[data-draggable="true"]'
+          );
+          const isControlsClick = !!(e.target as Element).closest(
+            ".window-controls"
+          );
           if (isDraggableTarget && !isControlsClick && !isMaximized) {
             onFocus();
             dragControls.start(e);
@@ -374,23 +375,26 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
           isActive && "active",
           isFocused && "ring-2 ring-primary/30",
           isDragging && "dragging",
-          isMaximized && "maximized"
+          isMaximized && "maximized",
+          hideWindowChrome && "no-window-chrome"
         )}
+        data-hide-chrome={hideWindowChrome}
         style={{
           zIndex,
-          willChange: isDragging || isResizing ? "transform, width, height" : "auto",
+          willChange:
+            isDragging || isResizing ? "transform, width, height" : "auto",
           ...(isMaximized
-            ? { 
+            ? {
                 position: "fixed",
                 top: 0,
                 left: 0,
                 width: "100vw",
                 height: "100vh",
               }
-            : { 
+            : {
                 position: "absolute",
-                width: size.width, 
-                height: size.height, 
+                width: size.width,
+                height: size.height,
               }),
           x, // Use this syntax for motion values
           y, // Use this syntax for motion values

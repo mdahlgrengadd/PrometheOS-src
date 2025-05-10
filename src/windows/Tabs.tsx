@@ -1,9 +1,9 @@
-// src/components/windows/Tabs.tsx
-import * as React from "react";
+// src/components/franky-ui-kit/Tabs.tsx
+import * as React from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
-import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
 
 const WindowsTabs = TabsPrimitive.Root;
 
