@@ -269,7 +269,7 @@
   /* Bottom corner handles for BeOS */
   .theme-beos .resize-handle-br {
     top: auto !important;
-    right: 5px !important; /* Account for 5px frame border */
+    right: -7px !important; /* Account for 5px frame border */
     bottom: -7px !important; /* Account for 5px frame border */
     left: auto !important;
     width: 16px !important;
