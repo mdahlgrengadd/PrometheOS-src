@@ -7,6 +7,10 @@
     /* Default fallback variables */
     --radius: 0.5rem;
     color-scheme: light;
+
+    /* Ensure windows stay fully opaque while dragging/resizing */
+    --window-drag-opacity: 1;
+    --window-resize-opacity: 1;
   }
 
   .theme-dark {
