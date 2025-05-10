@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 
 import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from "@/lib/ThemeProvider";
 
 export interface RadioOption {
   id: string;
@@ -30,7 +30,7 @@ export function WindowsRadioGroup({
   legend,
   fieldset = true,
 }: WindowsRadioGroupProps) {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
   const isWin98 = theme === "win98";
 
   // Inject the Win98 fieldset styling

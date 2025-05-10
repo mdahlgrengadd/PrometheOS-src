@@ -2,7 +2,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from "@/lib/ThemeProvider";
 import {
   Content as RadixTabsContent,
   List as RadixTabsList,
@@ -16,7 +16,7 @@ export const WinTabsList = React.forwardRef<
   React.ElementRef<typeof RadixTabsList>,
   React.ComponentPropsWithoutRef<typeof RadixTabsList>
 >(({ className, children, ...props }, ref) => {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
   return (
     <RadixTabsList ref={ref} asChild {...props}>
       <menu
@@ -40,7 +40,7 @@ export const WinTabsTrigger = React.forwardRef<
     children: React.ReactNode;
   }
 >(({ children, className, ...props }, ref) => {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
 
   return (
     <RadixTabsTrigger ref={ref} asChild {...props}>
@@ -70,7 +70,7 @@ export const WinTabsContent = React.forwardRef<
     children: React.ReactNode;
   }
 >(({ children, className, ...props }, ref) => {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
 
   if (theme === "win98") {
     return (
