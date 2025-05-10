@@ -7,7 +7,8 @@ export async function preload(previousTheme) {
   const link = document.createElement("link");
   link.id = "win-theme-css";
   link.rel = "stylesheet";
-  link.href = "https://jdan.github.io/98.css/98.css";
+  //link.href = "https://jdan.github.io/98.css/98.css";
+  link.href = "https://unpkg.com/xp.css@0.2.6/dist/98.css";
 
   return new Promise((resolve) => {
     link.onload = () => {

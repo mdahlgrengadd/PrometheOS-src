@@ -7,7 +7,8 @@ export async function preload(previousTheme) {
   const link = document.createElement("link");
   link.id = "win-theme-css";
   link.rel = "stylesheet";
-  link.href = "https://botoxparty.github.io/XP.css/XP.css";
+  //link.href = "https://botoxparty.github.io/XP.css/XP.css";
+  link.href = "https://unpkg.com/xp.css@0.2.6/dist/xp.css";
 
   return new Promise((resolve) => {
     link.onload = () => {
