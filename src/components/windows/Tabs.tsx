@@ -45,9 +45,7 @@ export const WinTabsTrigger = React.forwardRef<
   return (
     <RadixTabsTrigger ref={ref} asChild {...props}>
       {theme === "win98" ? (
-        <li role="tab">
-          <a>{children}</a>
-        </li>
+        <button className={cn(className)}>{children}</button>
       ) : (
         <button
           className={cn(
