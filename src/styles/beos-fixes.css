@@ -77,3 +77,74 @@
 .unified-window .window-control[data-control="minimize"]:hover {
   background: #ffb300;
 }
+
+/* Resize handle positioning for BeOS theme - correctly positioned OUTSIDE the frame */
+.theme-beos .resize-handle-t {
+  top: 27px !important; /* 32px titlebar - 5px to reach outside the frame */
+  right: -5px !important; /* Extend 5px beyond right edge */
+  left: -5px !important; /* Extend 5px beyond left edge */
+  height: 8px !important;
+}
+
+.theme-beos .resize-handle-r {
+  top: 27px !important; /* 32px titlebar - 5px to reach outside */
+  right: -5px !important; /* Extend 5px beyond right edge */
+  bottom: -5px !important; /* Extend 5px beyond bottom edge */
+  width: 8px !important;
+}
+
+.theme-beos .resize-handle-b {
+  bottom: -5px !important; /* Extend 5px beyond bottom edge */
+  right: -5px !important; /* Extend 5px beyond right edge */
+  left: -5px !important; /* Extend 5px beyond left edge */
+  height: 8px !important;
+}
+
+.theme-beos .resize-handle-l {
+  top: 27px !important; /* 32px titlebar - 5px to reach outside */
+  left: -5px !important; /* Extend 5px beyond left edge */
+  bottom: -5px !important; /* Extend 5px beyond bottom edge */
+  width: 8px !important;
+}
+
+/* Corner handles for BeOS theme */
+.theme-beos .resize-handle-tl {
+  top: 27px !important; /* 32px titlebar - 5px to reach outside */
+  left: -5px !important; /* Extend 5px beyond left edge */
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.theme-beos .resize-handle-tr {
+  top: 27px !important; /* 32px titlebar - 5px to reach outside */
+  right: -5px !important; /* Extend 5px beyond right edge */
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.theme-beos .resize-handle-bl {
+  bottom: -5px !important; /* Extend 5px beyond bottom edge */
+  left: -5px !important; /* Extend 5px beyond left edge */
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.theme-beos .resize-handle-br {
+  bottom: -5px !important; /* Extend 5px beyond bottom edge */
+  right: -5px !important; /* Extend 5px beyond right edge */
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Make sure resize handles are visible and operational */
+.theme-beos .resize-handle {
+  background: transparent;
+  opacity: 0.15 !important;
+  pointer-events: auto !important;
+  z-index: 1000;
+}
+
+.theme-beos .resize-handle:hover {
+  opacity: 0.5 !important;
+  background-color: rgba(0, 120, 255, 0.3);
+}

@@ -222,6 +222,93 @@
     cursor: ns-resize;
   }
   
+  /* BeOS-specific handle positioning - adjusted for content window location and frame border (5px) */
+  .theme-beos .resize-handle-t {
+    top: 25px !important; /* 32px titlebar + 5px frame border */
+    right: 21px !important; /* 16px + 5px frame border */
+    bottom: auto !important;
+    left: 21px !important; /* 16px + 5px frame border */
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  /* Top-right corner handle for BeOS */
+  .theme-beos .resize-handle-tr {
+    top: 25px !important; /* 32px titlebar + 5px frame border */
+    right: -7px !important; /* Account for 5px frame border */
+    bottom: auto !important;
+    left: auto !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nesw-resize;
+  }
+  
+  /* Right edge handle for BeOS - adjusted to start below top-right corner */
+  .theme-beos .resize-handle-r {
+    top: 53px !important; /* 32px titlebar + 5px frame + 16px corner spacing */
+    right: -7px !important; /* Account for 5px frame border */
+    bottom: 21px !important; /* 16px + 5px frame border */
+    left: auto !important;
+    width: 8px !important;
+    height: auto !important;  
+    cursor: ew-resize;
+  }
+  
+  /* Bottom edge handle for BeOS */
+  .theme-beos .resize-handle-b {
+    top: auto !important;
+    right: 21px !important; /* 16px + 5px frame border */
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: 21px !important; /* 16px + 5px frame border */
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  /* Bottom corner handles for BeOS */
+  .theme-beos .resize-handle-br {
+    top: auto !important;
+    right: 5px !important; /* Account for 5px frame border */
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: auto !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nwse-resize;
+  }
+
+  .theme-beos .resize-handle-bl {
+    top: auto !important;
+    right: auto !important;
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: -7px !important; /* Account for 5px frame border */
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nesw-resize;
+  }
+
+  /* Left edge handle for BeOS */
+  .theme-beos .resize-handle-l {
+    top: 53px !important; /* 32px titlebar + 5px frame + 16px corner spacing */
+    right: auto !important;
+    bottom: 21px !important; /* 16px + 5px frame border */
+    left: -7px !important; /* Account for 5px frame border */
+    width: 8px !important;
+    height: auto !important;
+    cursor: ew-resize;
+  }
+
+  /* Top-left corner handle for BeOS */
+  .theme-beos .resize-handle-tl {
+    top: 37px !important; /* 32px titlebar + 5px frame border */
+    right: auto !important;
+    bottom: auto !important;
+    left: 5px !important; /* Account for 5px frame border */
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nwse-resize;
+  }
+  
   /* Window header */
   .window-header {
     text-align: left;
