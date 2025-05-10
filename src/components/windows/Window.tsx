@@ -42,6 +42,7 @@ interface WindowProps {
     width: number | string;
     height: number | string;
   }) => void;
+  hideWindowChrome?: boolean;
 }
 
 export function WindowsWindow({
@@ -70,6 +71,7 @@ export function WindowsWindow({
   onFocus = () => {},
   onDragEnd = () => {},
   onResize = () => {},
+  hideWindowChrome = false,
 }: WindowProps) {
   const { theme } = useTheme();
   const [hovered, setHovered] = React.useState(false);
@@ -257,18 +259,11 @@ export function WindowsWindow({
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onPointerDown={(e) => {
-          // Only start drag if the target or its ancestor has data-draggable="true"
           const isDraggableTarget = !!(e.target as Element).closest('[data-draggable="true"]');
-          
-          // Don't start drag when clicking controls
           const isControlsClick = !!(e.target as Element).closest('.title-bar-controls');
-          
           if (isDraggableTarget && !isControlsClick && !isMaximized) {
-            // Ensure window is focused when starting a drag
             onFocus();
-            // Start the drag operation
             controls.start(e);
-            // Set drag state for visual feedback
             setIsDragging(true);
           }
         }}
@@ -304,38 +299,39 @@ export function WindowsWindow({
           willChange: isDragging ? "transform" : "auto",
         }}
       >
-        {/* Title bar */}
-        <div
-          ref={headerRef}
-          className={cn(
-            "title-bar flex items-center justify-between",
-            activeTarget === "titlebar" && isActive && "active",
-            !isMaximized && "window-drag-handle"
-          )}
-          style={{
-            minHeight: theme === "winxp" ? "1.5rem" : undefined,
-            cursor: "move",
-            pointerEvents: "auto", // Ensure pointer events work
-            userSelect: "none", // Prevent text selection during drag
-            touchAction: "none", // Prevent default touch actions
-            WebkitUserSelect: "none", // Ensure text isn't selectable in Safari
-          }}
-          data-draggable="true"
-        >
-          {controlsPosition === "left" && (
-            <div className="title-bar-controls">{controlButtons}</div>
-          )}
-          <div className="title-bar-text">{title}</div>
-          {controlsPosition === "right" && (
-            <div className="title-bar-controls">{controlButtons}</div>
-          )}
-        </div>
-
+        {/* Title bar and controls, unless chrome is hidden */}
+        {!hideWindowChrome && (
+          <div
+            ref={headerRef}
+            className={cn(
+              "title-bar flex items-center justify-between",
+              activeTarget === "titlebar" && isActive && "active",
+              !isMaximized && "window-drag-handle"
+            )}
+            style={{
+              minHeight: theme === "winxp" ? "1.5rem" : undefined,
+              cursor: "move",
+              pointerEvents: "auto",
+              userSelect: "none",
+              touchAction: "none",
+              WebkitUserSelect: "none",
+            }}
+            data-draggable="true"
+          >
+            {controlsPosition === "left" && (
+              <div className="title-bar-controls">{controlButtons}</div>
+            )}
+            <div className="title-bar-text">{title}</div>
+            {controlsPosition === "right" && (
+              <div className="title-bar-controls">{controlButtons}</div>
+            )}
+          </div>
+        )}
         {/* Content area */}
         <div
           className={cn(
             "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
-            isWindowsTheme && "has-scrollbar" // Add has-scrollbar class for Windows themes
+            isWindowsTheme && "has-scrollbar"
           )}
         >
           {children}

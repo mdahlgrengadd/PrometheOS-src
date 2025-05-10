@@ -51,6 +51,7 @@ interface WindowShellProps {
   onFocus?: () => void;
   onDragEnd?: (position: { x: number; y: number }) => void;
   onResize?: (size: { width: number | string; height: number | string }) => void;
+  hideWindowChrome?: boolean;
 }
 
 export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
@@ -84,6 +85,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   onFocus = () => {},
   onDragEnd = () => {},
   onResize = () => {},
+  hideWindowChrome = false,
 }) => {
   const { theme } = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
@@ -342,50 +344,38 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     >
       <motion.div
         ref={windowRef}
-        drag
-        dragListener={false}
-        dragControls={dragControls}
-        className={cn(
-          "unified-window",
-          className,
-          activeTarget === "window" && isActive && "active",
-          isMaximized && "maximized",
-          isFocused && "ring-2 ring-primary/30",
-          isDragging && "dragging",
-          isResizing && "resizing"
-        )}
-        onClick={() => {
-          // Always focus the window when clicked
-          if (!isFocused) {
-            onFocus();
-          }
-        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onPointerDown={(e) => {
-          // Only start drag if the target or its ancestor has data-draggable="true"
           const isDraggableTarget = !!(e.target as Element).closest('[data-draggable="true"]');
-          
-          // Don't start drag when clicking controls
           const isControlsClick = !!(e.target as Element).closest('.window-controls');
-          
           if (isDraggableTarget && !isControlsClick && !isMaximized) {
-            // Add this to ensure window gets focus when dragging starts
             onFocus();
-            
-            // Start the drag operation
             dragControls.start(e);
-            
-            // Set drag state immediately for visual feedback
             setIsDragging(true);
           }
         }}
-        dragMomentum={false}
-        dragElastic={0}
-        onDragStart={handleDragStart}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        dragTransition={{ power: 0 }}
+        {...(!isMaximized
+          ? {
+              drag: true,
+              dragControls: dragControls,
+              dragListener: false,
+              dragMomentum: false,
+              dragElastic: 0,
+              onDragStart: handleDragStart,
+              onDrag: handleDrag,
+              onDragEnd: handleDragEnd,
+              dragTransition: { power: 0 },
+            }
+          : { drag: false })}
+        className={cn(
+          "unified-window flex flex-col",
+          className,
+          isActive && "active",
+          isFocused && "ring-2 ring-primary/30",
+          isDragging && "dragging",
+          isMaximized && "maximized"
+        )}
         style={{
           zIndex,
           willChange: isDragging || isResizing ? "transform, width, height" : "auto",
@@ -406,41 +396,41 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
           y, // Use this syntax for motion values
         }}
       >
-        {/* Header (now just a div, still draggable via data-draggable) */}
-        <div
-          ref={headerRef}
-          className={cn(
-            "window-header",
-            "window-drag-handle", // Class for styling and to mark as draggable
-            activeTarget === "titlebar" && isActive && "active"
-          )}
-          data-draggable="true"
-          style={{
-            cursor: "move",
-            userSelect: "none", // Prevent text selection during drag
-            touchAction: "none", // Prevent default touch actions
-            pointerEvents: "auto", // Ensure pointer events work properly
-            zIndex: 1, // Ensure the header is above the content
-            position: "relative", // Establish a stacking context
-          }}
-        >
-          <WindowHeader
-            title={title}
-            onMinimize={onMinimize}
-            onMaximize={onMaximize}
-            onClose={onClose}
-            headerRef={headerRef}
-            isMaximized={isMaximized}
-            controlsPosition={controlsPosition}
-            controls={controls}
-          />
-        </div>
-        
+        {/* Header and controls, unless chrome is hidden */}
+        {!hideWindowChrome && (
+          <div
+            ref={headerRef}
+            className={cn(
+              "window-header",
+              "window-drag-handle",
+              activeTarget === "titlebar" && isActive && "active"
+            )}
+            data-draggable="true"
+            style={{
+              cursor: "move",
+              userSelect: "none",
+              touchAction: "none",
+              pointerEvents: "auto",
+              zIndex: 1,
+              position: "relative",
+            }}
+          >
+            <WindowHeader
+              title={title}
+              onMinimize={onMinimize}
+              onMaximize={onMaximize}
+              onClose={onClose}
+              headerRef={headerRef}
+              isMaximized={isMaximized}
+              controlsPosition={controlsPosition}
+              controls={controls}
+            />
+          </div>
+        )}
         {/* Window Content */}
         <WindowContent className={isWindowsTheme ? "has-scrollbar" : ""}>
           {children}
         </WindowContent>
-        
         {/* Resize handles */}
         {!isMaximized && (
           <Resizable

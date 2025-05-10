@@ -13,6 +13,11 @@ export interface WindowState {
   previousPosition?: { x: number; y: number };
   previousSize?: { width: number | string; height: number | string };
   isMaximized?: boolean;
+  /**
+   * If true, the window manager should not render window chrome (titlebar, controls, etc)
+   * and should let the app render its own UI edge-to-edge.
+   */
+  hideWindowChrome?: boolean;
 }
 
 // Dictionary of windows by ID

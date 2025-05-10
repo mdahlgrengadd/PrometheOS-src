@@ -75,6 +75,7 @@ const Window: React.FC<WindowProps> = ({
       onFocus={handleFocus}
       onDragEnd={onDragStop}
       onResize={handleResize}
+      hideWindowChrome={window.hideWindowChrome}
     >
       {window.content}
     </WindowShell>

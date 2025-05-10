@@ -20,6 +20,7 @@ interface WindowShellProps {
   onDragEnd: (position: { x: number; y: number }) => void;
   onResize: (size: { width: number | string; height: number | string }) => void;
   children: React.ReactNode;
+  hideWindowChrome?: boolean;
 }
 
 /**
@@ -35,7 +36,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
   const { theme } = useTheme();
   const { 
     id, title, zIndex, position, size, isMaximized, isOpen, isMinimized, isFocused,
-    onClose, onMinimize, onMaximize, onFocus, onDragEnd, onResize, children 
+    onClose, onMinimize, onMaximize, onFocus, onDragEnd, onResize, children, hideWindowChrome 
   } = props;
   
   // Check if using a Windows theme
@@ -63,6 +64,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
         onFocus={onFocus}
         onDragEnd={onDragEnd}
         onResize={onResize}
+        hideWindowChrome={hideWindowChrome}
       >
         {children}
       </WindowsWindow>
@@ -87,6 +89,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
       onFocus={onFocus}
       onDragEnd={onDragEnd}
       onResize={onResize}
+      hideWindowChrome={hideWindowChrome}
     >
       {children}
     </UnifiedWindowShellV2>

@@ -127,6 +127,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                 },
                 size,
                 isMaximized: false,
+                hideWindowChrome: plugin.manifest.hideWindowChrome,
               });
             } else if (manifest.entrypoint) {
               // Dynamic plugin - load from entrypoint URL
@@ -171,6 +172,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                   },
                   size,
                   isMaximized: false,
+                  hideWindowChrome: plugin.manifest.hideWindowChrome,
                 });
               } catch (error) {
                 console.error(

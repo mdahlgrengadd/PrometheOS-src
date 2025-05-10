@@ -19,6 +19,11 @@ export interface PluginManifest {
     width: number;
     height: number;
   };
+  /**
+   * If true, the window manager should not render window chrome (titlebar, controls, etc)
+   * and should let the app render its own UI edge-to-edge.
+   */
+  hideWindowChrome?: boolean;
 }
 
 /**
