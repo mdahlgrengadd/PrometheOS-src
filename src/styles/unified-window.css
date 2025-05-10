@@ -5,13 +5,32 @@
   flex-direction: column;
   background-color: var(--window-bg, #fff);
   border: var(--window-border, 1px solid #333);
-  box-shadow: var(--window-shadow, 0 5px 15px rgba(0, 0, 0, 0.15));
+  box-shadow: none;
   border-radius: var(--window-border-radius, 3px);
   overflow: hidden;
   transform-origin: center;
   min-width: 320px;
   min-height: 200px;
   transition: box-shadow 0.2s ease;
+  position: relative;
+  background: transparent;
+}
+
+.unified-window:not(.maximized)::after {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px #888888,
+    0 0 0 2px #dddddd,
+    0 0 0 3px #ffffff,
+    0 0 0 4px #dddddd,
+    0 0 0 5px #888888,
+    0 14px 16px -6px rgba(0, 0, 0, 0.2);
 }
 
 /* Maximized window styles */
@@ -190,4 +209,96 @@
 
 .window-drag-handle:active {
   cursor: grabbing !important;
+}
+
+/* ------------------ BeOS Theme Overrides ------------------ */
+.theme-beos {
+  /* Tab-style titlebar for non-maximized windows */
+  .unified-window:not(.maximized) .window-header.window-drag-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: fit-content; /* Allow tab width to fit title */
+    min-width: 210px; /* But keep a sensible minimum */
+    height: 32px;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px 4px 0 0;
+    z-index: 2; /* Float it above the window content */
+
+    /* Classic BeOS yellow gradient tab */
+    background: linear-gradient(to bottom, #ffda8f, #ffc34e);
+    border: 1px solid #b99100;
+    border-bottom: none;
+  }
+
+  /* Neutralize the inner structural header to avoid duplicate tab */
+  .unified-window:not(.maximized) .window-header:not(.window-drag-handle) {
+    background: transparent;
+    border: none;
+    padding: 0 0.5rem;
+    height: 32px;
+  }
+
+  /* Yellow dot indicator only on the drag-handle header */
+  .unified-window:not(.maximized) .window-header.window-drag-handle::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 13px;
+    height: 13px;
+    background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
+    border: 1px solid #b99100;
+    border-radius: 50%;
+    display: block;
+  }
+
+  /* Remove dot from the inner structural header */
+  .unified-window:not(.maximized) .window-header:not(.window-drag-handle)::before {
+    display: none;
+  }
+
+  /* Bold black title text with left offset for the dot */
+  .unified-window:not(.maximized) .window-header .window-title {
+    font-weight: bold;
+    color: #000;
+    padding-left: 16px; /* Space for the yellow dot */
+  }
+
+  /* Window control buttons: keep them small and flat */
+  .unified-window .window-control {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #999;
+    border-radius: 50%;
+    background: #f0f0f0;
+    box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .unified-window .window-control:hover {
+    background: #e0e0e0;
+  }
+
+  /* Specific colors for each control */
+  .unified-window .window-control[data-control="close"] { background: #ff6b6b; }
+  .unified-window .window-control[data-control="close"]:hover { background: #ff5252; }
+
+  .unified-window .window-control[data-control="maximize"] { background: #4caf50; }
+  .unified-window .window-control[data-control="maximize"]:hover { background: #43a047; }
+
+  .unified-window .window-control[data-control="minimize"] { background: #ffc107; }
+  .unified-window .window-control[data-control="minimize"]:hover { background: #ffb300; }
+
+  /* Ensure the bevel shadow isn't clipped */
+  .unified-window {
+    overflow: visible;
+  }
+
+  /* Give the content a small inset so the bevel remains visible */
+  .unified-window .window-content {
+    margin: 0;
+    height: calc(100% - 32px); /* Fill to the bottom bevel, 32px is tab height */
+    border-radius: 0;
+    border: none;
+  }
 }
