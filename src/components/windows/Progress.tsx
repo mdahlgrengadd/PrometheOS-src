@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from "@/lib/ThemeProvider";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 export interface WinProgressProps
@@ -21,7 +21,7 @@ export function WinProgress({
   className,
   ...rest
 }: WinProgressProps) {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
 
   if (theme === "win98") {
     // 98.css → .progress-indicator + <span>

@@ -11,7 +11,7 @@ import { useViewMode } from "./hooks/useViewMode";
 import Index from "./pages/index";
 import MobileIndex from "./pages/MobileIndex";
 import Windows7DemoPage from "./pages/Windows7Demo";
-import Demo from "./pages/WindowsDemo";
+
 
 function ThemedWindowWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
@@ -45,7 +45,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={isMobile ? <MobileIndex /> : <Index />} />
-          <Route path="/demo" element={isMobile ? <MobileIndex /> : <Demo />} />
+
           <Route
             path="/windows7-demo"
             element={isMobile ? <MobileIndex /> : <Windows7DemoPage />}

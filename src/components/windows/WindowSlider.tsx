@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from "@/lib/ThemeProvider";
 
 export interface WindowSliderProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -15,7 +15,7 @@ export const WindowSlider = React.forwardRef<
   HTMLInputElement,
   WindowSliderProps
 >(({ className, orientation = "horizontal", style, ...props }, ref) => {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
   const isVertical = orientation === "vertical";
 
   // wrapper uses theme's vertical class if needed

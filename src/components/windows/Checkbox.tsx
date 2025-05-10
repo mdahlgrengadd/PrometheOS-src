@@ -1,7 +1,7 @@
 import React from "react";
 
 import { cn } from "@/lib/utils";
-import { useWindowsTheme } from "@/providers/WindowsThemeProvider";
+import { useTheme } from "@/lib/ThemeProvider";
 
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -13,7 +13,7 @@ export function WindowsCheckbox({
   id,
   ...props
 }: CheckboxProps) {
-  const { theme } = useWindowsTheme();
+  const { theme } = useTheme();
   const checkboxId =
     id || `checkbox-${Math.random().toString(36).substring(2, 9)}`;
 

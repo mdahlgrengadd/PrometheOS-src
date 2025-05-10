@@ -1,0 +1,62 @@
+/* Window mouse event and display fixes */
+
+/* Make sure pointer events work on windows and their elements */
+.windows-wrapper .window,
+.windows-wrapper .draggable-window {
+  pointer-events: auto !important;
+  z-index: auto !important;
+}
+
+/* Ensure all child elements of windows receive pointer events */
+.windows-wrapper .window *,
+.windows-wrapper .draggable-window * {
+  pointer-events: auto !important;
+}
+
+/* Specific fix for Windows theme windows */
+.theme-win98 .window, 
+.theme-winxp .window, 
+.theme-win7 .window,
+.theme-win98 .title-bar, 
+.theme-winxp .title-bar, 
+.theme-win7 .title-bar {
+  pointer-events: auto !important;
+  cursor: move;
+}
+
+/* Make sure draggable window headers have correct cursor and behavior */
+.window-drag-handle[data-draggable="true"],
+.title-bar[data-draggable="true"],
+.window-header[data-draggable="true"] {
+  cursor: move !important;
+  user-select: none !important;
+  touch-action: none !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Fix for data-draggable implementation */
+[data-draggable="true"] {
+  cursor: grab !important;
+  user-select: none !important;
+  touch-action: none !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Additional z-index fixes for focused windows */
+.window.active, 
+.window:focus-within,
+.draggable-window.active,
+.draggable-window:focus-within {
+  z-index: 10000 !important;
+}
+
+/* Stop clicking through windows */
+.window, .draggable-window {
+  background-clip: padding-box;
+  contain: layout style; /* Improve performance and prevent layout issues */
+}
+
+/* Prevent mouse events from passing through to elements behind windows */
+.window-content {
+  pointer-events: auto !important;
+}
