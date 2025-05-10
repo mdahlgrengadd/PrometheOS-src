@@ -362,6 +362,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     [theme, setTheme, setLoading, allThemes, setAllThemes]
   );
 
+  // On initial mount, restore full theme (including external decorators and CSS)
+  useEffect(() => {
+    loadTheme(theme).catch(console.error);
+  }, []);
+
   // Install a theme from a URL
   const installTheme = async (
     manifestUrl: string
