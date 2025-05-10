@@ -15,11 +15,13 @@ export function resetDesktopState(reload = false) {
   localStorage.removeItem("show-desktop-icons");
   localStorage.removeItem("taskbar-autohide");
   localStorage.removeItem("enable-animations");
-  localStorage.removeItem("selected-theme");
-  localStorage.removeItem("window-padding");
-  localStorage.removeItem("background-color");
-  localStorage.removeItem("primary-color");
-  localStorage.removeItem("wallpaper");
+
+  // Clear theme and appearance settings keys used by ThemeProvider
+  localStorage.removeItem("os-theme");
+  localStorage.removeItem("window-content-padding");
+  localStorage.removeItem("os-wallpaper");
+  localStorage.removeItem("os-background-color");
+  localStorage.removeItem("os-primary-color");
 
   // 2) Reset URL (drop all query params)
   window.history.replaceState({}, document.title, window.location.pathname);

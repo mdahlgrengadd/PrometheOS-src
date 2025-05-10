@@ -1,32 +1,20 @@
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { toast } from "sonner";
+    createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState
+} from 'react';
+import { toast } from 'sonner';
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '@/components/ui/skeleton';
 
-import { themes } from "./theme-definitions";
+import { themes } from './theme-definitions';
 import {
-  getAvailableExternalThemes,
-  installTheme as installThemeFromUrl,
-  loadExternalTheme,
-  uninstallTheme as uninstallThemeById,
-} from "./theme-loader";
-import {
-  ThemeConfig,
-  ThemeContextType,
-  ThemeInstallResult,
-  ThemeType,
-} from "./theme-types";
+    getAvailableExternalThemes, installTheme as installThemeFromUrl, loadExternalTheme,
+    uninstallTheme as uninstallThemeById
+} from './theme-loader';
+import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './theme-types';
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
+  theme: "beos",
   setTheme: () => {},
   themes,
   setPadding: () => {},
@@ -88,11 +76,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   // Try to get stored theme from localStorage or use 'light' as default
   const [theme, setThemeState] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem("os-theme");
-    return (savedTheme as ThemeType) || "light";
+    return (savedTheme as ThemeType) || "beos";
   });
 
   // Load Windows UI styles on initial render and when theme changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
 
     // Apply Window-specific CSS classes to the document body for global styling
@@ -457,7 +445,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // Apply theme CSS variables when theme changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
 
     // ⇒ RESET EVERYTHING from any prior theme
