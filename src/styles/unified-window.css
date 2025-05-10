@@ -16,7 +16,7 @@
   background: transparent;
 }
 
-.unified-window:not(.maximized)::after {
+.theme-beos .unified-window:not(.maximized)::after {
   content: "";
   position: absolute;
   top: 32px;
@@ -29,9 +29,23 @@
     0 0 0 2px #dddddd,
     0 0 0 3px #ffffff,
     0 0 0 4px #dddddd,
-    0 0 0 5px #888888,
-    0 14px 16px -6px rgba(0, 0, 0, 0.2);
+    0 0 0 5px #888888;
 }
+
+/* Remove focused shadows as well */
+.theme-beos .unified-window.active:not(.maximized)::after,
+.theme-beos .unified-window:focus-within:not(.maximized)::after {
+  box-shadow:
+    /* Bevel border only */
+    0 0 0 1px #888888,
+    0 0 0 2px #dddddd,
+    0 0 0 3px #ffffff,
+    0 0 0 4px #dddddd,
+    0 0 0 5px #888888;
+}
+
+/* Remove tab shadow to prevent floating shadow outside visible area */
+/* (If desired later, a smaller shadow can be reintroduced with tighter clipping) */
 
 /* Maximized window styles */
 .unified-window.maximized {
@@ -47,9 +61,10 @@
 }
 
 /* Active/focused states */
-.unified-window.active,
-.unified-window:focus-within {
-  box-shadow: var(--window-shadow-active, 0 10px 25px rgba(0, 0, 0, 0.25));
+/* Remove focus/active shadow for BeOS theme to avoid floating shadow around tab */
+.theme-beos .unified-window.active,
+.theme-beos .unified-window:focus-within {
+  box-shadow: none !important;
   z-index: 10000 !important;
 }
 
@@ -58,6 +73,11 @@
   opacity: var(--window-drag-opacity, 0.9);
   box-shadow: var(--window-shadow-dragging, 0 15px 30px rgba(0, 0, 0, 0.3));
   cursor: grabbing !important;
+}
+
+/* Override for BeOS theme to prevent shadow in transparent area when dragging */
+.theme-beos .unified-window.dragging {
+  box-shadow: none;
 }
 
 /* Window resize states */
@@ -300,5 +320,10 @@
     height: calc(100% - 32px); /* Fill to the bottom bevel, 32px is tab height */
     border-radius: 0;
     border: none;
+  }
+
+  /* Always-on drop shadow for window content (applies to all windows) */
+  .unified-window:not(.maximized) .window-content {
+    box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.28);
   }
 }
