@@ -1,25 +1,14 @@
-import {
-  DragHandlers,
-  motion,
-  useDragControls,
-  useMotionValue,
-} from "framer-motion";
-import React, { useRef } from "react";
+import { DragHandlers, motion, useDragControls, useMotionValue } from 'framer-motion';
+import React, { useRef } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
 import {
-  DndContext,
-  DragEndEvent,
-  DragMoveEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
+} from '@dnd-kit/core';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
-import { Resizable } from "../window/Resizable";
+import { Resizable } from '../window/Resizable';
 
 interface WindowProps {
   title: string;
@@ -190,6 +179,15 @@ export function WindowsWindow({
     }
   }, [position, isDragging, x, y]);
 
+  // When maximized we want to snap the window to the top-left corner and reset any existing transform.
+  React.useEffect(() => {
+    if (isMaximized) {
+      // Reset position transform values so the window is rendered from top-left.
+      x.set(0);
+      y.set(0);
+    }
+  }, [isMaximized, x, y]);
+
   // Determine if this is a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
 
@@ -258,29 +256,35 @@ export function WindowsWindow({
         ref={windowRef}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        drag
-        dragControls={controls}
-        dragListener={false}
-        dragMomentum={false}
-        dragElastic={0}
-        onDragStart={handleDragStart}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        dragTransition={{ power: 0 }}
+        {...(!isMaximized
+          ? {
+              drag: true,
+              dragControls: controls,
+              dragListener: false,
+              dragMomentum: false,
+              dragElastic: 0,
+              onDragStart: handleDragStart,
+              onDrag: handleDrag,
+              onDragEnd: handleDragEnd,
+              dragTransition: { power: 0 },
+            }
+          : { drag: false })}
         className={cn(
           "window flex flex-col",
           className,
           activeTarget === "window" && isActive && "active",
           isFocused && "ring-2 ring-primary/30",
-          isDragging && "dragging"
+          isDragging && "dragging",
+          isMaximized && "maximized"
         )}
         style={{
-          width: size?.width || width,
-          height: size?.height || height,
+          width: isMaximized ? "100vw" : size?.width || width,
+          height: isMaximized ? "100vh" : size?.height || height,
           zIndex,
-          position: "absolute",
-          x,
-          y,
+          position: isMaximized ? "fixed" : "absolute",
+          top: isMaximized ? 0 : undefined,
+          left: isMaximized ? 0 : undefined,
+          ...(isMaximized ? {} : { x, y }),
           willChange: isDragging ? "transform" : "auto",
         }}
       >
