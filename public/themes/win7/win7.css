@@ -25,4 +25,15 @@
   min-width: 0 !important;
   min-height: 0 !important;
   padding: 0 !important;
+}
+
+/* Override min-width on all buttons except title bar buttons */
+.theme-win7 button:not(.title-bar-button), .theme-win7 [role="button"]:not(.title-bar-button) {
+  min-width: 0 !important;
+}
+
+/* Disable gradient when inline background-color is set */
+.theme-win7 button[style*="background-color"], .theme-win7 [role="button"][style*="background-color"] {
+  background-image: none !important;
+  min-width: 0 !important;
 } 
