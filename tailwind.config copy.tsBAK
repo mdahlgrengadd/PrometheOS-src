@@ -64,27 +64,6 @@ export default {
         "beos-lightgrey": "#989898",
         window: "var(--window-background)",
         "window-border": "var(--window-border)",
-        sidebar: {
-          DEFAULT: 'hsl(var(--sidebar-background))',
-          foreground: 'hsl(var(--sidebar-foreground))',
-          primary: 'hsl(var(--sidebar-primary))',
-          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-          accent: 'hsl(var(--sidebar-accent))',
-          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-          border: 'hsl(var(--sidebar-border))',
-          ring: 'hsl(var(--sidebar-ring))'
-        },
-        winxp: {
-          'medium-blue': '#245edb',
-          'light-blue': '#0c8dea',
-          'start-green': '#3c873c',
-          'start-green-light': '#79ce71',
-          'menu-blue': '#d3e5fa',
-          'menu-border': '#95bdee',
-          'menu-text': '#29356c',
-          'menu-text-dark': '#373738',
-          'menu-text-gray': '#808080'
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -129,10 +108,6 @@ export default {
       },
       textColor: {
         "taskbar-foreground": "white",
-      },
-      backgroundImage: {
-        'winxp-bliss': "url('/images/winxp-bliss.jpg')",
-        'winxp-start': "url('/images/winxp-start.png')"
       },
     },
   },

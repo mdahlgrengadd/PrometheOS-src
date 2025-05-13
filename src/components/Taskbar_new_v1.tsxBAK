@@ -1,26 +1,23 @@
-import React, { useState, useEffect, useMemo, FC } from 'react';
+import React, { useState, useEffect, useRef, useMemo, FC } from 'react';
 import { useTheme } from '@/lib/ThemeProvider';
 import { useWindowStore } from '@/store/windowStore';
 import { WindowState } from '@/types/window';
 import { useWebRTCStatus } from '../hooks/useWebRTCStatus';
-import StartButton from './StartButton';
-import StartMenu from './StartMenu';
 import { FcGlobe, FcSpeaker, FcDocument } from 'react-icons/fc';
-import { Monitor, Minimize2, Maximize2, Wifi } from 'lucide-react';
-
-// Import component-scoped styles
-import './Taskbar.css';
+import { Monitor, Minimize2, Maximize2, Wifi, Home } from 'lucide-react';
 
 interface TaskbarProps {
   onWindowClick: (id: string) => void;
 }
 
 const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
-  // Theme and WebRTC status
+  // Theme and connection status
   const { theme } = useTheme();
   const isConnected = useWebRTCStatus().isConnected;
+  const isBeOSTheme = theme === 'beos';
+  const isMacOSTheme = theme === 'macos';
 
-  // Windows state
+  // Subscribe to raw windows dict, then memoize filtered list
   const windowsDict = useWindowStore((state) => state.windows);
   const windows: WindowState[] = useMemo(
     () => Object.values(windowsDict).filter((w) => w.isOpen),
@@ -29,20 +26,48 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
 
   // Start menu state
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Auto-hide state
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+
+  // Clock state
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Effects
   useEffect(() => {
+    // Clock tick every second
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
+    // Read auto-hide setting once
     const stored = localStorage.getItem('taskbar-autohide') === 'true';
     setAutoHide(stored);
     setIsVisible(!stored);
+  }, []);
+
+  useEffect(() => {
+    // Message & outside-click for start menu
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data === 'closeStartMenu' || e.data?.action === 'openItem') {
+        setIsStartMenuOpen(false);
+      }
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest('.start-menu-iframe') && !t.closest('.taskbar-start')) {
+        setIsStartMenuOpen(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Handlers
@@ -56,7 +81,7 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
   const formatDate = (date: Date) =>
     date.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
 
-  // Styles
+  // Inline styles for XP look + auto-hide
   const containerStyle: React.CSSProperties = {
     position: 'absolute',
     bottom: 0,
@@ -64,24 +89,35 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
     width: '100%',
     height: '3rem',
     display: 'flex',
-    background:
-      'linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)',
+    background: 'linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)',
     boxShadow: 'inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5',
     transition: autoHide ? 'transform 0.3s ease' : undefined,
     transform: autoHide && !isVisible ? 'translateY(100%)' : 'translateY(0)',
   };
 
+  // Start menu iframe element
+  const startMenuIframe = isStartMenuOpen && (
+    <iframe
+      ref={iframeRef}
+      className="start-menu-iframe absolute bottom-12 left-0 w-72 h-96 border border-gray-300 rounded-t-lg shadow-lg z-50 overflow-hidden"
+      src="/startmenu.html"
+      frameBorder="0"
+      title="Start Menu"
+    />
+  );
+
   return (
     <div
-      className="taskbar-scope"
       style={containerStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* Start button & menu */}
       <div className="relative flex items-center pl-2">
-        <StartButton isActive={isStartMenuOpen} onClick={toggleStartMenu} />
-        <StartMenu isOpen={isStartMenuOpen} />
+        <button className="taskbar-start flex items-center" onClick={toggleStartMenu}>
+          <Home className="w-5 h-5 text-white" />
+        </button>
+        {startMenuIframe}
       </div>
 
       {/* Quick launch */}

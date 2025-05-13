@@ -21,7 +21,7 @@
     left: 0;
     right: 0;
     bottom: var(--taskbar-height, 48px); /* Ensure we don't overlap the taskbar */
-    z-index: 1;
+    /* z-index removed to prevent stacking context issues with start menu */
     display: flex;  /* Use flexbox instead of grid for more natural column layout */
     flex-direction: column; /* Stack icons vertically first */
     flex-wrap: wrap;        /* Wrap to next column when reaching bottom */

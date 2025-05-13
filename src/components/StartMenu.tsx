@@ -1,94 +1,162 @@
-import { Cloud, CloudRain, Home, LogOut, Sun } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React from 'react';
+import StartMenuItem from './StartMenuItem';
+import './Taskbar.css';
+import {
+  FcHome, FcDocument, FcPicture, FcMusic, FcMultipleDevices,
+  FcGlobe, FcSettings, FcPrint, FcServiceMark, FcSearch,
+  FcCommandLine, FcInternal, FcInvite, FcViewDetails,
+  FcFolder, FcOpenedFolder
+} from 'react-icons/fc';
 
-interface WeatherData {
-  temperature: number;
-  condition: string;
-  location: string;
+interface StartMenuProps {
+  isOpen: boolean;
 }
 
-const StartMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // This is a simple mock weather data - in a real app you'd fetch from a weather API
-    const fetchWeather = async () => {
-      setLoading(true);
-      // Simulating API call delay
-      setTimeout(() => {
-        setWeather({
-          temperature: 72,
-          condition: "Partly Cloudy",
-          location: "Your Location",
-        });
-        setLoading(false);
-      }, 1000);
-    };
-
-    fetchWeather();
-  }, []);
-
-  // Handle clicks outside the menu to close it
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest(".start-menu") && !target.closest(".taskbar-start")) {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
+const StartMenu = ({ isOpen }: StartMenuProps) => {
+  if (!isOpen) return null;
+  
   return (
-    <div className="start-menu">
-      <div className="start-menu-header">
-        <Home className="w-5 h-5 mr-2" />
-        <h2>Welcome!</h2>
-      </div>
-
-      <div className="start-menu-content">
-        <div className="weather-widget">
-          <h3>Weather</h3>
-          {loading ? (
-            <div className="weather-loading">Loading weather data...</div>
-          ) : (
-            <div className="weather-data">
-              <div className="weather-icon">
-                {weather?.condition.includes("Cloud") ? (
-                  <Cloud className="w-8 h-8" />
-                ) : weather?.condition.includes("Rain") ? (
-                  <CloudRain className="w-8 h-8" />
-                ) : (
-                  <Sun className="w-8 h-8" />
-                )}
-              </div>
-              <div className="weather-details">
-                <div className="weather-temp">{weather?.temperature}°F</div>
-                <div className="weather-condition">{weather?.condition}</div>
-                <div className="weather-location">{weather?.location}</div>
+    <div className="taskbar-scope">
+      <div className="absolute bottom-full left-0 w-[380px] h-[550px] bg-winxp-light-blue rounded-t-md shadow-lg z-[11000] overflow-hidden border border-border">
+        {/* Header */}
+        <div className="flex items-center h-[65px] px-2 py-2 bg-gradient-to-b from-winxp-medium-blue to-winxp-light-blue shadow-inner">
+          <div className="bg-white rounded p-0.5 h-[52px] shadow-md">
+            <img 
+              src="/images/winxp-profile.jpg" 
+              alt="User" 
+              className="h-full rounded"
+            />
+          </div>
+          <h1 className="text-white text-lg ml-2 drop-shadow-sm">John Smith</h1>
+        </div>
+        
+        {/* Body */}
+        <div className="flex h-[calc(100%-65px-43px)] bg-white border border-winxp-light-blue mx-px relative">
+          {/* Left Side - Favorites */}
+          <div className="flex flex-col w-1/2 h-full p-2">
+            {/* Internet */}
+            <StartMenuItem 
+              customIcon={<FcGlobe className="w-8 h-8" />}
+              intent="Internet"
+              program="Internet Explorer"
+              type="intent"
+            />
+            
+            {/* Email */}
+            <StartMenuItem 
+              customIcon={<FcInvite className="w-8 h-8" />}
+              intent="E-mail"
+              program="Outlook Express"
+              type="intent"
+            />
+            
+            <div className="my-1 h-px bg-gradient-to-r from-white via-gray-300 to-white" />
+            
+            {/* Notepad */}
+            <StartMenuItem 
+              customIcon={<FcViewDetails className="w-8 h-8" />}
+              label="Notepad"
+              type="favorite"
+            />
+            
+            <div className="mt-auto">
+              <div className="h-px bg-gradient-to-r from-white via-gray-300 to-white mb-1" />
+              <div className="flex items-center justify-between font-bold text-winxp-menu-text-dark text-xs p-1 hover:bg-winxp-medium-blue hover:text-white cursor-pointer">
+                <span>All Programs</span>
+                <div className="w-4 h-4 bg-contain bg-no-repeat bg-center" style={{ backgroundImage: "url('/images/arrow-right.ico')" }} />
               </div>
             </div>
-          )}
+          </div>
+          
+          {/* Right Side - Shortcuts */}
+          <div className="flex flex-col w-1/2 h-full p-2 bg-winxp-menu-blue border-l border-winxp-menu-border">
+            {/* My Documents */}
+            <StartMenuItem 
+              customIcon={<FcDocument className="w-8 h-8" />}
+              label="My Documents"
+              type="my"
+            />
+            
+            {/* My Recent Documents */}
+            <StartMenuItem 
+              customIcon={<FcOpenedFolder className="w-8 h-8" />}
+              label="My Recent Documents"
+              type="my"
+              hasSubmenu={true}
+            />
+            
+            {/* My Pictures */}
+            <StartMenuItem 
+              customIcon={<FcPicture className="w-8 h-8" />}
+              label="My Pictures"
+              type="my"
+            />
+            
+            {/* My Music */}
+            <StartMenuItem 
+              customIcon={<FcMusic className="w-8 h-8" />}
+              label="My Music"
+              type="my"
+            />
+            
+            {/* My Computer */}
+            <StartMenuItem 
+              customIcon={<FcMultipleDevices className="w-8 h-8" />}
+              label="My Computer"
+              type="my"
+            />
+            
+            {/* Network Places */}
+            <StartMenuItem 
+              customIcon={<FcGlobe className="w-8 h-8" />}
+              label="My Network Places"
+              type="my"
+            />
+            
+            <div className="my-1 h-px bg-gradient-to-r from-transparent via-[#aebad6] to-transparent" />
+            
+            {/* Control Panel */}
+            <StartMenuItem 
+              customIcon={<FcSettings className="w-6 h-6" />}
+              label="Control Panel"
+              type="shortcut"
+            />
+            
+            {/* Printers */}
+            <StartMenuItem 
+              customIcon={<FcPrint className="w-6 h-6" />}
+              label="Printers and Faxes"
+              type="shortcut"
+            />
+            
+            <div className="my-1 h-px bg-gradient-to-r from-transparent via-[#aebad6] to-transparent" />
+            
+            {/* Help */}
+            <StartMenuItem 
+              customIcon={<FcServiceMark className="w-6 h-6" />}
+              label="Help and Support"
+              type="shortcut"
+            />
+            
+            {/* Search */}
+            <StartMenuItem 
+              customIcon={<FcSearch className="w-6 h-6" />}
+              label="Search"
+              type="shortcut"
+              hasSubmenu={true}
+            />
+            
+            {/* Run */}
+            <StartMenuItem 
+              customIcon={<FcCommandLine className="w-6 h-6" />}
+              label="Run..."
+              type="shortcut"
+            />
+          </div>
         </div>
-
-        <div className="recent-apps">
-          <h3>Quick Access</h3>
-          <ul>
-            <li>Documents</li>
-            <li>Pictures</li>
-            <li>Settings</li>
-          </ul>
-        </div>
-
-        <div className="logout-option">
-          <button className="logout-button" onClick={onClose}>
-            <LogOut className="w-5 h-5 mr-2" />
-            <span>Log Out</span>
-          </button>
-        </div>
+        
+        {/* Footer */}
+        <div className="h-[43px] bg-gradient-to-t from-winxp-medium-blue to-winxp-light-blue shadow-inner" />
       </div>
     </div>
   );
