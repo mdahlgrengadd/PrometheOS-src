@@ -321,7 +321,7 @@ const FlowCanvasInner: React.FC = () => {
           <button
             onClick={executeWorkflow}
             disabled={isExecuting}
-            className={`px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg ${
+            className={`px-4 py-2 bg-green-600 hover:bg-green-700 text-primary rounded-md shadow-lg ${
               isExecuting ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
@@ -330,13 +330,13 @@ const FlowCanvasInner: React.FC = () => {
         </div>
 
         {currentNodeId && (
-          <div className="execution-indicator absolute bottom-4 right-4 z-10 bg-blue-800 text-white px-4 py-2 rounded-md shadow-lg">
+          <div className="execution-indicator absolute bottom-4 right-4 z-10 bg-blue-800 text-primary px-4 py-2 rounded-md shadow-lg">
             Executing node: {currentNodeId}
           </div>
         )}
 
         {executionError && (
-          <div className="execution-error absolute bottom-4 left-4 z-10 bg-red-800 text-white p-4 max-w-md rounded-md shadow-lg">
+          <div className="execution-error absolute bottom-4 left-4 z-10 bg-red-800 text-primary p-4 max-w-md rounded-md shadow-lg">
             <h3 className="font-bold mb-2">Execution Error</h3>
             <div className="text-sm">{executionError}</div>
             <button

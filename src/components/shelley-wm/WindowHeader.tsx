@@ -19,14 +19,16 @@ const WindowControls: React.FC<WindowControlsProps> = ({
   controls = ["minimize", "maximize", "close"],
 }) => {
   const renderControl = (control: "minimize" | "maximize" | "close") => {
-    const handler = 
-      control === "minimize" ? onMinimize :
-      control === "maximize" ? onMaximize :
-      onClose;
-    
+    const handler =
+      control === "minimize"
+        ? onMinimize
+        : control === "maximize"
+        ? onMaximize
+        : onClose;
+
     let icon: React.ReactNode;
     let bgColor: string;
-    
+
     switch (control) {
       case "minimize":
         icon = <div className="h-1 w-2.5 bg-black/60 rounded-none"></div>;
@@ -46,7 +48,7 @@ const WindowControls: React.FC<WindowControlsProps> = ({
         bgColor = "var(--wm-btn-close-bg, #e74c3c)";
         break;
     }
-    
+
     return (
       <button
         key={control}
@@ -55,18 +57,16 @@ const WindowControls: React.FC<WindowControlsProps> = ({
         aria-label={control.charAt(0).toUpperCase() + control.slice(1)}
         style={{ backgroundColor: bgColor }}
       >
-        <div className={control === "close" ? "h-2.5 w-2.5 relative" : undefined}>
+        <div
+          className={control === "close" ? "h-2.5 w-2.5 relative" : undefined}
+        >
           {icon}
         </div>
       </button>
     );
   };
 
-  return (
-    <div className="window-controls">
-      {controls.map(renderControl)}
-    </div>
-  );
+  return <div className="window-controls">{controls.map(renderControl)}</div>;
 };
 
 interface WindowHeaderProps {
@@ -82,15 +82,15 @@ interface WindowHeaderProps {
 
 export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
   const { theme, themes } = useTheme();
-  const { 
-    title, 
-    onMinimize, 
-    onMaximize, 
-    onClose, 
-    headerRef, 
-    isMaximized, 
-    controls = ["minimize", "maximize", "close"], 
-    controlsPosition = "right" 
+  const {
+    title,
+    onMinimize,
+    onMaximize,
+    onClose,
+    headerRef,
+    isMaximized,
+    controls = ["minimize", "maximize", "close"],
+    controlsPosition = "right",
   } = props;
 
   // Get the current theme's config
@@ -104,7 +104,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
   if (theme === "beos" && isMaximized) {
     return null;
   }
-  
+
   // If the theme has a custom header component, use it
   if (decorator.Header) {
     // Forward the ref and other props to the custom header
@@ -115,12 +115,12 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
       </div>
     );
   }
-  
+
   // Otherwise, provide a default header implementation
   return (
-    <div 
-      className="window-header flex items-center justify-between p-2" 
-      data-draggable="true" 
+    <div
+      className="window-header flex items-center justify-between p-2"
+      data-draggable="true"
       ref={headerRef}
       style={{
         cursor: "move",
@@ -137,11 +137,9 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
           controls={controls}
         />
       )}
-      
-      <div className="window-title flex-1 text-center">
-        {title}
-      </div>
-      
+
+      <div className="window-title flex-1 text-center">{title}</div>
+
       {controlsPosition === "right" && (
         <WindowControls
           onMinimize={onMinimize}

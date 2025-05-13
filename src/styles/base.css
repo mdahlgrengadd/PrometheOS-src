@@ -11,10 +11,14 @@
     /* Ensure windows stay fully opaque while dragging/resizing */
     --window-drag-opacity: 1;
     --window-resize-opacity: 1;
+    /* Unified primary text color for all themes */
+    --text-primary: #000000;
   }
 
   .theme-dark {
     color-scheme: dark;
+    /* In dark theme, primary text should use foreground variable */
+    --text-primary: var(--foreground);
   }
 
   * {

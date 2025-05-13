@@ -30,7 +30,7 @@ const ExecutionPin = ({
         style={{ zIndex: 100 }}
       />
       <div
-        className={`execution-label text-xs text-white font-mono font-bold ${
+        className={`execution-label text-xs text-primary font-mono font-bold ${
           position === Position.Right ? "mr-4 ml-4" : "ml-4 mr-4"
         }`}
       >
