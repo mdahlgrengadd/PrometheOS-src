@@ -96,23 +96,32 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
 
       {/* Running apps */}
       <div className="flex items-center ml-2 space-x-1 flex-1">
-        {windows.map((win) => (
-          <button
-            key={win.id}
-            className={`flex items-center px-2 py-1 rounded ${
-              win.isOpen && !win.isMinimized ? 'bg-[#4096e3]/60' : 'hover:bg-[#4096e3]/40'
-            }`}
-            onClick={() => onWindowClick(win.id)}
-          >
-            <Monitor className="w-5 h-5 mr-1 text-white" />
-            <span className="truncate text-white text-xs">{win.title}</span>
-            {win.isOpen && !win.isMinimized ? (
-              <Minimize2 className="w-3 h-3 ml-1 text-white" />
-            ) : (
-              <Maximize2 className="w-3 h-3 ml-1 text-white" />
-            )}
-          </button>
-        ))}
+        {windows.map((win) => {
+          const btnClass = [
+            'taskbar-app-btn',
+            win.isMinimized ? 'minimized' : '',
+            win.isOpen && !win.isMinimized ? 'taskbar-app-btn-active' : '',
+            'cursor-pointer',
+          ].filter(Boolean).join(' ');
+          return (
+            <div
+              key={win.id}
+              className={btnClass}
+              onClick={() => onWindowClick(win.id)}
+              tabIndex={0}
+              role="button"
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onWindowClick(win.id); }}
+            >
+              <Monitor className="w-5 h-5 mr-1 text-white" />
+              <span className="truncate">{win.title}</span>
+              {win.isOpen && !win.isMinimized ? (
+                <Minimize2 className="w-3 h-3 ml-1 text-white" />
+              ) : (
+                <Maximize2 className="w-3 h-3 ml-1 text-white" />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* System tray */}

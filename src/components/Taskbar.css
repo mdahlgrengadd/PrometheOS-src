@@ -1,3 +1,67 @@
+/* Modern running app button styling with shadow, hover, and active states */
+.taskbar-app-btn {
+  @apply flex items-center px-2 py-1 rounded-md font-medium text-white text-xs transition-all duration-150 shadow-sm;
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 1px 4px 0 rgba(64,150,227,0.12);
+}
+.taskbar-app-btn:hover {
+  background-color: #4096e366 !important; /* #4096e3/40 */
+  box-shadow: 0 2px 8px 0 rgba(64,150,227,0.18);
+  filter: brightness(1.08);
+}
+.taskbar-app-btn:active {
+  background-color: #4096e399 !important; /* #4096e3/60 */
+  box-shadow: 0 2px 12px 0 rgba(64,150,227,0.25);
+  filter: brightness(1.12);
+}
+.taskbar-app-btn-active {
+  background-color: #4096e399 !important; /* #4096e3/60 */
+  box-shadow: 0 2px 12px 0 rgba(64,150,227,0.25);
+  filter: brightness(1.12);
+}
+/*
+TEMP DEBUG STYLE (for minimized taskbar buttons):
+.taskbar-app-btn.minimized,
+.taskbar-app-btn.minimized:hover,
+.taskbar-app-btn.minimized:active {
+  outline: 4px solid red !important;
+  background: yellow !important;
+  color: black !important;
+  filter: grayscale(1) !important;
+  opacity: 0.5 !important;
+  border: 2px dashed red !important;
+  box-shadow: 0 0 0 4px orange !important;
+  z-index: 9999 !important;
+}
+*/
+
+.taskbar-app-btn.minimized,
+.taskbar-app-btn.minimized:hover,
+.taskbar-app-btn.minimized:active {
+  box-shadow: none !important;
+  filter: grayscale(1) brightness(0.92) !important;
+  opacity: 0.6 !important;
+  background-color: #a7b7da !important; /* lighter muted blue */
+  color: #404349 !important;
+  border: 1.5px dashed #4a5a7a !important;
+}
+
+.taskbar-app-btn.minimized .truncate {
+  opacity: 0.5 !important;
+}
+/* Make running app buttons always look modern, regardless of theme */
+.taskbar-app-btn {
+  @apply flex items-center px-2 py-1 rounded-md font-medium text-white text-xs transition-colors duration-150;
+  background: transparent !important;
+  color: #fff !important;
+}
+.taskbar-app-btn:hover {
+  background-color: #4096e366 !important; /* #4096e3/40 */
+}
+.taskbar-app-btn-active {
+  background-color: #4096e399 !important; /* #4096e3/60 */
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
