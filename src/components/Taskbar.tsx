@@ -29,6 +29,22 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
 
   // Start menu state
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
+
+  // Close StartMenu when clicking outside
+  const startMenuRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isStartMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        startMenuRef.current &&
+        !startMenuRef.current.contains(e.target as Node)
+      ) {
+        setIsStartMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isStartMenuOpen]);
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -79,7 +95,7 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
       onMouseLeave={handleMouseLeave}
     >
       {/* Start button & menu */}
-      <div className="relative flex items-center pl-2">
+      <div className="relative flex items-center pl-2" ref={startMenuRef}>
         <StartButton isActive={isStartMenuOpen} onClick={toggleStartMenu} />
         <StartMenu isOpen={isStartMenuOpen} />
       </div>
