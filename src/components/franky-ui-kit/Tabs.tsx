@@ -1,12 +1,14 @@
 // src/components/franky-ui-kit/Tabs.tsx
-import * as React from 'react';
+import * as React from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { cn } from '@/lib/utils';
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
 import {
-    Content as RadixTabsContent, List as RadixTabsList, Root as RadixTabsRoot,
-    Trigger as RadixTabsTrigger
-} from '@radix-ui/react-tabs';
+  Content as RadixTabsContent,
+  List as RadixTabsList,
+  Root as RadixTabsRoot,
+  Trigger as RadixTabsTrigger,
+} from "@radix-ui/react-tabs";
 
 export const WinTabs = RadixTabsRoot;
 

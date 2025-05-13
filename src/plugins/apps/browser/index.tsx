@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
-import { Plugin, PluginManifest } from '../../types';
+import { Plugin, PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "browser",
@@ -150,8 +150,8 @@ const BrowserContent = () => {
   ];
 
   return (
-    <div className="p-0 flex flex-col h-full">
-      <div className="flex items-center mb-2 space-x-2">
+    <div className="p-0 py-1 flex flex-col h-full">
+      <div className="flex items-center mb-1 space-x-2">
         <div className="flex space-x-1">
           <button
             onClick={goBack}
@@ -159,7 +159,7 @@ const BrowserContent = () => {
             className={`px-2 py-1 rounded ${
               historyIndex <= 0
                 ? "bg-muted text-muted-foreground"
-                : "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-blue-500 text-primary hover:bg-blue-600"
             }`}
             aria-label="Go back"
             title="Go back"
@@ -172,7 +172,7 @@ const BrowserContent = () => {
             className={`px-2 py-1 rounded ${
               historyIndex >= history.length - 1
                 ? "bg-muted text-muted-foreground"
-                : "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-blue-500 text-primary hover:bg-blue-600"
             }`}
             aria-label="Go forward"
             title="Go forward"
@@ -181,7 +181,7 @@ const BrowserContent = () => {
           </button>
           <button
             onClick={refresh}
-            className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-2 py-1 bg-blue-500 text-primary rounded hover:bg-blue-600"
             aria-label="Refresh"
             title="Refresh page"
           >
@@ -198,13 +198,13 @@ const BrowserContent = () => {
         />
         <button
           onClick={navigateToUrl}
-          className="bg-blue-500 text-white px-3 py-1 rounded-r hover:bg-blue-600"
+          className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
         >
           Go
         </button>
       </div>
 
-      <div className="relative flex-1 bg-background border border-border">
+      <div className="relative flex-1 bg-background">
         {isLoading && !frameError && (
           <div className="absolute inset-0 flex items-center justify-center bg-background bg-opacity-70 z-10">
             <div className="text-blue-500 font-semibold">Loading...</div>
