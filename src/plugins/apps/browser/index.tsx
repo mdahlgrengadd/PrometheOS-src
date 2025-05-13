@@ -150,7 +150,7 @@ const BrowserContent = () => {
   ];
 
   return (
-    <div className="p-4 flex flex-col h-full">
+    <div className="p-0 flex flex-col h-full">
       <div className="flex items-center mb-2 space-x-2">
         <div className="flex space-x-1">
           <button

@@ -336,7 +336,7 @@ export function WindowsWindow({
         {/* Content area */}
         <div
           className={cn(
-            "window-body p-2 flex flex-col gap-4 flex-1 overflow-y-auto",
+            "window-body p-0 flex flex-col gap-4 flex-1 overflow-y-auto",
             isWindowsTheme && "has-scrollbar"
           )}
         >
