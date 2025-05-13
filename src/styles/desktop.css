@@ -116,9 +116,9 @@
 
   .desktop-icon-label {
     @apply text-center text-xs mt-2 w-full;
-    color: var(--text-primary, #000000);
+    color: white;
     font-weight: var(--desktop-icon-font-weight, 500);
-    text-shadow: var(--desktop-icon-text-shadow, none);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
     white-space: normal; /* Allow text to wrap */
     overflow-wrap: break-word; /* Break words that are too long */
     word-break: break-word; /* Allow words to break if needed */
@@ -129,24 +129,6 @@
     max-height: 3.6em; /* Approximately 3 lines of text */
     overflow: hidden; /* Hide any text beyond the line limit */
     padding: 0 4px; /* Add a small padding to prevent text touching edges */
-    
-    .theme-beos & {
-      @apply font-bold;
-      color: var(--text-primary);
-      text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);
-    }
-    
-    .theme-light & {
-      @apply font-medium;
-      color: var(--text-primary);
-      text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .theme-dark & {
-      @apply font-medium;
-      color: white;
-      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
-    }
   }
 
   /* Base tab bar style applies to all themes, specific themes can override */
