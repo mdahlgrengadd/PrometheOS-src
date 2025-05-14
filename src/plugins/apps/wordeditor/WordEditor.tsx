@@ -1,26 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 import {
-    MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut
-} from '@/components/ui/menubar';
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+} from "@/components/ui/menubar";
 import {
-    WindowsMenubar, WindowsMenubarContent, WindowsMenubarTrigger
-} from '@/components/ui/windows';
-import CharacterCount from '@tiptap/extension-character-count';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
-import Underline from '@tiptap/extension-underline';
-import { useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+  WindowsMenubar,
+  WindowsMenubarContent,
+  WindowsMenubarTrigger,
+} from "@/components/ui/windows";
+import CharacterCount from "@tiptap/extension-character-count";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 // Internal components (toolbar + page view)
-import WordEditorContent from './WordEditorContent';
-import WordEditorToolbar from './WordEditorToolbar';
+import WordEditorContent from "./WordEditorContent";
+import WordEditorToolbar from "./WordEditorToolbar";
 
 const WordEditor = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
@@ -69,7 +74,7 @@ const WordEditor = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-background text-foreground">
+    <div className="flex flex-col h-full bg-background text-primary">
       {/* Top application menubar */}
       <WindowsMenubar>
         <MenubarMenu>

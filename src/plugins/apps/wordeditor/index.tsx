@@ -1,7 +1,7 @@
-import React from 'react';
+import React from "react";
 
-import { Plugin, PluginManifest } from '../../types';
-import WordEditorComponent from './WordEditor';
+import { Plugin, PluginManifest } from "../../types";
+import WordEditorComponent from "./WordEditor";
 
 export const manifest: PluginManifest = {
   id: "WordEditor",
@@ -30,7 +30,11 @@ const WordEditorPlugin: Plugin = {
     console.log("Word Editor Pro plugin initialized");
   },
   render: () => {
-    return <WordEditorComponent />;
+    return (
+      <div className="text-primary">
+        <WordEditorComponent />
+      </div>
+    );
   },
 };
 
