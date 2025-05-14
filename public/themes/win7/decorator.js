@@ -204,9 +204,6 @@ const Win7Decorator = {
 // For module-style loading (ESM)
 export default Win7Decorator;
 
-// For global export style loading (for script tag usage)
-window.Win7Decorator = Win7Decorator;
-
 /*
 ====================
 How to Use This File

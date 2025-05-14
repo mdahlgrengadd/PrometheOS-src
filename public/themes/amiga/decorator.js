@@ -188,8 +188,5 @@ class AmigaDecorator {
   }
 }
 
-// Export for ESM compatibility
+// Export as ES Module
 export default AmigaDecorator;
-
-// Make available globally for script tag loading
-window.AmigaDecorator = AmigaDecorator;

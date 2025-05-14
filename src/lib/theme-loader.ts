@@ -1,7 +1,10 @@
-import { isValidThemeManifest, validateThemeManifest } from '@/utils/validateTheme';
+import {
+  isValidThemeManifest,
+  validateThemeManifest,
+} from "@/utils/validateTheme";
 
-import themeManifest from './theme-manifest.json';
-import { ExternalThemeManifest, ThemeConfig, ThemeType } from './theme-types';
+import themeManifest from "./theme-manifest.json";
+import { ExternalThemeManifest, ThemeConfig, ThemeType } from "./theme-types";
 
 // Storage keys
 const INSTALLED_THEMES_KEY = "installed-themes";
@@ -121,80 +124,80 @@ export const loadThemeCSS = async (cssUrl: string): Promise<void> => {
 };
 
 /**
- * Load decorator module for a theme using a script tag
+ * Load decorator module for a theme using dynamic ESM import
  * @param decoratorPath The path to the decorator module
  * @returns Promise that resolves with the decorator module
  */
 const loadThemeDecorator = async (
   decoratorPath: string
 ): Promise<ThemeDecoratorModule | null> => {
-  // Check if the script is already loaded
-  const existingScript = document.querySelector(
-    `script[data-decorator="${decoratorPath}"]`
-  );
-  if (existingScript) {
-    // Extract the class name from the path (e.g., "Win95Decorator" from "/themes/win95/decorator.js")
-    const pathParts = decoratorPath.split("/");
-    const theme = pathParts[pathParts.length - 2]; // Get the theme name (e.g., "win95")
-    const decoratorClassName =
-      theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
-    return (
-      (window as unknown as Record<string, ThemeDecoratorModule>)[
-        decoratorClassName
-      ] || null
-    );
-  }
+  try {
+    // Using dynamic import to load the module
+    console.log(`Loading decorator from ${decoratorPath} using ESM import`);
 
-  return new Promise((resolve, reject) => {
-    try {
-      const script = document.createElement("script");
-      script.src = decoratorPath;
-      script.type = "module";
-      script.dataset.decorator = decoratorPath;
+    let decoratorModule: Record<string, unknown> | null = null;
 
-      script.onload = () => {
-        // Get the theme name from the path (e.g., "win95" from "/themes/win95/decorator.js")
-        const pathParts = decoratorPath.split("/");
-        const theme = pathParts[pathParts.length - 2];
-        const decoratorClassName =
-          theme.charAt(0).toUpperCase() + theme.slice(1) + "Decorator"; // e.g., "Win95Decorator"
+    // In development mode, we need to handle imports from public directory differently
+    // because Vite doesn't allow direct imports from public
+    if (
+      process.env.NODE_ENV === "development" &&
+      decoratorPath.startsWith("/themes/")
+    ) {
+      // For development mode, fetch the file via AJAX and evaluate it as a module
+      const response = await fetch(decoratorPath);
 
-        // Try to find the decorator class in the global scope
-        setTimeout(() => {
-          const decoratorClass = (window as unknown as Record<string, unknown>)[
-            decoratorClassName
-          ] as ThemeDecoratorModule | undefined;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch decorator: ${response.statusText}`);
+      }
 
-          if (decoratorClass) {
-            // Check for newer style preload/postload exports
-            if (
-              typeof decoratorClass === "object" &&
-              (decoratorClass.preload || decoratorClass.postload)
-            ) {
-              resolve(decoratorClass);
-              return;
-            }
+      const code = await response.text();
 
-            resolve(decoratorClass);
-          } else {
-            console.warn(
-              `Decorator class ${decoratorClassName} not found in global scope`
-            );
-            resolve(null);
-          }
-        }, 100); // Give a small delay for the script to be evaluated
-      };
+      // Create a blob URL from the code
+      const blob = new Blob([code], { type: "application/javascript" });
+      const blobURL = URL.createObjectURL(blob);
 
-      script.onerror = () => {
-        reject(new Error(`Failed to load decorator from ${decoratorPath}`));
-      };
+      try {
+        // Import the blob URL
+        const module = await import(/* @vite-ignore */ blobURL);
+        decoratorModule = module.default;
+      } finally {
+        // Clean up the blob URL
+        URL.revokeObjectURL(blobURL);
+      }
+    } else {
+      // For production or if not in public/themes, use normal import
+      // Add a random query parameter to bypass cache during development
+      const cacheBuster =
+        process.env.NODE_ENV === "development" ? `?_=${Date.now()}` : "";
+      const fullPath = `${decoratorPath}${cacheBuster}`;
 
-      document.head.appendChild(script);
-    } catch (error) {
-      console.error(`Failed to load decorator from ${decoratorPath}`, error);
-      reject(error);
+      // Dynamic import of the module
+      const module = await import(/* @vite-ignore */ fullPath);
+      decoratorModule = module.default;
     }
-  });
+
+    if (!decoratorModule) {
+      console.warn(
+        `No default export found in decorator module: ${decoratorPath}`
+      );
+      return null;
+    } // Verify that the module has the expected properties
+    if (
+      typeof decoratorModule === "object" &&
+      decoratorModule !== null &&
+      (typeof decoratorModule.preload === "function" ||
+        typeof decoratorModule.Header === "function")
+    ) {
+      return decoratorModule as unknown as ThemeDecoratorModule;
+    }
+    console.warn(
+      `Decorator module doesn't have expected properties: ${decoratorPath}`
+    );
+    return null;
+  } catch (error) {
+    console.error(`Failed to load decorator from ${decoratorPath}:`, error);
+    return null;
+  }
 };
 
 /**

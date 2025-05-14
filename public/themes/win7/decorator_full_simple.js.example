@@ -74,22 +74,7 @@ export function postload() {
   `;
 
   document.head.appendChild(style);
-
-  // Add calculator-specific button overrides to ensure correct sizing/layout
-  const calcOverrideStyle = document.createElement("style");
-  calcOverrideStyle.id = "win7-calc-overrides";
-  calcOverrideStyle.textContent = `
-    .theme-win7 .calculator-root button {
-      box-sizing: border-box !important;
-      display: block !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      height: auto !important;
-      padding: 0.5rem !important;
-    }
-  `;
-  document.head.appendChild(calcOverrideStyle);
+  // Removed calculator-specific button overrides (now in win7.css)
 }
 
 // Cleanup function - called when switching away from the theme
@@ -98,8 +83,7 @@ export function cleanup() {
   document.getElementById("win-theme-css")?.remove();
   // Remove override CSS
   document.getElementById("win7-override-css")?.remove();
-  // Remove calculator override style
-  document.getElementById("win7-calc-overrides")?.remove();
+  // Removed: document.getElementById("win7-calc-overrides")?.remove();
   document.getElementById("scrollbar-fixes")?.remove();
 }
 

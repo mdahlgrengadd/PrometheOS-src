@@ -48,7 +48,6 @@ export async function preload(previousTheme) {
 export function postload() {
   // Remove any previous fixes
   document.getElementById("scrollbar-fixes")?.remove();
-  document.getElementById("win7-calc-overrides")?.remove();
 
   // Inject scrollbar fixes
   const style = document.createElement("style");
@@ -88,22 +87,6 @@ export function postload() {
     }
   `;
   document.head.appendChild(style);
-
-  // Calculator-specific button overrides
-  const calcOverrideStyle = document.createElement("style");
-  calcOverrideStyle.id = "win7-calc-overrides";
-  calcOverrideStyle.textContent = `
-    .theme-win7 .calculator-root button {
-      box-sizing: border-box !important;
-      display: block !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      height: auto !important;
-      padding: 0.5rem !important;
-    }
-  `;
-  document.head.appendChild(calcOverrideStyle);
 }
 
 /**
@@ -114,7 +97,6 @@ export function cleanup() {
   console.log("Win7 cleanup called");
   document.getElementById("win-theme-css")?.remove();
   document.getElementById("win7-override-css")?.remove();
-  document.getElementById("win7-calc-overrides")?.remove();
   document.getElementById("scrollbar-fixes")?.remove();
 }
 

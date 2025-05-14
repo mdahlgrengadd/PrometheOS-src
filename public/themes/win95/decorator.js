@@ -126,8 +126,5 @@ class Win95Decorator {
   }
 }
 
-// Export for ESM compatibility
+// Export as ES Module
 export default Win95Decorator;
-
-// Make available globally for script tag loading
-window.Win95Decorator = Win95Decorator;

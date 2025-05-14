@@ -1,5 +1,6 @@
 // My Cool Theme Decorator
 // This file defines custom window decorations
+import React from "https://esm.sh/react@18.2.0";
 
 class CoolThemeDecorator {
   // Window header component
@@ -124,5 +125,5 @@ class CoolThemeDecorator {
   static borderRadius = 8;
 }
 
-// Export to window object
-window.CoolThemeDecorator = CoolThemeDecorator;
+// Export as ES Module
+export default CoolThemeDecorator;
