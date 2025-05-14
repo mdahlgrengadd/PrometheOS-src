@@ -1,16 +1,29 @@
 import React, {
-    createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState
-} from 'react';
-import { toast } from 'sonner';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { themes } from './theme-definitions';
+import { themes } from "./theme-definitions";
 import {
-    getAvailableExternalThemes, installTheme as installThemeFromUrl, loadExternalTheme,
-    uninstallTheme as uninstallThemeById
-} from './theme-loader';
-import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './theme-types';
+  getAvailableExternalThemes,
+  installTheme as installThemeFromUrl,
+  loadExternalTheme,
+  uninstallTheme as uninstallThemeById,
+} from "./theme-loader";
+import {
+  ThemeConfig,
+  ThemeContextType,
+  ThemeInstallResult,
+  ThemeType,
+} from "./theme-types";
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
@@ -561,7 +574,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     if (loading) {
       // You can use a custom spinner or skeleton here
       return (
-        <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Skeleton className="w-32 h-32 rounded-full" />
         </div>
       );
