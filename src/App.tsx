@@ -1,29 +1,13 @@
-import './App.css';
+import "./App.css";
 
-import { useEffect } from 'react';
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import { ThemeProvider, useTheme } from '@/lib/ThemeProvider';
-import { PluginProvider } from '@/plugins/PluginContext';
+import { ThemeProvider } from "@/lib/ThemeProvider";
 
-import { WindowDndContext } from './components/shelley-wm/WindowDndContext';
-import { useViewMode } from './hooks/useViewMode';
-import Index from './pages/index';
-import MobileIndex from './pages/MobileIndex';
-
-function ThemedWindowWrapper({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
-
-  // Only Win7 needs to be wrapped in a .win7 class
-  // Win98 and WinXP are global CSS resets that don't need a wrapper
-  console.log("ThemedWindowWrapper: ", theme);
-  if (theme === "win7") {
-    return <div className="win7 theme-light">{children}</div>;
-  }
-
-  // For Win98, WinXP and other themes, just render children directly
-  return <>{children}</>;
-}
+import { WindowDndContext } from "./components/shelley-wm/WindowDndContext";
+import { useViewMode } from "./hooks/useViewMode";
+import Index from "./pages/index";
+import MobileIndex from "./pages/MobileIndex";
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (

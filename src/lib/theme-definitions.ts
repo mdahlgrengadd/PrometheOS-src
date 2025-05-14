@@ -1,7 +1,7 @@
-import * as win7Decorator from './decorators/win7.decorator';
-import * as win98Decorator from './decorators/win98.decorator';
-import * as winxpDecorator from './decorators/winxp.decorator';
-import { ThemeConfig, ThemeType } from './theme-types';
+// import * as win7Decorator from './decorators/win7.decorator';
+// import * as win98Decorator from './decorators/win98.decorator';
+// import * as winxpDecorator from './decorators/winxp.decorator';
+import { ThemeConfig, ThemeType } from "./theme-types";
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -359,62 +359,62 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--ring": "231, 57%, 67%",
     },
   },
-  win98: {
-    id: "win98",
-    name: "Windows 98",
-    desktopBackground: "#008080",
-    cssVariables: {
-      // Basic window structure
-      "--window-background": "#c0c0c0",
-      "--window-border": "#808080",
-      "--text-primary": "#000000",
-      "--app-bg": "#008080",
-      // Common UI elements
-      "--taskbar-bg": "#c0c0c0",
-      "--button-bg": "#c0c0c0",
-      "--button-hover": "#c0c0c0",
-      "--button-active": "#c0c0c0",
-    },
-    preload: win98Decorator.preload,
-    postload: win98Decorator.postload,
-  },
-  winxp: {
-    id: "winxp",
-    name: "Windows XP",
-    desktopBackground:
-      "linear-gradient(to bottom, #236B8E, #3A8FB7, #78CFEB, #C2E3F1)",
-    cssVariables: {
-      // Basic window structure
-      "--window-background": "#ECE9D8",
-      "--window-border": "#0054E3",
-      "--text-primary": "#000000",
-      "--app-bg": "#236B8E",
-      // Common UI elements
-      "--taskbar-bg": "linear-gradient(to bottom, #2A5889, #3A6EA5)",
-      "--button-bg": "#ECE9D8",
-      "--button-hover": "#ECE9D8",
-      "--button-active": "#ECE9D8",
-    },
-    preload: winxpDecorator.preload,
-    postload: winxpDecorator.postload,
-  },
-  win7: {
-    id: "win7",
-    name: "Windows 7",
-    desktopBackground: "linear-gradient(to bottom, #1F5D9A, #66AAD7)",
-    cssVariables: {
-      // Basic window structure
-      "--window-background": "#FFFFFF",
-      "--window-border": "#AAAAAA",
-      "--text-primary": "#000000",
-      "--app-bg": "#1F5D9A",
-      // Common UI elements
-      "--taskbar-bg": "linear-gradient(to bottom, #2B5D97, #3A73B7, #2B5D97)",
-      "--button-bg": "#E1E1E1",
-      "--button-hover": "#E5F1FB",
-      "--button-active": "#CCE4F7",
-    },
-    preload: win7Decorator.preload,
-    postload: win7Decorator.postload,
-  },
+  // win98: {
+  //   id: "win98",
+  //   name: "Windows 98",
+  //   desktopBackground: "#008080",
+  //   cssVariables: {
+  //     // Basic window structure
+  //     "--window-background": "#c0c0c0",
+  //     "--window-border": "#808080",
+  //     "--text-primary": "#000000",
+  //     "--app-bg": "#008080",
+  //     // Common UI elements
+  //     "--taskbar-bg": "#c0c0c0",
+  //     "--button-bg": "#c0c0c0",
+  //     "--button-hover": "#c0c0c0",
+  //     "--button-active": "#c0c0c0",
+  //   },
+  //   preload: win98Decorator.preload,
+  //   postload: win98Decorator.postload,
+  // },
+  // winxp: {
+  //   id: "winxp",
+  //   name: "Windows XP",
+  //   desktopBackground:
+  //     "linear-gradient(to bottom, #236B8E, #3A8FB7, #78CFEB, #C2E3F1)",
+  //   cssVariables: {
+  //     // Basic window structure
+  //     "--window-background": "#ECE9D8",
+  //     "--window-border": "#0054E3",
+  //     "--text-primary": "#000000",
+  //     "--app-bg": "#236B8E",
+  //     // Common UI elements
+  //     "--taskbar-bg": "linear-gradient(to bottom, #2A5889, #3A6EA5)",
+  //     "--button-bg": "#ECE9D8",
+  //     "--button-hover": "#ECE9D8",
+  //     "--button-active": "#ECE9D8",
+  //   },
+  //   preload: winxpDecorator.preload,
+  //   postload: winxpDecorator.postload,
+  // },
+  // win7: {
+  //   id: "win7",
+  //   name: "Windows 7",
+  //   desktopBackground: "linear-gradient(to bottom, #1F5D9A, #66AAD7)",
+  //   cssVariables: {
+  //     // Basic window structure
+  //     "--window-background": "#FFFFFF",
+  //     "--window-border": "#AAAAAA",
+  //     "--text-primary": "#000000",
+  //     "--app-bg": "#1F5D9A",
+  //     // Common UI elements
+  //     "--taskbar-bg": "linear-gradient(to bottom, #2B5D97, #3A73B7, #2B5D97)",
+  //     "--button-bg": "#E1E1E1",
+  //     "--button-hover": "#E5F1FB",
+  //     "--button-active": "#CCE4F7",
+  //   },
+  //   preload: win7Decorator.preload,
+  //   postload: win7Decorator.postload,
+  // },
 };

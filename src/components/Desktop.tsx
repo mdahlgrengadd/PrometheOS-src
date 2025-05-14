@@ -7,7 +7,6 @@ import { WindowState } from "@/types/window";
 import { usePlugins } from "../plugins/PluginContext";
 import DesktopIcons from "./DesktopIcons";
 import Taskbar from "./Taskbar";
-import ThemeSelector from "./ThemeSelector";
 import Window from "./Window";
 
 const Desktop = () => {
