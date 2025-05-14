@@ -558,6 +558,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Determine what to render based on theme, and overlay loading indicator when loading
   const renderContent = () => {
+    if (loading) {
+      // You can use a custom spinner or skeleton here
+      return (
+        <div style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Skeleton className="w-32 h-32 rounded-full" />
+        </div>
+      );
+    }
     return children;
   };
 

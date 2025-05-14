@@ -230,7 +230,7 @@ window.Win7Decorator = Win7Decorator;
 How to Use This File
 ====================
 
-- Place this file in your theme folder (e.g. /themes/win7/decorator_advance_full_example.js)
+- Place this file in your theme folder (e.g. /themes/win7/decorator.js)
 - Reference it in your theme manifest as the "decoratorPath"
 - The theme system will automatically call preload/postload/cleanup and use the Header/Controls components for your windows.
 - You can customize the Header/Controls or add more logic as needed!
