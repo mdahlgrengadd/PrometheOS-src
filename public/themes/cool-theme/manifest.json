@@ -1,0 +1,30 @@
+{
+  "id": "cool-theme",
+  "name": "My Cool Theme",
+  "author": "Your Name",
+  "version": "1.0.0",
+  "description": "My Cool Theme custom theme",
+  "cssUrl": "/themes/cool-theme/style.css",
+  "preview": "/themes/cool-theme/preview.png",
+  "desktopBackground": "#f0f0f0",
+  "decoratorPath": "/themes/cool-theme/decorator.js",
+  "cssVariables": {
+    "--wm-border-width": "1px",
+    "--wm-border-color": "#cccccc",
+    "--wm-border-radius": "8px",
+    "--wm-header-height": "32px",
+    "--window-background": "#ffffff",
+    "--window-text": "#000000",
+    "--window-header-background": "#f80000",
+    "--window-header-text": "#333333",
+    "--window-header-button-hover": "#e8e8e8",
+    "--window-header-button-active": "#d8d8d8",
+    "--window-resize-handle": "rgba(0, 0, 0, 0.1)",
+    "--wm-btn-close-bg": "#ff5f57",
+    "--wm-btn-minimize-bg": "#ffbd2e",
+    "--wm-btn-maximize-bg": "#28c940",
+    "--taskbar-bg": "rgba(248, 248, 248, 0.8)",
+    "--text-primary": "#333333",
+    "--accent-primary": "#0066cc"
+  }
+}

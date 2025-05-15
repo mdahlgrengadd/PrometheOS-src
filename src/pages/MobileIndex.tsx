@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { ApiProvider } from "@/api/context/ApiContext";
+import MobileAppOpener from "@/components/mobile/MobileAppOpener";
 import MobileShell from "@/components/mobile/MobileShell";
 import { MacroProvider } from "@/macros/context/MacroContext";
 import { PluginProvider } from "@/plugins/PluginContext";
@@ -74,6 +75,7 @@ const MobileContent = () => {
 
   return (
     <div className="min-h-screen w-full overflow-hidden">
+      <MobileAppOpener setActiveApp={setActiveApp} />
       <MobileShell activeApp={activeApp} setActiveApp={setActiveApp} />
     </div>
   );

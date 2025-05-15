@@ -6,12 +6,7 @@
   --animation-duration-medium: 300ms;
   --animation-duration-long: 500ms;
   --enable-animations: true; /* Default value, will be overridden by JS */
-}
-
-/* Window animations */
-.window {
-  transition: opacity var(--animation-duration-medium) ease,
-    transform var(--animation-duration-medium) ease;
+  --disable-windows-animations: false; /* Windows-specific animations disable */
 }
 
 /* Disable all animations when animations are turned off */
@@ -21,70 +16,24 @@ html[style*="--enable-animations: false"] * {
   animation-duration: 0ms !important;
 }
 
-/* Window opening animation */
-@keyframes window-open {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* All window animations are disabled by default */
+.window, .draggable-window {
+  transition: none !important;
+  animation: none !important;
+  will-change: transform; /* Hint to browser to use GPU acceleration */
 }
 
-/* Window closing animation */
-@keyframes window-close {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.95);
-  }
+/* Base animation timings - kept for non-window elements */
+:root {
+  --anim-duration-fast: 100ms;
+  --anim-duration-normal: 200ms;
+  --anim-duration-slow: 300ms;
+  --anim-easing: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* Window maximizing animation */
-@keyframes window-maximize {
-  from {
-    transform: scale(0.95);
-  }
-  to {
-    transform: scale(1);
-  }
-}
+/* Window animations have been removed to improve performance */
 
-/* Window minimizing animation */
-@keyframes window-minimize {
-  from {
-    transform: scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-}
-
-/* Apply animations to windows */
-:root:not([style*="--enable-animations:false"]) .window-opening {
-  animation: window-open var(--animation-duration-medium) ease forwards;
-}
-
-:root:not([style*="--enable-animations:false"]) .window-closing {
-  animation: window-close var(--animation-duration-medium) ease forwards;
-}
-
-:root:not([style*="--enable-animations:false"]) .window-maximizing {
-  animation: window-maximize var(--animation-duration-short) ease forwards;
-}
-
-:root:not([style*="--enable-animations:false"]) .window-minimizing {
-  animation: window-minimize var(--animation-duration-short) ease forwards;
-}
-
-/* BeOS window frame highlight for focused windows */
+/* Focus styling for windows - static only, no animations */
 .theme-beos .window.focused .window-titlebar {
   border-color: var(--beos-window-focus-color, #a855f7);
 }
@@ -92,10 +41,12 @@ html[style*="--enable-animations: false"] * {
 /* Taskbar auto-hide behavior */
 .taskbar-auto-hide {
   transition: transform var(--animation-duration-medium) ease;
+  will-change: transform;
 }
 
 /* Desktop icon transitions */
 .desktop-icon {
   transition: transform var(--animation-duration-short) ease,
     opacity var(--animation-duration-short) ease;
-} 
+  will-change: transform, opacity;
+}

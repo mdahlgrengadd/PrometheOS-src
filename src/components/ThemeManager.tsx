@@ -1,0 +1,300 @@
+import React, { useState } from "react";
+
+import { WindowsButton } from "@/components/franky-ui-kit/Button";
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
+
+import InstallLocalTheme from "./InstallLocalTheme";
+import ThemeInstaller from "./ThemeInstaller";
+import styles from "./ThemeManager.module.css";
+
+const ThemeManager: React.FC = () => {
+  const {
+    themes,
+    theme: activeTheme,
+    setTheme,
+    loadTheme,
+    installTheme,
+    uninstallTheme,
+  } = useTheme();
+  const [isUninstallDialogOpen, setIsUninstallDialogOpen] = useState(false);
+  const [themeToUninstall, setThemeToUninstall] = useState<string | null>(null);
+  const [isUninstalling, setIsUninstalling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInstallerOpen, setIsInstallerOpen] = useState(false);
+
+  // One-click install for Windows 7 theme
+  const handleInstallWin7 = async () => {
+    setError(null);
+    try {
+      const result = await installTheme("/themes/win7/manifest.json");
+      if (!result.success) {
+        setError(result.error || "Failed to install Windows 7 theme");
+        return;
+      }
+      // Wait for the theme to be registered in the theme system before loading
+      // This ensures the theme is available in the context
+      setTimeout(async () => {
+        const success = await loadTheme("win7");
+        if (!success) {
+          setError("Failed to activate Windows 7 theme after install");
+        }
+      }, 100); // Small delay to allow theme registration
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error installing Windows 7 theme"
+      );
+    }
+  };
+
+  // Split themes into built-in and external
+  const builtInThemes = Object.entries(themes).filter(
+    ([id]) =>
+      id === "light" ||
+      id === "dark" ||
+      id === "beos" ||
+      id === "macos" ||
+      id === "windows" ||
+      id === "fluxbox"
+  );
+
+  const externalThemes = Object.entries(themes).filter(
+    ([id]) =>
+      id !== "light" &&
+      id !== "dark" &&
+      id !== "beos" &&
+      id !== "macos" &&
+      id !== "windows" &&
+      id !== "fluxbox"
+  );
+
+  const handleUninstallClick = (themeId: string) => {
+    setThemeToUninstall(themeId);
+    setIsUninstallDialogOpen(true);
+    setError(null);
+  };
+
+  const confirmUninstall = async () => {
+    if (!themeToUninstall) return;
+
+    setIsUninstalling(true);
+    try {
+      // If we're uninstalling the active theme, switch to light theme using loadTheme
+      if (activeTheme === themeToUninstall) {
+        await loadTheme("light");
+      }
+
+      const success = await uninstallTheme(themeToUninstall);
+      if (!success) {
+        throw new Error(`Failed to uninstall theme: ${themeToUninstall}`);
+      }
+      setIsUninstallDialogOpen(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to uninstall theme"
+      );
+    } finally {
+      setIsUninstalling(false);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Theme Manager</h2>
+        <div className="flex space-x-2">
+          <WindowsButton
+            onClick={handleInstallWin7}
+            variant="default"
+            className={styles.themeButton}
+          >
+            Install Windows 7
+          </WindowsButton>
+          <WindowsButton
+            onClick={() => setIsInstallerOpen(true)}
+            variant="outline"
+            className={styles.themeButton}
+          >
+            Install New Theme
+          </WindowsButton>
+        </div>
+      </div>
+      {error && (
+        <div className="bg-red-100 text-red-800 p-2 rounded mb-4 text-sm">
+          {error}
+        </div>
+      )}
+      {builtInThemes.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-2">Built-in Themes</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {builtInThemes.map(([themeId, themeConfig]) => (
+              <div
+                key={themeId}
+                className={`border p-4 rounded-lg cursor-pointer transition-all ${
+                  activeTheme === themeId
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
+                }`}
+                onClick={async () => {
+                  // Always use loadTheme for proper cleanup of resources
+                  setError(null);
+                  try {
+                    const success = await loadTheme(themeId);
+                    if (!success) {
+                      setError(`Failed to load theme: ${themeId}`);
+                    }
+                  } catch (err) {
+                    setError(`Error loading theme: ${themeId}`);
+                    console.error("Error loading theme:", err);
+                  }
+                }}
+              >
+                <div className="flex items-center mb-2">
+                  <div
+                    className={`w-3 h-3 rounded-full mr-2 ${
+                      activeTheme === themeId ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  />
+                  <h4 className="font-medium">{themeConfig.name}</h4>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {themeConfig.description || "Built-in theme"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {externalThemes.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-2">Installed Themes</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {externalThemes.map(([themeId, themeConfig]) => (
+              <div
+                key={themeId}
+                className={cn(
+                  styles.themeCard,
+                  `border p-4 rounded-lg transition-all ${
+                    activeTheme === themeId
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200"
+                  }`
+                )}
+              >
+                <div className="mb-2">
+                  <div className="flex items-center min-w-0 overflow-hidden">
+                    <div
+                      className={`w-3 h-3 rounded-full mr-2 flex-shrink-0 ${
+                        activeTheme === themeId ? "bg-blue-500" : "bg-gray-300"
+                      }`}
+                    />
+                    <h4 className="font-medium truncate">{themeConfig.name}</h4>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 mb-2">
+                  {themeConfig.description || "External theme"}
+                </div>
+                <div className={styles.themeButtonsContainer}>
+                  <WindowsButton
+                    variant={activeTheme === themeId ? "secondary" : "default"}
+                    onClick={async () => {
+                      // Always use loadTheme for proper cleanup of resources
+                      setError(null);
+                      try {
+                        const success = await loadTheme(themeId);
+                        if (!success) {
+                          setError(`Failed to load theme: ${themeId}`);
+                        }
+                      } catch (err) {
+                        setError(`Error loading theme: ${themeId}`);
+                        console.error("Error loading theme:", err);
+                      }
+                    }}
+                    className={styles.themeActivateButton}
+                  >
+                    {activeTheme === themeId ? "Active" : "Activate"}
+                  </WindowsButton>
+                  <WindowsButton
+                    variant="ghost"
+                    className={cn(
+                      styles.removeButton,
+                      "text-red-600 hover:text-red-800",
+                      activeTheme === "win7" ? "win7-remove-button" : ""
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent theme activation
+                      handleUninstallClick(themeId);
+                    }}
+                    title="Remove Theme" // Add title attribute for accessibility
+                  >
+                    Remove
+                  </WindowsButton>
+                </div>
+                {themeConfig.author && (
+                  <div className="text-xs text-gray-500 mt-2">
+                    By: {themeConfig.author}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}{" "}
+      {externalThemes.length === 0 && (
+        <div className="border rounded-md p-4 mb-4">
+          <p className="text-sm text-gray-500">
+            No external themes are currently installed. Click "Install New
+            Theme" to add a theme.
+          </p>
+        </div>
+      )}
+      {/* Add our new component for installing local themes */}
+      <InstallLocalTheme />
+      {isUninstallDialogOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-medium mb-2">Remove Theme</h3>
+            <p className="mb-4">
+              Are you sure you want to remove this theme? This action cannot be
+              undone.
+            </p>
+            {error && (
+              <div className="bg-red-100 text-red-800 p-2 rounded mb-4 text-sm">
+                {error}
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <WindowsButton
+                onClick={() => setIsUninstallDialogOpen(false)}
+                disabled={isUninstalling}
+                variant="outline"
+                className={styles.themeButton}
+              >
+                Cancel
+              </WindowsButton>
+              <WindowsButton
+                onClick={confirmUninstall}
+                disabled={isUninstalling}
+                variant="destructive"
+                className={cn(
+                  styles.themeButton,
+                  isUninstalling ? "opacity-50 cursor-not-allowed" : ""
+                )}
+              >
+                {isUninstalling ? "Removing..." : "Remove Theme"}
+              </WindowsButton>
+            </div>
+          </div>
+        </div>
+      )}
+      {isInstallerOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <ThemeInstaller onCancel={() => setIsInstallerOpen(false)} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ThemeManager;

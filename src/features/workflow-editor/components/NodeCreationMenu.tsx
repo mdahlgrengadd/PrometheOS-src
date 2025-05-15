@@ -330,14 +330,14 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
   const renderAppNodeForm = () => {
     return (
       <div className="menu-section">
-        <h4 className="text-white font-medium mb-3">API App Node</h4>
+        <h4 className="text-primary font-medium mb-3">API App Node</h4>
 
         <div className="mb-3">
           <label className="block text-gray-300 text-sm mb-1">App</label>
           <select
             value={selectedAppId}
             onChange={(e) => setSelectedAppId(e.target.value)}
-            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
           >
             <option value="">Select an app...</option>
             {availableApps.map((app) => (
@@ -356,7 +356,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <select
               value={selectedComponentId}
               onChange={(e) => setSelectedComponentId(e.target.value)}
-              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             >
               <option value="">Select a component...</option>
               {appComponents.map((component) => (
@@ -375,7 +375,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             !selectedAppId || !selectedComponentId
               ? "bg-gray-500 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
-          } text-white rounded`}
+          } text-primary rounded`}
         >
           Add API App Node
         </button>
@@ -387,7 +387,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
   const renderBasicNodeForm = () => {
     return (
       <div className="menu-section">
-        <h4 className="text-white font-medium mb-3">REST API Node</h4>
+        <h4 className="text-primary font-medium mb-3">REST API Node</h4>
 
         <div className="mb-3 text-sm text-gray-300">
           <p>Creates a REST API call node with:</p>
@@ -406,7 +406,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             type="text"
             value={nodeName}
             onChange={(e) => setNodeName(e.target.value)}
-            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             placeholder="Node name"
           />
         </div>
@@ -419,7 +419,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             type="text"
             value={endpoint}
             onChange={(e) => setEndpoint(e.target.value)}
-            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             placeholder="https://api.example.com/endpoint"
           />
         </div>
@@ -431,7 +431,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             !nodeName || !endpoint
               ? "bg-gray-500 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700"
-          } text-white rounded`}
+          } text-primary rounded`}
         >
           Add REST API Node
         </button>
@@ -444,7 +444,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
     return (
       <>
         <div className="menu-section">
-          <h4 className="text-white font-medium mb-3">
+          <h4 className="text-primary font-medium mb-3">
             {primitiveType === "string"
               ? "String Primitive"
               : "Number Primitive"}
@@ -457,7 +457,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               onChange={(e) =>
                 setPrimitiveType(e.target.value as "string" | "number")
               }
-              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             >
               <option value="string">String</option>
               <option value="number">Number</option>
@@ -471,7 +471,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
                 type="text"
                 value={stringValue}
                 onChange={(e) => setStringValue(e.target.value)}
-                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
                 placeholder="Enter string value"
               />
             </div>
@@ -482,7 +482,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
                 type="number"
                 value={numberValue}
                 onChange={(e) => setNumberValue(Number(e.target.value))}
-                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+                className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
               />
             </div>
           )}
@@ -493,14 +493,14 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
                 ? handleAddStringPrimitiveNode
                 : handleAddNumberPrimitiveNode
             }
-            className="mt-2 w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded"
+            className="mt-2 w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-primary rounded"
           >
             Add {primitiveType === "string" ? "String" : "Number"} Primitive
           </button>
         </div>
 
         <div className="mt-6 pt-4 border-t border-gray-600">
-          <h4 className="text-white font-medium mb-3">Type Converter</h4>
+          <h4 className="text-primary font-medium mb-3">Type Converter</h4>
 
           <div className="mb-3">
             <label className="block text-gray-300 text-sm mb-1">
@@ -509,7 +509,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <select
               value={inputDataType}
               onChange={(e) => setInputDataType(e.target.value as PinDataType)}
-              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             >
               <option value="string">String</option>
               <option value="number">Number</option>
@@ -526,7 +526,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <select
               value={outputDataType}
               onChange={(e) => setOutputDataType(e.target.value as PinDataType)}
-              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-white"
+              className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] rounded text-primary"
             >
               <option value="string">String</option>
               <option value="number">Number</option>
@@ -538,7 +538,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
 
           <button
             onClick={handleAddDataTypeConversionNode}
-            className="w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded"
+            className="w-full px-3 py-1 bg-purple-600 hover:bg-purple-700 text-primary rounded"
           >
             Add Type Converter
           </button>
@@ -556,7 +556,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("basic");
             }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-lg"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-primary rounded-md shadow-lg"
           >
             Add REST API Node
           </button>
@@ -565,7 +565,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("app");
             }}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-primary rounded-md shadow-lg"
           >
             Add App API Node
           </button>
@@ -574,14 +574,14 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("primitive");
             }}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md shadow-lg"
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-primary rounded-md shadow-lg"
           >
             Add Primitive
           </button>
         </div>
       ) : (
         <div className="p-4 bg-[#2D3748] rounded-md shadow-xl border border-[#4A5568] w-64">
-          <h3 className="text-white font-bold mb-3">
+          <h3 className="text-primary font-bold mb-3">
             {nodeMode === "basic"
               ? "Add REST API Node"
               : nodeMode === "app"
@@ -594,7 +594,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <button
               className={`flex-1 py-1 text-sm ${
                 nodeMode === "basic"
-                  ? "bg-blue-600 text-white"
+                  ? "bg-blue-600 text-primary"
                   : "text-gray-400"
               }`}
               onClick={() => setNodeMode("basic")}
@@ -603,7 +603,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             </button>
             <button
               className={`flex-1 py-1 text-sm ${
-                nodeMode === "app" ? "bg-green-600 text-white" : "text-gray-400"
+                nodeMode === "app" ? "bg-green-600 text-primary" : "text-gray-400"
               }`}
               onClick={() => setNodeMode("app")}
             >
@@ -612,7 +612,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <button
               className={`flex-1 py-1 text-sm ${
                 nodeMode === "primitive"
-                  ? "bg-purple-600 text-white"
+                  ? "bg-purple-600 text-primary"
                   : "text-gray-400"
               }`}
               onClick={() => setNodeMode("primitive")}
@@ -636,7 +636,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
                   hasBeginWorkflowNode
                     ? "bg-gray-500 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
-                } text-white rounded`}
+                } text-primary rounded`}
               >
                 Begin Workflow
               </button>

@@ -1,19 +1,61 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-interface IconWindow {
-  id: string;
-  title: string;
-  icon?: React.ReactNode;
-}
+import { useWindowStore } from "@/store/windowStore";
+import { getAppLaunchUrl } from "@/utils/url";
+
+import { usePlugins } from "../plugins/PluginContext";
 
 interface DesktopIconsProps {
-  windows: IconWindow[];
   openWindow: (id: string) => void;
 }
 
-const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
-  console.log("%c[DesktopIcons] Re-rendered", "color: orange");
+const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
+  //console.log("%c[DesktopIcons] Re-rendered", "color: orange");
   const [showIcons, setShowIcons] = useState(true);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    appId: string;
+    visible: boolean;
+  } | null>(null);
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to the raw windows object
+  const windowsDict = useWindowStore((state) => state.windows);
+  // Now memoize your values array
+  const windows = useMemo(() => Object.values(windowsDict), [windowsDict]);
+
+  // Get plugin icons from the plugin context
+  const { loadedPlugins } = usePlugins();
+
+  // Create icon windows with plugin icons
+  const iconWindows = useMemo(
+    () =>
+      windows.map((w) => {
+        const plugin = loadedPlugins.find((p) => p.id === w.id);
+        return {
+          id: w.id,
+          title: w.title,
+          icon: plugin?.manifest.icon,
+        };
+      }),
+    [windows, loadedPlugins]
+  );
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Check if desktop icons should be visible
   useEffect(() => {
@@ -61,6 +103,32 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
     };
   }, []);
 
+  // Handle context menu
+  const handleContextMenu = (e: React.MouseEvent, appId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      appId,
+      visible: true,
+    });
+  };
+
+  // Copy app launch URL
+  const copyAppLaunchUrl = (appId: string) => {
+    const url = getAppLaunchUrl(appId);
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        // Show toast or notification if available
+        console.log(`URL copied: ${url}`);
+      })
+      .catch((err) => {
+        console.error("Could not copy URL: ", err);
+      });
+    setContextMenu(null);
+  };
+
   // If icons should be hidden, don't render anything
   if (!showIcons) {
     return null;
@@ -68,8 +136,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
 
   return (
     <div className="desktop-icons">
-      {windows.map((window) => {
-        console.log(`Rendering icon for ${window.id}:`, window.icon);
+      {iconWindows.map((window) => {
+        //console.log(`Rendering icon for ${window.id}:`, window.icon);
 
         return (
           <div
@@ -77,6 +145,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
             className="desktop-icon"
             onDoubleClick={() => openWindow(window.id)}
             onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => handleContextMenu(e, window.id)}
           >
             {window.icon || (
               <div className="h-8 w-8 bg-blue-500 rounded flex items-center justify-center text-white">
@@ -87,32 +156,38 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ windows, openWindow }) => {
           </div>
         );
       })}
+
+      {/* Context Menu */}
+      {contextMenu && contextMenu.visible && (
+        <div
+          ref={menuRef}
+          className="absolute bg-white shadow-md rounded-md py-1 z-50"
+          style={{
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+          }}
+        >
+          <div
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            onClick={() => openWindow(contextMenu.appId)}
+          >
+            Open
+          </div>
+          <div
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+            onClick={() => copyAppLaunchUrl(contextMenu.appId)}
+          >
+            Copy Launch URL
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 function areEqual(prev: DesktopIconsProps, next: DesktopIconsProps): boolean {
-  // Compare the openWindow callback
-  if (prev.openWindow !== next.openWindow) return false;
-
-  // Compare windows length
-  if (prev.windows.length !== next.windows.length) return false;
-
-  // Compare each window's properties
-  for (let i = 0; i < prev.windows.length; i++) {
-    const a = prev.windows[i];
-    const b = next.windows[i];
-
-    // Compare basic properties
-    if (a.id !== b.id || a.title !== b.title) return false;
-
-    // We don't compare the actual icon React elements deeply as that's expensive and unnecessary
-    // Just check if both have an icon or both don't have an icon
-    // This works because icons are loaded once and don't change during the app lifecycle
-    if ((a.icon === undefined) !== (b.icon === undefined)) return false;
-  }
-
-  return true;
+  // Only compare the openWindow callback now
+  return prev.openWindow === next.openWindow;
 }
 
 export default React.memo(DesktopIcons, areEqual);

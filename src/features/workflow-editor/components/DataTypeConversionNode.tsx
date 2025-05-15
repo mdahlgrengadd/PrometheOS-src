@@ -24,7 +24,7 @@ const DataTypeConversionNode = memo(
   ({ id, data, isConnectable }: DataTypeConversionNodeProps) => {
     return (
       <div className="py-2 px-4 rounded-md border-2 border-gray-600 bg-gray-800 min-w-[180px]">
-        <div className="font-medium text-white text-center mb-2">
+        <div className="font-medium text-primary text-center mb-2">
           {data.label}
         </div>
         <div className="text-xs text-gray-400 text-center mb-2">

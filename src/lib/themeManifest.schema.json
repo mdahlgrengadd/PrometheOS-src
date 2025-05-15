@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Theme Manifest",
+  "description": "Schema for OS theme manifest that defines visual appearance",
+  "type": "object",
+  "required": ["id", "name", "version", "cssVariables", "desktopBackground"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the theme"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the theme"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the theme"
+    },
+    "author": {
+      "type": "string",
+      "description": "Theme author name or organization"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the theme"
+    },
+    "cssUrl": {
+      "type": "string",
+      "description": "URL to additional CSS file for the theme"
+    },
+    "preview": {
+      "type": "string",
+      "description": "URL to a preview image of the theme"
+    },
+    "desktopBackground": {
+      "type": "string",
+      "description": "Background color or gradient for the desktop"
+    },
+    "decoratorPath": {
+      "type": "string",
+      "description": "Path to a JavaScript module that exports WindowDecorator components"
+    },
+    "cssVariables": {
+      "type": "object",
+      "description": "CSS custom properties that define the theme's appearance",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "required": [
+        "--wm-border-width",
+        "--wm-border-color",
+        "--wm-border-radius",
+        "--wm-header-height",
+        "--window-background",
+        "--window-text",
+        "--window-header-background",
+        "--window-header-text",
+        "--window-header-button-hover",
+        "--window-header-button-active",
+        "--window-resize-handle",
+        "--wm-btn-close-bg",
+        "--wm-btn-minimize-bg",
+        "--wm-btn-maximize-bg",
+        "--taskbar-bg",
+        "--text-primary",
+        "--accent-primary"
+      ]
+    },
+    "paddingConfig": {
+      "type": "object",
+      "description": "Optional padding configuration",
+      "properties": {
+        "windowContent": {
+          "type": "number",
+          "description": "Padding for window content in pixels"
+        }
+      }
+    }
+  }
+}

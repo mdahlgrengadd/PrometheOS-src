@@ -23,7 +23,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {visibleMessages.length === 0 && (
-        <div className="flex h-full items-center justify-center text-gray-500">
+        <div className="flex h-full items-center justify-center text-muted-foreground">
           <p>Start a conversation with the AI assistant</p>
         </div>
       )}
@@ -39,7 +39,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
             className={`max-w-[80%] p-3 rounded-lg ${
               message.role === "user"
                 ? "bg-blue-100 text-blue-900"
-                : "bg-gray-100 text-gray-900"
+                : "bg-card text-foreground"
             }`}
           >
             <div className="text-xs font-semibold mb-1">

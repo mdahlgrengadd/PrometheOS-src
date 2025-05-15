@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 /**
  * Plugin manifest definition that describes a plugin in the system
@@ -10,11 +10,20 @@ export interface PluginManifest {
   description: string;
   author: string;
   icon: React.ReactNode;
+  // URL to icon image for remote plugins (used instead of icon for dynamic plugins)
+  iconUrl?: string;
   entry: string;
+  // Optional entrypoint URL for dynamically loaded plugins
+  entrypoint?: string;
   preferredSize?: {
     width: number;
     height: number;
   };
+  /**
+   * If true, the window manager should not render window chrome (titlebar, controls, etc)
+   * and should let the app render its own UI edge-to-edge.
+   */
+  hideWindowChrome?: boolean;
 }
 
 /**

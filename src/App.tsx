@@ -1,53 +1,41 @@
-import { useEffect, useState } from "react";
+import "./App.css";
+
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { useViewMode } from "@/hooks/useViewMode";
-import MobileIndex from "@/pages/MobileIndex";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "@/lib/ThemeProvider";
 
-import { ThemeProvider } from "./lib/ThemeProvider";
+import { WindowDndContext } from "./components/shelley-wm/WindowDndContext";
+import { useViewMode } from "./hooks/useViewMode";
 import Index from "./pages/index";
-import NotFound from "./pages/NotFound";
+import MobileIndex from "./pages/MobileIndex";
 
-// Define mobile breakpoint
-const MOBILE_BREAKPOINT = 768;
-
-// Custom event for view mode changes
-const VIEW_MODE_CHANGE_EVENT = "viewmode:change";
-
-// Interface for legacy Navigator properties
-interface NavigatorWithMSMaxTouchPoints extends Navigator {
-  msMaxTouchPoints?: number;
+function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider>
+      <WindowDndContext>{children}</WindowDndContext>
+    </ThemeProvider>
+  );
 }
 
-const queryClient = new QueryClient();
-
-const App = () => {
+function App() {
   const { isMobile } = useViewMode();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={isMobile ? <MobileIndex /> : <Index />}
-              />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <AppProviders>
+      <BrowserRouter>
+        {/* Navigation Links */}
+
+        <Routes>
+          <Route path="/" element={isMobile ? <MobileIndex /> : <Index />} />
+
+          <Route
+            path="/apps/:id"
+            element={isMobile ? <MobileIndex /> : <Index />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </AppProviders>
   );
-};
+}
 
 export default App;

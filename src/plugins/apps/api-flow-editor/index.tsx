@@ -13,7 +13,7 @@ export const manifest: PluginManifest = {
   description: "Blueprints-style visual editor for API workflows",
   author: "Desktop Dreamscape Team",
   icon: (
-    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-primary font-bold">
       FE
     </div>
   ),
@@ -42,7 +42,7 @@ const ApiFlowEditorComponent: React.FC = () => {
       {showHelp && (
         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="bg-[#2D3748] rounded-lg p-6 max-w-2xl shadow-xl border border-[#4A5568]">
-            <h2 className="text-xl font-bold text-white mb-4">
+            <h2 className="text-xl font-bold text-primary mb-4">
               API Flow Editor Help
             </h2>
             <div className="mb-4">
@@ -67,25 +67,25 @@ const ApiFlowEditorComponent: React.FC = () => {
               </h3>
               <ul className="grid grid-cols-2 gap-2 text-gray-300">
                 <li className="mb-1">
-                  <span className="text-white font-mono">Delete</span>: Remove
+                  <span className="text-primary font-mono">Delete</span>: Remove
                   selected node
                 </li>
                 <li className="mb-1">
-                  <span className="text-white font-mono">Drag + Shift</span>:
+                  <span className="text-primary font-mono">Drag + Shift</span>:
                   Select multiple nodes
                 </li>
                 <li className="mb-1">
-                  <span className="text-white font-mono">Mousewheel</span>: Zoom
-                  in/out
+                  <span className="text-primary font-mono">Mousewheel</span>:
+                  Zoom in/out
                 </li>
                 <li className="mb-1">
-                  <span className="text-white font-mono">Space + Drag</span>:
+                  <span className="text-primary font-mono">Space + Drag</span>:
                   Pan canvas
                 </li>
               </ul>
             </div>
             <button
-              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-primary rounded"
               onClick={() => setShowHelp(false)}
             >
               Close Help

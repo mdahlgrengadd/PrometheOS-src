@@ -45,7 +45,7 @@ const NumberPrimitiveNode = ({
   return (
     <div className="primitive-node number-primitive rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-green-600 min-w-[200px]">
       {/* Header */}
-      <div className="node-header px-3 py-2 bg-green-600 text-white font-bold flex items-center justify-between">
+      <div className="node-header px-3 py-2 bg-green-600 text-primary font-bold flex items-center justify-between">
         <span className="text-sm truncate">{data.label || "Number Value"}</span>
       </div>
 
@@ -57,7 +57,7 @@ const NumberPrimitiveNode = ({
             type="number"
             value={data.value}
             onChange={handleValueChange}
-            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] text-white rounded"
+            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] text-primary rounded"
             placeholder="Enter number value..."
             step="0.1"
           />

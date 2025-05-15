@@ -20,7 +20,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       </label>
       <select
         id="model-select"
-        className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1.5"
+        className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1.5"
         value={selectedModel}
         onChange={(e) => onSelectModel(e.target.value)}
         disabled={disabled}

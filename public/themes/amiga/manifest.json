@@ -1,0 +1,30 @@
+{
+  "id": "amiga",
+  "name": "Amiga Workbench",
+  "author": "Retro Computing",
+  "version": "1.0.0",
+  "description": "Inspired by the classic Amiga Workbench interface",
+  "cssUrl": "/themes/amiga/amiga.css",
+  "preview": "/themes/previews/amiga.png",
+  "desktopBackground": "#4c75ff",
+  "decoratorPath": "/themes/amiga/decorator.js",
+  "cssVariables": {
+    "--wm-border-width": "1px",
+    "--wm-border-color": "#000000",
+    "--wm-border-radius": "0",
+    "--wm-header-height": "20px",
+    "--window-header-background": "#aaaaaa",
+    "--window-header-text": "#000000",
+    "--window-background": "#aaaaaa",
+    "--window-text": "#000000",
+    "--taskbar-bg": "rgba(170, 170, 170, 0.9)",
+    "--text-primary": "#000000",
+    "--accent-primary": "#4c75ff",
+    "--wm-btn-close-bg": "#ff5555",
+    "--wm-btn-minimize-bg": "#ffaa55",
+    "--wm-btn-maximize-bg": "#55ff55",
+    "--window-header-button-hover": "#cccccc",
+    "--window-header-button-active": "#999999",
+    "--window-resize-handle": "rgba(0, 0, 0, 0.2)"
+  }
+}

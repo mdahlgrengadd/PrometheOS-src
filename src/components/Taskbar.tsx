@@ -1,213 +1,153 @@
-import { Clock, Home, Maximize2, Minimize2, Monitor } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo, FC } from 'react';
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
+import { useWebRTCStatus } from '../hooks/useWebRTCStatus';
+import StartButton from './StartButton';
+import StartMenu from './StartMenu';
+import { FcGlobe, FcSpeaker, FcDocument } from 'react-icons/fc';
+import { Monitor, Minimize2, Maximize2, Wifi } from 'lucide-react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-
-import { WindowState } from "./Desktop";
+// Import component-scoped styles
+import './Taskbar.css';
 
 interface TaskbarProps {
-  windows: WindowState[];
   onWindowClick: (id: string) => void;
 }
 
-const Taskbar: React.FC<TaskbarProps> = ({ windows, onWindowClick }) => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
+  // Theme and WebRTC status
   const { theme } = useTheme();
-  const isBeOSTheme = theme === "beos";
+  const isConnected = useWebRTCStatus().isConnected;
+
+  // Windows state
+  const windowsDict = useWindowStore((state) => state.windows);
+  const windows: WindowState[] = useMemo(
+    () => Object.values(windowsDict).filter((w) => w.isOpen),
+    [windowsDict]
+  );
+
+  // Start menu state
+  const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
+
+  // Close StartMenu when clicking outside
+  const startMenuRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isStartMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        startMenuRef.current &&
+        !startMenuRef.current.contains(e.target as Node)
+      ) {
+        setIsStartMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isStartMenuOpen]);
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Check for auto-hide setting on mount
+  // Effects
   useEffect(() => {
-    const checkAutoHideSetting = () => {
-      const autoHideSetting =
-        localStorage.getItem("taskbar-autohide") === "true";
-      setAutoHide(autoHideSetting);
-      setIsVisible(!autoHideSetting);
-    };
-
-    // Initial check
-    checkAutoHideSetting();
-
-    // Listen for storage changes to update setting
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "taskbar-autohide") {
-        setAutoHide(e.newValue === "true");
-        setIsVisible(e.newValue !== "true");
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    // Also check the document's custom property for auto-hide changes
-    const observeAutoHideProperty = () => {
-      const autoHideValue = getComputedStyle(document.documentElement)
-        .getPropertyValue("--taskbar-auto-hide")
-        .trim();
-      setAutoHide(autoHideValue === "true");
-      setIsVisible(autoHideValue !== "true");
-    };
-
-    // Create a MutationObserver to watch for style attribute changes
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === "style") {
-          observeAutoHideProperty();
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      observer.disconnect();
-    };
-  }, []);
-
-  // Update clock
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Format time as hours:minutes AM/PM
-  const formattedTime = currentTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  // Handle mouse events for auto-hide behavior
-  const handleMouseEnter = () => {
-    if (autoHide) {
-      setIsVisible(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (autoHide) {
-      setIsVisible(false);
-    }
-  };
-
-  // Taskbar classes based on visibility and auto-hide settings
-  const taskbarClasses = `taskbar ${autoHide ? "taskbar-auto-hide" : ""} ${
-    isVisible ? "taskbar-visible" : "taskbar-hidden"
-  }`;
-
-  // Add CSS for taskbar auto-hide
   useEffect(() => {
-    // Add CSS for auto-hide only once
-    if (!document.getElementById("taskbar-styles")) {
-      const styleElement = document.createElement("style");
-      styleElement.id = "taskbar-styles";
-      styleElement.textContent = `
-        .taskbar-auto-hide {
-          transition: transform 0.3s ease;
-        }
-        .taskbar-hidden {
-          transform: translateY(100%);
-        }
-        .taskbar-visible {
-          transform: translateY(0);
-        }
-      `;
-      document.head.appendChild(styleElement);
-    }
-
-    return () => {
-      // Clean up on unmount
-      const styleElement = document.getElementById("taskbar-styles");
-      if (styleElement) {
-        document.head.removeChild(styleElement);
-      }
-    };
+    const stored = localStorage.getItem('taskbar-autohide') === 'true';
+    setAutoHide(stored);
+    setIsVisible(!stored);
   }, []);
 
-  // BeOS style taskbar
-  if (isBeOSTheme) {
-    return (
-      <div
-        className={taskbarClasses}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        <div className="taskbar-start">
-          <span>BeOS</span>
-        </div>
+  // Handlers
+  const toggleStartMenu = () => setIsStartMenuOpen((s) => !s);
+  const handleMouseEnter = () => autoHide && setIsVisible(true);
+  const handleMouseLeave = () => autoHide && setIsVisible(false);
 
-        <div className="taskbar-separator"></div>
+  // Formatters
+  const formatTime = (date: Date) =>
+    date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
 
-        <div className="flex-1 flex">
-          {windows.map(
-            (window) =>
-              window.isOpen && (
-                <button
-                  key={window.id}
-                  className={`taskbar-item ${
-                    window.isOpen && !window.isMinimized ? "active" : ""
-                  }`}
-                  onClick={() => onWindowClick(window.id)}
-                >
-                  {window.title}
-                </button>
-              )
-          )}
-        </div>
+  // Styles
+  const containerStyle: React.CSSProperties = {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '3rem',
+    display: 'flex',
+    background:
+      'linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)',
+    boxShadow: 'inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5',
+    transition: autoHide ? 'transform 0.3s ease' : undefined,
+    transform: autoHide && !isVisible ? 'translateY(100%)' : 'translateY(0)',
+  };
 
-        <div className="taskbar-separator"></div>
-
-        <div className="px-2 text-xs font-bold">{formattedTime}</div>
-      </div>
-    );
-  }
-
-  // Modern style taskbar
   return (
     <div
-      className={taskbarClasses}
+      className="taskbar-scope"
+      style={containerStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button className="taskbar-start">
-        <Home className="w-4 h-4 mr-2" />
-        <span>Start</span>
-      </button>
-
-      <div className="taskbar-separator"></div>
-
-      <div className="flex-1 flex">
-        {windows.map(
-          (window) =>
-            window.isOpen && (
-              <button
-                key={window.id}
-                className={`taskbar-item ${
-                  window.isOpen && !window.isMinimized ? "active" : ""
-                }`}
-                onClick={() => onWindowClick(window.id)}
-              >
-                <Monitor className="taskbar-item-icon" />
-                <span className="truncate">{window.title}</span>
-                {window.isOpen && !window.isMinimized ? (
-                  <Minimize2 className="w-3.5 h-3.5 ml-1 text-muted-foreground" />
-                ) : (
-                  <Maximize2 className="w-3.5 h-3.5 ml-1 text-muted-foreground" />
-                )}
-              </button>
-            )
-        )}
+      {/* Start button & menu */}
+      <div className="relative flex items-center pl-2" ref={startMenuRef}>
+        <StartButton isActive={isStartMenuOpen} onClick={toggleStartMenu} />
+        <StartMenu isOpen={isStartMenuOpen} />
       </div>
 
-      <div className="taskbar-separator"></div>
+      {/* Quick launch */}
+      <div className="flex items-center ml-2 space-x-1 border-r border-[#3976b8] pr-2">
+        <div className="w-10 h-10 flex items-center justify-center rounded hover:bg-[#4096e3]/40 cursor-pointer">
+          <FcGlobe className="w-5 h-5" />
+        </div>
+        <div className="w-10 h-10 flex items-center justify-center rounded hover:bg-[#4096e3]/40 cursor-pointer">
+          <FcDocument className="w-5 h-5" />
+        </div>
+      </div>
 
-      <div className="flex items-center px-3 font-medium">
-        <Clock className="w-4 h-4 mr-2 text-primary" />
-        <span>{formattedTime}</span>
+      {/* Running apps */}
+      <div className="flex items-center ml-2 space-x-1 flex-1">
+        {windows.map((win) => {
+          const btnClass = [
+            'taskbar-app-btn',
+            win.isMinimized ? 'minimized' : '',
+            win.isOpen && !win.isMinimized ? 'taskbar-app-btn-active' : '',
+            'cursor-pointer',
+          ].filter(Boolean).join(' ');
+          return (
+            <div
+              key={win.id}
+              className={btnClass}
+              onClick={() => onWindowClick(win.id)}
+              tabIndex={0}
+              role="button"
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onWindowClick(win.id); }}
+            >
+              <Monitor className="w-5 h-5 mr-1 text-white" />
+              <span className="truncate">{win.title}</span>
+              {win.isOpen && !win.isMinimized ? (
+                <Minimize2 className="w-3 h-3 ml-1 text-white" />
+              ) : (
+                <Maximize2 className="w-3 h-3 ml-1 text-white" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* System tray */}
+      <div className="flex items-center pr-3 space-x-2">
+        {isConnected && <Wifi className="w-4 h-4 text-white" />}
+        <FcSpeaker className="w-4 h-4" />
+        <div className="flex flex-col items-end text-white text-xs">
+          <div className="font-bold">{formatTime(currentTime)}</div>
+          <div className="text-[10px]">{formatDate(currentTime)}</div>
+        </div>
       </div>
     </div>
   );

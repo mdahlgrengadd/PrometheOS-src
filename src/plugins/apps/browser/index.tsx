@@ -150,16 +150,16 @@ const BrowserContent = () => {
   ];
 
   return (
-    <div className="p-4 flex flex-col h-full">
-      <div className="flex items-center mb-2 space-x-2">
+    <div className="p-0 py-1 flex flex-col h-full">
+      <div className="flex items-center mb-1 space-x-2">
         <div className="flex space-x-1">
           <button
             onClick={goBack}
             disabled={historyIndex <= 0}
             className={`px-2 py-1 rounded ${
               historyIndex <= 0
-                ? "bg-gray-300 text-gray-500"
-                : "bg-blue-500 text-white hover:bg-blue-600"
+                ? "bg-muted text-muted-foreground"
+                : "bg-blue-500 text-primary hover:bg-blue-600"
             }`}
             aria-label="Go back"
             title="Go back"
@@ -171,8 +171,8 @@ const BrowserContent = () => {
             disabled={historyIndex >= history.length - 1}
             className={`px-2 py-1 rounded ${
               historyIndex >= history.length - 1
-                ? "bg-gray-300 text-gray-500"
-                : "bg-blue-500 text-white hover:bg-blue-600"
+                ? "bg-muted text-muted-foreground"
+                : "bg-blue-500 text-primary hover:bg-blue-600"
             }`}
             aria-label="Go forward"
             title="Go forward"
@@ -181,7 +181,7 @@ const BrowserContent = () => {
           </button>
           <button
             onClick={refresh}
-            className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="px-2 py-1 bg-blue-500 text-primary rounded hover:bg-blue-600"
             aria-label="Refresh"
             title="Refresh page"
           >
@@ -190,7 +190,7 @@ const BrowserContent = () => {
         </div>
         <input
           type="text"
-          className="flex-1 px-2 py-1 border border-gray-300 rounded-l"
+          className="flex-1 px-2 py-1 border border-border rounded-l bg-background text-foreground"
           placeholder="Enter URL..."
           value={url}
           onChange={handleUrlChange}
@@ -198,15 +198,15 @@ const BrowserContent = () => {
         />
         <button
           onClick={navigateToUrl}
-          className="bg-blue-500 text-white px-3 py-1 rounded-r hover:bg-blue-600"
+          className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
         >
           Go
         </button>
       </div>
 
-      <div className="relative flex-1 bg-white border border-gray-300">
+      <div className="relative flex-1 bg-background">
         {isLoading && !frameError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-background bg-opacity-70 z-10">
             <div className="text-blue-500 font-semibold">Loading...</div>
           </div>
         )}
@@ -261,9 +261,9 @@ const BrowserContent = () => {
               ))}
             </ul>
 
-            <div className="mt-6 bg-gray-100 p-4 rounded-md">
+            <div className="mt-6 bg-card p-4 rounded-md">
               <h4 className="font-medium mb-2">What is X-Frame-Options?</h4>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-muted-foreground">
                 X-Frame-Options is a security header that websites use to
                 prevent "clickjacking" attacks by controlling whether their
                 pages can be embedded in iframes on other domains. When set to

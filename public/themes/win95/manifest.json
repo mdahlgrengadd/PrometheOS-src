@@ -1,0 +1,30 @@
+{
+  "id": "win95",
+  "name": "Windows 95",
+  "author": "Classic OS Themes",
+  "version": "1.0.0",
+  "description": "Classic Windows 95 retro theme with signature gray bezels and classic controls",
+  "cssUrl": "/themes/win95/win95.css",
+  "preview": "/themes/previews/win95.png",
+  "desktopBackground": "#008080",
+  "decoratorPath": "/themes/win95/decorator.js",
+  "cssVariables": {
+    "--wm-border-width": "2px",
+    "--wm-border-color": "#c0c0c0",
+    "--wm-border-radius": "0",
+    "--wm-header-height": "24px",
+    "--window-header-background": "#000080",
+    "--window-header-text": "#ffffff",
+    "--window-background": "#ffffff",
+    "--window-text": "#000000",
+    "--taskbar-bg": "rgba(192, 192, 192, 0.9)",
+    "--text-primary": "#000000",
+    "--accent-primary": "#000080",
+    "--wm-btn-close-bg": "#c0c0c0",
+    "--wm-btn-minimize-bg": "#c0c0c0",
+    "--wm-btn-maximize-bg": "#c0c0c0",
+    "--window-header-button-hover": "#d0d0d0",
+    "--window-header-button-active": "#a0a0a0",
+    "--window-resize-handle": "rgba(0, 0, 0, 0.1)"
+  }
+}

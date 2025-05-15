@@ -1,0 +1,121 @@
+/* WindowsXP Theme Styles for shadcn/ui components */
+
+/* Button styles */
+.windows-btn-winxp {
+  background: linear-gradient(180deg, #f6f6f6 0%, #e4e4e4 50%, #d3d3d3 51%, #c7c7c7 100%);
+  border: 1px solid #919191;
+  color: #000;
+  border-radius: 3px;
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  padding: 4px 10px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.windows-btn-winxp:hover:not(:disabled) {
+  background: linear-gradient(180deg, #e9f5fc 0%, #d3edfa 50%, #bee5fa 51%, #aadbf9 100%);
+  border: 1px solid #3c7fb1;
+}
+
+.windows-btn-winxp:active:not(:disabled) {
+  background: linear-gradient(180deg, #cde6f7 0%, #abd8f5 50%, #8ccbf3 51%, #7fc2f1 100%);
+  border: 1px solid #3c7fb1;
+}
+
+/* Input styles */
+.windows-input-winxp {
+  border: 1px solid #7b9ebd;
+  background-color: #fff;
+  color: #000;
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.windows-input-winxp:focus {
+  border-color: #3c7fb1;
+}
+
+/* Card styles */
+.windows-card-winxp {
+  background-color: #fff;
+  border: 1px solid #8eb0d2;
+  border-radius: 3px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.windows-card-header-winxp {
+  background: linear-gradient(180deg, #2a5889 0%, #3562a0 35%, #3f71b5 65%, #3a6cad 100%);
+  padding: 4px 8px;
+  color: white;
+}
+
+.windows-card-title-winxp {
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.windows-card-content-winxp {
+  padding: 10px;
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+}
+
+/* Select styles */
+.windows-select-trigger-winxp {
+  border: 1px solid #7b9ebd;
+  background: linear-gradient(180deg, #f6f6f6 0%, #e4e4e4 50%, #d3d3d3 51%, #c7c7c7 100%);
+  color: #000;
+  border-radius: 3px;
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.windows-select-trigger-winxp:focus {
+  border-color: #3c7fb1;
+  background: linear-gradient(180deg, #e9f5fc 0%, #d3edfa 50%, #bee5fa 51%, #aadbf9 100%);
+}
+
+.windows-select-content-winxp {
+  border: 1px solid #7b9ebd;
+  background-color: #fff;
+  color: #000;
+  border-radius: 2px;
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Tabs styles */
+.windows-tabs-list-winxp {
+  background: linear-gradient(180deg, #f6f6f6 0%, #e4e4e4 50%, #d3d3d3 51%, #c7c7c7 100%);
+  border-bottom: 1px solid #7b9ebd;
+  border-radius: 3px 3px 0 0;
+  padding: 3px 3px 0;
+}
+
+.windows-tabs-trigger-winxp {
+  font-family: "Tahoma", "Segoe UI", sans-serif;
+  background: linear-gradient(180deg, #e4e4e4 0%, #d0d0d0 100%);
+  border: 1px solid #7b9ebd;
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  color: #333;
+  margin-right: 2px;
+}
+
+.windows-tabs-trigger-winxp[data-state="active"] {
+  background: linear-gradient(180deg, #e9f5fc 0%, #d3edfa 50%, #bee5fa 51%, #aadbf9 100%);
+  font-weight: bold;
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  padding-bottom: 1px;
+}
+
+.windows-tabs-content-winxp {
+  border: 1px solid #7b9ebd;
+  border-top: none;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.1);
+}
