@@ -1,0 +1,91 @@
+/* ThemeManager.module.css */
+.themeButton {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: normal !important;
+  letter-spacing: normal !important;
+  padding: 6px 12px !important;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeActivateButton {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: normal !important;
+  padding: 2px 8px !important;
+  min-height: 24px;
+}
+
+.removeButton {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: normal !important;
+  min-height: 24px;
+  padding: 2px 6px !important;
+  flex-shrink: 0 !important;
+  margin-left: 4px !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  max-width: 80px !important;
+  overflow: hidden !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Override Windows theme-specific button styles when needed */
+.themeButton:global(.button),
+.themeActivateButton:global(.button),
+.removeButton:global(.button) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  image-rendering: auto !important;
+}
+
+/* Theme card layout styles */
+.themeCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Ensure nothing extends past the card */
+  position: relative; /* Create positioning context for absolute elements */
+}
+
+.themeButtonsContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%; /* Ensure buttons stay within container */
+  flex-wrap: nowrap; /* Prevent wrapping */
+  box-sizing: border-box; /* Include padding in width calculation */
+  overflow: hidden; /* Hide anything that extends beyond */
+  position: relative; /* Establish positioning context */
+}
+
+/* Windows 7 specific fixes */
+:global([data-theme="win7"]) .removeButton {
+  /* Limit the button width in Win7 theme */
+  max-width: 70px !important;
+  margin: 0 !important;
+  padding: 2px 4px !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Additional fix to ensure ghost buttons don't overflow in Windows 7 theme */
+:global([data-theme="win7"]) button.button.win-ghost.removeButton {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  max-width: 60px !important;
+  overflow: hidden !important;
+  padding: 2px 4px !important;
+}
+
+/* Ensure buttons don't overflow their containers by enforcing max-width */
+:global([data-theme="win7"]) .themeButtonsContainer {
+  padding-right: 2px !important;
+}

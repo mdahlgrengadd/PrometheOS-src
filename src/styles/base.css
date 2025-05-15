@@ -7,10 +7,18 @@
     /* Default fallback variables */
     --radius: 0.5rem;
     color-scheme: light;
+
+    /* Ensure windows stay fully opaque while dragging/resizing */
+    --window-drag-opacity: 1;
+    --window-resize-opacity: 1;
+    /* Unified primary text color for all themes */
+    --text-primary: #000000;
   }
 
   .theme-dark {
     color-scheme: dark;
+    /* In dark theme, primary text should use foreground variable */
+    --text-primary: var(--foreground);
   }
 
   * {
@@ -24,7 +32,13 @@
   }
 
   body {
-    @apply bg-background;
+    background-color: var(--app-bg, #f0f0f0);
+    background-image: var(--app-bg-image, none);
+    background-size: var(--app-bg-size, auto);
+    background-position: var(--app-bg-position, center);
+    background-repeat: var(--app-bg-repeat, repeat);
+    background-attachment: var(--app-bg-attachment, scroll);
+    color: var(--app-text, #000000);
     position: relative;
     margin: 0;
     padding: 0;
@@ -41,6 +55,78 @@
     overflow: hidden;
   }
 
+  /* Menu reset - to override button styling in menus */
+  .reset-menu-style {
+    all: unset !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    font-family: inherit !important;
+    cursor: default !important;
+  }
+
+  /* Core app styling for controls */
+  button, .btn {
+    background: var(--button-bg, #e0e0e0);
+    color: var(--control-fg, #000000);
+    border: 1px solid var(--button-border, transparent);
+    border-radius: var(--radius, 0.25rem);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 150ms ease;
+  }
+
+  button:hover, .btn:hover {
+    filter: brightness(1.05);
+    background: var(--button-hover, #f0f0f0);
+  }
+
+  button:active, .btn:active {
+    filter: brightness(0.95);
+    background: var(--button-active, #d0d0d0);
+  }
+
+  /* Form controls styling */
+  input, textarea, select {
+    background: var(--control-bg, #ffffff);
+    color: var(--control-fg, #000000);
+    border: 1px solid var(--control-border, #cccccc);
+    border-radius: var(--radius, 0.25rem);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Range input styling */
+  input[type="range"] {
+    background: var(--slider-track, #cccccc);
+    height: 0.5rem;
+    border-radius: 1rem;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--slider-thumb, #888888);
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: var(--slider-thumb, #888888);
+    cursor: pointer;
+  }
+
   /* Fix text coloring in dark mode */
   .theme-dark .window-content,
   .theme-dark input,
@@ -50,3 +136,13 @@
     color: var(--foreground);
   }
 }
+
+/* make .bg-background work with hsla() values */
+@layer utilities {
+  .bg-background {
+    /* Use the complete hsla() value */
+    background-color: var(--background);
+  }
+} 
+
+

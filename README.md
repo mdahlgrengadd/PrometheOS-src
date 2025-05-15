@@ -59,6 +59,86 @@ This project is built with .
 - React
 - shadcn-ui
 - Tailwind CSS
+- Zustand (for global state management)
+
+## Project Roadmap Implementation
+
+### Phase 1: Window Management with Zustand (✅ Completed)
+
+We've implemented a centralized window management system using Zustand:
+
+- Global store for all window state with persistence
+- Dictionary-based window storage for O(1) lookups
+- Clean, testable action API for window operations
+- Persists window positions and sizes across page reloads
+- Properly handles z-index management with rehydration
+
+Key features:
+- `useWindowStore` provides actions like `focus`, `move`, `resize`, `minimize`, etc.
+- Optimized selectors for better performance and fewer re-renders
+- Shared TypeScript types between components in `src/types/window.ts`
+- Unit tests for store operations in `tests/unit/windowStore.test.ts`
+
+**Example: Using the Window Store**
+
+Creating a new window:
+```tsx
+import { useWindowStore } from '@/store/windowStore';
+
+// In your component:
+const registerWindow = useWindowStore(state => state.registerWindow);
+
+// Register a new window
+registerWindow({
+  id: 'my-plugin-id',
+  title: 'My Plugin',
+  content: <MyPluginContent />,
+  isOpen: true,
+  isMinimized: false,
+  zIndex: 1,
+  position: { x: 100, y: 100 },
+  size: { width: 500, height: 400 }
+});
+
+// Access window state
+const myWindow = useWindowStore(state => state.windows['my-plugin-id']);
+
+// Use window actions
+const { focus, move, resize, minimize, maximize, close } = useWindowStore(
+  state => ({
+    focus: state.focus,
+    move: state.move,
+    resize: state.resize,
+    minimize: state.minimize,
+    maximize: state.maximize,
+    close: state.close
+  })
+);
+
+// Focus a window
+focus('my-plugin-id');
+
+// Move a window
+move('my-plugin-id', { x: 200, y: 150 });
+
+// Get only open windows
+const openWindows = useWindowStore(state => 
+  Object.values(state.windows).filter(w => w.isOpen)
+);
+```
+
+Run tests with:
+```
+npm run test
+```
+
+### Future Phases
+
+- Phase 2: Extract WindowShell, implement gesture library, CSS prop theme tokens
+- Phase 3: Workerize PluginManager with Comlink
+- Phase 4: Implement theme manifests
+- Phase 5: Add responsive layout support
+- Phase 6: Build secure remote-plugin loader
 
 ## How can I deploy this project?
 

@@ -1,221 +1,126 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from "react";
 
-import { eventBus } from '../plugins/EventBus';
-import { usePlugins } from '../plugins/PluginContext';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
-import Window from './Window';
+import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
 
-export interface WindowState {
-  id: string;
-  title: string;
-  content: React.ReactNode;
-  isOpen: boolean;
-  isMinimized: boolean;
-  zIndex: number;
-  position: { x: number; y: number };
-  size: { width: number | string; height: number | string };
-  previousPosition?: { x: number; y: number };
-  previousSize?: { width: number | string; height: number | string };
-  isMaximized?: boolean;
-}
+import { usePlugins } from "../plugins/PluginContext";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
+import Window from "./Window";
 
 const Desktop = () => {
   const {
     loadedPlugins,
-    activeWindows,
     openWindow,
     closeWindow,
     minimizeWindow,
     focusWindow,
   } = usePlugins();
-  const [windows, setWindows] = useState<WindowState[]>([]);
 
-  // Set up windows based on loaded plugins
-  useEffect(() => {
-    // Only create windows that don't already exist
-    const existingWindowIds = windows.map((w) => w.id);
+  // Get the current theme
+  const { theme } = useTheme();
 
-    const newPluginWindows = loadedPlugins
-      .filter((plugin) => !existingWindowIds.includes(plugin.id))
-      .map((plugin) => {
-        // Use preferred size from manifest if available, otherwise use defaults
-        const defaultSize = { width: 400, height: 300 };
-        const size = plugin.manifest.preferredSize || defaultSize;
+  // Use store as single source of truth
+  const windowsDict = useWindowStore((s) => s.windows);
+  const move = useWindowStore((s) => s.move);
+  const maximize = useWindowStore((s) => s.maximize);
+  const focusWin = useWindowStore((s) => s.focus);
 
-        return {
-          id: plugin.id,
-          title: plugin.manifest.name,
-          content: plugin.render(),
-          isOpen: activeWindows.includes(plugin.id),
-          isMinimized: false,
-          zIndex: 1,
-          position: {
-            x: 100 + Math.random() * 100,
-            y: 100 + Math.random() * 100,
-          },
-          size: size,
-          isMaximized: false,
-        };
-      });
+  // Memoized selectors
+  const windows = useMemo(() => Object.values(windowsDict), [windowsDict]);
 
-    // Update existing windows' active state without changing positions
-    const updatedExistingWindows = windows.map((window) => ({
-      ...window,
-      isOpen: activeWindows.includes(window.id),
-    }));
+  const openWindows = useMemo(() => {
+    return windows.filter((w) => w.isOpen);
+  }, [windows]);
 
-    setWindows([...updatedExistingWindows, ...newPluginWindows]);
-  }, [loadedPlugins, activeWindows]);
+  const maximizedWindows = useMemo(() => {
+    return windows
+      .filter((w) => w.isOpen && !w.isMinimized && w.isMaximized)
+      .sort((a, b) => b.zIndex - a.zIndex);
+  }, [windows]);
 
-  // Set up event listeners
-  useEffect(() => {
-    const handleWindowOpened = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId
-            ? { ...window, isOpen: true, isMinimized: false }
-            : window
-        )
-      );
+  // Make desktop state available globally for syncing
+  useMemo(() => {
+    // Define a proper type for the window extension
+    interface WindowWithDesktopState extends Window {
+      __DESKTOP_STATE?: {
+        windows: Array<Omit<WindowState, "content">>;
+      };
+    }
+
+    (window as WindowWithDesktopState).__DESKTOP_STATE = {
+      windows: windows.map((w) => ({
+        id: w.id,
+        title: w.title,
+        isOpen: w.isOpen,
+        isMinimized: w.isMinimized,
+        zIndex: w.zIndex,
+        position: w.position,
+        size: w.size,
+        isMaximized: w.isMaximized,
+        previousPosition: w.previousPosition,
+        previousSize: w.previousSize,
+      })),
     };
+  }, [windows]);
 
-    const handleWindowClosed = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId ? { ...window, isOpen: false } : window
-        )
-      );
-    };
-
-    const handleWindowMinimized = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) =>
-          window.id === pluginId ? { ...window, isMinimized: true } : window
-        )
-      );
-    };
-
-    const handleWindowMaximized = (pluginId: string) => {
-      setWindows((prev) =>
-        prev.map((window) => {
-          if (window.id === pluginId) {
-            // Check if window is already maximized
-            if (window.isMaximized) {
-              // Restore previous size and position
-              return {
-                ...window,
-                position: window.previousPosition || { x: 100, y: 100 },
-                size: window.previousSize || { width: 500, height: 400 },
-                isMaximized: false,
-                previousPosition: undefined,
-                previousSize: undefined,
-              };
-            } else {
-              // Save current size and position
-              return {
-                ...window,
-                previousPosition: { ...window.position },
-                previousSize: { ...window.size },
-                position: { x: 0, y: 0 },
-                size: { width: "100%", height: "calc(100vh - 62px)" },
-                isMaximized: true,
-              };
-            }
-          }
-          return window;
-        })
-      );
-    };
-
-    const handleWindowFocused = (pluginId: string) => {
-      setWindows((prev) => {
-        const highestZ = Math.max(...prev.map((w) => w.zIndex), 0);
-
-        return prev.map((window) =>
-          window.id === pluginId
-            ? { ...window, zIndex: highestZ + 1, isMinimized: false }
-            : window
-        );
-      });
-    };
-
-    // Subscribe to events
-    const unsubscribeOpened = eventBus.subscribe(
-      "window:opened",
-      handleWindowOpened
-    );
-    const unsubscribeClosed = eventBus.subscribe(
-      "window:closed",
-      handleWindowClosed
-    );
-    const unsubscribeMinimized = eventBus.subscribe(
-      "window:minimized",
-      handleWindowMinimized
-    );
-    const unsubscribeMaximized = eventBus.subscribe(
-      "window:maximized",
-      handleWindowMaximized
-    );
-    const unsubscribeFocused = eventBus.subscribe(
-      "window:focused",
-      handleWindowFocused
-    );
-
-    return () => {
-      // Clean up event subscriptions
-      unsubscribeOpened();
-      unsubscribeClosed();
-      unsubscribeMinimized();
-      unsubscribeMaximized();
-      unsubscribeFocused();
-    };
-  }, []);
-
-  const maximizedWindows = windows
-    .filter((w) => w.isOpen && !w.isMinimized && w.isMaximized)
-    .sort((a, b) => b.zIndex - a.zIndex);
-
-  const maximizeWindow = (id: string) => {
-    eventBus.emit("window:maximized", id);
-  };
-
-  const updateWindowPosition = (
-    id: string,
-    position: { x: number; y: number }
-  ) => {
-    setWindows((prevWindows) =>
-      prevWindows.map((window) =>
-        window.id === id ? { ...window, position } : window
-      )
-    );
-  };
-
-  const handleTabClick = (id: string) => {
-    focusWindow(id);
-  };
-
-  const iconWindows = useMemo(
-    () =>
-      windows.map((w) => {
-        const plugin = loadedPlugins.find((p) => p.id === w.id);
-        return {
-          id: w.id,
-          title: w.title,
-          icon: plugin?.manifest.icon,
-        };
-      }),
-    [windows, loadedPlugins]
+  // Action callbacks
+  const maximizeWindow = useCallback(
+    (id: string) => {
+      maximize(id);
+    },
+    [maximize]
   );
 
-  // Memoize the openWindow callback to prevent unnecessary re-renders of DesktopIcons
-  const memoizedOpenWindow = useMemo(() => {
-    return (id: string) => openWindow(id);
-  }, [openWindow]);
+  const updateWindowPosition = useCallback(
+    (id: string, position: { x: number; y: number }) => {
+      move(id, position);
+    },
+    [move]
+  );
+
+  const handleTabClick = useCallback(
+    (id: string) => {
+      focusWindow(id);
+    },
+    [focusWindow]
+  );
+
+  // Handle taskbar window clicks
+  const handleTaskbarWindowClick = useCallback(
+    (id: string) => {
+      const window = windows.find((w) => w.id === id);
+      if (window?.isMinimized) {
+        // For minimized windows, we should focus and restore them
+        useWindowStore.getState().minimize(id, false);
+        focusWindow(id);
+      } else if (window?.isOpen) {
+        minimizeWindow(id);
+      } else {
+        openWindow(id);
+      }
+    },
+    [windows, focusWindow, minimizeWindow, openWindow]
+  );
+
+  // Check if we need to show the desktop-level tab bar (BeOS with maximized windows)
+  const isBeOS = theme === "beos";
+  // Only show the desktop tab bar when BeOS + maximized windows exist
+  const maximizedBeOS = isBeOS && maximizedWindows.length > 0;
+
+  // Check if Webamp plugin is available
+  const hasWebampPlugin = loadedPlugins.some(
+    (plugin) => plugin.id === "webamp"
+  );
 
   return (
     <div className="desktop">
-      {maximizedWindows.length > 0 && (
+      {/*<div className="absolute top-2 right-2 z-50">
+        <ThemeSelector />
+      </div> */}
+
+      {maximizedBeOS && (
         <div className="window-tab-bar">
           {maximizedWindows.map((window) => (
             <div
@@ -229,13 +134,13 @@ const Desktop = () => {
               onClick={() => handleTabClick(window.id)}
             >
               <span className="window-tab-title">{window.title}</span>
-              {/* Show window controls for all maximized windows, not just the active one */}
+              {/* Show window controls for all maximized windows */}
               <div className="window-controls">
                 <button
                   className="window-control"
                   onClick={(e) => {
                     e.stopPropagation();
-                    eventBus.emit("window:minimized", window.id);
+                    minimizeWindow(window.id);
                   }}
                   aria-label="Minimize"
                 >
@@ -270,40 +175,38 @@ const Desktop = () => {
         </div>
       )}
 
-      <DesktopIcons windows={iconWindows} openWindow={memoizedOpenWindow} />
+      {/* Desktop Icons Layer - only visible when showIcons is true */}
+      <DesktopIcons openWindow={openWindow} />
 
-      {windows.map(
-        (window) =>
-          window.isOpen && (
+      {/* Windows Layer - absolute positioned, won't move when icons visibility changes */}
+      <div className="windows-wrapper">
+        {openWindows.map((w) => {
+          // Look up the matching plugin and re-render its content
+          const plugin = loadedPlugins.find((p) => p.id === w.id);
+          const content = plugin ? plugin.render() : w.content;
+
+          // Spread in fresh content for this render pass
+          const winWithContent = { ...w, content };
+
+          return (
             <Window
-              key={window.id}
-              window={window}
+              key={winWithContent.id}
+              window={winWithContent}
               allWindows={windows}
-              onClose={() => closeWindow(window.id)}
-              onMinimize={() => minimizeWindow(window.id)}
-              onMaximize={() => maximizeWindow(window.id)}
-              onFocus={() => focusWindow(window.id)}
+              onClose={() => closeWindow(winWithContent.id)}
+              onMinimize={() => minimizeWindow(winWithContent.id)}
+              onMaximize={() => maximizeWindow(winWithContent.id)}
+              onFocus={() => focusWin(winWithContent.id)}
               onDragStop={(position) =>
-                updateWindowPosition(window.id, position)
+                updateWindowPosition(winWithContent.id, position)
               }
               onTabClick={handleTabClick}
             />
-          )
-      )}
+          );
+        })}
+      </div>
 
-      <Taskbar
-        windows={windows}
-        onWindowClick={(id) => {
-          const window = windows.find((w) => w.id === id);
-          if (window?.isMinimized) {
-            focusWindow(id);
-          } else if (window?.isOpen) {
-            minimizeWindow(id);
-          } else {
-            openWindow(id);
-          }
-        }}
-      />
+      <Taskbar onWindowClick={handleTaskbarWindowClick} />
     </div>
   );
 };

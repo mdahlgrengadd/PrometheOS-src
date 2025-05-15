@@ -1,0 +1,142 @@
+.plugin-installer {
+  background-color: var(--installer-bg, var(--background, #1e1e2e));
+  border-radius: var(--radius, 8px);
+  box-shadow: 0 8px 32px var(--window-shadow, rgba(0, 0, 0, 0.4));
+  padding: 20px;
+  width: 500px;
+  max-width: 90vw;
+  color: var(--installer-fg, var(--foreground, #cdd6f4));
+}
+
+.plugin-installer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border, #313244);
+  padding-bottom: 10px;
+}
+
+.plugin-installer-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primary, #f5c2e7);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--muted-foreground, #7f849c);
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: var(--destructive, #f38ba8);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.url-input {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--input, #313244);
+  border: 1px solid var(--border, #45475a);
+  border-radius: var(--radius, 4px);
+  color: var(--foreground, #cdd6f4);
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.url-input:focus {
+  border-color: var(--ring, #89b4fa);
+  outline: none;
+}
+
+.url-input::placeholder {
+  color: var(--muted-foreground, #6c7086);
+}
+
+.error-message {
+  background-color: var(--destructive-bg, rgba(243, 139, 168, 0.2));
+  color: var(--destructive, #f38ba8);
+  padding: 10px;
+  border-radius: var(--radius, 4px);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.success-message {
+  background-color: var(--success-bg, rgba(166, 227, 161, 0.2));
+  color: var(--success, #a6e3a1);
+  padding: 10px;
+  border-radius: var(--radius, 4px);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button, .install-button {
+  padding: 8px 16px;
+  border-radius: var(--radius, 4px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.cancel-button {
+  background-color: transparent;
+  border: 1px solid var(--border, #45475a);
+  color: var(--foreground, #cdd6f4);
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: var(--secondary, #313244);
+}
+
+.install-button {
+  background-color: var(--primary, #89b4fa);
+  border: none;
+  color: var(--primary-foreground, #1e1e2e);
+}
+
+.install-button:hover:not(:disabled) {
+  background-color: var(--accent-secondary, #74c7ec);
+}
+
+.cancel-button:disabled, .install-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.plugin-installer-info {
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--muted-foreground, #7f849c);
+  background-color: var(--muted, rgba(127, 132, 156, 0.1));
+  padding: 10px;
+  border-radius: var(--radius, 4px);
+}
+
+.plugin-installer-info p {
+  margin: 0;
+}
+
+.plugin-installer-info strong {
+  color: var(--primary, #f5c2e7);
+} 

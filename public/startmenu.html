@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Start Menu</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+      }
+
+      .start-menu-header {
+        background-color: #007bff;
+        color: white;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+      }
+
+      .start-menu-content {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .weather-widget {
+        background-color: white;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .weather-widget h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .weather-data {
+        display: flex;
+        align-items: center;
+      }
+
+      .weather-icon {
+        margin-right: 12px;
+        color: #007bff;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .weather-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .weather-temp {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .weather-condition {
+        font-size: 14px;
+        color: #555;
+      }
+
+      .weather-location {
+        font-size: 12px;
+        color: #777;
+      }
+
+      .recent-apps {
+        background-color: white;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .recent-apps h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .recent-apps ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .recent-apps li {
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .recent-apps li:hover {
+        background-color: #f0f0f0;
+      }
+
+      .logout-option {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+      }
+
+      .logout-button {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 10px;
+        background-color: #f8f8f8;
+        border: none;
+        border-radius: 4px;
+        color: #333;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .logout-button:hover {
+        background-color: #e0e0e0;
+      }
+
+      .logout-button svg {
+        margin-right: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="start-menu">
+      <div class="start-menu-header">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="mr-2"
+        >
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <h2>Welcome!</h2>
+      </div>
+
+      <div class="start-menu-content">
+        <div class="weather-widget">
+          <h3>Weather</h3>
+          <div class="weather-data">
+            <div class="weather-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#007bff"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"
+                ></path>
+              </svg>
+            </div>
+            <div class="weather-details">
+              <div class="weather-temp">72°F</div>
+              <div class="weather-condition">Partly Cloudy</div>
+              <div class="weather-location">Your Location</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="recent-apps">
+          <h3>Quick Access</h3>
+          <ul>
+            <li>Documents</li>
+            <li>Pictures</li>
+            <li>Settings</li>
+          </ul>
+        </div>
+
+        <div class="logout-option">
+          <button
+            class="logout-button"
+            onclick="window.parent.postMessage('closeStartMenu', '*')"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Log Out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Script to handle iframe interactions with parent window
+      document.addEventListener("DOMContentLoaded", function () {
+        // Simulate loading weather data
+        setTimeout(() => {
+          console.log("Weather data loaded");
+        }, 1000);
+
+        // Handle logout button click
+        document
+          .querySelector(".logout-button")
+          .addEventListener("click", function () {
+            window.parent.postMessage("closeStartMenu", "*");
+          });
+
+        // Handle clicks on menu items
+        document.querySelectorAll(".recent-apps li").forEach((item) => {
+          item.addEventListener("click", function () {
+            window.parent.postMessage(
+              { action: "openItem", item: this.textContent },
+              "*"
+            );
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

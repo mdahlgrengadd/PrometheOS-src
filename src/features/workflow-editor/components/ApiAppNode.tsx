@@ -150,14 +150,14 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
 
     return (
       <div className="p-3 bg-[#1A202C] rounded">
-        <h3 className="text-sm font-bold mb-2 text-white">Configure Node</h3>
+        <h3 className="text-sm font-bold mb-2 text-primary">Configure Node</h3>
 
         <div className="mb-3">
           <label className="block text-xs text-gray-400 mb-1">
             Select Action
           </label>
           <select
-            className="w-full p-1 bg-[#2D3748] border border-[#4A5568] rounded text-white text-sm"
+            className="w-full p-1 bg-[#2D3748] border border-[#4A5568] rounded text-primary text-sm"
             onChange={(e) => handleActionSelect(e.target.value)}
             value={selectedAction?.id || ""}
           >
@@ -172,7 +172,7 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
 
         <div className="text-right">
           <button
-            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
+            className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-primary rounded text-xs"
             onClick={() => setIsConfiguring(false)}
             disabled={!selectedAction}
           >
@@ -188,7 +188,7 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
       <div className="api-app-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-[#4A5568] min-w-[250px]">
         {/* Header section */}
         <div
-          className={`node-header px-3 py-2 ${getCategoryColor()} text-white font-bold flex items-center justify-between`}
+          className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
         >
           <span className="text-sm truncate">
             {apiComponent?.type || "API Component"}
@@ -205,7 +205,7 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
     <div className="api-app-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-[#4A5568] min-w-[250px]">
       {/* Header section with title */}
       <div
-        className={`node-header px-3 py-2 ${getCategoryColor()} text-white font-bold flex items-center justify-between`}
+        className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
       >
         <span className="text-sm truncate">{data.label}</span>
         <span className="text-xs opacity-70 font-mono">{data.endpoint}</span>

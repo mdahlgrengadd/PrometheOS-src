@@ -22,7 +22,7 @@ const BeginWorkflowNode = ({
   return (
     <div className="begin-workflow-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-green-600 min-w-[200px]">
       {/* Header */}
-      <div className="node-header px-3 py-2 bg-green-600 text-white font-bold flex items-center justify-between">
+      <div className="node-header px-3 py-2 bg-green-600 text-primary font-bold flex items-center justify-between">
         <span className="text-sm truncate">
           {data.label || "Begin Workflow"}
         </span>

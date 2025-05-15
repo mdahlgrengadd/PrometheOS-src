@@ -2,6 +2,21 @@
 @import './styles/window.css';
 @import './styles/desktop.css';
 @import './styles/taskbar.css';
+@import './styles/animations.css';
+@import './styles/windows98-ui.css';
+@import './styles/windowsxp-ui.css';
+@import './styles/window-fixes.css';
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* FULL‐VIEWPORT LAYOUT: ensure Desktop height:100% actually fills the screen */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
 
 /* Disable text selection everywhere except input fields and editable areas */
 *:not(input):not(textarea):not([contenteditable="true"]):not(.allow-select) {
@@ -11,16 +26,48 @@
   user-select: none;
 }
 
-/* Any remaining utility classes */
+/* Window shell positioning for maximized windows */
 .maximized {
+  position: fixed !important; /* Ensure the window is positioned relative to viewport */
+  top: 0 !important;
+  bottom: 48px !important; /* taskbar height = 48px */
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 0 !important;
+  border-radius: 0 !important;
+  transform: none !important; /* Disable framer-motion transform */
+  /* Remove the height calculation that could cause spillover */
   width: 100% !important;
-  height: calc(100vh - 84px) !important;
+}
+
+/* Fix for header layouts when windows are maximized */
+.maximized .window-header {
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  z-index: 2; /* Ensure headers are above window content */
+}
+
+/* For themes that need headers to be visible above the window content area */
+.maximized .window-content {
+  height: calc(100% - var(--wm-header-height)) !important;
+  margin-top: var(--wm-header-height);
+}
+
+/* When any window is maximized (except BeOS), properly handle window content spacing */
+.maximized .window-content {
+  margin-top: 0 !important;
   padding-top: 0 !important;
+  height: calc(100% - var(--wm-header-height, 36px)) !important;
 }
 
 /* Theme-specific maximized window styles */
+/* Removing margin-top which causes a gap at the top of maximized windows */
 .theme-light .maximized, .theme-dark .maximized {
-  margin: 36px 0 0 0 !important;
+  /* margin: 36px 0 0 0 !important; */
 }
 
 .theme-beos .maximized {
@@ -177,12 +224,6 @@
   background-color: #f0f0f0 !important;
 }
 
-/* Fix for window content positioning in light/dark themes - prevents header overlap */
-.theme-light .draggable-window:not(.maximized) .window-content, 
-.theme-dark .draggable-window:not(.maximized) .window-content {
-  padding-top: 36px !important; /* Match the header height to prevent content overlap */
-}
-
 /* When maximized, content already has correct margin */
 .theme-light .maximized .window-content,
 .theme-dark .maximized .window-content {
@@ -254,3 +295,47 @@
     overflow: hidden;
   }
 }
+
+/* Make text selectable with user-select-all class */
+.user-select-all {
+  -webkit-user-select: all;  /* Safari */
+  -ms-user-select: all;      /* IE/Edge */
+  user-select: all;          /* Standard syntax */
+}
+
+/* Add a global style to make sure specific areas can be selected */
+.selectable-text {
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* —————————————————————————————————————
+   GLOBAL SWITCH FIX FOR ALL THEMES
+   ————————————————————————————————————— */
+
+[role="switch"] {
+  /* make sure it stays a flex container with items at the edges */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+[role="switch"] span {
+  /* enforce exact dimensions & perfect circle */
+  width: 1.25rem !important;   /* 20px */
+  height: 1.25rem !important;  /* 20px */
+  border-radius: 9999px !important;
+  transition: transform 0.2s !important;
+}
+
+/* unchecked = thumb on the left */
+[role="switch"][data-state="unchecked"] span {
+  transform: translateX(0) !important;
+}
+
+/* checked = thumb on the right */
+[role="switch"][data-state="checked"] span {
+  transform: translateX(1.25rem) !important; /* move it 20px over */
+}
+

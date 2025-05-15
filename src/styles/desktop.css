@@ -1,26 +1,84 @@
 @layer components {
   .desktop {
-    height: 100%;
-    width: 100%;
-    position: relative;
+    /* always fill the viewport */
+    position: fixed;
+    inset: 0;       /* top:0; right:0; bottom:0; left:0 */
     overflow: hidden;
-    padding: 50px;
+    padding: 0;
     transition: background-color 0.3s ease;
+    /* Make sure the desktop is a positioned parent for absolute children */
+    position: relative;
+    width: 100%;
+    height: 100%;
 
     /* Background is set through JavaScript by ThemeProvider */
   }
 
   .desktop-icons {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 80px);
-    grid-gap: 16px;
-    padding: 16px;
+    /* Position icons absolutely to take them out of normal flow */
+    position: absolute;
+    top: 36px;      /* Space for window tab bar */
+    left: 0;
+    right: 0;
+    bottom: var(--taskbar-height, 48px); /* Ensure we don't overlap the taskbar */
+    /* z-index removed to prevent stacking context issues with start menu */
+    display: flex;  /* Use flexbox instead of grid for more natural column layout */
+    flex-direction: column; /* Stack icons vertically first */
+    flex-wrap: wrap;        /* Wrap to next column when reaching bottom */
+    align-content: flex-start; /* Start from left side */
+    gap: 16px;              /* Gap between all icons */
+    column-gap: 24px;       /* Wider space between columns */
+    padding-left: 16px;     /* Left padding to give space from edge */
+    padding-top: 24px;      /* Top padding for better spacing */
+    align-items: flex-start; /* Start from top of container */
+    padding: 16px 24px;
+    pointer-events: auto;
+    height: calc(100vh - 100px);    /* Calculate height based on viewport minus tab bar and taskbar */
+    overflow-y: auto;              /* Allow scrolling if we have many icons */
   }
 
+  /* Wrapper for all Window instances */
+  .windows-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: var(--taskbar-height, 48px);
+    z-index: 2;
+    pointer-events: none;  /* let each window handle its own events */
+  }
+
+  /* ensure each Window is still absolute inside that wrapper */
+/* opt every real window container back in */
+.windows-wrapper .window,
+.windows-wrapper .draggable-window {
+  pointer-events: auto !important;
+  /* Let inline styles decide stacking order */
+  /* Removed z-index override so individual windows can control their own z-index via inline style */
+}
+
+/* Ensure all child elements of windows receive pointer events */
+.windows-wrapper .window *,
+.windows-wrapper .draggable-window * {
+  pointer-events: auto !important;
+}
+
+/* Specific fix for Windows theme windows */
+.theme-win98 .window, .theme-winxp .window, .theme-win7 .window,
+.theme-win98 .title-bar, .theme-winxp .title-bar, .theme-win7 .title-bar {
+  pointer-events: auto !important;
+  cursor: move; /* Show move cursor on titlebar */
+}
+
+  /* Base desktop icon styles using CSS variables - applies to all themes including external ones */
   .desktop-icon {
-    width: 80px;
-    height: 80px;
-    @apply flex flex-col items-center justify-center p-1 cursor-pointer transition-all duration-200;
+    width: 90px; /* Slightly wider to better accommodate the text */
+    height: auto; /* Auto height to accommodate labels with varying length */
+    min-height: 96px; /* Minimum height to ensure consistent sizing */
+    @apply flex flex-col items-center p-2 cursor-pointer transition-all duration-200;
+    background-color: var(--desktop-icon-bg, transparent);
+    border-radius: var(--desktop-icon-radius, 4px);
+    border: var(--desktop-icon-border, none);
     
     .theme-beos & {
       @apply rounded-sm;
@@ -36,6 +94,9 @@
   }
 
   .desktop-icon:hover {
+    background-color: var(--desktop-icon-hover-bg, rgba(255, 255, 255, 0.1));
+    transform: var(--desktop-icon-hover-transform, scale(1.05));
+    
     .theme-beos & {
       @apply bg-white/10;
     }
@@ -46,39 +107,40 @@
   }
 
   .desktop-icon:active {
+    transform: var(--desktop-icon-active-transform, scale(0.95));
+    
     .theme-light &, .theme-dark & {
       @apply scale-95;
     }
   }
 
   .desktop-icon-label {
-    @apply text-center text-xs mt-2 truncate w-full;
-    
-    .theme-beos & {
-      @apply font-bold;
-      color: var(--text-primary);
-      text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.7);
-    }
-    
-    .theme-light & {
-      @apply font-medium;
-      color: var(--text-primary);
-      text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    .theme-dark & {
-      @apply font-medium;
-      color: white;
-      text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
-    }
+    @apply text-center text-xs mt-2 w-full;
+    color: white;
+    font-weight: var(--desktop-icon-font-weight, 500);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+    white-space: normal; /* Allow text to wrap */
+    overflow-wrap: break-word; /* Break words that are too long */
+    word-break: break-word; /* Allow words to break if needed */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limit to 3 lines maximum */
+    line-clamp: 3; /* Standard property for compatibility */
+    -webkit-box-orient: vertical;
+    max-height: 3.6em; /* Approximately 3 lines of text */
+    overflow: hidden; /* Hide any text beyond the line limit */
+    padding: 0 4px; /* Add a small padding to prevent text touching edges */
   }
 
+  /* Base tab bar style applies to all themes, specific themes can override */
   .window-tab-bar {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     z-index: 900;
+    height: var(--wm-header-height, 36px);
+    border-bottom: 1px solid var(--wm-border-color, #d4d4d4);
+    background-color: var(--window-header-background, #f0f0f0);
     
     .theme-beos & {
       height: 36px;
@@ -94,8 +156,18 @@
     }
   }
 
+  /* Base window tab style that applies to all themes */
   .window-tab {
     cursor: pointer;
+    color: var(--window-header-text, #333333);
+    min-width: 180px;
+    max-width: 360px;
+    height: var(--wm-header-height, 36px);
+    border-right: 1px solid var(--wm-border-color, #d4d4d4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.75rem;
     
     .theme-beos & {
       @apply border-r flex items-center justify-between px-3 py-1.5;
@@ -128,6 +200,8 @@
   }
 
   .window-tab:hover {
+    background-color: var(--window-header-button-hover, #e0e0e0);
+    
     .theme-beos & {
       filter: brightness(1.05);
     }
@@ -147,6 +221,8 @@
 
   .window-tab-title {
     @apply truncate flex-1;
+    color: var(--window-header-text, #333333);
+    font-size: 0.875rem;
     
     .theme-beos & {
       @apply text-xs font-bold;
@@ -164,3 +240,4 @@
     }
   }
 }
+

@@ -42,7 +42,7 @@ const StringPrimitiveNode = ({
   return (
     <div className="primitive-node string-primitive rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-blue-600 min-w-[200px]">
       {/* Header */}
-      <div className="node-header px-3 py-2 bg-blue-600 text-white font-bold flex items-center justify-between">
+      <div className="node-header px-3 py-2 bg-blue-600 text-primary font-bold flex items-center justify-between">
         <span className="text-sm truncate">{data.label || "String Value"}</span>
       </div>
 
@@ -54,7 +54,7 @@ const StringPrimitiveNode = ({
             type="text"
             value={data.value}
             onChange={handleValueChange}
-            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] text-white rounded"
+            className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] text-primary rounded"
             placeholder="Enter string value..."
           />
         </div>

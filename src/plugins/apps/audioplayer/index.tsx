@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Music } from 'lucide-react';
 
@@ -22,6 +21,7 @@ export const manifest: PluginManifest = {
     width: 400,
     height: 300,
   },
+  hideWindowChrome: true,
 };
 
 const AudioPlayerPlugin: Plugin = {

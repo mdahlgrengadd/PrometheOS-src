@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from 'tailwindcss-animate';
-import { fontFamily } from 'tailwindcss/defaultTheme';
+import tailwindcssAnimate from "tailwindcss-animate";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
-import tailwindcssTypography from '@tailwindcss/typography';
+import tailwindcssTypography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -62,8 +62,29 @@ export default {
         "beos-yellow": "#ffcb06",
         "beos-darkgrey": "#333333",
         "beos-lightgrey": "#989898",
-        window: "var(--window-bg)",
+        window: "var(--window-background)",
         "window-border": "var(--window-border)",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+        winxp: {
+          "medium-blue": "#245edb",
+          "light-blue": "#0c8dea",
+          "start-green": "#3c873c",
+          "start-green-light": "#79ce71",
+          "menu-blue": "#d3e5fa",
+          "menu-border": "#95bdee",
+          "menu-text": "#29356c",
+          "menu-text-dark": "#373738",
+          "menu-text-gray": "#808080",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -93,14 +114,26 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        // Taskbar animation only
+        "taskbar-slide": {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
+        // Taskbar animation only
+        "taskbar-slide": "taskbar-slide 0.3s ease-out",
       },
       textColor: {
         "taskbar-foreground": "white",
+        primary: "var(--text-primary)",
+      },
+      backgroundImage: {
+        "winxp-bliss": "url('/images/winxp-bliss.jpg')",
+        "winxp-start": "url('/images/winxp-start.png')",
       },
     },
   },

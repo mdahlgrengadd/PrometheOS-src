@@ -1,17 +1,41 @@
 @layer components {
+  /* 
+   * WINDOW COMPONENT STYLES
+   * 
+   * CSS Variables used:
+   * --window-background: Main window background color
+   * --window-text: Text color inside windows
+   * --window-header-background: Background color for the window title bar
+   * --window-header-text: Text color for the window title
+   * --window-header-button-hover: Background color for window controls on hover
+   * --window-header-button-active: Background color for window controls when clicked
+   * --wm-border-width: Border width for windows
+   * --wm-border-color: Border color for windows
+   * --wm-border-radius: Border radius for windows
+   * --wm-header-height: Height of the window title bar
+   * --wm-btn-close-bg: Background color for the close button
+   * --wm-btn-minimize-bg: Background color for the minimize button
+   * --wm-btn-maximize-bg: Background color for the maximize button
+   */
+
+  /* Window shell container */
   .draggable-window {
-    @apply shadow-lg;
     position: absolute;
     min-width: 320px;
     min-height: 200px;
-    border-radius: var(--window-border-radius);
-    background-color: var(--window-bg);
-    transition: box-shadow 0.2s ease;
+    border-radius: var(--wm-border-radius, 4px);
+    background-color: var(--window-background, var(--window-bg, white));
     overflow: visible; /* Keep overflow visible so titlebar is not clipped */
     padding-top: 0; /* Space for the header */
-    resize: both;
-
-    /* Theme-specific styles */
+    /* native CSS resize disabled—use your custom handle instead */
+    /* resize: both; */
+    box-sizing: border-box;
+    
+    /* Common styles across all themes */
+    border: var(--wm-border-width, 1px) solid var(--wm-border-color, #ccc);
+    box-shadow: 0 4px 10px var(--window-shadow, rgba(0, 0, 0, 0.1));
+    
+    /* BeOS classic multi-layer bevel styling */
     .theme-beos & {
       box-shadow:
         0 0 0 1px #888888,
@@ -21,289 +45,621 @@
         0 0 0 5px #888888,
         0 14px 16px -6px rgba(0,0,0,0.2);
     }
-
-    .theme-light &, .theme-dark & {
-      border: 1px solid var(--window-border);
-      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1), 
-                  0 1px 3px rgba(0, 0, 0, 0.05);
+    
+    /* Windows XP multi-layer bevel styling */
+    .theme-windows & {
+      box-shadow:
+        0 0 0 1px #ffffff,
+        0 0 0 2px #999999,
+        0 4px 8px rgba(0, 0, 0, 0.15);
+      border-radius: 0;
     }
-
+    
     /* Focus state */
     &:focus-within {
+      box-shadow: 0 4px 15px var(--window-shadow, rgba(0, 0, 0, 0.15));
+      
+      /* Maintain BeOS bevel even when focused */
       .theme-beos & {
-        /* Apply purple to all frame layers for strong focus indication */
         box-shadow:
-          0 0 0 1px #7c3aed,
-          0 0 0 2px #9d68f7,
-          0 0 0 3px #c4a4fc,
-          0 0 0 4px #9d68f7,
-          0 0 0 5px #7c3aed,
-          0 14px 16px -6px rgba(0,0,0,0.2);
+          0 0 0 1px #888888,
+          0 0 0 2px #dddddd,
+          0 0 0 3px #ffffff,
+          0 0 0 4px #dddddd,
+          0 0 0 5px #888888,
+          0 14px 16px -6px rgba(0,0,0,0.3);
       }
-
-      .theme-light &, .theme-dark & {
-        box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.2), 
-                    0 1px 4px rgba(0, 0, 0, 0.05), 
-                    0 0 0 2px var(--ring);
+      
+      /* Maintain Windows bevel when focused */
+      .theme-windows & {
+        box-shadow:
+          0 0 0 1px #ffffff,
+          0 0 0 2px #999999,
+          0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+    }
+    
+    /* Resizing state */
+    &.resizing {
+      box-shadow: 0 6px 20px var(--window-shadow, rgba(0, 0, 0, 0.2));
+      z-index: 9999 !important; /* Ensure resizing window is on top */
+      
+      /* Maintain BeOS bevel even when resizing */
+      .theme-beos & {
+        box-shadow:
+          0 0 0 1px #888888,
+          0 0 0 2px #dddddd,
+          0 0 0 3px #ffffff,
+          0 0 0 4px #dddddd,
+          0 0 0 5px #888888,
+          0 14px 16px -6px rgba(0,0,0,0.4);
+      }
+      
+      /* Maintain Windows bevel when resizing */
+      .theme-windows & {
+        box-shadow:
+          0 0 0 1px #ffffff,
+          0 0 0 2px #999999,
+          0 6px 16px rgba(0, 0, 0, 0.25);
       }
     }
   }
 
-  /* Add a separate inner container for scrollable content */
-  .window-content {
-    @apply bg-card text-card-foreground;
-    overflow: auto; /* Apply scrolling to the content area instead */
-    width: 100%;
-    height: 100%;
-    position: relative;
-    top: 0; /* Account for header height */
-    left: 0;
-    padding: var(--window-content-padding, 16px);
-    
-    .theme-beos & {
-      border-top: 1px solid #888888;
-      background-color: #f0f0f0;
-    }
-    
-    .theme-light & {
-      background-color: hsl(0 0% 100%);
-      color: hsl(224 71% 4%);
-      border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
-    }
-    
-    .theme-dark & {
-      background-color: hsl(220 13% 18%);
-      color: hsl(220 13% 75%);
-      border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
-    }
-  }
-  
-  /* Corner resize handle for better resize UX */
-  .draggable-window::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px; /* Make it even larger for easier targeting */
-    height: 20px; /* Make it even larger for easier targeting */
-    cursor: nwse-resize;
-    z-index: 10; /* Ensure the resize handle is above other elements */
-    
-    .theme-beos & {
-      background: rgba(0, 0, 0, 0.05);
-    }
-  }
-
-  /* Custom resize handle for window resizing */
-  .resize-handle {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px;
-    height: 20px;
-    cursor: nwse-resize;
-    background: transparent;
-    z-index: 10;
-    
-    .theme-light &, .theme-dark & {
-      opacity: 0.6;
-      transition: opacity 0.15s ease;
-      width: 16px;
-      height: 16px;
-      bottom: 4px;
-      right: 4px;
-    }
-  }
-  
-  .resize-handle::before {
-    content: '';
-    position: absolute;
-    
-    .theme-beos & {
-      bottom: 4px;
-      right: 4px;
-      width: 12px;
-      height: 12px;
-      border-bottom: 2px solid rgba(0, 0, 0, 0.3);
-      border-right: 2px solid rgba(0, 0, 0, 0.3);
-    }
-    
-    .theme-light &, .theme-dark & {
-      bottom: 3px;
-      right: 3px;
-      width: 8px;
-      height: 8px;
-      border-bottom: 2px solid var(--muted-foreground);
-      border-right: 2px solid var(--muted-foreground);
-      border-radius: 1px;
-    }
-  }
-  
-  .resize-handle::after {
-    content: '';
-    position: absolute;
-    
-    .theme-beos & {
-      bottom: 8px;
-      right: 8px;
-      width: 6px;
-      height: 6px;
-      border-bottom: 2px solid rgba(0, 0, 0, 0.3);
-      border-right: 2px solid rgba(0, 0, 0, 0.3);
-    }
-    
-    .theme-light &, .theme-dark & {
-      display: none;
-    }
-  }
-  
-  .draggable-window:hover .resize-handle {
-    .theme-light &, .theme-dark & {
-      opacity: 1;
-    }
-  }
-  
-  /* Add a visual indicator when resizing */
-  .draggable-window.resizing {
+  /* Drag handle for framer-motion */
+  .window-drag-handle {
+    cursor: move;
+    touch-action: none;
     user-select: none;
   }
 
+  /* Window content */
+  .window-content {
+    overflow: auto; /* Apply scrolling to the content area instead */
+    width: 100%;
+    height: calc(100% - var(--wm-header-height, 36px));
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: var(--window-content-padding, 16px);
+    background-color: var(--window-background, var(--window-bg, white));
+    color: var(--window-text, black);
+    box-sizing: border-box;
+  }
+  
+  /* Generic resize handle */
+  .resize-handle {
+    position: absolute;
+    background: transparent;
+    z-index: 10;
+    touch-action: none;
+  }
+  
+  /* Make resize handles more visible on hover */
+  .draggable-window:hover .resize-handle {
+    opacity: 0.15 !important;
+  }
+  
+  .resize-handle:hover {
+    opacity: 0.5 !important;
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.3));
+  }
+  
+  /* Corner resize handles */
+  .resize-handle-br {
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    border-radius: 0 0 var(--wm-border-radius, 4px) 0;
+  }
+  
+  .resize-handle-bl {
+    bottom: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nesw-resize;
+    border-radius: 0 0 0 var(--wm-border-radius, 4px);
+  }
+  
+  .resize-handle-tr {
+    top: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nesw-resize;
+    border-radius: 0 var(--wm-border-radius, 4px) 0 0;
+  }
+  
+  .resize-handle-tl {
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    border-radius: var(--wm-border-radius, 4px) 0 0 0;
+  }
+  
+  /* Edge resize handles */
+  .resize-handle-r {
+    top: 16px !important;
+    right: 0 !important;
+    bottom: 16px !important;
+    left: auto !important;
+    width: 8px !important;
+    height: auto !important;  
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-l {
+    top: 16px !important;
+    right: auto !important;
+    bottom: 16px !important;
+    left: 0 !important;
+    width: 8px !important;
+    height: auto !important;
+    cursor: ew-resize;
+  }
+  
+  .resize-handle-b {
+    top: auto !important;
+    right: 16px !important;
+    bottom: 0 !important;
+    left: 16px !important;
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  .resize-handle-t {
+    top: 0 !important;
+    right: 16px !important;
+    bottom: auto !important;
+    left: 16px !important;
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  /* BeOS-specific handle positioning - adjusted for content window location and frame border (5px) */
+  .theme-beos .resize-handle-t {
+    top: 25px !important; /* 32px titlebar + 5px frame border */
+    right: 21px !important; /* 16px + 5px frame border */
+    bottom: auto !important;
+    left: 21px !important; /* 16px + 5px frame border */
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  /* Top-right corner handle for BeOS */
+  .theme-beos .resize-handle-tr {
+    top: 25px !important; /* 32px titlebar + 5px frame border */
+    right: -7px !important; /* Account for 5px frame border */
+    bottom: auto !important;
+    left: auto !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nesw-resize;
+  }
+  
+  /* Right edge handle for BeOS - adjusted to start below top-right corner */
+  .theme-beos .resize-handle-r {
+    top: 53px !important; /* 32px titlebar + 5px frame + 16px corner spacing */
+    right: -7px !important; /* Account for 5px frame border */
+    bottom: 21px !important; /* 16px + 5px frame border */
+    left: auto !important;
+    width: 8px !important;
+    height: auto !important;  
+    cursor: ew-resize;
+  }
+  
+  /* Bottom edge handle for BeOS */
+  .theme-beos .resize-handle-b {
+    top: auto !important;
+    right: 21px !important; /* 16px + 5px frame border */
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: 21px !important; /* 16px + 5px frame border */
+    width: auto !important;
+    height: 8px !important;
+    cursor: ns-resize;
+  }
+  
+  /* Bottom corner handles for BeOS */
+  .theme-beos .resize-handle-br {
+    top: auto !important;
+    right: -7px !important; /* Account for 5px frame border */
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: auto !important;
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nwse-resize;
+  }
+
+  .theme-beos .resize-handle-bl {
+    top: auto !important;
+    right: auto !important;
+    bottom: -7px !important; /* Account for 5px frame border */
+    left: -7px !important; /* Account for 5px frame border */
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nesw-resize;
+  }
+
+  /* Left edge handle for BeOS */
+  .theme-beos .resize-handle-l {
+    top: 53px !important; /* 32px titlebar + 5px frame + 16px corner spacing */
+    right: auto !important;
+    bottom: 21px !important; /* 16px + 5px frame border */
+    left: -7px !important; /* Account for 5px frame border */
+    width: 8px !important;
+    height: auto !important;
+    cursor: ew-resize;
+  }
+
+  /* Top-left corner handle for BeOS */
+  .theme-beos .resize-handle-tl {
+    top: 25px !important; /* 32px titlebar + 5px frame border */
+    right: auto !important;
+    bottom: auto !important;
+    left: -7px !important; /* Account for 5px frame border */
+    width: 16px !important;
+    height: 16px !important;
+    cursor: nwse-resize;
+  }
+  
+  /* Window header */
   .window-header {
     text-align: left;
-    position: var(--header-position);
-    top: var(--header-top);
-    left: var(--header-left);
-    height: var(--header-height);
-    width: var(--header-width);
-    border-radius: var(--header-border-radius);
-    padding: var(--header-padding);
-    @apply flex items-center justify-between cursor-move select-none;
-    z-index: 1; /* Ensure header is above window content */
-    transition: background-color 0.15s ease;
-    
-    /* Theme-specific styles */
-    .theme-beos & {
-      background: linear-gradient(to bottom, #ffda8f, #ffc34e);
-      border: 1px solid #b99100;
-      border-bottom: none;
-      box-shadow: 0px -1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .theme-light & {
-      background-color: hsl(240 5% 96%);
-      border-bottom: 1px solid hsl(240 5.9% 90%);
-    }
-    
-    .theme-dark & {
-      background-color: hsl(220 13% 22%);
-      border-bottom: 1px solid hsl(220 13% 15%);
-    }
+    position: relative;
+    height: var(--wm-header-height, 36px);
+    width: 100%;
+    border-bottom: var(--wm-border-width, 1px) solid var(--wm-border-color, #ccc);
+    border-radius: var(--wm-border-radius, 4px) var(--wm-border-radius, 4px) 0 0;
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: move;
+    user-select: none;
+    background-color: var(--window-header-background, #f0f0f0);
+    color: var(--window-header-text, #333);
   }
-
-  .window-header:hover {
-    .theme-beos & {
-      background: linear-gradient(to bottom, #ffce6f, #ffb82e);
-    }
-    
-    .theme-light & {
-      background-color: hsl(240 4% 90%);
-    }
-    
-    .theme-dark & {
-      background-color: hsl(220 13% 26%);
-    }
-  }
-
-  /* BeOS yellow dot in the header */
-  .window-header::before {
-    /* Only show in BeOS theme */
-    .theme-beos & {
-      position: absolute;
-      left: 4px;
-      top: 4px;
-      content: '';
-      width: 13px;
-      height: 13px;
-      background: linear-gradient(135deg, #fff9c9 0%, #e7c01d 100%);
-      border: 1px solid #b99100;
-      border-radius: 50%;
-    }
-    
-    /* Hide in other themes */
-    .theme-light &, .theme-dark & {
-      display: none;
-    }
+  
+  /* Windows style title bar */
+  .theme-windows .window-header {
+    background: linear-gradient(
+      to bottom,
+      var(--title-gradient-start, #e0e0e0),
+      var(--title-gradient-end, #c8c8c8)
+    );
+    border: 1px solid var(--title-border, #999999);
+    border-bottom: none;
+    height: var(--wm-header-height, 32px);
+    color: #000000;
+    font-weight: bold;
+    border-radius: 0;
+    padding: 0.25rem 0.5rem;
   }
 
   .window-title {
-    line-height: 1.25rem;
-    
-    .theme-beos & {
-      @apply text-black font-bold truncate text-sm;
-      max-width: calc(100% - 80px);
-      margin: 0 auto 0 15px; /* Add margin to make room for the BeOS yellow dot */
-    }
-    
-    .theme-light & {
-      @apply text-foreground font-medium text-sm;
-      max-width: calc(100% - 10px); /* Increase available space for title */
-      padding-right: 8px; /* Add padding to prevent title from touching window controls */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis; /* Use ellipsis instead of hard truncation */
-    }
-    
-    .theme-dark & {
-      @apply text-white font-medium text-sm;
-      max-width: calc(100% - 10px);
-      padding-right: 8px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    }
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    color: var(--window-header-text, #333);
+  }
 
+  /* Window controls */
   .window-controls {
-    @apply flex items-center;
-    
-    .theme-light &, .theme-dark & {
-      gap: 4px;
-    }
+    display: flex;
+    gap: var(--wm-btn-gap, 4px);
   }
 
   .window-control {
-    @apply flex items-center justify-center cursor-pointer;
-    
-    .theme-beos & {
-      @apply w-4 h-4 mx-0.5;
-      background: var(--control-bg);
-      border: 1px solid var(--control-border);
-      border-radius: 2px;
-    }
-    
-    .theme-light &, .theme-dark & {
-      @apply w-6 h-6 rounded-full;
-      background-color: var(--secondary);
-      transition: all 0.15s ease;
-    }
+    width: var(--wm-btn-size, 12px);
+    height: var(--wm-btn-size, 12px);
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    background-color: var(--window-header-button-hover, #e0e0e0);
   }
 
   .window-control:hover {
-    .theme-beos & {
-      background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
-    }
+    filter: brightness(0.9);
+    background-color: var(--window-header-button-hover, #e0e0e0);
+  }
+
+  .window-control:active {
+    filter: brightness(0.8);
+    background-color: var(--window-header-button-active, #d0d0d0);
+  }
+  
+  /* Windows style close, minimize, maximize buttons */
+  .theme-windows .window-controls {
+    gap: 2px;
+  }
+  
+  .theme-windows .window-control {
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
+    background-color: var(--title-gradient-end, #c8c8c8);
+    border: 1px solid var(--title-border, #999999);
+  }
+  
+  .theme-windows .window-control:hover {
+    background-color: var(--window-header-button-hover, #d0d0d0);
+  }
+  
+  .theme-windows .window-control:active {
+    background-color: var(--window-header-button-active, #b0b0b0);
+  }
+  
+  /* ------------------ BeOS in-window tab styling ------------------ */
+  /* Styling for non-maximized BeOS windows header tabs */
+  .theme-beos .draggable-window:not(.maximized) .window-header {
+    position: var(--header-position, absolute);
+    top: var(--header-top, -4px); /* Pull it up slightly to look like a tab */
+    left: var(--header-left, 5px);
+    width: var(--header-width, 210px);
+    height: var(--header-height, 32px);
+    padding: var(--header-padding, 0.25rem 0.5rem);
+    border-radius: var(--header-border-radius, 4px 4px 0 0);
+    z-index: 2; /* Float it above the window content */
     
-    .theme-light &, .theme-dark & {
-      background-color: var(--accent);
-      @apply shadow-sm;
-      transform: scale(1.05);
+    /* Classic BeOS yellow gradient tab */
+    background: linear-gradient(
+      to bottom,
+      var(--title-gradient-start, #ffda8f),
+      var(--title-gradient-end, #ffc34e)
+    );
+    border: 1px solid var(--title-border, #b99100);
+    border-bottom: none;
+    
+    /* Add the yellow dot */
+    &::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 13px;
+      height: 13px;
+      background: linear-gradient(135deg, var(--dot-color-start, #fff9c9) 0%, var(--dot-color-end, #e7c01d) 100%);
+      border: 1px solid var(--dot-border, #b99100);
+      border-radius: 50%;
+      display: var(--has-window-header-dot, none);
     }
   }
   
-  .window-control:active {
-    .theme-light &, .theme-dark & {
-      transform: scale(0.95);
-    }
+  /* Make the title text bold in BeOS headers */
+  .theme-beos .draggable-window:not(.maximized) .window-header .window-title {
+    font-weight: bold;
+    color: black;
+    padding-left: 16px; /* Add space for the yellow dot */
+  }
+
+  /* Enable resizing for all major themes, not just windows */
+  .theme-light .draggable-window,
+  .theme-dark .draggable-window,
+  .theme-fluxbox .draggable-window,
+  .theme-macos .draggable-window,
+  .theme-beos .draggable-window {
+    /* If any theme disables resize, override here */
+    resize: both !important;
+    /* Show resize handles if hidden */
+    /* If you use custom handles, ensure they are visible and pointer-events enabled */
+  }
+
+  /* --- Resize handle fixes for all major themes --- */
+  .theme-light .resize-handle,
+  .theme-dark .resize-handle,
+  .theme-fluxbox .resize-handle,
+  .theme-macos .resize-handle,
+  .theme-beos .resize-handle {
+    opacity: 0.15 !important;
+    pointer-events: auto !important;
+    background: transparent;
+  }
+
+  .theme-light .resize-handle:hover,
+  .theme-dark .resize-handle:hover,
+  .theme-fluxbox .resize-handle:hover,
+  .theme-macos .resize-handle:hover,
+  .theme-beos .resize-handle:hover {
+    opacity: 0.5 !important;
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.3));
+  }
+
+  /* Remove negative offsets and set handles to window edges for all themes */
+  .theme-light .resize-handle-br,
+  .theme-dark .resize-handle-br,
+  .theme-fluxbox .resize-handle-br,
+  .theme-macos .resize-handle-br,
+  .theme-beos .resize-handle-br {
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    border-radius: 0 0 var(--wm-border-radius, 4px) 0;
+  }
+  .theme-light .resize-handle-bl,
+  .theme-dark .resize-handle-bl,
+  .theme-fluxbox .resize-handle-bl,
+  .theme-macos .resize-handle-bl,
+  .theme-beos .resize-handle-bl {
+    bottom: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nesw-resize;
+    border-radius: 0 0 0 var(--wm-border-radius, 4px);
+  }
+  .theme-light .resize-handle-tr,
+  .theme-dark .resize-handle-tr,
+  .theme-fluxbox .resize-handle-tr,
+  .theme-macos .resize-handle-tr,
+  .theme-beos .resize-handle-tr {
+    top: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nesw-resize;
+    border-radius: 0 var(--wm-border-radius, 4px) 0 0;
+  }
+  .theme-light .resize-handle-tl,
+  .theme-dark .resize-handle-tl,
+  .theme-fluxbox .resize-handle-tl,
+  .theme-macos .resize-handle-tl,
+  .theme-beos .resize-handle-tl {
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    border-radius: var(--wm-border-radius, 4px) 0 0 0;
+  }
+  .theme-light .resize-handle-r,
+  .theme-dark .resize-handle-r,
+  .theme-fluxbox .resize-handle-r,
+  .theme-macos .resize-handle-r,
+  .theme-beos .resize-handle-r {
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+  }
+  .theme-light .resize-handle-l,
+  .theme-dark .resize-handle-l,
+  .theme-fluxbox .resize-handle-l,
+  .theme-macos .resize-handle-l,
+  .theme-beos .resize-handle-l {
+    top: 0;
+    left: 0;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+  }
+  .theme-light .resize-handle-b,
+  .theme-dark .resize-handle-b,
+  .theme-fluxbox .resize-handle-b,
+  .theme-macos .resize-handle-b,
+  .theme-beos .resize-handle-b {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    cursor: ns-resize;
+  }
+  .theme-light .resize-handle-t,
+  .theme-dark .resize-handle-t,
+  .theme-fluxbox .resize-handle-t,
+  .theme-macos .resize-handle-t,
+  .theme-beos .resize-handle-t {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    cursor: ns-resize;
+  }
+
+  /* Keep resize handles visible while actively resizing */
+  .draggable-window.resizing .resize-handle,
+  .unified-window.resizing .resize-handle {
+    opacity: 0.8 !important; /* Override any inline opacity */
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.4)) !important;
+    transition: none !important; /* Prevent fade in/out during drag */
+  }
+
+  /* Also keep the specific handle under the cursor clearly visible */
+  .resize-handle:active {
+    opacity: 0.9 !important;
+    background-color: var(--accent-primary, rgba(0, 120, 255, 0.5)) !important;
+    transition: none !important;
+  }
+
+  /* Optional: when a window is both hovered and resizing, prefer the stronger opacity */
+  .draggable-window.resizing:hover .resize-handle {
+    opacity: 0.8 !important;
+  }
+
+  /* =====================================================================
+     HIDE WINDOW CHROME SUPPORT
+     When the container sets data-hide-chrome="true" or the class
+     .no-window-chrome is present, strip away all decorative chrome such as
+     borders, shadows, headers and control buttons. This is respected across
+     all themes by using high‐specificity selectors and !important flags.
+     ===================================================================== */
+
+  [data-hide-chrome="true"],
+  .no-window-chrome {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide title / header bars and control buttons */
+  [data-hide-chrome="true"] .window-header,
+  [data-hide-chrome="true"] .title-bar,
+  [data-hide-chrome="true"] .window-controls,
+  [data-hide-chrome="true"] .title-bar-controls,
+  [data-hide-chrome="true"] .window-control,
+  .no-window-chrome .window-header,
+  .no-window-chrome .title-bar,
+  .no-window-chrome .window-controls,
+  .no-window-chrome .title-bar-controls,
+  .no-window-chrome .window-control {
+    display: none !important;
+  }
+
+  /* Ensure content fills full area when chrome is hidden */
+  [data-hide-chrome="true"] .window-content,
+  .no-window-chrome .window-content,
+  [data-hide-chrome="true"] .window-body,
+  .no-window-chrome .window-body {
+    height: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;          /* NEW: clear any leftover gutters */
+    border: none !important;       /* NEW: remove inner borders */
+    box-shadow: none !important;   /* NEW: remove inner shadows */
+    background: transparent !important; /* avoid double backgrounds */
+  }
+
+  [data-hide-chrome="true"] .window-body.has-scrollbar,
+  .no-window-chrome .window-body.has-scrollbar {
+    margin: 0 !important;
+  }
+
+  /* Remove BeOS bevel specifically when chrome hidden */
+  .theme-beos [data-hide-chrome="true"],
+  .theme-beos [data-hide-chrome="true"]::before,
+  .theme-beos [data-hide-chrome="true"]::after,
+  .theme-beos .no-window-chrome,
+  .theme-beos .no-window-chrome::before,
+  .theme-beos .no-window-chrome::after {
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Improve top resize/grab area when chrome is hidden */
+  [data-hide-chrome="true"] .resize-handle-t,
+  .no-window-chrome .resize-handle-t {
+    top: -8px !important;   /* raise above content */
+    height: 16px !important;
+  }
+  [data-hide-chrome="true"] .resize-handle-tl,
+  .no-window-chrome .resize-handle-tl,
+  [data-hide-chrome="true"] .resize-handle-tr,
+  .no-window-chrome .resize-handle-tr {
+    top: -8px !important;
   }
 }
 

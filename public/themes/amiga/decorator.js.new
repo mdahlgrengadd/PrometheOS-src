@@ -1,0 +1,173 @@
+/**
+ * Amiga Workbench Theme Window Decorator
+ * This decorator adds Amiga Workbench specific styling and behavior to windows
+ */
+
+// Import React from CDN for use in decorator modules
+import React from "https://esm.sh/react@18.2.0";
+
+/**
+ * Preload the Amiga theme CSS
+ * @param {string} previousTheme - The previous theme's name (optional)
+ * @returns {Promise<boolean>} Resolves true if loaded, false if error
+ */
+export async function preload(previousTheme) {
+  // Remove any existing theme CSS
+  document.getElementById("amiga-theme-css")?.remove();
+
+  // Create and append the Amiga CSS
+  const link = document.createElement("link");
+  link.id = "amiga-theme-css";
+  link.rel = "stylesheet";
+  link.href = "/themes/amiga/amiga.css";
+
+  return new Promise((resolve) => {
+    link.onload = () => {
+      console.log("Amiga theme CSS loaded");
+      resolve(true);
+    };
+    link.onerror = () => {
+      console.error("Failed to load Amiga theme CSS");
+      resolve(false);
+    };
+    document.head.appendChild(link);
+  });
+}
+
+/**
+ * Post-load adjustments for Amiga theme
+ * Applies additional styling after the theme is loaded
+ */
+export function postload() {
+  console.log("Amiga theme post-load");
+  // Add any post-load adjustments if needed
+}
+
+/**
+ * Cleanup function - called when switching away from the theme
+ * Removes all injected CSS and style elements
+ */
+export function cleanup() {
+  console.log("Amiga cleanup called");
+  document.getElementById("amiga-theme-css")?.remove();
+}
+
+/**
+ * AmigaControls - Renders Amiga Workbench style window control buttons
+ * @param {Object} props - Button handlers
+ */
+function AmigaControls({ onMinimize, onMaximize, onClose }) {
+  return React.createElement(
+    "div",
+    { className: "window-controls" },
+    // Close button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-close",
+        onClick: onClose,
+        "aria-label": "Close",
+        style: { 
+          backgroundColor: "var(--wm-btn-close-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    ),
+    // Maximize button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-maximize",
+        onClick: onMaximize,
+        "aria-label": "Maximize",
+        style: { 
+          backgroundColor: "var(--wm-btn-maximize-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    ),
+    // Minimize button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-minimize",
+        onClick: onMinimize,
+        "aria-label": "Minimize",
+        style: { 
+          backgroundColor: "var(--wm-btn-minimize-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    )
+  );
+}
+
+/**
+ * AmigaHeader - Renders the Amiga Workbench style window title bar with controls
+ * @param {Object} props - Title, handlers, and headerRef for drag
+ */
+function AmigaHeader({ title, onMinimize, onMaximize, onClose, headerRef, icon }) {
+  return React.createElement(
+    "div",
+    {
+      ref: headerRef,
+      className: "window-header amiga-header",
+      style: {
+        cursor: "move",
+        backgroundColor: "var(--window-header-background)",
+        color: "var(--window-header-text)",
+        height: "var(--wm-header-height)",
+        display: "flex",
+        alignItems: "center",
+        padding: "0 4px",
+        fontWeight: "bold",
+        textTransform: "uppercase",
+        fontSize: "11px"
+      }
+    },
+    // Window icon if provided (depth gadget)
+    icon && React.createElement(
+      "div", 
+      {
+        className: "window-depth-gadget",
+        style: {
+          backgroundImage: `url(${icon})`,
+          width: "16px",
+          height: "16px",
+          marginRight: "4px",
+          cursor: "pointer"
+        }
+      }
+    ),
+    React.createElement("div", { className: "window-title" }, title),
+    React.createElement(AmigaControls, { onMinimize, onMaximize, onClose })
+  );
+}
+
+// Create the main decorator object
+const AmigaDecorator = {
+  preload, // Called before theme is applied
+  postload, // Called after theme is applied
+  cleanup, // Called when theme is removed
+  Header: AmigaHeader, // React component for window title bar
+  Controls: AmigaControls, // React component for window controls
+  borderRadius: 0, // Window border radius (px)
+};
+
+// Export as ESM only
+export default AmigaDecorator;

@@ -18,7 +18,7 @@ const ApiNode = ({ id, data, isConnectable }: ApiNodeProps) => {
   return (
     <div className="api-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-[#4A5568] min-w-[250px]">
       {/* Header section with title */}
-      <div className="node-header px-3 py-2 bg-[#1A202C] text-white font-bold flex items-center justify-between">
+      <div className="node-header px-3 py-2 bg-[#1A202C] text-primary font-bold flex items-center justify-between">
         <span className="text-sm truncate">{data.label}</span>
         <span className="text-xs opacity-70 font-mono">{data.endpoint}</span>
       </div>
