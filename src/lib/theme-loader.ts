@@ -105,7 +105,10 @@ const convertExternalTheme = (
  * @param cssUrl The URL to the CSS file
  * @returns Promise that resolves when the CSS is loaded
  */
-export const loadThemeCSS = async (cssUrl: string): Promise<void> => {
+export const loadThemeCSS = async (
+  cssUrl: string,
+  themeId?: string
+): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if this CSS is already loaded
     const existingLink = document.querySelector(`link[href="${cssUrl}"]`);
@@ -117,6 +120,11 @@ export const loadThemeCSS = async (cssUrl: string): Promise<void> => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = cssUrl;
+    // Add data attributes to make it easier to identify and remove theme CSS
+    link.setAttribute("data-theme-css", "true");
+    if (themeId) {
+      link.setAttribute("data-theme-id", themeId);
+    }
     link.onload = () => resolve();
     link.onerror = () => reject(new Error(`Failed to load CSS from ${cssUrl}`));
     document.head.appendChild(link);
@@ -259,8 +267,8 @@ export const loadExternalTheme = async (
   }
 
   try {
-    // Load the theme's CSS
-    await loadThemeCSS(externalTheme.cssUrl);
+    // Load the theme's CSS with themeId for better identification
+    await loadThemeCSS(externalTheme.cssUrl, themeId);
 
     // Convert and prepare the theme config
     const themeConfig = convertExternalTheme(externalTheme);
@@ -393,10 +401,26 @@ export const uninstallTheme = async (themeId: string): Promise<boolean> => {
 
     // Remove any loaded CSS
     const theme = storedThemes.find((t) => t.id === themeId);
-    if (theme?.cssUrl) {
-      const cssLink = document.querySelector(`link[href="${theme.cssUrl}"]`);
-      if (cssLink) {
-        cssLink.remove();
+
+    // Try multiple strategies for reliable CSS removal
+    if (theme) {
+      // 1. Remove by theme ID data attribute (most reliable)
+      document
+        .querySelectorAll(`link[data-theme-id="${themeId}"]`)
+        .forEach((el) => el.remove());
+
+      // 2. Remove by URL if specified
+      if (theme.cssUrl) {
+        document
+          .querySelectorAll(`link[href="${theme.cssUrl}"]`)
+          .forEach((el) => el.remove());
+      }
+
+      // 3. Try a backup approach for Win7 theme (since it uses a CDN link that might vary)
+      if (themeId === "win7") {
+        document
+          .querySelectorAll('link[href*="7.css"]')
+          .forEach((el) => el.remove());
       }
     }
 

@@ -32,8 +32,14 @@ const ThemeManager: React.FC = () => {
         setError(result.error || "Failed to install Windows 7 theme");
         return;
       }
-      // Activate it immediately using loadTheme to ensure CSS and decorators are loaded
-      loadTheme("win7");
+      // Wait for the theme to be registered in the theme system before loading
+      // This ensures the theme is available in the context
+      setTimeout(async () => {
+        const success = await loadTheme("win7");
+        if (!success) {
+          setError("Failed to activate Windows 7 theme after install");
+        }
+      }, 100); // Small delay to allow theme registration
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Error installing Windows 7 theme"

@@ -242,6 +242,39 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       // Store current theme as a fallback
       const previousTheme = theme;
 
+      // If the requested theme is already active, do NOT run cleanup.
+      if (themeId === previousTheme) {
+        const themeConfig = allThemes[themeId];
+        if (themeConfig) {
+          // Re-run preload and postload hooks to re-inject CSS if needed
+          if (themeConfig.preload) {
+            setLoading(true);
+            try {
+              const success = await themeConfig.preload(previousTheme);
+              setLoading(false);
+              if (!success) {
+                toast.error(`Failed to re-apply theme: ${themeId}`);
+                return false;
+              }
+            } catch (error) {
+              setLoading(false);
+              console.error(`Error in theme preload hook: ${themeId}`, error);
+              toast.error(`Error re-applying theme: ${themeId}`);
+              return false;
+            }
+          }
+          if (themeConfig.postload) {
+            try {
+              themeConfig.postload();
+            } catch (error) {
+              console.error(`Error in theme postload hook: ${themeId}`, error);
+            }
+          }
+          // No theme state change needed
+          return true;
+        }
+      }
+
       // Only remove Windows theme CSS link when NOT switching to a Windows theme
       const isWindowsTheme = ["win98", "winxp", "win7"].includes(themeId);
       if (!isWindowsTheme) {
