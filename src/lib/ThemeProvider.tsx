@@ -46,34 +46,6 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export const useTheme = () => useContext(ThemeContext);
 
-// Function to load Windows UI component styles
-const loadWindowsUIComponentStyles = (windowsTheme: string | null) => {
-  // Remove any existing Windows UI component styles
-  document
-    .querySelectorAll("link[data-windows-ui-styles]")
-    .forEach((el) => el.remove());
-
-  if (!windowsTheme) return;
-
-  // Only load styles for Windows themes
-  if (["win98", "winxp", "win7"].includes(windowsTheme)) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.setAttribute("data-windows-ui-styles", "true");
-
-    // Load the appropriate Windows UI styles based on the theme
-    if (windowsTheme === "win98") {
-      link.href = "/src/styles/windows98-ui.css";
-    } else if (windowsTheme === "winxp") {
-      link.href = "/src/styles/windowsxp-ui.css";
-    } else if (windowsTheme === "win7") {
-      link.href = "/src/styles/windows7-ui.css";
-    }
-
-    document.head.appendChild(link);
-  }
-};
-
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -94,19 +66,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load Windows UI styles on initial render and when theme changes
   useLayoutEffect(() => {
-    const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
-
-    // Apply Window-specific CSS classes to the document body for global styling
-    if (isWindowsTheme) {
-      document.body.classList.add("windows-theme", `theme-${theme}`);
-    } else {
-      document.body.classList.remove(
-        "windows-theme",
-        "theme-win98",
-        "theme-winxp",
-        "theme-win7"
-      );
-    }
+    // Remove all theme-specific classes from the body
+    document.body.classList.remove(
+      ...Array.from(document.body.classList).filter((cls) =>
+        cls.startsWith("theme-")
+      ),
+      "windows-theme"
+    );
+    // Add the active theme class
+    document.body.classList.add(`theme-${theme}`);
   }, [theme]);
 
   // Get stored padding from localStorage or use 0px as default
@@ -188,28 +156,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     const prev = allThemes[theme];
     if (prev?.decoratorModule) {
       try {
-        // @ts-expect-error - We know this might not exist on all themes
-        if (typeof prev.decoratorModule.cleanup === "function") {
-          // @ts-expect-error - Calling cleanup method from dynamically loaded module
-          prev.decoratorModule.cleanup();
+        const decorator = prev.decoratorModule as { cleanup?: () => void };
+        if (typeof decorator.cleanup === "function") {
+          decorator.cleanup();
         }
       } catch (e) {
         console.error(`Error cleaning up previous theme: ${theme}`, e);
       }
     }
-
-    // 2) Only remove Windows theme CSS link when NOT switching to a Windows theme
-    const isWindowsTheme = ["win98", "winxp", "win7"].includes(newTheme);
-    if (!isWindowsTheme) {
-      document.getElementById("win-theme-css")?.remove();
-    }
-
+    // 2) Remove any theme-specific CSS links (by data attribute)
+    document
+      .querySelectorAll("link[data-theme-css], link[data-theme-id]")
+      .forEach((el) => el.remove());
     // 3) Update theme state and localStorage
     setThemeState(newTheme);
     localStorage.setItem("os-theme", newTheme);
-
-    // 4) Load Windows UI component styles when theme changes
-    loadWindowsUIComponentStyles(isWindowsTheme ? newTheme : null);
   };
 
   const setPadding = (newPadding: number) => {
@@ -239,14 +200,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   // Load an external theme
   const loadTheme = useCallback(
     async (themeId: string): Promise<boolean> => {
-      // Store current theme as a fallback
       const previousTheme = theme;
-
-      // If the requested theme is already active, do NOT run cleanup.
       if (themeId === previousTheme) {
         const themeConfig = allThemes[themeId];
         if (themeConfig) {
-          // Re-run preload and postload hooks to re-inject CSS if needed
           if (themeConfig.preload) {
             setLoading(true);
             try {
@@ -270,25 +227,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
               console.error(`Error in theme postload hook: ${themeId}`, error);
             }
           }
-          // No theme state change needed
           return true;
         }
       }
-
-      // Only remove Windows theme CSS link when NOT switching to a Windows theme
-      const isWindowsTheme = ["win98", "winxp", "win7"].includes(themeId);
-      if (!isWindowsTheme) {
-        document.getElementById("win-theme-css")?.remove();
-      }
-
+      // Remove any theme-specific CSS links (by data attribute)
+      document
+        .querySelectorAll("link[data-theme-css], link[data-theme-id]")
+        .forEach((el) => el.remove());
       // Run cleanup for the previous theme if it has a cleanup function
       const prevThemeConfig = allThemes[previousTheme];
       if (prevThemeConfig?.decoratorModule) {
         try {
-          // @ts-expect-error - We know this might not exist on all themes
-          if (typeof prevThemeConfig.decoratorModule.cleanup === "function") {
-            // @ts-expect-error - Calling cleanup method from dynamically loaded module
-            prevThemeConfig.decoratorModule.cleanup();
+          const decorator = prevThemeConfig.decoratorModule as {
+            cleanup?: () => void;
+          };
+          if (typeof decorator.cleanup === "function") {
+            decorator.cleanup();
           }
         } catch (error) {
           console.error(
@@ -573,9 +527,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       root.classList.remove("dark");
     }
-
-    // Load Windows UI component styles if applicable
-    loadWindowsUIComponentStyles(theme);
 
     // -------------- Ensure fallback variables for shadcn UI --------------
     const ensureCssVar = (name: string, fallback: string) => {
