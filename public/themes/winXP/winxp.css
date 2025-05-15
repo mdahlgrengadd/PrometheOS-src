@@ -1,0 +1,26 @@
+/*
+ * Windows XP Theme (override file)
+ * Most styles are loaded from xp.css via CDN.
+ * Add any custom overrides below.
+ */
+
+/* Example: fix min-width on buttons, similar to win7.css */
+.theme-winXP button:not(.title-bar-button), .theme-winXP [role="button"]:not(.title-bar-button) {
+  min-width: 0 !important;
+}
+
+.theme-winXP .resize-handle[role="button"] {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+.theme-winXP .calculator-root button {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0.5rem !important;
+}

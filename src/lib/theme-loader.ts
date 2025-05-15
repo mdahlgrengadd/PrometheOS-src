@@ -225,6 +225,9 @@ export const getAvailableExternalThemes = (): ExternalThemeManifest[] => {
     uniqueThemes.set(theme.id, theme);
   });
 
+  // Debug output to check what themes are available
+  console.log("Available external themes:", Array.from(uniqueThemes.values()));
+
   return Array.from(uniqueThemes.values());
 };
 
@@ -327,9 +330,7 @@ export const installTheme = async (
           .map((e) => `${e.field}: ${e.message}`)
           .join(", ")}`,
       };
-    }
-
-    // Add to stored themes
+    } // Add to stored themes
     const storedThemesJson = localStorage.getItem(INSTALLED_THEMES_KEY);
     const storedThemes: ExternalThemeManifest[] = storedThemesJson
       ? JSON.parse(storedThemesJson)
@@ -347,6 +348,9 @@ export const installTheme = async (
 
     // Save updated themes
     localStorage.setItem(INSTALLED_THEMES_KEY, JSON.stringify(storedThemes));
+
+    console.log("Theme installed successfully:", themeManifest);
+    console.log("Current themes in storage:", JSON.stringify(storedThemes));
 
     return { success: true };
   } catch (error) {

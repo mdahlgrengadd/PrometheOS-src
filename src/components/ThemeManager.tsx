@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { WindowsButton } from '@/components/franky-ui-kit/Button';
-import { useTheme } from '@/lib/ThemeProvider';
-import { cn } from '@/lib/utils';
+import { WindowsButton } from "@/components/franky-ui-kit/Button";
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
 
-import ThemeInstaller from './ThemeInstaller';
-import styles from './ThemeManager.module.css';
+import InstallLocalTheme from "./InstallLocalTheme";
+import ThemeInstaller from "./ThemeInstaller";
+import styles from "./ThemeManager.module.css";
 
 const ThemeManager: React.FC = () => {
   const {
@@ -112,13 +113,11 @@ const ThemeManager: React.FC = () => {
           </WindowsButton>
         </div>
       </div>
-
       {error && (
         <div className="bg-red-100 text-red-800 p-2 rounded mb-4 text-sm">
           {error}
         </div>
       )}
-
       {builtInThemes.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Built-in Themes</h3>
@@ -161,7 +160,6 @@ const ThemeManager: React.FC = () => {
           </div>
         </div>
       )}
-
       {externalThemes.length > 0 && (
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Installed Themes</h3>
@@ -236,8 +234,7 @@ const ThemeManager: React.FC = () => {
             ))}
           </div>
         </div>
-      )}
-
+      )}{" "}
       {externalThemes.length === 0 && (
         <div className="border rounded-md p-4 mb-4">
           <p className="text-sm text-gray-500">
@@ -246,7 +243,8 @@ const ThemeManager: React.FC = () => {
           </p>
         </div>
       )}
-
+      {/* Add our new component for installing local themes */}
+      <InstallLocalTheme />
       {isUninstallDialogOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg shadow-lg max-w-md w-full">
@@ -284,7 +282,6 @@ const ThemeManager: React.FC = () => {
           </div>
         </div>
       )}
-
       {isInstallerOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <ThemeInstaller onCancel={() => setIsInstallerOpen(false)} />

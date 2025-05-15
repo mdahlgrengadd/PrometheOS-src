@@ -3,128 +3,194 @@
  * This decorator adds Windows 95 specific styling and behavior to windows
  */
 
-class Win95Decorator {
-  constructor(windowManager) {
-    this.windowManager = windowManager;
-  }
+// Import React from CDN for use in decorator modules
+import React from "https://esm.sh/react@18.2.0";
 
-  /**
-   * Apply Windows 95 specific decorations to a window
-   * @param {HTMLElement} windowElement - The window DOM element
-   * @param {Object} windowConfig - Window configuration
-   */
-  decorateWindow(windowElement, windowConfig) {
-    // Add Win95 class
-    windowElement.classList.add("win95-window");
+/**
+ * Preload the Win95 theme CSS
+ * @param {string} previousTheme - The previous theme's name (optional)
+ * @returns {Promise<boolean>} Resolves true if loaded, false if error
+ */
+export async function preload(previousTheme) {
+  // Remove any existing theme CSS
+  document.getElementById("win95-theme-css")?.remove();
 
-    // Get header and controls
-    const header = windowElement.querySelector(".window-header");
-    const controls = windowElement.querySelector(".window-controls");
+  // Create and append the Win95 CSS
+  const link = document.createElement("link");
+  link.id = "win95-theme-css";
+  link.rel = "stylesheet";
+  link.href = "/themes/win95/win95.css";
 
-    // Clear existing controls
-    if (controls) {
-      controls.innerHTML = "";
-
-      // Create Windows 95 style buttons
-      if (windowConfig.minimizable !== false) {
-        const minimizeBtn = this.createButton("minimize", "_");
-        controls.appendChild(minimizeBtn);
-      }
-
-      if (windowConfig.maximizable !== false) {
-        const maximizeBtn = this.createButton("maximize", "□");
-        controls.appendChild(maximizeBtn);
-      }
-
-      if (windowConfig.closable !== false) {
-        const closeBtn = this.createButton("close", "X");
-        controls.appendChild(closeBtn);
-      }
-    }
-
-    // Add window icon if specified
-    if (windowConfig.icon && header) {
-      const iconElement = document.createElement("div");
-      iconElement.className = "window-icon";
-      iconElement.style.backgroundImage = `url(${windowConfig.icon})`;
-      iconElement.style.width = "16px";
-      iconElement.style.height = "16px";
-      iconElement.style.marginRight = "4px";
-
-      const title = header.querySelector(".window-title");
-      if (title) {
-        header.insertBefore(iconElement, title);
-      }
-    }
-
-    return windowElement;
-  }
-
-  /**
-   * Create a Windows 95 style button
-   * @param {string} action - Button action (minimize, maximize, close)
-   * @param {string} label - Button label
-   * @returns {HTMLElement}
-   */
-  createButton(action, label) {
-    const button = document.createElement("button");
-    button.className = `window-button window-${action}`;
-    button.dataset.action = action;
-    button.innerHTML = label;
-    button.style.fontFamily = "Arial";
-    button.style.fontSize = "9px";
-    button.style.fontWeight = "bold";
-    button.style.lineHeight = "14px";
-    button.style.textAlign = "center";
-    button.style.cursor = "pointer";
-
-    return button;
-  }
-
-  /**
-   * Decorate the taskbar with Windows 95 styling
-   * @param {HTMLElement} taskbarElement - The taskbar DOM element
-   */
-  decorateTaskbar(taskbarElement) {
-    taskbarElement.classList.add("win95-taskbar");
-
-    // Create Start Button
-    const startButton = document.createElement("button");
-    startButton.className = "win95-start-button";
-    startButton.innerHTML =
-      '<img src="/themes/win95/start-icon.png" style="width: 16px; height: 16px; margin-right: 4px;">Start';
-
-    // Insert at beginning of taskbar
-    if (taskbarElement.firstChild) {
-      taskbarElement.insertBefore(startButton, taskbarElement.firstChild);
-    } else {
-      taskbarElement.appendChild(startButton);
-    }
-  }
-
-  /**
-   * Create desktop icon in Windows 95 style
-   * @param {Object} iconConfig - Icon configuration
-   * @returns {HTMLElement}
-   */
-  createDesktopIcon(iconConfig) {
-    const iconElement = document.createElement("div");
-    iconElement.className = "win95-desktop-icon";
-
-    const iconImage = document.createElement("div");
-    iconImage.className = "icon-image";
-    iconImage.style.backgroundImage = `url(${iconConfig.icon})`;
-
-    const iconLabel = document.createElement("div");
-    iconLabel.className = "icon-label";
-    iconLabel.textContent = iconConfig.label;
-
-    iconElement.appendChild(iconImage);
-    iconElement.appendChild(iconLabel);
-
-    return iconElement;
-  }
+  return new Promise((resolve) => {
+    link.onload = () => {
+      console.log("Win95 theme CSS loaded");
+      resolve(true);
+    };
+    link.onerror = () => {
+      console.error("Failed to load Win95 theme CSS");
+      resolve(false);
+    };
+    document.head.appendChild(link);
+  });
 }
 
-// Export as ES Module
+/**
+ * Post-load adjustments for Win95 theme
+ * Applies additional styling after the theme is loaded
+ */
+export function postload() {
+  console.log("Win95 theme post-load");
+  // Add any post-load adjustments if needed
+}
+
+/**
+ * Cleanup function - called when switching away from the theme
+ * Removes all injected CSS and style elements
+ */
+export function cleanup() {
+  console.log("Win95 cleanup called");
+  document.getElementById("win95-theme-css")?.remove();
+}
+
+/**
+ * Win95Controls - Renders Windows 95 style window control buttons
+ * @param {Object} props - Button handlers
+ */
+function Win95Controls({ onMinimize, onMaximize, onClose }) {
+  return React.createElement(
+    "div",
+    { className: "window-controls" },
+    // Minimize button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-minimize",
+        onClick: onMinimize,
+        "aria-label": "Minimize",
+        style: {
+          backgroundColor: "var(--wm-btn-minimize-bg)",
+          width: "16px",
+          height: "14px",
+          margin: "0 1px",
+          border: "1px solid #000",
+          fontFamily: "Arial",
+          fontSize: "9px",
+          fontWeight: "bold",
+          lineHeight: "14px",
+          textAlign: "center",
+          boxShadow:
+            "inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf",
+          cursor: "pointer",
+        },
+      },
+      "_"
+    ),
+    // Maximize button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-maximize",
+        onClick: onMaximize,
+        "aria-label": "Maximize",
+        style: {
+          backgroundColor: "var(--wm-btn-maximize-bg)",
+          width: "16px",
+          height: "14px",
+          margin: "0 1px",
+          border: "1px solid #000",
+          fontFamily: "Arial",
+          fontSize: "9px",
+          fontWeight: "bold",
+          lineHeight: "14px",
+          textAlign: "center",
+          boxShadow:
+            "inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf",
+          cursor: "pointer",
+        },
+      },
+      "□"
+    ),
+    // Close button
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-close",
+        onClick: onClose,
+        "aria-label": "Close",
+        style: {
+          backgroundColor: "var(--wm-btn-close-bg)",
+          width: "16px",
+          height: "14px",
+          margin: "0 1px",
+          border: "1px solid #000",
+          fontFamily: "Arial",
+          fontSize: "9px",
+          fontWeight: "bold",
+          lineHeight: "14px",
+          textAlign: "center",
+          boxShadow:
+            "inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey, inset 2px 2px #dfdfdf",
+          cursor: "pointer",
+        },
+      },
+      "X"
+    )
+  );
+}
+
+/**
+ * Win95Header - Renders the Windows 95 style window title bar with controls
+ * @param {Object} props - Title, handlers, and headerRef for drag
+ */
+function Win95Header({
+  title,
+  onMinimize,
+  onMaximize,
+  onClose,
+  headerRef,
+  icon,
+}) {
+  return React.createElement(
+    "div",
+    {
+      ref: headerRef,
+      className: "window-header win95-header",
+      style: {
+        cursor: "move",
+        backgroundColor: "var(--window-header-background)",
+        color: "var(--window-header-text)",
+        height: "var(--wm-header-height)",
+        display: "flex",
+        alignItems: "center",
+        padding: "0 4px",
+        fontWeight: "bold",
+      },
+    },
+    // Window icon if provided
+    icon &&
+      React.createElement("div", {
+        className: "window-icon",
+        style: {
+          backgroundImage: `url(${icon})`,
+          width: "16px",
+          height: "16px",
+          marginRight: "4px",
+        },
+      }),
+    React.createElement("div", { className: "window-title" }, title),
+    React.createElement(Win95Controls, { onMinimize, onMaximize, onClose })
+  );
+}
+
+// Create the main decorator object
+const Win95Decorator = {
+  preload, // Called before theme is applied
+  postload, // Called after theme is applied
+  cleanup, // Called when theme is removed
+  Header: Win95Header, // React component for window title bar
+  Controls: Win95Controls, // React component for window controls
+  borderRadius: 0, // Window border radius (px)
+};
+
+// Export as ESM only
 export default Win95Decorator;

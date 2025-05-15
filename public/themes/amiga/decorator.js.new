@@ -61,50 +61,59 @@ function AmigaControls({ onMinimize, onMaximize, onClose }) {
     "div",
     { className: "window-controls" },
     // Close button
-    React.createElement("button", {
-      className: "window-control window-close",
-      onClick: onClose,
-      "aria-label": "Close",
-      style: {
-        backgroundColor: "var(--wm-btn-close-bg)",
-        width: "14px",
-        height: "14px",
-        margin: "0 2px",
-        border: "1px solid #000",
-        borderRadius: "7px",
-        padding: "0",
-      },
-    }),
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-close",
+        onClick: onClose,
+        "aria-label": "Close",
+        style: { 
+          backgroundColor: "var(--wm-btn-close-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    ),
     // Maximize button
-    React.createElement("button", {
-      className: "window-control window-maximize",
-      onClick: onMaximize,
-      "aria-label": "Maximize",
-      style: {
-        backgroundColor: "var(--wm-btn-maximize-bg)",
-        width: "14px",
-        height: "14px",
-        margin: "0 2px",
-        border: "1px solid #000",
-        borderRadius: "7px",
-        padding: "0",
-      },
-    }),
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-maximize",
+        onClick: onMaximize,
+        "aria-label": "Maximize",
+        style: { 
+          backgroundColor: "var(--wm-btn-maximize-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    ),
     // Minimize button
-    React.createElement("button", {
-      className: "window-control window-minimize",
-      onClick: onMinimize,
-      "aria-label": "Minimize",
-      style: {
-        backgroundColor: "var(--wm-btn-minimize-bg)",
-        width: "14px",
-        height: "14px",
-        margin: "0 2px",
-        border: "1px solid #000",
-        borderRadius: "7px",
-        padding: "0",
-      },
-    })
+    React.createElement(
+      "button",
+      {
+        className: "window-control window-minimize",
+        onClick: onMinimize,
+        "aria-label": "Minimize",
+        style: { 
+          backgroundColor: "var(--wm-btn-minimize-bg)", 
+          width: "14px",
+          height: "14px",
+          margin: "0 2px",
+          border: "1px solid #000",
+          borderRadius: "7px",
+          padding: "0"
+        }
+      }
+    )
   );
 }
 
@@ -112,14 +121,7 @@ function AmigaControls({ onMinimize, onMaximize, onClose }) {
  * AmigaHeader - Renders the Amiga Workbench style window title bar with controls
  * @param {Object} props - Title, handlers, and headerRef for drag
  */
-function AmigaHeader({
-  title,
-  onMinimize,
-  onMaximize,
-  onClose,
-  headerRef,
-  icon,
-}) {
+function AmigaHeader({ title, onMinimize, onMaximize, onClose, headerRef, icon }) {
   return React.createElement(
     "div",
     {
@@ -135,21 +137,23 @@ function AmigaHeader({
         padding: "0 4px",
         fontWeight: "bold",
         textTransform: "uppercase",
-        fontSize: "11px",
-      },
+        fontSize: "11px"
+      }
     },
     // Window icon if provided (depth gadget)
-    icon &&
-      React.createElement("div", {
+    icon && React.createElement(
+      "div", 
+      {
         className: "window-depth-gadget",
         style: {
           backgroundImage: `url(${icon})`,
           width: "16px",
           height: "16px",
           marginRight: "4px",
-          cursor: "pointer",
-        },
-      }),
+          cursor: "pointer"
+        }
+      }
+    ),
     React.createElement("div", { className: "window-title" }, title),
     React.createElement(AmigaControls, { onMinimize, onMaximize, onClose })
   );
