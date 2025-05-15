@@ -1,6 +1,6 @@
-import * as Comlink from "comlink";
+import * as Comlink from 'comlink';
 
-import { PluginManifest } from "./types";
+import { PluginManifest } from './types';
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
@@ -112,7 +112,6 @@ class WorkerPluginManagerClient {
     if (!this.isConnected) await this.connect();
     return this.workerApi.callPlugin(pluginId, method, params);
   }
-
   /**
    * Helper method specifically for the calculator
    */
@@ -132,6 +131,74 @@ class WorkerPluginManagerClient {
     }
 
     throw new Error("Calculator returned non-numeric result");
+  }
+
+  /**
+   * Helper method to load a WebLLM model
+   */
+  async loadModel(
+    modelName: string
+  ): Promise<{ status: string; message?: string }> {
+    const result = await this.callPlugin("webllm", "loadModel", { modelName });
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("WebLLM loadModel returned invalid result");
+  }
+
+  /**
+   * Helper method to get WebLLM progress
+   */
+  async getModelProgress(): Promise<{ text: string; progress: number }> {
+    const result = await this.callPlugin("webllm", "getProgress");
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "text" in result &&
+      "progress" in result
+    ) {
+      return result as { text: string; progress: number };
+    }
+
+    return { text: "", progress: 0 };
+  }
+
+  /**
+   * Helper method to chat with WebLLM
+   * Returns a ReadableStream that can be consumed in the UI
+   */
+  async chat(
+    messages: { role: string; content: string }[],
+    temperature: number = 0.7
+  ): Promise<ReadableStream<string>> {
+    // Call the worker and get the response
+    const result = await this.callPlugin("webllm", "chat", {
+      messages,
+      temperature,
+    });
+
+    // If result is an error object
+    if (typeof result === "object" && result !== null && "error" in result) {
+      throw new Error(String(result.error));
+    }
+
+    // The worker transfers the ReadableStream, so it should be usable directly
+    if (result instanceof ReadableStream) {
+      return result;
+    }
+
+    // In case it's not a ReadableStream for some reason, throw an error
+    throw new Error("WebLLM chat did not return a ReadableStream");
+  }
+
+  /**
+   * Clean up WebLLM resources
+   */
+  async cleanupWebLLM(): Promise<void> {
+    await this.callPlugin("webllm", "cleanup");
   }
 
   /**
