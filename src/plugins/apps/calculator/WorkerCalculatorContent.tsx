@@ -22,8 +22,8 @@ const WorkerCalculatorContent: React.FC = () => {
         if (!isRegistered) {
           // Get the correct worker path based on environment
           const workerPath = import.meta.env.PROD
-            ? "/workers/calculator-worker.js" // Production path (without 'public')
-            : "/worker/plugins/calculator.js"; // Development path
+            ? "/workers/calculator-worker.js" // Production path
+            : "/workers/calculator-worker.js"; // Development path
 
           // Register the calculator plugin with its worker URL
           const success = await workerPluginManager.registerPlugin(

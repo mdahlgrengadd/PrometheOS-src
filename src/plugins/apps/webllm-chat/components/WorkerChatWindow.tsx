@@ -46,8 +46,8 @@ const WorkerChatWindow: React.FC = () => {
         if (!isRegistered) {
           // Get the correct worker path based on environment
           const workerPath = import.meta.env.PROD
-            ? "/workers/webllm-worker.js" // Production path (without 'public')
-            : "/worker/plugins/webllm.js"; // Development path
+            ? "/workers/webllm-worker.js" // Production path
+            : "/workers/webllm-worker.js"; // Development path
 
           // Register the webllm plugin with its worker URL
           const success = await workerPluginManager.registerPlugin(
