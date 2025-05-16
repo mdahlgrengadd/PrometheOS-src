@@ -42,10 +42,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
                 : "bg-card text-foreground"
             }`}
           >
-            <div className="text-xs font-semibold mb-1">
+            <div className="text-xs font-semibold mb-1 text-left">
               {message.role === "user" ? "You" : "AI Assistant"}
             </div>
-            <div className="whitespace-pre-wrap">
+            <div className="whitespace-pre-wrap text-left">
               {message.content ||
                 (message.role === "assistant" && (
                   <span className="animate-pulse">▋</span>

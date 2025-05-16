@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { Plugin, PluginManifest } from '../../types';
-import ChatWindow from './components/ChatWindow';
+import { Plugin, PluginManifest } from "../../types";
+import WorkerChatWindow from "./components/WorkerChatWindow";
 
+// Create manifest for the plugin
 export const manifest: PluginManifest = {
   id: "webllm-chat",
   name: "AI Chat",
   version: "1.0.0",
-  description: "AI chat powered by WebLLM",
+  description: "AI chat powered by WebLLM in a Web Worker",
   author: "Desktop System",
   icon: (
     <svg
@@ -39,14 +40,15 @@ export const manifest: PluginManifest = {
   },
 };
 
+// Create the plugin
 const WebLLMChatPlugin: Plugin = {
   id: manifest.id,
   manifest,
   init: async () => {
-    console.log("WebLLM Chat plugin initialized");
+    console.log("Worker WebLLM Chat plugin initialized");
   },
   render: () => {
-    return <ChatWindow />;
+    return <WorkerChatWindow />;
   },
 };
 
