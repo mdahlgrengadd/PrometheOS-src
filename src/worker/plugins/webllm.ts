@@ -5,6 +5,8 @@
 
 import * as webllm from '@mlc-ai/web-llm';
 
+import { WorkerPlugin } from './calculator';
+
 // Interface for progress updates
 export interface ProgressUpdate {
   text: string;
@@ -17,40 +19,40 @@ export interface Message {
   content: string;
 }
 
-// Define type for WebLLM worker plugin
-export interface WorkerWebLLMType {
-  id: string;
-  loadModel(modelName: string): Promise<{ status: string; message?: string }>;
-  chat(messages: Message[], temperature: number): ReadableStream<string>;
-  getProgress(): ProgressUpdate | null;
-  cleanup(): void;
-}
+/**
+ * WebLLM plugin implementation for worker
+ */
+const WorkerWebLLM: WorkerPlugin = {
+  id: "webllm",
 
-// Implementation of WebLLM plugin for worker
-export class WorkerWebLLM implements WorkerWebLLMType {
-  id = "webllm";
-  private engine: webllm.MLCEngine | null = null;
-  private currentModel: string | null = null;
-  private progress: ProgressUpdate | null = null;
+  // Private state
+  _engine: null as webllm.MLCEngine | null,
+  _currentModel: null as string | null,
+  _progress: null as ProgressUpdate | null,
 
-  // Load a model with progress updates
+  /**
+   * Load a model with progress updates
+   */
   async loadModel(
     modelName: string
   ): Promise<{ status: string; message?: string }> {
     try {
       // Clean up existing engine if needed
-      if (this.engine) {
+      if (this._engine) {
         // Clean up old engine resources if any
         this.cleanup();
       }
 
-      this.currentModel = modelName;
-      this.progress = { text: "Starting model initialization...", progress: 0 };
+      this._currentModel = modelName;
+      this._progress = {
+        text: "Starting model initialization...",
+        progress: 0,
+      };
 
       // Initialize engine with progress callback
-      this.engine = await webllm.CreateMLCEngine(modelName, {
+      this._engine = await webllm.CreateMLCEngine(modelName, {
         initProgressCallback: (progress) => {
-          this.progress = {
+          this._progress = {
             text: progress.text || "Initializing...",
             progress: progress.progress,
           };
@@ -66,16 +68,20 @@ export class WorkerWebLLM implements WorkerWebLLMType {
         message,
       };
     }
-  }
+  },
 
-  // Get current progress
+  /**
+   * Get current progress
+   */
   getProgress(): ProgressUpdate | null {
-    return this.progress;
-  }
+    return this._progress;
+  },
 
-  // Chat with the model, returning a ReadableStream of response chunks
+  /**
+   * Chat with the model, returning a ReadableStream of response chunks
+   */
   chat(messages: Message[], temperature: number = 0.7): ReadableStream<string> {
-    const engine = this.engine;
+    const engine = this._engine;
 
     return new ReadableStream<string>({
       async start(controller) {
@@ -112,15 +118,54 @@ export class WorkerWebLLM implements WorkerWebLLMType {
         }
       },
     });
-  }
+  },
 
-  // Clean up resources
+  /**
+   * Clean up resources
+   */
   cleanup(): void {
-    this.engine = null;
-    this.currentModel = null;
-    this.progress = null;
-  }
-}
+    this._engine = null;
+    this._currentModel = null;
+    this._progress = null;
+  },
 
-// Export a singleton instance
-export const WorkerWebLLMInstance = new WorkerWebLLM();
+  /**
+   * Generic handler function that processes method calls with parameters
+   */
+  handle(method: string, params?: Record<string, unknown>): unknown {
+    switch (method) {
+      case "loadModel": {
+        if (!params || typeof params.modelName !== "string") {
+          return { error: "Invalid parameters for loadModel" };
+        }
+        return this.loadModel(params.modelName);
+      }
+
+      case "getProgress": {
+        return this.getProgress();
+      }
+
+      case "chat": {
+        if (!params || !Array.isArray(params.messages)) {
+          return { error: "Invalid parameters for chat" };
+        }
+
+        const temperature =
+          typeof params.temperature === "number" ? params.temperature : 0.7;
+
+        return this.chat(params.messages as Message[], temperature);
+      }
+
+      case "cleanup": {
+        this.cleanup();
+        return { status: "success" };
+      }
+
+      default:
+        return { error: `Method ${method} not supported for webllm` };
+    }
+  },
+};
+
+// Export the webllm plugin instance as default
+export default WorkerWebLLM;

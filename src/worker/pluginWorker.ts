@@ -68,159 +68,51 @@ class WorkerPluginManager {
       const importUrl = new URL(resolvedUrl, self.location.origin).href;
       console.log(`Resolved import URL: ${importUrl}`);
 
-      try {
-        // Try dynamic import with the resolved URL
-        const pluginModule = await import(/* @vite-ignore */ importUrl);
+      // Try dynamic import with the resolved URL
+      const pluginModule = await import(/* @vite-ignore */ importUrl);
 
-        // Get the plugin instance
-        const plugin = pluginModule.default || pluginModule;
+      // Get the plugin instance
+      const plugin = pluginModule.default || pluginModule;
 
-        if (!plugin || !plugin.id) {
-          return { error: `Invalid plugin module: ${importUrl}` };
-        }
-
-        // Register the plugin
-        this.plugins.set(pluginId, plugin as WorkerPlugin);
-
-        // Register the handler function
-        if (typeof plugin.handle === "function") {
-          // Create a wrapper function to maintain proper typing
-          const handlerFn: PluginMethodHandler = async (method, params) => {
-            return (
-              (plugin as WorkerPlugin).handle?.(method, params) ?? {
-                error: `Handler returned undefined`,
-              }
-            );
-          };
-
-          this.pluginHandlers.set(pluginId, handlerFn);
-        } else {
-          // Create a default handler that calls methods directly on the plugin
-          this.pluginHandlers.set(pluginId, async (method, params) => {
-            const typedPlugin = plugin as WorkerPlugin;
-            const methodFn = typedPlugin[method];
-
-            if (typeof methodFn !== "function") {
-              throw new Error(
-                `Method ${method} not found in plugin ${pluginId}`
-              );
-            }
-
-            // Since we can't type this better without generics, we need to cast
-            return (methodFn as (...args: unknown[]) => unknown)(
-              ...(params ? Object.values(params) : [])
-            );
-          });
-        }
-
-        console.log(`Worker registered plugin: ${pluginId}`);
-
-        return { status: "success", message: `Plugin ${pluginId} registered` };
-      } catch (importError) {
-        console.error(
-          `Failed to import plugin from ${importUrl}:`,
-          importError
-        );
-
-        // As a fallback, try to directly use a module that might be available in a specific location
-        if (pluginId === "calculator") {
-          try {
-            // For calculator, try to create a simplified plugin directly
-            const calculatorPlugin: WorkerPlugin = {
-              id: "calculator",
-              calculate(
-                firstOperand: number,
-                secondOperand: number,
-                operator: string
-              ): number {
-                console.log(
-                  `Direct calculator: ${firstOperand} ${operator} ${secondOperand}`
-                );
-                let result: number;
-
-                switch (operator) {
-                  case "+":
-                    result = firstOperand + secondOperand;
-                    break;
-                  case "-":
-                    result = firstOperand - secondOperand;
-                    break;
-                  case "*":
-                    result = firstOperand * secondOperand;
-                    break;
-                  case "/":
-                    result = firstOperand / secondOperand;
-                    break;
-                  default:
-                    result = secondOperand;
-                }
-
-                console.log(`Direct result: ${result}`);
-                return result;
-              },
-              handle(
-                method: string,
-                params?: Record<string, unknown>
-              ): unknown {
-                if (method === "calculate") {
-                  if (!params)
-                    return { error: "Missing parameters for calculator" };
-
-                  if (
-                    typeof params.firstOperand !== "number" ||
-                    typeof params.secondOperand !== "number" ||
-                    typeof params.operator !== "string"
-                  ) {
-                    return { error: "Invalid parameters for calculator" };
-                  }
-
-                  return this.calculate(
-                    params.firstOperand as number,
-                    params.secondOperand as number,
-                    params.operator as string
-                  );
-                }
-
-                return {
-                  error: `Method ${method} not supported for calculator`,
-                };
-              },
-            };
-
-            this.plugins.set(pluginId, calculatorPlugin);
-
-            // Create a handler function that's properly typed
-            const handlerFn: PluginMethodHandler = async (method, params) => {
-              return calculatorPlugin.handle(method, params);
-            };
-
-            this.pluginHandlers.set(pluginId, handlerFn);
-
-            console.log(`Worker registered fallback calculator plugin`);
-            return {
-              status: "success",
-              message: `Plugin ${pluginId} registered (fallback)`,
-            };
-          } catch (fallbackError) {
-            console.error(`Fallback registration failed:`, fallbackError);
-            return {
-              error: `Failed to register plugin ${pluginId}: ${
-                importError instanceof Error
-                  ? importError.message
-                  : String(importError)
-              }`,
-            };
-          }
-        }
-
-        return {
-          error: `Failed to register plugin ${pluginId}: ${
-            importError instanceof Error
-              ? importError.message
-              : String(importError)
-          }`,
-        };
+      if (!plugin || !plugin.id) {
+        return { error: `Invalid plugin module: ${importUrl}` };
       }
+
+      // Register the plugin
+      this.plugins.set(pluginId, plugin as WorkerPlugin);
+
+      // Register the handler function
+      if (typeof plugin.handle === "function") {
+        // Create a wrapper function to maintain proper typing
+        const handlerFn: PluginMethodHandler = async (method, params) => {
+          return (
+            (plugin as WorkerPlugin).handle?.(method, params) ?? {
+              error: `Handler returned undefined`,
+            }
+          );
+        };
+
+        this.pluginHandlers.set(pluginId, handlerFn);
+      } else {
+        // Create a default handler that calls methods directly on the plugin
+        this.pluginHandlers.set(pluginId, async (method, params) => {
+          const typedPlugin = plugin as WorkerPlugin;
+          const methodFn = typedPlugin[method];
+
+          if (typeof methodFn !== "function") {
+            throw new Error(`Method ${method} not found in plugin ${pluginId}`);
+          }
+
+          // Since we can't type this better without generics, we need to cast
+          return (methodFn as (...args: unknown[]) => unknown)(
+            ...(params ? Object.values(params) : [])
+          );
+        });
+      }
+
+      console.log(`Worker registered plugin: ${pluginId}`);
+
+      return { status: "success", message: `Plugin ${pluginId} registered` };
     } catch (error) {
       console.error(`Failed to register plugin ${pluginId}:`, error);
       return {

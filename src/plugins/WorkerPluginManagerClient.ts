@@ -188,7 +188,12 @@ class WorkerPluginManagerClient {
   ): Promise<number> {
     // Make sure calculator plugin is registered
     if (!this.registeredPlugins.has("calculator")) {
-      await this.registerPlugin("calculator", "/worker/plugins/calculator.js");
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? "/workers/calculator-worker.js" // Production path
+        : "/worker/plugins/calculator.js"; // Development path
+
+      await this.registerPlugin("calculator", workerPath);
     }
 
     const result = await this.callPlugin("calculator", "calculate", {
@@ -210,6 +215,16 @@ class WorkerPluginManagerClient {
   async loadModel(
     modelName: string
   ): Promise<{ status: string; message?: string }> {
+    // Make sure webllm plugin is registered
+    if (!this.registeredPlugins.has("webllm")) {
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? "/workers/webllm-worker.js" // Production path
+        : "/worker/plugins/webllm.js"; // Development path
+
+      await this.registerPlugin("webllm", workerPath);
+    }
+
     const result = await this.callPlugin("webllm", "loadModel", { modelName });
 
     if (typeof result === "object" && result !== null && "status" in result) {
@@ -222,8 +237,22 @@ class WorkerPluginManagerClient {
   /**
    * Helper method to get WebLLM progress
    */
-  async getModelProgress(): Promise<{ text: string; progress: number }> {
+  async getModelProgress(): Promise<{ text: string; progress: number } | null> {
+    // Make sure webllm plugin is registered
+    if (!this.registeredPlugins.has("webllm")) {
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? "/workers/webllm-worker.js" // Production path
+        : "/worker/plugins/webllm.js"; // Development path
+
+      await this.registerPlugin("webllm", workerPath);
+    }
+
     const result = await this.callPlugin("webllm", "getProgress");
+
+    if (result === null) {
+      return null;
+    }
 
     if (
       typeof result === "object" &&
@@ -245,6 +274,16 @@ class WorkerPluginManagerClient {
     messages: { role: string; content: string }[],
     temperature: number = 0.7
   ): Promise<ReadableStream<string>> {
+    // Make sure webllm plugin is registered
+    if (!this.registeredPlugins.has("webllm")) {
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? "/workers/webllm-worker.js" // Production path
+        : "/worker/plugins/webllm.js"; // Development path
+
+      await this.registerPlugin("webllm", workerPath);
+    }
+
     // Call the worker and get the response
     const result = await this.callPlugin("webllm", "chat", {
       messages,
@@ -269,6 +308,9 @@ class WorkerPluginManagerClient {
    * Clean up WebLLM resources
    */
   async cleanupWebLLM(): Promise<void> {
+    if (!this.registeredPlugins.has("webllm")) {
+      return; // No need to clean up if not registered
+    }
     await this.callPlugin("webllm", "cleanup");
   }
 

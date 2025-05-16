@@ -15,7 +15,6 @@ interface Message {
 const AVAILABLE_MODELS = [
   "Llama-3.1-8B-Instruct-q4f32_1-MLC",
   "Phi-3-mini-4k-instruct-q4f32_1-MLC",
-
   "Gemma-2B-it-q4f32_1-MLC",
   "Mistral-7B-v0.3-q4f32_1-MLC",
 ];
@@ -33,9 +32,58 @@ const WorkerChatWindow: React.FC = () => {
   const [isModelLoaded, setIsModelLoaded] = useState<boolean>(false);
   const [progressInterval, setProgressInterval] =
     useState<NodeJS.Timeout | null>(null);
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
 
-  // Initialize model
+  // Register the WebLLM worker plugin
   useEffect(() => {
+    const initWebLLM = async () => {
+      try {
+        // Check if webllm is already registered
+        const isRegistered = await workerPluginManager.isPluginRegistered(
+          "webllm"
+        );
+
+        if (!isRegistered) {
+          // Get the correct worker path based on environment
+          const workerPath = import.meta.env.PROD
+            ? "/workers/webllm-worker.js" // Production path (without 'public')
+            : "/worker/plugins/webllm.js"; // Development path
+
+          // Register the webllm plugin with its worker URL
+          const success = await workerPluginManager.registerPlugin(
+            "webllm",
+            workerPath
+          );
+
+          if (success) {
+            setIsWorkerReady(true);
+            console.log("WebLLM worker registered successfully");
+          } else {
+            console.error("Failed to register WebLLM worker");
+          }
+        } else {
+          setIsWorkerReady(true);
+          console.log("WebLLM worker already registered");
+        }
+      } catch (error) {
+        console.error("Error initializing WebLLM worker:", error);
+      }
+    };
+
+    initWebLLM();
+
+    // Clean up when component unmounts
+    return () => {
+      // We don't unregister here since other instances might use it
+    };
+  }, []);
+
+  // Initialize model once worker is ready
+  useEffect(() => {
+    if (!isWorkerReady) {
+      return; // Wait until worker is registered
+    }
+
     const initModel = async () => {
       try {
         setIsLoading(true);
@@ -91,8 +139,10 @@ const WorkerChatWindow: React.FC = () => {
       }
     };
 
-    // Initialize model when component mounts or model changes
-    initModel();
+    // Initialize model when worker is ready or model changes
+    if (isWorkerReady) {
+      initModel();
+    }
 
     // Cleanup function
     return () => {
@@ -102,11 +152,13 @@ const WorkerChatWindow: React.FC = () => {
       }
 
       // Clean up model resources in worker
-      workerPluginManager.cleanupWebLLM().catch((err) => {
-        console.error("Error cleaning up WebLLM:", err);
-      });
+      if (isWorkerReady) {
+        workerPluginManager.cleanupWebLLM().catch((err) => {
+          console.error("Error cleaning up WebLLM:", err);
+        });
+      }
     };
-  }, [selectedModel]);
+  }, [selectedModel, isWorkerReady]);
 
   // Handle model change
   const handleModelChange = (model: string) => {
@@ -115,7 +167,7 @@ const WorkerChatWindow: React.FC = () => {
 
   // Handle sending a new message
   const handleSendMessage = async (content: string) => {
-    if (!content.trim() || !isModelLoaded) return;
+    if (!content.trim() || !isModelLoaded || !isWorkerReady) return;
 
     // Add user message to chat
     const userMessage: Message = { role: "user", content };
@@ -187,11 +239,18 @@ const WorkerChatWindow: React.FC = () => {
           models={AVAILABLE_MODELS}
           selectedModel={selectedModel}
           onSelectModel={handleModelChange}
-          disabled={isLoading || isTyping}
+          disabled={isLoading || isTyping || !isWorkerReady}
         />
       </div>
 
-      {isLoading ? (
+      {!isWorkerReady ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+            <p>Initializing WebLLM worker...</p>
+          </div>
+        </div>
+      ) : isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
@@ -203,7 +262,7 @@ const WorkerChatWindow: React.FC = () => {
           <MessageList messages={messages} />
           <MessageInput
             onSendMessage={handleSendMessage}
-            disabled={!isModelLoaded || isTyping}
+            disabled={!isModelLoaded || isTyping || !isWorkerReady}
             isTyping={isTyping}
           />
         </>
