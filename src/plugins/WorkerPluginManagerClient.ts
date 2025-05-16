@@ -4,20 +4,23 @@ import { PluginManifest } from './types';
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
-  registerPlugin(plugin: unknown): void;
-  activatePlugin(pluginId: string): Promise<void>;
-  deactivatePlugin(pluginId: string): void;
-  loadPlugins(manifests: PluginManifest[]): Promise<void>;
-  getPluginInfo(
-    pluginId: string
-  ): Promise<{ id: string; manifest: PluginManifest } | null>;
-  isPluginActive(pluginId: string): Promise<boolean>;
-  getAllPlugins(): Promise<Array<{ id: string; manifest: PluginManifest }>>;
+  registerPlugin(pluginId: string, pluginUrl: string): Promise<unknown>;
+  unregisterPlugin(pluginId: string): Promise<unknown>;
+  isPluginRegistered(pluginId: string): Promise<boolean>;
+  getPluginInfo(pluginId: string): Promise<{ id: string } | null>;
+  getAllPlugins(): Promise<Array<{ id: string }>>;
   callPlugin(
     pluginId: string,
     method: string,
     params?: Record<string, unknown>
   ): Promise<unknown>;
+}
+
+// Map plugin manifests to their worker URLs
+interface PluginWorkerInfo {
+  id: string;
+  workerUrl: string;
+  isRegistered: boolean;
 }
 
 /**
@@ -28,6 +31,7 @@ class WorkerPluginManagerClient {
   private worker: Worker;
   private workerApi: Comlink.Remote<WorkerPluginManager>;
   private isConnected = false;
+  private registeredPlugins: Map<string, PluginWorkerInfo> = new Map();
 
   constructor() {
     // Create the worker with the pluginWorker.ts file
@@ -48,7 +52,7 @@ class WorkerPluginManagerClient {
 
     try {
       // Make a simple call to check if the worker is responsive
-      await this.workerApi.isPluginActive("calculator");
+      await this.workerApi.getAllPlugins();
       this.isConnected = true;
       console.log("Worker connection established");
     } catch (error) {
@@ -58,35 +62,80 @@ class WorkerPluginManagerClient {
   }
 
   /**
-   * Activate a plugin in the worker
+   * Register a plugin with the worker
    */
-  async activatePlugin(pluginId: string): Promise<void> {
+  async registerPlugin(pluginId: string, pluginUrl: string): Promise<boolean> {
     if (!this.isConnected) await this.connect();
-    return this.workerApi.activatePlugin(pluginId);
+
+    try {
+      const result = await this.workerApi.registerPlugin(pluginId, pluginUrl);
+
+      if (
+        result &&
+        typeof result === "object" &&
+        "status" in result &&
+        result.status === "success"
+      ) {
+        this.registeredPlugins.set(pluginId, {
+          id: pluginId,
+          workerUrl: pluginUrl,
+          isRegistered: true,
+        });
+        return true;
+      }
+
+      console.error("Failed to register plugin:", result);
+      return false;
+    } catch (error) {
+      console.error(`Error registering plugin ${pluginId}:`, error);
+      return false;
+    }
   }
 
   /**
-   * Deactivate a plugin in the worker
+   * Unregister a plugin from the worker
    */
-  async deactivatePlugin(pluginId: string): Promise<void> {
+  async unregisterPlugin(pluginId: string): Promise<boolean> {
     if (!this.isConnected) await this.connect();
-    return this.workerApi.deactivatePlugin(pluginId);
+
+    try {
+      const result = await this.workerApi.unregisterPlugin(pluginId);
+
+      if (
+        result &&
+        typeof result === "object" &&
+        "status" in result &&
+        result.status === "success"
+      ) {
+        if (this.registeredPlugins.has(pluginId)) {
+          const pluginInfo = this.registeredPlugins.get(pluginId)!;
+          this.registeredPlugins.set(pluginId, {
+            ...pluginInfo,
+            isRegistered: false,
+          });
+        }
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error(`Error unregistering plugin ${pluginId}:`, error);
+      return false;
+    }
   }
 
   /**
-   * Check if a plugin is active
+   * Check if a plugin is registered in the worker
    */
-  async isPluginActive(pluginId: string): Promise<boolean> {
+  async isPluginRegistered(pluginId: string): Promise<boolean> {
     if (!this.isConnected) await this.connect();
-    return this.workerApi.isPluginActive(pluginId);
+    return this.workerApi.isPluginRegistered(pluginId);
   }
 
   /**
    * Get information about a specific plugin
    */
-  async getPluginInfo(
-    pluginId: string
-  ): Promise<{ id: string; manifest: PluginManifest } | null> {
+  async getPluginInfo(pluginId: string): Promise<{ id: string } | null> {
     if (!this.isConnected) await this.connect();
     return this.workerApi.getPluginInfo(pluginId);
   }
@@ -94,9 +143,7 @@ class WorkerPluginManagerClient {
   /**
    * Get all registered plugins
    */
-  async getAllPlugins(): Promise<
-    Array<{ id: string; manifest: PluginManifest }>
-  > {
+  async getAllPlugins(): Promise<Array<{ id: string }>> {
     if (!this.isConnected) await this.connect();
     return this.workerApi.getAllPlugins();
   }
@@ -110,8 +157,27 @@ class WorkerPluginManagerClient {
     params?: Record<string, unknown>
   ): Promise<unknown> {
     if (!this.isConnected) await this.connect();
+
+    // Check if plugin is registered, if not, try to register it
+    const isRegistered = await this.isPluginRegistered(pluginId);
+    if (!isRegistered) {
+      const pluginInfo = this.registeredPlugins.get(pluginId);
+      if (pluginInfo && !pluginInfo.isRegistered) {
+        const success = await this.registerPlugin(
+          pluginId,
+          pluginInfo.workerUrl
+        );
+        if (!success) {
+          throw new Error(`Failed to register plugin ${pluginId}`);
+        }
+      } else {
+        throw new Error(`Plugin ${pluginId} not registered`);
+      }
+    }
+
     return this.workerApi.callPlugin(pluginId, method, params);
   }
+
   /**
    * Helper method specifically for the calculator
    */
@@ -120,6 +186,11 @@ class WorkerPluginManagerClient {
     secondOperand: number,
     operator: string
   ): Promise<number> {
+    // Make sure calculator plugin is registered
+    if (!this.registeredPlugins.has("calculator")) {
+      await this.registerPlugin("calculator", "/worker/plugins/calculator.js");
+    }
+
     const result = await this.callPlugin("calculator", "calculate", {
       firstOperand,
       secondOperand,
@@ -207,6 +278,7 @@ class WorkerPluginManagerClient {
   terminate(): void {
     this.worker.terminate();
     this.isConnected = false;
+    this.registeredPlugins.clear();
   }
 }
 

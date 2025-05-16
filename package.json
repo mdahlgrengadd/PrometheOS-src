@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/build-workers.cjs && tsc && vite build",
     "build:dev": "vite build --mode development",
+    "build:workers": "node scripts/build-workers.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

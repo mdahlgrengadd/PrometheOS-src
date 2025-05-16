@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
 
 const WorkerCalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -8,6 +8,52 @@ const WorkerCalculatorContent: React.FC = () => {
   const [operator, setOperator] = useState<string | null>(null);
   const [waitingForSecondOperand, setWaitingForSecondOperand] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
+
+  useEffect(() => {
+    // Register the calculator plugin when component mounts
+    const initCalculator = async () => {
+      try {
+        // Check if calculator is already registered
+        const isRegistered = await workerPluginManager.isPluginRegistered(
+          "calculator"
+        );
+
+        if (!isRegistered) {
+          // Get the correct worker path based on environment
+          const workerPath = import.meta.env.PROD
+            ? "/workers/calculator-worker.js" // Production path (without 'public')
+            : "/worker/plugins/calculator.js"; // Development path
+
+          // Register the calculator plugin with its worker URL
+          const success = await workerPluginManager.registerPlugin(
+            "calculator",
+            workerPath
+          );
+
+          if (success) {
+            setIsWorkerReady(true);
+            console.log("Calculator worker registered successfully");
+          } else {
+            console.error("Failed to register calculator worker");
+          }
+        } else {
+          setIsWorkerReady(true);
+          console.log("Calculator worker already registered");
+        }
+      } catch (error) {
+        console.error("Error initializing calculator worker:", error);
+      }
+    };
+
+    initCalculator();
+
+    // Clean up when component unmounts
+    return () => {
+      // We don't unregister here since other instances might use it
+      // In a real app, you might want to track reference counts
+    };
+  }, []);
 
   const inputDigit = (digit: string) => {
     if (waitingForSecondOperand) {
@@ -101,6 +147,9 @@ const WorkerCalculatorContent: React.FC = () => {
         {isCalculating && (
           <div className="text-xs text-blue-500">Computing...</div>
         )}
+        {!isWorkerReady && (
+          <div className="text-xs text-amber-500">Initializing worker...</div>
+        )}
       </div>
       <div className="bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
         {display}
@@ -109,18 +158,21 @@ const WorkerCalculatorContent: React.FC = () => {
         <button
           onClick={clearDisplay}
           className="col-span-2 bg-red-500 text-white p-2"
+          disabled={!isWorkerReady}
         >
           AC
         </button>
         <button
           onClick={() => performOperation("/")}
           className="bg-muted p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           /
         </button>
         <button
           onClick={() => performOperation("*")}
           className="bg-muted p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           ×
         </button>
@@ -128,24 +180,28 @@ const WorkerCalculatorContent: React.FC = () => {
         <button
           onClick={() => inputDigit("7")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           7
         </button>
         <button
           onClick={() => inputDigit("8")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           8
         </button>
         <button
           onClick={() => inputDigit("9")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           9
         </button>
         <button
           onClick={() => performOperation("-")}
           className="bg-muted p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           -
         </button>
@@ -153,24 +209,28 @@ const WorkerCalculatorContent: React.FC = () => {
         <button
           onClick={() => inputDigit("4")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           4
         </button>
         <button
           onClick={() => inputDigit("5")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           5
         </button>
         <button
           onClick={() => inputDigit("6")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           6
         </button>
         <button
           onClick={() => performOperation("+")}
           className="bg-muted p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           +
         </button>
@@ -178,24 +238,28 @@ const WorkerCalculatorContent: React.FC = () => {
         <button
           onClick={() => inputDigit("1")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           1
         </button>
         <button
           onClick={() => inputDigit("2")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           2
         </button>
         <button
           onClick={() => inputDigit("3")}
           className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           3
         </button>
         <button
           onClick={handleEquals}
           className="bg-blue-500 text-white p-2 row-span-2"
+          disabled={!isWorkerReady}
         >
           =
         </button>
@@ -203,10 +267,15 @@ const WorkerCalculatorContent: React.FC = () => {
         <button
           onClick={() => inputDigit("0")}
           className="bg-card p-2 col-span-2 text-foreground"
+          disabled={!isWorkerReady}
         >
           0
         </button>
-        <button onClick={inputDecimal} className="bg-card p-2 text-foreground">
+        <button
+          onClick={inputDecimal}
+          className="bg-card p-2 text-foreground"
+          disabled={!isWorkerReady}
+        >
           .
         </button>
       </div>
