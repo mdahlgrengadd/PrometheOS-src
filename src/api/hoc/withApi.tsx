@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import { useApi } from "../context/ApiContext";
 import { ApiComponentProps, IApiComponent } from "../core/types";
 
+// keep track of registered component IDs to prevent duplicate registration
+const registeredComponents = new Set<string>();
+
 /**
  * Higher Order Component to make a component API-aware
  * This allows components to be discoverable and interactable by the AI agent
@@ -29,6 +32,8 @@ export function withApi<P extends object>(
       const uniqueId = useRef(
         apiId || `${defaultApiDoc?.type || "component"}-${uuidv4()}`
       );
+
+      // generate uniqueId ref above
 
       // Track whether component has been registered
       const isRegisteredRef = useRef(false);
@@ -109,22 +114,21 @@ export function withApi<P extends object>(
         fullApiDoc.metadata,
       ]);
 
-      // Combined register/unregister effect for React StrictMode compatibility
+      // Combined register effect for React StrictMode compatibility
       // Only registers once on mount with static doc (no dynamic state)
       useEffect(() => {
-        console.log(
-          `[API] Registering component: ${uniqueId.current} with ${staticApiDoc.actions.length} actions`
-        );
-        registerComponent(staticApiDoc);
-        isRegisteredRef.current = true;
-
-        // Return cleanup function
-        return () => {
-          console.log(`[API] Unregistering component: ${uniqueId.current}`);
-          unregisterComponent(uniqueId.current);
-          isRegisteredRef.current = false;
-        };
-      }, []); // Empty deps array - only runs on mount/unmount
+        const id = uniqueId.current;
+        if (!isRegisteredRef.current && !registeredComponents.has(id)) {
+          console.log(
+            `[API] Registering component: ${id} with ${staticApiDoc.actions.length} actions`
+          );
+          registerComponent(staticApiDoc);
+          registeredComponents.add(id);
+          isRegisteredRef.current = true;
+        }
+        // keep registered across unmounts
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
 
       // Handle state updates separately - don't re-register the component
       useEffect(() => {
@@ -208,20 +212,19 @@ export function useApiComponent(
     if (apiDoc.state) {
       prevStateRef.current = { ...apiDoc.state };
     }
-  }, []);
+  }, [apiDoc.state]);
 
-  // Registration effect - only runs on mount/unmount, no dynamic dependencies
+  // Registration effect - register once and persist (dedupe by ID)
   useEffect(() => {
-    // Always register when mounted
+    const id = apiId;
+    if (registeredComponents.has(id)) {
+      return;
+    }
     registerComponent(staticComponent);
+    registeredComponents.add(id);
     isRegisteredRef.current = true;
-
-    // Return cleanup function
-    return () => {
-      unregisterComponent(apiId);
-      isRegisteredRef.current = false;
-    };
-  }, []); // Empty deps - only runs on mount/unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle state updates separately
   useEffect(() => {

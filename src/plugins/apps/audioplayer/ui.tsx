@@ -1,9 +1,18 @@
-import { Howl, Howler } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
-import { Button } from '@/components/ui/api/button';
+import { Button } from "@/components/ui/api/button";
+
+import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -372,7 +381,7 @@ const AudioPlayerUI = () => {
 
         <div className="flex items-center justify-center gap-4">
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-previous"
             onClick={onPrevious}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -380,7 +389,7 @@ const AudioPlayerUI = () => {
           </Button>
 
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-play"
             onClick={togglePlay}
             className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -388,7 +397,7 @@ const AudioPlayerUI = () => {
           </Button>
 
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-next"
             onClick={onNext}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -397,7 +406,7 @@ const AudioPlayerUI = () => {
         </div>
 
         <Button
-          apiId="audio-player-controls"
+          apiId="audio-player-controls-mute"
           onClick={onToggleMute}
           className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
@@ -488,7 +497,6 @@ const AudioPlayerContent = () => {
       >
         <AudioPlayerUI />
       </AudioPlayerProvider>
-
     </>
   );
 };
