@@ -1,6 +1,6 @@
 import React from "react";
 
-import { textarea } from "@/components/ui/api/textarea";
+import { Textarea } from "@/components/ui/api/textarea";
 import {
   MenubarContent,
   MenubarItem,
@@ -178,13 +178,13 @@ const NotepadComponent: React.FC = () => {
       </WindowsMenubar>
 
       {/* API-enabled textarea for AI interaction */}
-      {React.createElement(textarea, {
-        apiId: "notepad-text-editor",
-        className: "flex-1 w-full p-1 rounded-none resize-none bg-white text-foreground",
-        placeholder: "Type your notes here...",
-        value: noteContent,
-        onChange: handleTextChange,
-      })}
+      <Textarea
+        apiId="notepad-text-editor"
+        className="flex-1 w-full p-1 rounded-none resize-none bg-white text-foreground"
+        placeholder="Type your notes here..."
+        value={noteContent}
+        onChange={handleTextChange}
+      />
     </div>
   );
 };
