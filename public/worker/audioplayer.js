@@ -1,5 +1,5 @@
 // Built worker plugin: audioplayer
-// Generated on: 2025-05-17T07:16:23.946Z
+// Generated on: 2025-05-17T07:20:25.141Z
 
 // src/worker/plugins/audioplayer.ts
 var audioplayerWorker = {
