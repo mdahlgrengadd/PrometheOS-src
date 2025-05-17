@@ -378,7 +378,6 @@ const AudioPlayerUI = () => {
         >
           <List size={24} />
         </button>
-
         <div className="flex items-center justify-center gap-4">
           <Button
             apiId="audio-player-controls-previous"
@@ -403,8 +402,7 @@ const AudioPlayerUI = () => {
           >
             <SkipForward size={24} />
           </Button>
-        </div>
-
+        </div>{" "}
         <Button
           apiId="audio-player-controls-mute"
           onClick={onToggleMute}
@@ -413,7 +411,8 @@ const AudioPlayerUI = () => {
           {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
         </Button>
         <Button
-          apiId="audio-player-controls-fuck-off"
+          apiId="audio-player-controls-fuck"
+          onClick={() => console.log("FUCK OFF")}
           className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
           {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
