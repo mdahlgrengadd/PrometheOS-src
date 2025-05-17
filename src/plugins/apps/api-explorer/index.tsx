@@ -616,11 +616,13 @@ const ApiExplorerComponent: React.FC = () => {
   useEffect(() => {
     const fetchComponents = () => {
       const apiComponents = getComponents();
-      setComponents(apiComponents);
+      // Only show APIs with at least one action
+      const visibleApis = apiComponents.filter(api => Array.isArray(api.actions) && api.actions.length > 0);
+      setComponents(visibleApis);
 
       // If there's a selected component, update it
       if (selectedComponent) {
-        const updated = apiComponents.find(
+        const updated = visibleApis.find(
           (c) => c.id === selectedComponent.id
         );
         if (updated) {
