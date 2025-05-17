@@ -103,8 +103,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 // Determine the worker URL based on environment
                 const workerUrl = import.meta.env.PROD
-                  ? `/workers/${plugin.id}-worker.js` // Production path
-                  : `/worker/plugins/${plugin.id}.js`; // Development path
+                  ? `/worker/${plugin.id}.js` // Production path
+                  : `/worker/${plugin.id}.js`; // Development path
 
                 // Register the worker plugin
                 workerPluginManager
@@ -180,8 +180,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
                   // Determine the worker URL based on environment
                   const workerUrl = import.meta.env.PROD
-                    ? `/workers/${module.default.id}-worker.js` // Production path
-                    : `/worker/plugins/${module.default.id}.js`; // Development path
+                    ? `/worker/${module.default.id}.js` // Production path
+                    : `/worker/${module.default.id}.js`; // Development path
 
                   try {
                     const success = await workerPluginManager.registerPlugin(

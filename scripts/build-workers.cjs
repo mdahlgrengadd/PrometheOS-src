@@ -12,7 +12,7 @@ const { execSync } = require("child_process");
 // Paths
 const WORKER_SOURCE_DIR = path.resolve(__dirname, "../src/worker/plugins");
 const PLUGINS_DIR = path.resolve(__dirname, "../src/plugins/apps");
-const PUBLIC_WORKERS_DIR = path.resolve(__dirname, "../public/workers");
+const PUBLIC_WORKERS_DIR = path.resolve(__dirname, "../public/worker");
 
 // Ensure the destination directory exists
 if (!fs.existsSync(PUBLIC_WORKERS_DIR)) {
@@ -86,7 +86,7 @@ console.log(workerFiles.map((file) => file.pluginId));
 
 // Process each plugin file
 workerFiles.forEach(({ pluginId, sourcePath }) => {
-  const outputName = `${pluginId}-worker.js`;
+  const outputName = `${pluginId}.js`;
   const outputPath = path.join(PUBLIC_WORKERS_DIR, outputName);
 
   console.log(`Building ${pluginId} worker...`);
