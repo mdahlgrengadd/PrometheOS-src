@@ -1,5 +1,5 @@
 // Built worker plugin: settings
-// Generated on: 2025-05-17T07:06:17.005Z
+// Generated on: 2025-05-17T07:16:27.492Z
 
 // src/worker/plugins/settings.ts
 var settingsWorker = {

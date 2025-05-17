@@ -1,18 +1,18 @@
-import { WorkerPlugin } from '../../src/plugins/types';
+import { WorkerPlugin } from '../../plugins/types';
 
 /**
  * Worker logic for Webllm-chat
  * This runs in a Web Worker context with no DOM access
  */
-const webllmchatWorker: WorkerPlugin = {
-  id: "webllm-chat",
-  
+const webllmChatWorker: WorkerPlugin = {
+  id: "webllmChat",
+
   /**
    * Example method that can be called from the UI
    */
   exampleMethod(param1: string, param2: number): { result: string } {
     return {
-      result: `Processed ${param1} with value ${param2}`
+      result: `Processed ${param1} with value ${param2}`,
     };
   },
 
@@ -22,7 +22,11 @@ const webllmchatWorker: WorkerPlugin = {
   handle(method: string, params?: Record<string, unknown>): unknown {
     switch (method) {
       case "exampleMethod": {
-        if (!params || typeof params.param1 !== "string" || typeof params.param2 !== "number") {
+        if (
+          !params ||
+          typeof params.param1 !== "string" ||
+          typeof params.param2 !== "number"
+        ) {
           return { error: "Invalid parameters for exampleMethod" };
         }
         return this.exampleMethod(
@@ -30,7 +34,7 @@ const webllmchatWorker: WorkerPlugin = {
           params.param2 as number
         );
       }
-      
+
       default:
         return { error: `Method ${method} not supported for webllm-chat` };
     }
@@ -38,4 +42,4 @@ const webllmchatWorker: WorkerPlugin = {
 };
 
 // Export the worker instance as default
-export default webllm-chatWorker; 
+export default webllmChatWorker;
