@@ -1,4 +1,4 @@
-import { WorkerPlugin } from '../../src/plugins/types';
+import { WorkerPlugin } from '../../plugins/types';
 
 /**
  * Worker logic for Wordeditor
@@ -6,13 +6,13 @@ import { WorkerPlugin } from '../../src/plugins/types';
  */
 const wordeditorWorker: WorkerPlugin = {
   id: "wordeditor",
-  
+
   /**
    * Example method that can be called from the UI
    */
   exampleMethod(param1: string, param2: number): { result: string } {
     return {
-      result: `Processed ${param1} with value ${param2}`
+      result: `Processed ${param1} with value ${param2}`,
     };
   },
 
@@ -22,7 +22,11 @@ const wordeditorWorker: WorkerPlugin = {
   handle(method: string, params?: Record<string, unknown>): unknown {
     switch (method) {
       case "exampleMethod": {
-        if (!params || typeof params.param1 !== "string" || typeof params.param2 !== "number") {
+        if (
+          !params ||
+          typeof params.param1 !== "string" ||
+          typeof params.param2 !== "number"
+        ) {
           return { error: "Invalid parameters for exampleMethod" };
         }
         return this.exampleMethod(
@@ -30,7 +34,7 @@ const wordeditorWorker: WorkerPlugin = {
           params.param2 as number
         );
       }
-      
+
       default:
         return { error: `Method ${method} not supported for wordeditor` };
     }
@@ -38,4 +42,4 @@ const wordeditorWorker: WorkerPlugin = {
 };
 
 // Export the worker instance as default
-export default wordeditorWorker; 
+export default wordeditorWorker;

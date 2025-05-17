@@ -1,4 +1,4 @@
-import { WorkerPlugin } from '../../src/plugins/types';
+import { WorkerPlugin } from '../../plugins/types';
 
 /**
  * Worker logic for Webamp
@@ -6,13 +6,13 @@ import { WorkerPlugin } from '../../src/plugins/types';
  */
 const webampWorker: WorkerPlugin = {
   id: "webamp",
-  
+
   /**
    * Example method that can be called from the UI
    */
   exampleMethod(param1: string, param2: number): { result: string } {
     return {
-      result: `Processed ${param1} with value ${param2}`
+      result: `Processed ${param1} with value ${param2}`,
     };
   },
 
@@ -22,7 +22,11 @@ const webampWorker: WorkerPlugin = {
   handle(method: string, params?: Record<string, unknown>): unknown {
     switch (method) {
       case "exampleMethod": {
-        if (!params || typeof params.param1 !== "string" || typeof params.param2 !== "number") {
+        if (
+          !params ||
+          typeof params.param1 !== "string" ||
+          typeof params.param2 !== "number"
+        ) {
           return { error: "Invalid parameters for exampleMethod" };
         }
         return this.exampleMethod(
@@ -30,7 +34,7 @@ const webampWorker: WorkerPlugin = {
           params.param2 as number
         );
       }
-      
+
       default:
         return { error: `Method ${method} not supported for webamp` };
     }
@@ -38,4 +42,4 @@ const webampWorker: WorkerPlugin = {
 };
 
 // Export the worker instance as default
-export default webampWorker; 
+export default webampWorker;

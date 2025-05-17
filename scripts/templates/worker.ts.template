@@ -1,4 +1,4 @@
-import { WorkerPlugin } from '../../src/plugins/types';
+import { WorkerPlugin } from '../../plugins/types';
 
 /**
  * Worker logic for PLUGIN_NAME
