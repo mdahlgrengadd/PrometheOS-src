@@ -8,11 +8,14 @@ import React, {
 } from "react";
 
 import { useApiComponent } from "@/api/hoc/withApi";
+import { audioPlayerApiDoc } from "@/plugins/apps/audioplayer/manifest";
+import { IActionResult } from "../core/types";
+import { registerApiActionHandler } from "./ApiContext";
 
 /**
  * Default API documentation for audio player
  */
-const audioPlayerApiDoc = {
+const defaultAudioPlayerApiDoc = {
   type: "AudioPlayer",
   description: "An audio player component with playback controls",
   state: {
@@ -24,61 +27,15 @@ const audioPlayerApiDoc = {
     isMuted: false,
   },
   actions: [
-    {
-      id: "play",
-      name: "Play",
-      description: "Start playback of current track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "pause",
-      name: "Pause",
-      description: "Pause playback of current track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "next",
-      name: "Next Track",
-      description: "Skip to next track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "previous",
-      name: "Previous Track",
-      description: "Skip to previous track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "toggleMute",
-      name: "Toggle Mute",
-      description: "Mute or unmute audio",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "setVolume",
-      name: "Set Volume",
-      description: "Set the volume level",
-      available: true,
-      parameters: [
-        {
-          name: "volume",
-          type: "number",
-          description: "Volume level (0.0 to 1.0)",
-          required: true,
-        },
-      ],
-    },
+    { id: "play", name: "Play", description: "Start playback of current track", available: true, parameters: [] },
+    { id: "pause", name: "Pause", description: "Pause playback of current track", available: true, parameters: [] },
+    { id: "next", name: "Next Track", description: "Skip to next track", available: true, parameters: [] },
+    { id: "previous", name: "Previous Track", description: "Skip to previous track", available: true, parameters: [] },
+    { id: "toggleMute", name: "Toggle Mute", description: "Mute or unmute audio", available: true, parameters: [] },
+    { id: "setVolume", name: "Set Volume", description: "Set the volume level", available: true, parameters: [{ name: "volume", type: "number", description: "Volume level (0.0 to 1.0)", required: true }] },
   ],
   path: "/apps/audioplayer/controls",
 };
-
-import { IActionResult } from "../core/types";
-import { registerApiActionHandler } from "./ApiContext";
 
 type AudioPlayerCtx = {
   isPlaying: boolean;
@@ -101,7 +58,6 @@ export const AudioPlayerProvider: React.FC<
 > = ({ apiId, children, ...stateAndActions }) => {
   // Create a static version of the API doc (without dynamic state)
   const staticApiDoc = useMemo(() => {
-    // Extract only the static parts of the audio player API doc
     const { state, ...staticDoc } = audioPlayerApiDoc;
     return staticDoc;
   }, []);

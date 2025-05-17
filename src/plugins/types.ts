@@ -1,4 +1,5 @@
 import React from 'react';
+import { IApiComponent } from '../api/core/types';
 
 /**
  * Plugin manifest definition that describes a plugin in the system
@@ -26,6 +27,7 @@ export interface PluginManifest {
    * and should let the app render its own UI edge-to-edge.
    */
   hideWindowChrome?: boolean;
+  apiDoc?: Omit<IApiComponent, 'id'>;
 }
 
 /**

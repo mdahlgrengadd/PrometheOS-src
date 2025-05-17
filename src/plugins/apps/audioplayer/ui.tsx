@@ -2,7 +2,7 @@ import { Howl, Howler } from 'howler';
 import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { AudioPlayerProvider, useAudioPlayer } from '@/api/context/AudioPlayerContext';
+import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
 import { Button } from '@/components/ui/api/button';
 
 // Define sample songs - in a real app these would come from a database or files
@@ -489,30 +489,6 @@ const AudioPlayerContent = () => {
         <AudioPlayerUI />
       </AudioPlayerProvider>
 
-      {/*<ApiButtonWithHandler
-        apiId="audio-player-controls2"
-        api={{
-          type: "Button",
-          description: "Play button for audio player",
-          actions: [
-            {
-              id: "click",
-              name: "Play Button Click",
-              description: "Starts the audio playback",
-              available: true,
-              parameters: [],
-            },
-          ],
-          path: "/apps/audioplayer/buttons/play",
-          state: {
-            enabled: true,
-            visible: true,
-          },
-        }}
-        onClick={handlePlay}
-      >
-        Play
-      </ApiButtonWithHandler>*/}
     </>
   );
 };
