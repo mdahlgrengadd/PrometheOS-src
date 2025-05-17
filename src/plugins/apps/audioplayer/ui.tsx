@@ -2,7 +2,7 @@ import { Howl, Howler } from 'howler';
 import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
+import { AudioPlayerProvider, useAudioPlayer } from '@/api/context/AudioPlayerContext';
 import { Button } from '@/components/ui/api/button';
 
 // Define sample songs - in a real app these would come from a database or files
@@ -371,38 +371,38 @@ const AudioPlayerUI = () => {
         </button>
 
         <div className="flex items-center justify-center gap-4">
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          <Button
+            apiId="audio-player-controls"
             onClick={onPrevious}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipBack size={24} />
-          </button>
+          </Button>
 
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
+          <Button
+            apiId="audio-player-controls"
             onClick={togglePlay}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-          </button>
+          </Button>
 
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          <Button
+            apiId="audio-player-controls"
             onClick={onNext}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipForward size={24} />
-          </button>
+          </Button>
         </div>
 
-        <button
-          data-draggable="false"
-          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+        <Button
+          apiId="audio-player-controls"
           onClick={onToggleMute}
+          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
           {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
-        </button>
+        </Button>
       </div>
 
       {/* Playlist Overlay */}
