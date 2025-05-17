@@ -49,11 +49,21 @@ export function withApi<P extends object>(
 ) {
   // Create a display name for debugging
   const displayName = Component.displayName || Component.name || "Component";
-
   // Define the wrapped component
   const WithApiComponent = React.forwardRef<unknown, P & ApiComponentProps>(
     (props, ref) => {
-      const { api, apiId, ...componentProps } = props as P & ApiComponentProps;
+      const { 
+        api, 
+        apiId, 
+        apiType,
+        apiName,
+        apiDescription,
+        apiPath,
+        apiActions,
+        apiState,
+        apiMetadata,
+        ...componentProps 
+      } = props as P & ApiComponentProps;
       const { registerComponent, unregisterComponent, updateComponentState } =
         useApi();
 
@@ -86,47 +96,55 @@ export function withApi<P extends object>(
         // Add or override with prop actions
         propActions.forEach((action) => {
           actionMap.set(action.id, action);
-        });
-
-        // Auto-generate click action if it doesn't exist and component is clickable
+        });        // Auto-generate click action if it doesn't exist and component is clickable
         // (Buttons, links, etc. typically have onClick handlers)
         if (!actionMap.has("click") && "onClick" in props) {
           actionMap.set("click", {
             id: "click",
             description: `Click the ${
-              api?.type || defaultApiDoc?.type || "component"
+              apiType || api?.type || defaultApiDoc?.type || "component"
             }`,
             parameters: [],
           });
         }
 
         return Array.from(actionMap.values());
-      }, [api?.actions, props]);
-
-      // Create the full API documentation by merging defaults with props
+      }, [api?.actions, props]);      // Create the full API documentation by merging defaults with props
       const fullApiDoc = useMemo<IApiComponent>(() => {
         const mergedActions = autoGenerateActions();
 
+        // Get actions from both the apiActions prop and from the api object
+        const combinedActions = [
+          ...(apiActions || []),
+          ...(api?.actions || [])
+        ];
+
+        // Combined state from all sources (priority: apiState > api.state > defaultApiDoc.state)
+        const combinedState = {
+          enabled: true,
+          visible: true,
+          ...(defaultApiDoc?.state || {}),
+          ...(api?.state || {}),
+          ...(apiState || {})
+        };
+
+        // Combined metadata (priority: apiMetadata > api.metadata > defaultApiDoc.metadata)
+        const combinedMetadata = {
+          ...(defaultApiDoc?.metadata || {}),
+          ...(api?.metadata || {}),
+          ...(apiMetadata || {}),
+          // Add name as metadata if provided
+          ...(apiName ? { name: apiName } : {})
+        };
+
         const doc = {
           id: uniqueId.current,
-          type: api?.type || defaultApiDoc?.type || "unknown",
-          description:
-            api?.description || defaultApiDoc?.description || "No description",
-          state: {
-            enabled: true,
-            visible: true,
-            ...(defaultApiDoc?.state || {}),
-            ...(api?.state || {}),
-          },
-          actions: mergedActions,
-          path:
-            api?.path ||
-            defaultApiDoc?.path ||
-            `/components/${uniqueId.current}`,
-          metadata: {
-            ...(defaultApiDoc?.metadata || {}),
-            ...(api?.metadata || {}),
-          },
+          type: apiType || api?.type || defaultApiDoc?.type || "unknown",
+          description: apiDescription || api?.description || defaultApiDoc?.description || "No description",
+          state: combinedState,
+          actions: mergedActions.length > 0 ? mergedActions : combinedActions,
+          path: apiPath || api?.path || defaultApiDoc?.path || `/components/${uniqueId.current}`,
+          metadata: combinedMetadata,
         };
 
         // Update the ref so we can use it in the effect without dependencies
@@ -139,13 +157,19 @@ export function withApi<P extends object>(
         api?.path,
         api?.state,
         api?.type,
+        apiActions,
+        apiDescription,
+        apiMetadata,
+        apiPath,
+        apiState,
+        apiType,
         autoGenerateActions,
         defaultApiDoc?.description,
         defaultApiDoc?.metadata,
         defaultApiDoc?.path,
         defaultApiDoc?.state,
         defaultApiDoc?.type,
-      ]); // Register an automatic click handler
+      ]);      // Register an automatic click handler
       const registerClickHandler = useCallback(() => {
         if (isRegisteredRef.current && "onClick" in props) {
           // Register the click action handler
@@ -156,29 +180,30 @@ export function withApi<P extends object>(
               // Simulate a click by calling the onClick handler directly
               if ("onClick" in props) {
                 // Create a synthetic event object (simplified)
+                // Cast to unknown first to avoid TS errors
                 const syntheticEvent = {
                   preventDefault: () => {},
                   stopPropagation: () => {},
                   target: elementRef.current,
                   currentTarget: elementRef.current,
-                } as React.MouseEvent<HTMLElement>;
-
+                } as unknown as React.MouseEvent<HTMLElement>;
+                
                 // Call the onClick handler with the synthetic event
                 (props as any).onClick(syntheticEvent);
-
+                
                 // Or click the DOM element directly if we have a ref
                 if (elementRef.current) {
                   elementRef.current.click();
                 }
-
+                
                 return { success: true };
               }
-
+              
               return { success: false, error: "Component is not clickable" };
             },
           });
         }
-      }, [props]);      // Setup component registration once on mount with cleanup on unmount
+      }, [props]);// Setup component registration once on mount with cleanup on unmount
       // Using empty deps array to ensure this only runs on mount/unmount
       useEffect(() => {
         const id = uniqueId.current;

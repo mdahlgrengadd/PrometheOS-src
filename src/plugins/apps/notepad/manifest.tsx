@@ -1,8 +1,9 @@
 import React from 'react';
 import { PluginManifest } from '../../../plugins/types';
-import { textareaApiDoc } from '@/components/ui/api/textarea';
+import { textareaApiDoc, textareaApiActions } from '@/components/ui/api/textarea-api';
 
-export { textareaApiDoc };
+// Export for backwards compatibility
+export { textareaApiDoc, textareaApiActions };
 
 export const manifest: PluginManifest & { apiDoc?: typeof textareaApiDoc } = {
   id: "notepad",

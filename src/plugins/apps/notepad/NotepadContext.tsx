@@ -1,8 +1,8 @@
 import React, {createContext, useContext, useMemo, useEffect, useRef, useState} from "react";
 import { useApiComponent } from "@/api/hoc/withApi";
 import { registerApiActionHandler } from "@/api/context/ApiContext";
-import { IActionResult } from "../../../api/core/types";
-import { textareaApiDoc } from "./manifest";
+import { IActionResult, IApiAction } from "../../../api/core/types";
+import { textareaApiActions } from "./manifest";
 
 // Define Notepad context shape
 type NotepadCtx = {
@@ -17,11 +17,13 @@ export const NotepadProvider: React.FC<{ apiId: string; children: React.ReactNod
   const [value, setValue] = useState<string>("");
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value);
 
-  // Prepare static API doc without state
-  const staticApiDoc = useMemo(() => {
-    const { state, ...doc } = textareaApiDoc;
-    return doc;
-  }, []);
+  // Prepare static API doc
+  const staticApiDoc = useMemo(() => ({
+    type: "Textarea",
+    description: "A text area component for multi-line text input",
+    path: "/components/textareas",
+    actions: textareaApiActions,
+  }), []);
 
   // Hook into API component registry
   const { updateState } = useApiComponent(apiId, staticApiDoc);
