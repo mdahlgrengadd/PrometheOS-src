@@ -2,11 +2,7 @@
  * Worker-specific Calculator plugin implementation that doesn't depend on React or DOM
  */
 
-// Define the plugin interface
-export interface WorkerPlugin {
-  id: string;
-  [key: string]: unknown;
-}
+import { WorkerPlugin } from '../../plugins/types';
 
 /**
  * Simple calculator functionality without any UI dependencies

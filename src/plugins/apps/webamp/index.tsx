@@ -3,28 +3,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowStore } from '@/store/windowStore';
 
 import { eventBus } from '../../EventBus';
-import { Plugin, PluginManifest } from '../../types';
+import { Plugin } from '../../types';
 import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
 
 // Define the plugin manifest
-export const manifest: PluginManifest = {
-  id: "webamp",
-  name: "Webamp Music Player",
-  version: "1.0.0",
-  description: "A Winamp-inspired music player for your desktop",
-  author: "Based on Webamp by captbaritone",
-  icon: (
-    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-      W
-    </div>
-  ),
-  entry: "apps/webamp",
-  preferredSize: {
-    width: 275,
-    height: 350,
-  },
-  hideWindowChrome: true,
-};
+import { manifest } from './manifest';
 
 // CSS preload helper
 const preloadWebampCSS = () => {
@@ -301,3 +284,4 @@ const WebampPlugin: Plugin = {
 };
 
 export default WebampPlugin;
+

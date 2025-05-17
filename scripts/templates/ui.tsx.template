@@ -1,0 +1,12 @@
+import React from 'react';
+
+const PLUGIN_IDContent: React.FC = () => {
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">PLUGIN_NAME</h2>
+      <p>Your plugin content goes here.</p>
+    </div>
+  );
+};
+
+export default PLUGIN_IDContent; 

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 /**
  * Plugin manifest definition that describes a plugin in the system
@@ -15,6 +15,8 @@ export interface PluginManifest {
   entry: string;
   // Optional entrypoint URL for dynamically loaded plugins
   entrypoint?: string;
+  // Optional worker entrypoint (relative to src/worker/plugins or as URL for remote plugins)
+  workerEntrypoint?: string;
   preferredSize?: {
     width: number;
     height: number;
@@ -39,4 +41,13 @@ export interface Plugin {
   onMinimize?: () => void;
   onMaximize?: () => void;
   onDestroy?: () => void;
+}
+
+/**
+ * Worker plugin interface for compute-intensive tasks
+ */
+export interface WorkerPlugin {
+  id: string;
+  handle?: (method: string, params?: Record<string, unknown>) => unknown;
+  [key: string]: unknown;
 }

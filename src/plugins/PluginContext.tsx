@@ -1,48 +1,39 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
+import { useWindowStore } from '@/store/windowStore';
 
-import ApiExplorerPlugin from "./apps/api-explorer";
-import ApiFlowEditorPlugin from "./apps/api-flow-editor";
-import AudioPlayerPlugin from "./apps/audioplayer";
-import BrowserPlugin from "./apps/browser";
-//import CalculatorPlugin from "./apps/calculator";
-import WorkerCalculatorPlugin from "./apps/calculator/workerCalculator";
-import ChatPlugin from "./apps/chat";
-import FileBrowserPlugin from "./apps/filebrowser";
+import ApiExplorerPlugin from './apps/api-explorer';
+import ApiFlowEditorPlugin from './apps/api-flow-editor';
+import AudioPlayerPlugin from './apps/audioplayer';
+import BrowserPlugin from './apps/browser';
+import CalculatorPlugin from './apps/calculator';
+//import WorkerCalculatorPlugin from './apps/calculator/workerCalculator';
+import ChatPlugin from './apps/chat';
+import FileBrowserPlugin from './apps/filebrowser';
 // Import plugins directly for reliable loading
-import NotepadPlugin from "./apps/notepad";
-import SessionPlugin from "./apps/session";
-import SettingsPlugin from "./apps/settings";
-import WebampPlugin from "./apps/webamp";
-import WebLLMChatPlugin from "./apps/webllm-chat";
-import WordEditorPlugin from "./apps/wordeditor";
-import { eventBus } from "./EventBus";
-import { PluginManager } from "./PluginManager";
+import NotepadPlugin from './apps/notepad';
+import SessionPlugin from './apps/session';
+import SettingsPlugin from './apps/settings';
+import WebampPlugin from './apps/webamp';
+import WebLLMChatPlugin from './apps/webllm-chat';
+import WordEditorPlugin from './apps/wordeditor';
+import { eventBus } from './EventBus';
+import { PluginManager } from './PluginManager';
 import {
-  getAllManifests,
-  installPlugin,
-  uninstallPlugin as removePluginFromRegistry,
-} from "./registry";
-import { Plugin, PluginManifest } from "./types";
+    getAllManifests, installPlugin, uninstallPlugin as removePluginFromRegistry
+} from './registry';
+import { Plugin, PluginManifest } from './types';
+import { workerPluginManager } from './WorkerPluginManagerClient';
 
 // Map of plugin modules for direct access
 const pluginModules: Record<string, Plugin> = {
   "api-explorer": ApiExplorerPlugin,
   "api-flow-editor": ApiFlowEditorPlugin,
   notepad: NotepadPlugin,
-  // calculator: CalculatorPlugin,
-  "worker-calculator": WorkerCalculatorPlugin,
+  calculator: CalculatorPlugin,
   browser: BrowserPlugin,
   settings: SettingsPlugin,
-  WordEditor: WordEditorPlugin,
+  wordeditor: WordEditorPlugin,
   audioplayer: AudioPlayerPlugin,
   webamp: WebampPlugin,
   "webllm-chat": WebLLMChatPlugin,
@@ -106,6 +97,37 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
               const plugin = pluginModules[manifest.id];
               pluginManager.registerPlugin(plugin);
 
+              // Register any worker component if specified in the manifest
+              if (plugin.manifest.workerEntrypoint) {
+                console.log(`Registering worker for plugin ${plugin.id}`);
+
+                // Determine the worker URL based on environment
+                const workerUrl = import.meta.env.PROD
+                  ? `/worker/${plugin.id}.js` // Production path
+                  : `/worker/${plugin.id}.js`; // Development path
+
+                // Register the worker plugin
+                workerPluginManager
+                  .registerPlugin(plugin.id, workerUrl)
+                  .then((success) => {
+                    if (success) {
+                      console.log(
+                        `Worker for ${plugin.id} registered successfully`
+                      );
+                    } else {
+                      console.error(
+                        `Failed to register worker for ${plugin.id}`
+                      );
+                    }
+                  })
+                  .catch((error) => {
+                    console.error(
+                      `Error registering worker for ${plugin.id}:`,
+                      error
+                    );
+                  });
+              }
+
               // Register window in the store immediately after plugin registration
               const defaultSize = { width: 400, height: 300 };
               const size = plugin.manifest.preferredSize || defaultSize;
@@ -149,6 +171,40 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 pluginManager.registerPlugin(module.default);
                 dynamicIds.push(manifest.id);
+
+                // Register worker component if specified
+                if (module.default.manifest.workerEntrypoint) {
+                  console.log(
+                    `Registering worker for dynamic plugin ${module.default.id}`
+                  );
+
+                  // Determine the worker URL based on environment
+                  const workerUrl = import.meta.env.PROD
+                    ? `/worker/${module.default.id}.js` // Production path
+                    : `/worker/${module.default.id}.js`; // Development path
+
+                  try {
+                    const success = await workerPluginManager.registerPlugin(
+                      module.default.id,
+                      workerUrl
+                    );
+
+                    if (success) {
+                      console.log(
+                        `Worker for ${module.default.id} registered successfully`
+                      );
+                    } else {
+                      console.error(
+                        `Failed to register worker for ${module.default.id}`
+                      );
+                    }
+                  } catch (error) {
+                    console.error(
+                      `Error registering worker for ${module.default.id}:`,
+                      error
+                    );
+                  }
+                }
 
                 // Register window for dynamic plugin too
                 const plugin = module.default;

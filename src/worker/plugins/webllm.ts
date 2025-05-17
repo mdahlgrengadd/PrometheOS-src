@@ -5,7 +5,7 @@
 
 import * as webllm from '@mlc-ai/web-llm';
 
-import { WorkerPlugin } from './calculator';
+import { WorkerPlugin } from '../../plugins/types';
 
 // Interface for progress updates
 export interface ProgressUpdate {

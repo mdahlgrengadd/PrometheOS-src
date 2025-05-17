@@ -11,7 +11,8 @@ const { execSync } = require("child_process");
 
 // Paths
 const WORKER_SOURCE_DIR = path.resolve(__dirname, "../src/worker/plugins");
-const PUBLIC_WORKERS_DIR = path.resolve(__dirname, "../public/workers");
+const PLUGINS_DIR = path.resolve(__dirname, "../src/plugins/apps");
+const PUBLIC_WORKERS_DIR = path.resolve(__dirname, "../public/worker");
 
 // Ensure the destination directory exists
 if (!fs.existsSync(PUBLIC_WORKERS_DIR)) {
@@ -19,22 +20,76 @@ if (!fs.existsSync(PUBLIC_WORKERS_DIR)) {
   console.log(`Created directory: ${PUBLIC_WORKERS_DIR}`);
 }
 
-// Read all TypeScript files in the worker plugins directory
-const pluginFiles = fs
-  .readdirSync(WORKER_SOURCE_DIR)
-  .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
+// Find worker plugins to build
+const workerFiles = [];
+
+// 1. Look in the dedicated worker plugins directory
+if (fs.existsSync(WORKER_SOURCE_DIR)) {
+  const dedicatedWorkerFiles = fs
+    .readdirSync(WORKER_SOURCE_DIR)
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
+    .map((file) => ({
+      pluginId: path.basename(file, ".ts"),
+      sourcePath: path.join(WORKER_SOURCE_DIR, file),
+    }));
+
+  workerFiles.push(...dedicatedWorkerFiles);
+}
+
+// 2. Look for workerEntrypoints in plugin manifests
+if (fs.existsSync(PLUGINS_DIR)) {
+  const pluginDirs = fs.readdirSync(PLUGINS_DIR);
+
+  pluginDirs.forEach((pluginDir) => {
+    const fullPluginDir = path.join(PLUGINS_DIR, pluginDir);
+
+    // Skip if not a directory
+    if (!fs.statSync(fullPluginDir).isDirectory()) {
+      return;
+    }
+
+    // Check if this plugin has a manifest with workerEntrypoint
+    const manifestPath = path.join(fullPluginDir, "manifest.ts");
+    if (fs.existsSync(manifestPath)) {
+      const manifestContent = fs.readFileSync(manifestPath, "utf8");
+      const workerEntrypointMatch = manifestContent.match(
+        /workerEntrypoint: ["']([^"']+)["']/
+      );
+
+      if (workerEntrypointMatch) {
+        // Plugin has a worker, check if it exists in the dedicated worker directory
+        // If not, look for it in the plugin directory
+
+        // If the plugin already has a worker in the dedicated worker directory,
+        // we've already added it above, so skip it
+        const dedicatedWorkerPath = path.join(
+          WORKER_SOURCE_DIR,
+          `${pluginDir}.ts`
+        );
+        if (!fs.existsSync(dedicatedWorkerPath)) {
+          // Look for worker.ts in the plugin directory
+          const pluginWorkerPath = path.join(fullPluginDir, "worker.ts");
+          if (fs.existsSync(pluginWorkerPath)) {
+            workerFiles.push({
+              pluginId: pluginDir,
+              sourcePath: pluginWorkerPath,
+            });
+          }
+        }
+      }
+    }
+  });
+}
 
 console.log("Building worker plugins:");
-console.log(pluginFiles);
+console.log(workerFiles.map((file) => file.pluginId));
 
 // Process each plugin file
-pluginFiles.forEach((file) => {
-  const baseName = path.basename(file, ".ts");
-  const outputName = `${baseName}-worker.js`;
-  const sourcePath = path.join(WORKER_SOURCE_DIR, file);
+workerFiles.forEach(({ pluginId, sourcePath }) => {
+  const outputName = `${pluginId}.js`;
   const outputPath = path.join(PUBLIC_WORKERS_DIR, outputName);
 
-  console.log(`Building ${baseName} worker...`);
+  console.log(`Building ${pluginId} worker...`);
 
   try {
     // Use esbuild to bundle the worker file
@@ -51,13 +106,13 @@ pluginFiles.forEach((file) => {
     let content = fs.readFileSync(outputPath, "utf8");
 
     // Add a comment about this being a built file
-    content = `// Built worker plugin: ${baseName}\n// Generated on: ${new Date().toISOString()}\n\n${content}`;
+    content = `// Built worker plugin: ${pluginId}\n// Generated on: ${new Date().toISOString()}\n\n${content}`;
 
     fs.writeFileSync(outputPath, content);
 
     console.log(`Post-processed ${outputPath}`);
   } catch (error) {
-    console.error(`Error building ${baseName} worker:`, error);
+    console.error(`Error building ${pluginId} worker:`, error);
     process.exit(1);
   }
 });
