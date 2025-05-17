@@ -412,6 +412,12 @@ const AudioPlayerUI = () => {
         >
           {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
         </Button>
+        <Button
+          apiId="audio-player-controls-fuck-off"
+          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+        >
+          {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
+        </Button>
       </div>
 
       {/* Playlist Overlay */}
