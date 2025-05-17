@@ -3,7 +3,7 @@ import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucid
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
-import { ApiButtonWithHandler } from '@/components/api/ApiButton';
+import { Button } from '@/components/ui/api/button';
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
