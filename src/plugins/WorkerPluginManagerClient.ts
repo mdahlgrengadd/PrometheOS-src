@@ -219,8 +219,8 @@ class WorkerPluginManagerClient {
     if (!this.registeredPlugins.has("webllm")) {
       // Get the correct worker path based on environment
       const workerPath = import.meta.env.PROD
-        ? "/workers/webllm-worker.js" // Production path
-        : "/worker/plugins/webllm.js"; // Development path
+        ? "/worker/webllm.js" // Production path
+        : "/worker/webllm.js"; // Development path
 
       await this.registerPlugin("webllm", workerPath);
     }
