@@ -1,8 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { withApi } from "@/api/hoc/withApi";
+
 import { registerApiActionHandler } from "@/api/context/ApiContext";
-import { IActionResult, IApiAction, ApiComponentProps } from "@/api/core/types";
-import { Button as BaseButton, ButtonProps as BaseProps } from "@/components/ui/button";
+import { ApiComponentProps, IActionResult, IApiAction } from "@/api/core/types";
+import { withApi } from "@/api/hoc/withApi";
+import {
+  Button as BaseButton,
+  ButtonProps as BaseProps,
+} from "@/components/ui/button";
 
 // Default API documentation for Button
 const buttonApiDoc = {
@@ -35,9 +39,9 @@ export interface ButtonProps extends BaseProps, ApiComponentProps {
  * API-enabled Button component
  * Registers click handler via API context
  */
-export const Button: React.FC<ButtonProps> = ({ 
-  apiId, 
-  onClick, 
+export const Button: React.FC<ButtonProps> = ({
+  apiId,
+  onClick,
   apiActions,
   apiDescription,
   apiPath,
@@ -45,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
   apiName,
   apiState,
   apiMetadata,
-  ...props 
+  ...props
 }) => {
   const onClickRef = useRef(onClick);
   useEffect(() => {
@@ -61,7 +65,8 @@ export const Button: React.FC<ButtonProps> = ({
           }
           return { success: true };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           return { success: false, error: errorMessage };
         }
       };
@@ -69,17 +74,20 @@ export const Button: React.FC<ButtonProps> = ({
     }
   }, [apiId]);
 
-  return <ApiButton 
-    apiId={apiId} 
-    onClick={onClick}
-    apiType={apiType || buttonApiDoc.type}
-    apiName={apiName}
-    apiDescription={apiDescription || buttonApiDoc.description}
-    apiPath={apiPath || buttonApiDoc.path}
-    apiActions={apiActions || buttonApiDoc.actions}
-    apiState={apiState}
-    apiMetadata={apiMetadata}    {...props} 
-  />;
+  return (
+    <ApiButton
+      apiId={apiId}
+      onClick={onClick}
+      apiType={apiType || buttonApiDoc.type}
+      apiName={apiName}
+      apiDescription={apiDescription || buttonApiDoc.description}
+      apiPath={apiPath || buttonApiDoc.path}
+      apiActions={apiActions || buttonApiDoc.actions}
+      apiState={apiState}
+      apiMetadata={apiMetadata}
+      {...props}
+    />
+  );
 };
 Button.displayName = "Button";
 

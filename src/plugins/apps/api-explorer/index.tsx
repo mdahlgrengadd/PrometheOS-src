@@ -216,10 +216,13 @@ const ComponentDetails: React.FC<{ component: IApiComponent }> = ({
       {component.actions.length > 0 ? (
         <Accordion type="single" collapsible className="w-full">
           {component.actions.map((action) => (
-            <AccordionItem key={action.id} value={action.id}>
-              <AccordionTrigger className="text-left">
+            <AccordionItem key={action.id} value={action.id}>              <AccordionTrigger className="text-left">
                 <div>
-                  <span className="font-medium">{action.name}</span>
+                  <span className="font-medium">
+                    {action.id === "click" && component.name
+                      ? `${component.name} (Click Action)`
+                      : action.name}
+                  </span>
                   <span className="ml-2 text-xs text-gray-500">
                     {action.id}
                   </span>
@@ -385,11 +388,11 @@ const PathGroupItem: React.FC<{
                   component.id === selectedComponentId ? "border-primary" : ""
                 }`}
                 onClick={() => onSelectComponent(component)}
-              >
-                <CardHeader className="py-2">
+              >                <CardHeader className="py-2">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-sm">{component.id}</CardTitle>
+                    <div>                      <CardTitle className="text-sm">
+                        {component.name || component.metadata?.name || component.id}
+                      </CardTitle>
                       <CardDescription className="text-xs">
                         {component.type}
                       </CardDescription>
@@ -675,9 +678,8 @@ const ApiExplorerComponent: React.FC = () => {
             <div className="col-span-2 border rounded-md p-4">
               {selectedComponent ? (
                 <div className="h-full flex flex-col">
-                  <div className="mb-4">
-                    <h2 className="text-xl font-bold">
-                      {selectedComponent.id}
+                  <div className="mb-4">                    <h2 className="text-xl font-bold">
+                      {selectedComponent.name || selectedComponent.id}
                     </h2>
                     <div className="flex gap-2 mt-1">
                       <Badge>{selectedComponent.type}</Badge>

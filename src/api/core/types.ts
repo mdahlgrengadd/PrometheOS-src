@@ -8,6 +8,9 @@ export interface IApiComponent {
 
   /** Type of component (Button, Input, etc.) */
   type: string;
+  
+  /** Optional display name for the component */
+  name?: string;
 
   /** Human-readable description of what the component does */
   description: string;
@@ -20,11 +23,15 @@ export interface IApiComponent {
 
   /** Available actions that can be performed on this component */
   actions: IApiAction[];
-
   /** Path to the component in the application (e.g., /calculator/display) */
   path: string;
+  
   /** Additional metadata about the component */
-  metadata?: Record<string, unknown>;
+  metadata?: {
+    /** Optional name for display in UI */
+    name?: string;
+    [key: string]: unknown;
+  };
 }
 
 /**
@@ -33,7 +40,7 @@ export interface IApiComponent {
 export interface ApiComponentProps {
   /** Unique identifier for the component in the API system */
   apiId?: string;
-  
+
   /** Optional API configuration to override defaults */
   api?: Partial<Omit<IApiComponent, "id">>;
 }
@@ -130,73 +137,74 @@ export interface IOpenApiSpec {
 
 /**
  * Props for ApiAware HOC
- * 
+ *
  * These props can be passed directly to any API-enabled component to set its API characteristics.
- * For example: 
+ * For example:
  * ```tsx
- * <Button 
+ * <Button
  *   apiId="my-button"
- *   apiName="Submit Button" 
+ *   apiName="Submit Button"
  *   apiDescription="Submits the form data"
  * >
  *   Submit
  * </Button>
  * ```
  */
-export interface ApiComponentProps {  /** 
-   * Legacy API description for the component - use the more specific props below instead 
+export interface ApiComponentProps {
+  /**
+   * Legacy API description for the component - use the more specific props below instead
    * @deprecated Use specific api* props instead
    */
   api?: Partial<Omit<IApiComponent, "id">>;
 
-  /** 
+  /**
    * Unique identifier for the component - required for all API-enabled components
    * This ID must be unique across the entire application
    * Example: "calculator-clear-button" or "audio-player-play-button"
    */
   apiId?: string;
-  
-  /** 
+
+  /**
    * Component type (e.g., "Button", "Input", etc.)
    * This helps categorize the component in the API explorer and documentation
    * Example: "Button", "TextField", "Slider", "Toggle"
    */
   apiType?: string;
-  
-  /** 
+
+  /**
    * Human-readable name for the component
    * This should be concise and descriptive
    * Example: "Play Button", "Volume Slider", "Search Input"
    */
   apiName?: string;
-  
-  /** 
+
+  /**
    * Human-readable description of what the component does
    * This should explain the component's purpose and behavior
    * Example: "Plays or pauses the current audio track"
    */
   apiDescription?: string;
-  
-  /** 
+
+  /**
    * Path to the component in the application structure
    * This helps organize components in a logical hierarchy
    * Example: "/audio-player/controls" or "/calculator/digits"
    */
   apiPath?: string;
-  
-  /** 
+
+  /**
    * Custom API actions to merge with default actions
    * Define additional actions that can be performed on this component
    */
   apiActions?: IApiAction[];
-    /** 
+  /**
    * Initial state for the component
    * Set custom state properties beyond the default enabled/visible
    * Example: { enabled: true, visible: true, mode: "edit", isValid: false }
    */
   apiState?: Record<string, unknown>;
-  
-  /** 
+
+  /**
    * Additional metadata about the component
    * Can include any extra information needed by the API consumer
    * Example: { version: "1.0", author: "John Doe", category: "input" }

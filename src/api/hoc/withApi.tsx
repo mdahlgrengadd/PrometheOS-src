@@ -52,9 +52,9 @@ export function withApi<P extends object>(
   // Define the wrapped component
   const WithApiComponent = React.forwardRef<unknown, P & ApiComponentProps>(
     (props, ref) => {
-      const { 
-        api, 
-        apiId, 
+      const {
+        api,
+        apiId,
         apiType,
         apiName,
         apiDescription,
@@ -62,7 +62,7 @@ export function withApi<P extends object>(
         apiActions,
         apiState,
         apiMetadata,
-        ...componentProps 
+        ...componentProps
       } = props as P & ApiComponentProps;
       const { registerComponent, unregisterComponent, updateComponentState } =
         useApi();
@@ -73,14 +73,14 @@ export function withApi<P extends object>(
       );
 
       // Reference to the element for simulating clicks
-      const elementRef = useRef<HTMLElement | null>(null);      // Track registration status
+      const elementRef = useRef<HTMLElement | null>(null); // Track registration status
       const isRegisteredRef = useRef(false);
 
       // Track the previous state to prevent redundant updates
       const prevStateRef = useRef<Record<string, unknown>>({});
 
       // Store the fullApiDoc in a ref to prevent it from triggering re-renders
-      const fullApiDocRef = useRef<IApiComponent | null>(null);// Generate automatic click action for elements that can be clicked
+      const fullApiDocRef = useRef<IApiComponent | null>(null); // Generate automatic click action for elements that can be clicked
       const autoGenerateActions = useCallback(() => {
         const defaultActions = defaultApiDoc?.actions || [];
         const propActions = api?.actions || [];
@@ -96,27 +96,24 @@ export function withApi<P extends object>(
         // Add or override with prop actions
         propActions.forEach((action) => {
           actionMap.set(action.id, action);
-        });        // Auto-generate click action if it doesn't exist and component is clickable
-        // (Buttons, links, etc. typically have onClick handlers)
+        }); // Auto-generate click action if it doesn't exist and component is clickable        // (Buttons, links, etc. typically have onClick handlers)
         if (!actionMap.has("click") && "onClick" in props) {
           actionMap.set("click", {
             id: "click",
-            description: `Click the ${
-              apiType || api?.type || defaultApiDoc?.type || "component"
-            }`,
+            name: apiName ? `${apiName} Click` : `Click ${apiType || api?.type || defaultApiDoc?.type || "component"}`,
+            description: apiDescription || 
+              `Click the ${apiType || api?.type || defaultApiDoc?.type || "component"}`,
             parameters: [],
           });
-        }
-
-        return Array.from(actionMap.values());
-      }, [api?.actions, props]);      // Create the full API documentation by merging defaults with props
+        }return Array.from(actionMap.values());
+      }, [api?.actions, api?.type, apiName, apiType, props, defaultApiDoc?.type]); // Create the full API documentation by merging defaults with props
       const fullApiDoc = useMemo<IApiComponent>(() => {
         const mergedActions = autoGenerateActions();
 
         // Get actions from both the apiActions prop and from the api object
         const combinedActions = [
           ...(apiActions || []),
-          ...(api?.actions || [])
+          ...(api?.actions || []),
         ];
 
         // Combined state from all sources (priority: apiState > api.state > defaultApiDoc.state)
@@ -125,7 +122,7 @@ export function withApi<P extends object>(
           visible: true,
           ...(defaultApiDoc?.state || {}),
           ...(api?.state || {}),
-          ...(apiState || {})
+          ...(apiState || {}),
         };
 
         // Combined metadata (priority: apiMetadata > api.metadata > defaultApiDoc.metadata)
@@ -134,22 +131,29 @@ export function withApi<P extends object>(
           ...(api?.metadata || {}),
           ...(apiMetadata || {}),
           // Add name as metadata if provided
-          ...(apiName ? { name: apiName } : {})
-        };
-
-        const doc = {
+          ...(apiName ? { name: apiName } : {}),
+        };        const doc = {
           id: uniqueId.current,
           type: apiType || api?.type || defaultApiDoc?.type || "unknown",
-          description: apiDescription || api?.description || defaultApiDoc?.description || "No description",
+          name: apiName, // Add name directly to the component object
+          description:
+            apiDescription ||
+            api?.description ||
+            defaultApiDoc?.description ||
+            "No description",
           state: combinedState,
           actions: mergedActions.length > 0 ? mergedActions : combinedActions,
-          path: apiPath || api?.path || defaultApiDoc?.path || `/components/${uniqueId.current}`,
+          path:
+            apiPath ||
+            api?.path ||
+            defaultApiDoc?.path ||
+            `/components/${uniqueId.current}`,
           metadata: combinedMetadata,
         };
 
         // Update the ref so we can use it in the effect without dependencies
         fullApiDocRef.current = doc;
-        
+
         return doc;
       }, [
         api?.description,
@@ -169,7 +173,7 @@ export function withApi<P extends object>(
         defaultApiDoc?.path,
         defaultApiDoc?.state,
         defaultApiDoc?.type,
-      ]);      // Register an automatic click handler
+      ]); // Register an automatic click handler
       const registerClickHandler = useCallback(() => {
         if (isRegisteredRef.current && "onClick" in props) {
           // Register the click action handler
@@ -187,34 +191,34 @@ export function withApi<P extends object>(
                   target: elementRef.current,
                   currentTarget: elementRef.current,
                 } as unknown as React.MouseEvent<HTMLElement>;
-                
+
                 // Call the onClick handler with the synthetic event
                 (props as any).onClick(syntheticEvent);
-                
+
                 // Or click the DOM element directly if we have a ref
                 if (elementRef.current) {
                   elementRef.current.click();
                 }
-                
+
                 return { success: true };
               }
-              
+
               return { success: false, error: "Component is not clickable" };
             },
           });
         }
-      }, [props]);// Setup component registration once on mount with cleanup on unmount
+      }, [props]); // Setup component registration once on mount with cleanup on unmount
       // Using empty deps array to ensure this only runs on mount/unmount
       useEffect(() => {
         const id = uniqueId.current;
         const registerFn = registerComponent;
         const unregisterFn = unregisterComponent;
         const clickHandlerFn = registerClickHandler;
-        
+
         // Only register if not already registered
         if (!isRegisteredRef.current && !componentRegistry.isMounted(id)) {
           const apiDoc = fullApiDocRef.current;
-          
+
           if (apiDoc) {
             console.log(
               `[API] Registering component: ${id} (${apiDoc.type}) with ${apiDoc.actions.length} actions`
@@ -241,7 +245,7 @@ export function withApi<P extends object>(
             isRegisteredRef.current = false;
           }
         };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []); // Empty deps = only run on mount/unmount
 
       // Handle state updates separately
@@ -321,10 +325,10 @@ export function useApiComponent(
   const isRegisteredRef = useRef(false);
   // Track previous state to prevent redundant updates
   const prevStateRef = useRef<Record<string, unknown>>({});
-  
+
   // Store the static component in a ref to prevent dependency issues
   const staticComponentRef = useRef<IApiComponent | null>(null);
-  
+
   // Memoize the static component object (without mutable state)
   const staticComponent = useMemo(() => {
     // Create a copy of apiDoc without the state property
@@ -339,10 +343,10 @@ export function useApiComponent(
         visible: true,
       },
     };
-    
+
     // Update the ref for use in the effect
     staticComponentRef.current = component;
-    
+
     return component;
   }, [apiId, apiDoc]);
 
@@ -351,17 +355,17 @@ export function useApiComponent(
     if (apiDoc.state) {
       prevStateRef.current = { ...apiDoc.state };
     }
-  }, [apiDoc.state]);  // Registration effect - register once and clean up on unmount
+  }, [apiDoc.state]); // Registration effect - register once and clean up on unmount
   // Using empty deps array to ensure this only runs on mount/unmount
   useEffect(() => {
     const id = apiId;
     const registerFn = registerComponent;
     const unregisterFn = unregisterComponent;
-    
+
     // Only register if not already mounted
     if (!componentRegistry.isMounted(id)) {
       const component = staticComponentRef.current;
-      
+
       if (component) {
         console.log(`[API] Registering component via hook: ${id}`);
         registerFn(component);
@@ -369,7 +373,7 @@ export function useApiComponent(
         isRegisteredRef.current = true;
       }
     }
-    
+
     // Return cleanup function for unmounting
     return () => {
       if (isRegisteredRef.current) {
@@ -379,7 +383,7 @@ export function useApiComponent(
         isRegisteredRef.current = false;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps = only run on mount/unmount
 
   // Handle state updates separately
