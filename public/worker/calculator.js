@@ -1,5 +1,5 @@
 // Built worker plugin: calculator
-// Generated on: 2025-05-17T07:20:26.149Z
+// Generated on: 2025-05-17T07:23:57.099Z
 
 // src/worker/plugins/calculator.ts
 var WorkerCalculator = {
@@ -26,7 +26,7 @@ var WorkerCalculator = {
       default:
         result = secondOperand;
     }
-    console.log(`Worker result: ${result}`);
+    console.log(`WorkerZXYRTE result: ${result}`);
     return result;
   },
   /**

@@ -4,7 +4,7 @@ import { WorkerPlugin } from '../../plugins/types';
  * Worker logic for Webllm2-chat
  * This runs in a Web Worker context with no DOM access
  */
-const webllm2chatWorker: WorkerPlugin = {
+const webllm2ChatWorker: WorkerPlugin = {
   id: "webllm2-chat",
 
   /**
@@ -42,4 +42,4 @@ const webllm2chatWorker: WorkerPlugin = {
 };
 
 // Export the worker instance as default
-export default webllm2 - chatWorker;
+export default webllm2ChatWorker;
