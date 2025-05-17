@@ -1,28 +1,10 @@
-import "@xyflow/react/dist/style.css";
+import '@xyflow/react/dist/style.css';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import FlowEditor from "../../../features/workflow-editor/FlowEditor";
-import { Plugin, PluginManifest } from "../../types";
-
-// Define the plugin manifest
-export const manifest: PluginManifest = {
-  id: "api-flow-editor",
-  name: "API Flow Editor",
-  version: "1.0.0",
-  description: "Blueprints-style visual editor for API workflows",
-  author: "Desktop Dreamscape Team",
-  icon: (
-    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-primary font-bold">
-      FE
-    </div>
-  ),
-  entry: "apps/api-flow-editor",
-  preferredSize: {
-    width: 1200,
-    height: 800,
-  },
-};
+import FlowEditor from '../../../features/workflow-editor/FlowEditor';
+import { Plugin } from '../../types';
+import { manifest } from './manifest';
 
 // Main component for the API Flow Editor
 const ApiFlowEditorComponent: React.FC = () => {

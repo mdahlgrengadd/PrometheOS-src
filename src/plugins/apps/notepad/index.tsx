@@ -20,25 +20,7 @@ import {
 
 import { Plugin, PluginManifest } from "../../types";
 
-export const manifest: PluginManifest = {
-  id: "notepad",
-  name: "Notepad",
-  version: "1.0.0",
-  description: "A simple text editor",
-  author: "Desktop System",
-  icon: (
-    <img
-      src="/icons/34688_ans_beos_ans_beos.png"
-      className="h-8 w-8"
-      alt="Notepad"
-    />
-  ),
-  entry: "apps/notepad",
-  preferredSize: {
-    width: 500,
-    height: 400,
-  },
-};
+import { manifest } from './manifest';
 
 // Create a separate React component for the Notepad
 const NotepadComponent: React.FC = () => {
@@ -242,3 +224,4 @@ const NotepadPlugin: Plugin = {
 };
 
 export default NotepadPlugin;
+

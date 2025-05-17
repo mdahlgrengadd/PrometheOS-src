@@ -15,27 +15,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Plugin, PluginManifest } from '../../types';
-
-export const manifest: PluginManifest = {
-  id: "api-explorer",
-  name: "API Explorer",
-  version: "1.0.0",
-  description: "Explore and interact with available API components",
-  author: "Desktop System",
-  icon: (
-    <img
-      src="/icons/34728_code_coding_brackets_code_coding_brackets.png"
-      className="h-8 w-8"
-      alt="API Explorer"
-    />
-  ),
-  entry: "apps/api-explorer",
-  preferredSize: {
-    width: 800,
-    height: 600,
-  },
-};
+import { Plugin } from '../../types';
+import { manifest } from './manifest';
 
 /**
  * Component to display API parameters and capture input values

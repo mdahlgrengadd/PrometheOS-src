@@ -1,0 +1,41 @@
+import { WorkerPlugin } from '../../src/plugins/types';
+
+/**
+ * Worker logic for Browser
+ * This runs in a Web Worker context with no DOM access
+ */
+const browserWorker: WorkerPlugin = {
+  id: "browser",
+  
+  /**
+   * Example method that can be called from the UI
+   */
+  exampleMethod(param1: string, param2: number): { result: string } {
+    return {
+      result: `Processed ${param1} with value ${param2}`
+    };
+  },
+
+  /**
+   * Generic handler function that processes method calls with parameters
+   */
+  handle(method: string, params?: Record<string, unknown>): unknown {
+    switch (method) {
+      case "exampleMethod": {
+        if (!params || typeof params.param1 !== "string" || typeof params.param2 !== "number") {
+          return { error: "Invalid parameters for exampleMethod" };
+        }
+        return this.exampleMethod(
+          params.param1 as string,
+          params.param2 as number
+        );
+      }
+      
+      default:
+        return { error: `Method ${method} not supported for browser` };
+    }
+  },
+};
+
+// Export the worker instance as default
+export default browserWorker; 

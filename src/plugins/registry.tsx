@@ -1,30 +1,26 @@
-import { manifest as apiExplorerManifest } from "./apps/api-explorer";
-import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor";
-import { manifest as audioPlayerManifest } from "./apps/audioplayer";
-import { manifest as browserManifest } from "./apps/browser";
+import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
+import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
+import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
+import { manifest as browserManifest } from './apps/browser/manifest';
 // import { manifest as calculatorManifest } from "./apps/calculator";
-import { manifest as workerCalculatorManifest } from "./apps/calculator/workerCalculator";
-import { manifest as chatManifest } from "./apps/chat";
-import { manifest as fileBrowserManifest } from "./apps/filebrowser";
+//import { manifest as workerCalculatorManifest } from "./apps/calculator/workerCalculator";
+import { manifest as chatManifest } from './apps/chat/manifest';
+import { manifest as fileBrowserManifest } from './apps/filebrowser/manifest';
 // Import all plugin manifests
-import { manifest as notepadManifest } from "./apps/notepad";
-import { manifest as sessionManifest } from "./apps/session";
-import { manifest as settingsManifest } from "./apps/settings";
-import { manifest as webampManifest } from "./apps/webamp";
-import { manifest as webllmChatManifest } from "./apps/webllm-chat";
-import { manifest as wordEditorManifest } from "./apps/wordeditor";
-import {
-  addDynamicManifest,
-  loadDynamicManifests,
-  removeDynamicManifest,
-} from "./dynamicRegistry";
-import { PluginManifest } from "./types";
+import { manifest as notepadManifest } from './apps/notepad/manifest';
+import { manifest as sessionManifest } from './apps/session/manifest';
+import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as webampManifest } from './apps/webamp/manifest';
+import { manifest as webllmChatManifest } from './apps/webllm-chat/manifest';
+import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { addDynamicManifest, loadDynamicManifests, removeDynamicManifest } from './dynamicRegistry';
+import { PluginManifest } from './types';
 
 // Static plugins list - keep this unchanged
 export const staticPlugins: PluginManifest[] = [
   notepadManifest,
   //calculatorManifest,
-  workerCalculatorManifest,
+  //workerCalculatorManifest,
   audioPlayerManifest,
   browserManifest,
   settingsManifest,
