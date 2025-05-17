@@ -8,7 +8,7 @@ export interface IApiComponent {
 
   /** Type of component (Button, Input, etc.) */
   type: string;
-  
+
   /** Optional display name for the component */
   name?: string;
 
@@ -25,7 +25,7 @@ export interface IApiComponent {
   actions: IApiAction[];
   /** Path to the component in the application (e.g., /calculator/display) */
   path: string;
-  
+
   /** Additional metadata about the component */
   metadata?: {
     /** Optional name for display in UI */

@@ -1,5 +1,5 @@
 // Built worker plugin: api-explorer
-// Generated on: 2025-05-17T14:57:47.989Z
+// Generated on: 2025-05-17T18:16:59.758Z
 
 // src/worker/plugins/api-explorer.ts
 var apiExplorerWorker = {

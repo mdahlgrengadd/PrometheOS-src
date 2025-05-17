@@ -100,13 +100,28 @@ export function withApi<P extends object>(
         if (!actionMap.has("click") && "onClick" in props) {
           actionMap.set("click", {
             id: "click",
-            name: apiName ? `${apiName} Click` : `Click ${apiType || api?.type || defaultApiDoc?.type || "component"}`,
-            description: apiDescription || 
-              `Click the ${apiType || api?.type || defaultApiDoc?.type || "component"}`,
+            name: apiName
+              ? `${apiName} Click`
+              : `Click ${
+                  apiType || api?.type || defaultApiDoc?.type || "component"
+                }`,
+            description:
+              apiDescription ||
+              `Click the ${
+                apiType || api?.type || defaultApiDoc?.type || "component"
+              }`,
             parameters: [],
           });
-        }return Array.from(actionMap.values());
-      }, [api?.actions, api?.type, apiName, apiType, props, defaultApiDoc?.type]); // Create the full API documentation by merging defaults with props
+        }
+        return Array.from(actionMap.values());
+      }, [
+        api?.actions,
+        api?.type,
+        apiName,
+        apiType,
+        props,
+        defaultApiDoc?.type,
+      ]); // Create the full API documentation by merging defaults with props
       const fullApiDoc = useMemo<IApiComponent>(() => {
         const mergedActions = autoGenerateActions();
 
@@ -132,7 +147,8 @@ export function withApi<P extends object>(
           ...(apiMetadata || {}),
           // Add name as metadata if provided
           ...(apiName ? { name: apiName } : {}),
-        };        const doc = {
+        };
+        const doc = {
           id: uniqueId.current,
           type: apiType || api?.type || defaultApiDoc?.type || "unknown",
           name: apiName, // Add name directly to the component object
