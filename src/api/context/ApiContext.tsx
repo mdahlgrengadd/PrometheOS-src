@@ -1,8 +1,19 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
-import { eventBus } from '../../plugins/EventBus';
-import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
-import { generateOpenApiSpec } from '../utils/openapi';
+import { eventBus } from "../../plugins/EventBus";
+import {
+  IActionResult,
+  IApiComponent,
+  IApiContextValue,
+  IOpenApiSpec,
+} from "../core/types";
+import { generateOpenApiSpec } from "../utils/openapi";
 
 // Create the API context with null default value
 const ApiContext = createContext<IApiContextValue | null>(null);
@@ -44,7 +55,6 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     // Emit event for component registration
     eventBus.emit("api:component:registered", component);
   };
-
   /**
    * Unregister a component from the API
    * @param id The ID of the component to unregister

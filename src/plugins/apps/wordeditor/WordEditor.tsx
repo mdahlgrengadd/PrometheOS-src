@@ -1,30 +1,44 @@
-import React, { useState } from 'react';
+import "./TaskList.css";
+import "./word-editor.css"; // Import the CSS file with layout-specific styles
+import "./word-editor.scss"; // Import the SCSS file with theme-specific styles
+
+import React, { useState } from "react";
 
 import {
-    MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut
-} from '@/components/ui/menubar';
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+} from "@/components/ui/menubar";
 import {
-    WindowsMenubar, WindowsMenubarContent, WindowsMenubarTrigger
-} from '@/components/ui/windows';
-import CharacterCount from '@tiptap/extension-character-count';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import Image from '@tiptap/extension-image';
-import Link from '@tiptap/extension-link';
-import Placeholder from '@tiptap/extension-placeholder';
-import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
-import Underline from '@tiptap/extension-underline';
-import { useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+  WindowsMenubar,
+  WindowsMenubarContent,
+  WindowsMenubarTrigger,
+} from "@/components/ui/windows";
+import CharacterCount from "@tiptap/extension-character-count";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import TextAlign from "@tiptap/extension-text-align";
+import TextStyle from "@tiptap/extension-text-style";
+import Typography from "@tiptap/extension-typography";
+import Underline from "@tiptap/extension-underline";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
+import content from "./content.json";
 // Internal components (toolbar + page view)
-import WordEditorContent from './ui';
-import WordEditorToolbar from './WordEditorToolbar';
+import WordEditorContent from "./ui";
+import WordEditorToolbar from "./WordEditorToolbar";
 
 const WordEditor = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
-
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -45,207 +59,217 @@ const WordEditor = () => {
       Placeholder.configure({
         placeholder: "Start writing...",
       }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
       TextStyle,
       Color,
       Underline,
       Highlight.configure({
         multicolor: true,
       }),
+      Typography,
+      Subscript,
+      Superscript,
       CharacterCount,
     ],
-    content: `
-      <h1>Welcome to Word Editor</h1>
-      <p>This is a professional word processor built with TipTap.</p>
-      <p>Try formatting this text or adding your own content!</p>
-    `,
+    content: content,
     autofocus: true,
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none p-4",
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none",
       },
     },
     editable: true,
   });
-
   return (
     <div className="flex flex-col h-full bg-background text-primary">
-      {/* Top application menubar */}
-      <WindowsMenubar>
-        <MenubarMenu>
-          <WindowsMenubarTrigger
-            className="!bg-transparent !border-0"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              appearance: "none",
-            }}
-          >
-            File
-          </WindowsMenubarTrigger>
-          <WindowsMenubarContent>
-            <MenubarItem className="hover:bg-muted">
-              New Document
-              <MenubarShortcut>⌘N</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem className="hover:bg-muted">
-              Open...
-              <MenubarShortcut>⌘O</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">
-              Save
-              <MenubarShortcut>⌘S</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem className="hover:bg-muted">Export as PDF</MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">Print</MenubarItem>
-          </WindowsMenubarContent>
-        </MenubarMenu>
-
-        <MenubarMenu>
-          <WindowsMenubarTrigger
-            className="!bg-transparent !border-0"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              appearance: "none",
-            }}
-          >
-            Edit
-          </WindowsMenubarTrigger>
-          <WindowsMenubarContent>
-            <MenubarItem
-              className="hover:bg-muted"
-              onClick={() => editor?.commands.undo()}
-              disabled={!editor?.can().chain().focus().undo().run()}
-            >
-              Undo
-              <MenubarShortcut>⌘Z</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem
-              className="hover:bg-muted"
-              onClick={() => editor?.commands.redo()}
-              disabled={!editor?.can().chain().focus().redo().run()}
-            >
-              Redo
-              <MenubarShortcut>⇧⌘Z</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem
-              className="hover:bg-muted"
-              onClick={() => {
-                editor?.chain().focus().selectAll().run();
-                document.execCommand("copy");
+      {/* Header section - fixed */}
+      <div className="fixed-header">
+        {/* Top application menubar */}
+        <WindowsMenubar>
+          <MenubarMenu>
+            <WindowsMenubarTrigger
+              className="!bg-transparent !border-0"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                appearance: "none",
               }}
             >
-              Copy
-              <MenubarShortcut>⌘C</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem
-              className="hover:bg-muted"
-              onClick={() => {
-                editor?.chain().focus().selectAll().run();
-                document.execCommand("cut");
+              File
+            </WindowsMenubarTrigger>
+            <WindowsMenubarContent>
+              <MenubarItem className="hover:bg-muted">
+                New Document
+                <MenubarShortcut>⌘N</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem className="hover:bg-muted">
+                Open...
+                <MenubarShortcut>⌘O</MenubarShortcut>
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">
+                Save
+                <MenubarShortcut>⌘S</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem className="hover:bg-muted">
+                Export as PDF
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">Print</MenubarItem>
+            </WindowsMenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <WindowsMenubarTrigger
+              className="!bg-transparent !border-0"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                appearance: "none",
               }}
             >
-              Cut
-              <MenubarShortcut>⌘X</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem
-              className="hover:bg-muted"
-              onClick={() => document.execCommand("paste")}
+              Edit
+            </WindowsMenubarTrigger>
+            <WindowsMenubarContent>
+              <MenubarItem
+                className="hover:bg-muted"
+                onClick={() => editor?.commands.undo()}
+                disabled={!editor?.can().chain().focus().undo().run()}
+              >
+                Undo
+                <MenubarShortcut>⌘Z</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem
+                className="hover:bg-muted"
+                onClick={() => editor?.commands.redo()}
+                disabled={!editor?.can().chain().focus().redo().run()}
+              >
+                Redo
+                <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem
+                className="hover:bg-muted"
+                onClick={() => {
+                  editor?.chain().focus().selectAll().run();
+                  document.execCommand("copy");
+                }}
+              >
+                Copy
+                <MenubarShortcut>⌘C</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem
+                className="hover:bg-muted"
+                onClick={() => {
+                  editor?.chain().focus().selectAll().run();
+                  document.execCommand("cut");
+                }}
+              >
+                Cut
+                <MenubarShortcut>⌘X</MenubarShortcut>
+              </MenubarItem>
+              <MenubarItem
+                className="hover:bg-muted"
+                onClick={() => document.execCommand("paste")}
+              >
+                Paste
+                <MenubarShortcut>⌘V</MenubarShortcut>
+              </MenubarItem>
+            </WindowsMenubarContent>
+          </MenubarMenu>
+
+          <MenubarMenu>
+            <WindowsMenubarTrigger
+              className="!bg-transparent !border-0"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                appearance: "none",
+              }}
             >
-              Paste
-              <MenubarShortcut>⌘V</MenubarShortcut>
-            </MenubarItem>
-          </WindowsMenubarContent>
-        </MenubarMenu>
+              View
+            </WindowsMenubarTrigger>
+            <WindowsMenubarContent>
+              <MenubarItem className="hover:bg-muted">Zoom In</MenubarItem>
+              <MenubarItem className="hover:bg-muted">Zoom Out</MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">Full Screen</MenubarItem>
+            </WindowsMenubarContent>
+          </MenubarMenu>
 
-        <MenubarMenu>
-          <WindowsMenubarTrigger
-            className="!bg-transparent !border-0"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              appearance: "none",
-            }}
-          >
-            View
-          </WindowsMenubarTrigger>
-          <WindowsMenubarContent>
-            <MenubarItem className="hover:bg-muted">Zoom In</MenubarItem>
-            <MenubarItem className="hover:bg-muted">Zoom Out</MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">Full Screen</MenubarItem>
-          </WindowsMenubarContent>
-        </MenubarMenu>
+          <MenubarMenu>
+            <WindowsMenubarTrigger
+              className="!bg-transparent !border-0"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                appearance: "none",
+              }}
+            >
+              Format
+            </WindowsMenubarTrigger>
+            <WindowsMenubarContent>
+              <MenubarItem className="hover:bg-muted">Font...</MenubarItem>
+              <MenubarItem className="hover:bg-muted">Paragraph...</MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">
+                Bullets & Numbering
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">
+                Headers & Footers
+              </MenubarItem>
+              <MenubarItem className="hover:bg-muted">
+                Page Setup...
+              </MenubarItem>
+            </WindowsMenubarContent>
+          </MenubarMenu>
 
-        <MenubarMenu>
-          <WindowsMenubarTrigger
-            className="!bg-transparent !border-0"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              appearance: "none",
-            }}
-          >
-            Format
-          </WindowsMenubarTrigger>
-          <WindowsMenubarContent>
-            <MenubarItem className="hover:bg-muted">Font...</MenubarItem>
-            <MenubarItem className="hover:bg-muted">Paragraph...</MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">
-              Bullets & Numbering
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">
-              Headers & Footers
-            </MenubarItem>
-            <MenubarItem className="hover:bg-muted">Page Setup...</MenubarItem>
-          </WindowsMenubarContent>
-        </MenubarMenu>
+          <MenubarMenu>
+            <WindowsMenubarTrigger
+              className="!bg-transparent !border-0"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                appearance: "none",
+              }}
+            >
+              Help
+            </WindowsMenubarTrigger>
+            <WindowsMenubarContent>
+              <MenubarItem className="hover:bg-muted">
+                Documentation
+              </MenubarItem>
+              <MenubarItem className="hover:bg-muted">
+                Keyboard Shortcuts
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem className="hover:bg-muted">
+                About Word Editor
+              </MenubarItem>
+            </WindowsMenubarContent>
+          </MenubarMenu>
+        </WindowsMenubar>
+        {/* Toolbar with Windows-styled controls */}{" "}
+        <WordEditorToolbar editor={editor} />
+      </div>
 
-        <MenubarMenu>
-          <WindowsMenubarTrigger
-            className="!bg-transparent !border-0"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              appearance: "none",
-            }}
-          >
-            Help
-          </WindowsMenubarTrigger>
-          <WindowsMenubarContent>
-            <MenubarItem className="hover:bg-muted">Documentation</MenubarItem>
-            <MenubarItem className="hover:bg-muted">
-              Keyboard Shortcuts
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem className="hover:bg-muted">
-              About Word Editor
-            </MenubarItem>
-          </WindowsMenubarContent>
-        </MenubarMenu>
-      </WindowsMenubar>
-
-      {/* Toolbar with Windows-styled controls */}
-      <WordEditorToolbar editor={editor} />
-
-      {/* Document page view */}
-      <div className="flex-grow overflow-auto bg-background">
+      {/* Document page view - scrollable area */}
+      <div className="document-container-wrapper">
         <WordEditorContent editor={editor} documentName={documentName} />
       </div>
 
-      {/* Status bar */}
-      <div className="border-t border-border px-4 py-1 text-xs flex justify-between items-center bg-muted/50">
+      {/* Status bar - fixed at bottom */}
+      <div className="fixed-status-bar px-4 py-1 text-xs flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <span>Words: {editor?.storage.characterCount.words() || 0}</span>
           <span>

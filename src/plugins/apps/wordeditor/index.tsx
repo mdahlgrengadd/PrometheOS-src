@@ -1,9 +1,8 @@
 import React from "react";
 
 import { Plugin, PluginManifest } from "../../types";
+import { manifest } from "./manifest";
 import WordEditorComponent from "./WordEditor";
-
-import { manifest } from './manifest';
 
 const WordEditorPlugin: Plugin = {
   id: manifest.id,
@@ -21,4 +20,3 @@ const WordEditorPlugin: Plugin = {
 };
 
 export default WordEditorPlugin;
-

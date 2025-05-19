@@ -128,20 +128,20 @@ Use one of the existing API components or create a custom one:
 
 ```tsx
 // Using existing API components
-import { ApiButton } from '@/components/api/ApiButton';
-import { ApiTextareaWithHandler } from '@/components/api/ApiTextarea';
+-import { ApiButton } from '@/components/api/ApiButton';
++import { Button } from '@/components/ui/api/button';
 
 // Inside your component:
 return (
   <div>
-    <ApiButton
+    <Button
       apiId="myapp-button"
       onClick={handleClick}
     >
       Click Me
-    </ApiButton>
+    </Button>
     
-    <ApiTextareaWithHandler
+    <Textarea
       apiId="myapp-textarea"
       value={text}
       onChange={handleTextChange}
@@ -463,4 +463,4 @@ Once your plugin is implemented with API functionality:
 
 ---
 
-For more details, check the API implementation in `src/api/` and existing plugins in `src/plugins/apps/`. 
+For more details, check the API implementation in `src/api/` and existing plugins in `src/plugins/apps/`.

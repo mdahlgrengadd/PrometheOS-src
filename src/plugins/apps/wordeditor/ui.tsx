@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { Editor, EditorContent } from '@tiptap/react';
+import { Editor, EditorContent } from "@tiptap/react";
 
 interface WordEditorContentProps {
   editor: Editor | null;
@@ -20,13 +20,12 @@ const WordEditorContent = ({
   }
 
   return (
-    <div className="relative h-full">
-      {/* Document Page */}
-      <div className="mx-auto my-4 w-[8.5in] min-h-[11in] shadow-lg bg-card p-8 border border-border">
+    <div className="document-scroll-container">
+      <div className="document-page">
         <div className="mb-4">
           <h1 className="text-2xl font-medium text-center">{documentName}</h1>
         </div>
-        <EditorContent editor={editor} className="h-full min-h-[10in]" />
+        <EditorContent editor={editor} className="editor-content-area" />
       </div>
     </div>
   );

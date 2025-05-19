@@ -1,19 +1,45 @@
 import {
-    AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Code as CodeIcon, Heading1, Heading2,
-    Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListOrdered, Redo, RotateCcw,
-    Strikethrough, Underline as UnderlineIcon
-} from 'lucide-react';
-import React from 'react';
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  CheckSquare,
+  Code as CodeIcon,
+  Heading1,
+  Heading2,
+  Highlighter,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Redo,
+  RotateCcw,
+  Strikethrough,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
+  Underline as UnderlineIcon,
+} from "lucide-react";
+import React from "react";
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SelectContent, SelectTrigger } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SelectContent, SelectTrigger } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 // Windows-themed components
 import {
-    Button as WindowsButton, SelectGroup, SelectItem, SelectValue, WindowsSelect
-} from '@/components/ui/windows';
-import { cn } from '@/lib/utils';
-import { Editor } from '@tiptap/react';
+  Button as WindowsButton,
+  SelectGroup,
+  SelectItem,
+  SelectValue,
+  WindowsSelect,
+} from "@/components/ui/windows";
+import { cn } from "@/lib/utils";
+import { Editor } from "@tiptap/react";
 
 interface WordEditorToolbarProps {
   editor: Editor | null;
@@ -83,9 +109,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
           </SelectContent>
         </WindowsSelect>
       </div>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Basic Formatting */}
       <WindowsButton
         variant="ghost"
@@ -95,7 +119,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Bold className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -104,7 +127,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Italic className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -116,7 +138,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <UnderlineIcon className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -125,9 +146,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Strikethrough className="h-4 w-4" />
       </WindowsButton>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Heading Styles */}
       <WindowsButton
         variant="ghost"
@@ -140,7 +159,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Heading1 className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -152,9 +170,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Heading2 className="h-4 w-4" />
       </WindowsButton>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Lists */}
       <WindowsButton
         variant="ghost"
@@ -167,7 +183,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <List className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -179,9 +194,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <ListOrdered className="h-4 w-4" />
       </WindowsButton>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Alignment */}
       <WindowsButton
         variant="ghost"
@@ -194,7 +207,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <AlignLeft className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -206,7 +218,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <AlignCenter className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -218,7 +229,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <AlignRight className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -230,9 +240,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <AlignJustify className="h-4 w-4" />
       </WindowsButton>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Link and Media */}
       <WindowsButton
         variant="ghost"
@@ -241,8 +249,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={setLink}
       >
         <LinkIcon className="h-4 w-4" />
-      </WindowsButton>
-
+      </WindowsButton>{" "}
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -251,9 +258,44 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <ImageIcon className="h-4 w-4" />
       </WindowsButton>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
+      {/* Superscript, Subscript */}
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("superscript") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleSuperscript().run()}
+      >
+        <SuperscriptIcon className="h-4 w-4" />
+      </WindowsButton>
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("subscript") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleSubscript().run()}
+      >
+        <SubscriptIcon className="h-4 w-4" />
+      </WindowsButton>
+      <Separator orientation="vertical" className="h-6 mx-1" />
+      {/* Task List */}
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("taskList") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleTaskList().run()}
+      >
+        <CheckSquare className="h-4 w-4" />
+      </WindowsButton>
+      <Separator orientation="vertical" className="h-6 mx-1" />
       {/* Code and Highlight */}
       <WindowsButton
         variant="ghost"
@@ -262,8 +304,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleCode().run()}
       >
         <CodeIcon className="h-4 w-4" />
-      </WindowsButton>
-
+      </WindowsButton>{" "}
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -275,9 +316,40 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Highlighter className="h-4 w-4" />
       </WindowsButton>
-
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("subscript") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleSubscript().run()}
+      >
+        <SubscriptIcon className="h-4 w-4" />
+      </WindowsButton>
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("superscript") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleSuperscript().run()}
+      >
+        <SuperscriptIcon className="h-4 w-4" />
+      </WindowsButton>
+      <WindowsButton
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "px-2 h-8 w-8",
+          editor.isActive("taskList") && "bg-muted"
+        )}
+        onClick={() => editor.chain().focus().toggleTaskList().run()}
+      >
+        <CheckSquare className="h-4 w-4" />
+      </WindowsButton>
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Text Color */}
       <Popover>
         <PopoverTrigger asChild>
@@ -309,9 +381,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
           </div>
         </PopoverContent>
       </Popover>
-
       <Separator orientation="vertical" className="h-6 mx-1" />
-
       {/* Undo and Redo */}
       <WindowsButton
         variant="ghost"
@@ -322,7 +392,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <RotateCcw className="h-4 w-4" />
       </WindowsButton>
-
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -332,7 +401,6 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <Redo className="h-4 w-4" />
       </WindowsButton>
-
       {/* Clear Styling */}
       <WindowsButton
         variant="ghost"

@@ -1,22 +1,31 @@
-import { ChevronDown, ChevronRight, RefreshCw } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-import { IApiAction, IApiComponent, IApiParameter } from '@/api/core/types';
-import { useApi } from '@/api/hooks/useApi';
+import { IApiAction, IApiComponent, IApiParameter } from "@/api/core/types";
+import { useApi } from "@/api/hooks/useApi";
 import {
-    Accordion, AccordionContent, AccordionItem, AccordionTrigger
-} from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 
-import { Plugin } from '../../types';
-import { manifest } from './manifest';
+import { Plugin } from "../../types";
+import { manifest } from "./manifest";
 
 /**
  * Component to display API parameters and capture input values
@@ -217,9 +226,14 @@ const ComponentDetails: React.FC<{ component: IApiComponent }> = ({
         <Accordion type="single" collapsible className="w-full">
           {component.actions.map((action) => (
             <AccordionItem key={action.id} value={action.id}>
+              {" "}
               <AccordionTrigger className="text-left">
                 <div>
-                  <span className="font-medium">{action.name}</span>
+                  <span className="font-medium">
+                    {action.id === "click" && component.name
+                      ? `${component.name} (Click Action)`
+                      : action.name}
+                  </span>
                   <span className="ml-2 text-xs text-gray-500">
                     {action.id}
                   </span>
@@ -386,10 +400,16 @@ const PathGroupItem: React.FC<{
                 }`}
                 onClick={() => onSelectComponent(component)}
               >
+                {" "}
                 <CardHeader className="py-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-sm">{component.id}</CardTitle>
+                      {" "}
+                      <CardTitle className="text-sm">
+                        {component.name ||
+                          component.metadata?.name ||
+                          component.id}
+                      </CardTitle>
                       <CardDescription className="text-xs">
                         {component.type}
                       </CardDescription>
@@ -616,13 +636,15 @@ const ApiExplorerComponent: React.FC = () => {
   useEffect(() => {
     const fetchComponents = () => {
       const apiComponents = getComponents();
-      setComponents(apiComponents);
+      // Only show APIs with at least one action
+      const visibleApis = apiComponents.filter(
+        (api) => Array.isArray(api.actions) && api.actions.length > 0
+      );
+      setComponents(visibleApis);
 
       // If there's a selected component, update it
       if (selectedComponent) {
-        const updated = apiComponents.find(
-          (c) => c.id === selectedComponent.id
-        );
+        const updated = visibleApis.find((c) => c.id === selectedComponent.id);
         if (updated) {
           setSelectedComponent(updated);
         }
@@ -674,8 +696,9 @@ const ApiExplorerComponent: React.FC = () => {
               {selectedComponent ? (
                 <div className="h-full flex flex-col">
                   <div className="mb-4">
+                    {" "}
                     <h2 className="text-xl font-bold">
-                      {selectedComponent.id}
+                      {selectedComponent.name || selectedComponent.id}
                     </h2>
                     <div className="flex gap-2 mt-1">
                       <Badge>{selectedComponent.type}</Badge>

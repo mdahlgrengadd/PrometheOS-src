@@ -1,7 +1,16 @@
-import React from 'react';
-import { PluginManifest } from '../../../plugins/types';
+import React from "react";
 
-export const manifest: PluginManifest = {
+import {
+  textareaApiActions,
+  textareaApiDoc,
+} from "@/components/ui/api/textarea-api";
+
+import { PluginManifest } from "../../../plugins/types";
+
+// Export for backwards compatibility
+export { textareaApiDoc, textareaApiActions };
+
+export const manifest: PluginManifest & { apiDoc?: typeof textareaApiDoc } = {
   id: "notepad",
   name: "Notepad",
   version: "1.0.0",
@@ -15,10 +24,11 @@ export const manifest: PluginManifest = {
     />
   ),
   entry: "apps/notepad",
+  apiDoc: textareaApiDoc,
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "notepad.js", 
+  // workerEntrypoint: "notepad.js",
   preferredSize: {
     width: 600,
     height: 400,
   },
-}; 
+};

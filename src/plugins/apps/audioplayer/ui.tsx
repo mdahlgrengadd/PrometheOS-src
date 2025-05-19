@@ -1,9 +1,18 @@
-import { Howl, Howler } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { AudioPlayerProvider, useAudioPlayer } from '@/components/api/ApiAudioPlayer';
-import { ApiButtonWithHandler } from '@/components/api/ApiButton';
+import { Button } from "@/components/ui/api/button";
+
+import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -369,40 +378,53 @@ const AudioPlayerUI = () => {
         >
           <List size={24} />
         </button>
-
         <div className="flex items-center justify-center gap-4">
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          {" "}
+          <Button
+            apiId="audio-player-controls-previous"
+            apiName="Previous Track"
+            apiDescription="Skip to the previous track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onPrevious}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipBack size={24} />
-          </button>
-
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
+          </Button>
+          <Button
+            apiId="audio-player-controls-play"
+            apiName={isPlaying ? "Pause" : "Play"}
+            apiDescription={
+              isPlaying ? "Pause the current track" : "Play the current track"
+            }
+            apiPath="/apps/audioplayer/controls"
             onClick={togglePlay}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
-          </button>
-
-          <button
-            data-draggable="false"
-            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          </Button>
+          <Button
+            apiId="audio-player-controls-next"
+            apiName="Next Track"
+            apiDescription="Skip to the next track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onNext}
+            className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipForward size={24} />
-          </button>
-        </div>
-
-        <button
-          data-draggable="false"
-          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
+          </Button>
+        </div>{" "}
+        <Button
+          apiId="audio-player-controls-mute"
+          apiName={isMuted ? "Unmute" : "Mute"}
+          apiDescription={
+            isMuted ? "Unmute the audio player" : "Mute the audio player"
+          }
+          apiPath="/apps/audioplayer/controls"
           onClick={onToggleMute}
+          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
           {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
-        </button>
+        </Button>
       </div>
 
       {/* Playlist Overlay */}
@@ -488,31 +510,6 @@ const AudioPlayerContent = () => {
       >
         <AudioPlayerUI />
       </AudioPlayerProvider>
-
-      {/*<ApiButtonWithHandler
-        apiId="audio-player-controls2"
-        api={{
-          type: "Button",
-          description: "Play button for audio player",
-          actions: [
-            {
-              id: "click",
-              name: "Play Button Click",
-              description: "Starts the audio playback",
-              available: true,
-              parameters: [],
-            },
-          ],
-          path: "/apps/audioplayer/buttons/play",
-          state: {
-            enabled: true,
-            visible: true,
-          },
-        }}
-        onClick={handlePlay}
-      >
-        Play
-      </ApiButtonWithHandler>*/}
     </>
   );
 };

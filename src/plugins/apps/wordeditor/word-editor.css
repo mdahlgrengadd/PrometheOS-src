@@ -1,0 +1,86 @@
+/* Base styling for fixed menu and toolbar */
+.fixed-header {
+  position: sticky;
+  top: 0;
+  background-color: var(--background, white);
+  z-index: 10;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Status bar fixed at bottom */
+.fixed-status-bar {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--muted, #f5f5f5);
+  z-index: 10;
+  border-top: 1px solid var(--border, #e5e7eb);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+/* Document container wrapper - prevents outer scrolling */
+.document-container-wrapper {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Document scroll container - the area that scrolls */
+.document-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  height: 100%;
+}
+
+/* Document page styling */
+.document-page {
+  background-color: white;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  min-height: calc(100% - 2rem);
+}
+
+/* Ensure the editor area has the right sizing */
+.editor-content-area {
+  min-height: 10rem;
+}
+
+/* Add some styles for the editor content */
+.ProseMirror {
+  outline: none;
+  min-height: 300px; /* Ensure there's a minimum editor height */
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+
+/* Fix focus ring for better accessibility */
+.ProseMirror:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Style for the scrollbar in the document view */
+.document-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.document-scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.document-scroll-container::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05);
+}
