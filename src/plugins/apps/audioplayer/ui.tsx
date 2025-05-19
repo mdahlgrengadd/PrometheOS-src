@@ -384,6 +384,7 @@ const AudioPlayerUI = () => {
             apiId="audio-player-controls-previous"
             apiName="Previous Track"
             apiDescription="Skip to the previous track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onPrevious}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -395,6 +396,7 @@ const AudioPlayerUI = () => {
             apiDescription={
               isPlaying ? "Pause the current track" : "Play the current track"
             }
+            apiPath="/apps/audioplayer/controls"
             onClick={togglePlay}
             className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -404,6 +406,7 @@ const AudioPlayerUI = () => {
             apiId="audio-player-controls-next"
             apiName="Next Track"
             apiDescription="Skip to the next track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onNext}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -416,17 +419,7 @@ const AudioPlayerUI = () => {
           apiDescription={
             isMuted ? "Unmute the audio player" : "Mute the audio player"
           }
-          onClick={onToggleMute}
-          className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
-        >
-          {isMuted ? <VolumeX size={24} /> : <Volume size={24} />}
-        </Button>
-        <Button
-          apiId="audio-player-controls-fucker"
-          apiName={isMuted ? "Fuck" : "UnFuck"}
-          apiDescription={
-            isMuted ? "Unfuck the audio player" : "Fuck the audio player"
-          }
+          apiPath="/apps/audioplayer/controls"
           onClick={onToggleMute}
           className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
