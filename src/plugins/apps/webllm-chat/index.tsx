@@ -1,12 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 
-import { Plugin, PluginManifest } from "../../types";
-import WorkerChatWindow from "./components/WorkerChatWindow";
+import { Plugin } from "../../types";
+import { manifest } from "./manifest";
+import WorkerChatWindow from "./ui";
 
-// Create manifest for the plugin
-import { manifest } from './manifest';
-
-// Create the plugin
 const WebLLMChatPlugin: Plugin = {
   id: manifest.id,
   manifest,
@@ -19,4 +16,3 @@ const WebLLMChatPlugin: Plugin = {
 };
 
 export default WebLLMChatPlugin;
-

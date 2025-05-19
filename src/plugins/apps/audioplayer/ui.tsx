@@ -1,9 +1,18 @@
-import { Howl, Howler } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
-import { Button } from '@/components/ui/api/button';
+import { Button } from "@/components/ui/api/button";
+
+import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -369,35 +378,48 @@ const AudioPlayerUI = () => {
         >
           <List size={24} />
         </button>
-
         <div className="flex items-center justify-center gap-4">
+          {" "}
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-previous"
+            apiName="Previous Track"
+            apiDescription="Skip to the previous track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onPrevious}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipBack size={24} />
           </Button>
-
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-play"
+            apiName={isPlaying ? "Pause" : "Play"}
+            apiDescription={
+              isPlaying ? "Pause the current track" : "Play the current track"
+            }
+            apiPath="/apps/audioplayer/controls"
             onClick={togglePlay}
             className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
             {isPlaying ? <Pause size={24} /> : <Play size={24} />}
           </Button>
-
           <Button
-            apiId="audio-player-controls"
+            apiId="audio-player-controls-next"
+            apiName="Next Track"
+            apiDescription="Skip to the next track in the playlist"
+            apiPath="/apps/audioplayer/controls"
             onClick={onNext}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipForward size={24} />
           </Button>
-        </div>
-
+        </div>{" "}
         <Button
-          apiId="audio-player-controls"
+          apiId="audio-player-controls-mute"
+          apiName={isMuted ? "Unmute" : "Mute"}
+          apiDescription={
+            isMuted ? "Unmute the audio player" : "Mute the audio player"
+          }
+          apiPath="/apps/audioplayer/controls"
           onClick={onToggleMute}
           className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
@@ -488,7 +510,6 @@ const AudioPlayerContent = () => {
       >
         <AudioPlayerUI />
       </AudioPlayerProvider>
-
     </>
   );
 };
