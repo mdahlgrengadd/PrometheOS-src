@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { manifest } from "./manifest";
 
 const CalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -20,22 +21,28 @@ const CalculatorContent: React.FC = () => {
         );
 
         if (!isRegistered) {
-          // Get the correct worker path based on environment
-          const workerPath = import.meta.env.PROD
-            ? "/workers/calculator-worker.js" // Production path
-            : "/workers/calculator-worker.js"; // Development path
-
-          // Register the calculator plugin with its worker URL
-          const success = await workerPluginManager.registerPlugin(
-            "calculator",
-            workerPath
-          );
-
-          if (success) {
-            setIsWorkerReady(true);
-            console.log("Calculator worker registered successfully");
+          // Use workerEntrypoint from manifest
+          let workerPath = undefined;
+          if (manifest.workerEntrypoint) {
+            workerPath = import.meta.env.PROD
+              ? `/worker/${manifest.workerEntrypoint}`
+              : `/worker/${manifest.workerEntrypoint}`;
           } else {
-            console.error("Failed to register calculator worker");
+            console.error("No workerEntrypoint defined in manifest");
+          }
+
+          if (workerPath) {
+            const success = await workerPluginManager.registerPlugin(
+              manifest.id,
+              workerPath
+            );
+
+            if (success) {
+              setIsWorkerReady(true);
+              console.log("Calculator worker registered successfully");
+            } else {
+              console.error("Failed to register calculator worker");
+            }
           }
         } else {
           setIsWorkerReady(true);
