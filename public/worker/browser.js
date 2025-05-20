@@ -1,5 +1,5 @@
 // Built worker plugin: browser
-// Generated on: 2025-05-20T10:20:26.804Z
+// Generated on: 2025-05-20T12:45:26.831Z
 
 // src/worker/plugins/browser.ts
 var browserWorker = {
