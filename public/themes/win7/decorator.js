@@ -48,11 +48,12 @@ export async function preload(previousTheme) {
 
 /**
  * Post-load adjustments for Windows 7 theme.
- * Adds custom scrollbar and calculator button fixes.
+ * Adds custom scrollbar, calculator button, and workflow node fixes.
  */
 export function postload() {
   // Remove any previous fixes
   document.getElementById("scrollbar-fixes")?.remove();
+  document.getElementById("win7-react-flow-fixes")?.remove();
 
   // Inject scrollbar fixes
   const style = document.createElement("style");
@@ -92,6 +93,50 @@ export function postload() {
     }
   `;
   document.head.appendChild(style);
+
+  // Inject React Flow node fixes for Win7
+  const reactFlowFixes = document.createElement("style");
+  reactFlowFixes.id = "win7-react-flow-fixes";
+  reactFlowFixes.textContent = `
+    /* Fix React Flow node interaction in Win7 theme */
+    .theme-win7 .react-flow__node {
+      pointer-events: all !important;
+    }
+    
+    .theme-win7 .react-flow__node .workflow-node-base,
+    .theme-win7 .react-flow__node .node-header,
+    .theme-win7 .react-flow__node .node-content,
+    .theme-win7 .react-flow__node .node-center-content,
+    .theme-win7 .react-flow__node .node-footer {
+      pointer-events: all !important;
+    }
+    
+    /* Fix dragging for nodes */
+    .theme-win7 .react-flow__node-apiNode,
+    .theme-win7 .react-flow__node-apiAppNode,
+    .theme-win7 .react-flow__node-beginWorkflow,
+    .theme-win7 .react-flow__node-stringPrimitive,
+    .theme-win7 .react-flow__node-numberPrimitive,
+    .theme-win7 .react-flow__node-dataTypeConversion {
+      pointer-events: all !important;
+      z-index: 5 !important;
+    }
+    
+    /* Make sure form elements and interactive components work */
+    .theme-win7 .react-flow__node input,
+    .theme-win7 .react-flow__node select,
+    .theme-win7 .react-flow__node button {
+      pointer-events: all !important;
+    }
+    
+    /* Ensure pins and handles are interactive */
+    .theme-win7 .react-flow__handle {
+      pointer-events: all !important;
+      cursor: crosshair !important;
+      z-index: 10 !important;
+    }
+  `;
+  document.head.appendChild(reactFlowFixes);
 }
 
 /**
@@ -105,6 +150,7 @@ export function cleanup() {
   document.getElementById("win7-theme-css")?.remove();
   document.getElementById("win7-override-css")?.remove();
   document.getElementById("scrollbar-fixes")?.remove();
+  document.getElementById("win7-react-flow-fixes")?.remove();
 
   // Also remove any Win7 theme CSS links by attribute selector
   // This is a more robust approach that will catch any links even if IDs were changed

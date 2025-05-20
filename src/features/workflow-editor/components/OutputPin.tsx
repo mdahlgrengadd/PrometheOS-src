@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position } from "@xyflow/react";
 
-import { Pin, PinDataType } from '../types/flowTypes';
+import { Pin, PinDataType } from "../types/flowTypes";
 
 interface OutputPinProps {
   pin: Pin;
@@ -15,7 +15,7 @@ const getPinColorClass = (dataType?: PinDataType): string => {
   switch (dataType) {
     case "string":
       return "bg-purple-500 border-purple-600";
-    case "number": 
+    case "number":
       // Check if it's an integer or float - defaulting to orange for now
       return "bg-orange-500 border-orange-600";
     case "boolean":
@@ -34,10 +34,13 @@ const OutputPin = ({ pin, nodeId, isConnectable }: OutputPinProps) => {
   const colorClass = getPinColorClass(pin.dataType);
 
   return (
-    <div className="output-pin flex items-center justify-end my-1 relative">      <div className="pin-label text-xs text-gray-300 font-mono mr-5">
+    <div className="output-pin flex items-center justify-end my-1 relative">
+      {" "}
+      <div className="pin-label text-xs text-gray-300 font-mono mr-5">
         {pin.label}
       </div>
-      <Handle        type="source"
+      <Handle
+        type="source"
         position={Position.Right}
         id={handleId}
         isConnectable={isConnectable}

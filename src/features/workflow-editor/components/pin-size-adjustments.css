@@ -1,3 +1,30 @@
+/* macOS and Fluxbox themes: Node title label should be light color for dark backgrounds */
+.theme-macos .workflow-node-base .node-header,
+.theme-fluxbox .workflow-node-base .node-header {
+  color: #f8fafc !important; /* light color for node title */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+
+/* macOS and Fluxbox themes: Make workflow editor input/select/button text light for dark backgrounds */
+.theme-macos .api-flow-editor input,
+.theme-macos .api-flow-editor select,
+.theme-macos .api-flow-editor button,
+.theme-fluxbox .api-flow-editor input,
+.theme-fluxbox .api-flow-editor select,
+.theme-fluxbox .api-flow-editor button {
+  color: #f8fafc !important;
+}
+/* BeOS theme: Node title label should be light color for dark backgrounds */
+.theme-beos .workflow-node-base .node-header {
+  color: #f8fafc !important; /* light color for node title */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+/* BeOS theme: Make workflow editor dropdown/select background light for contrast */
+.theme-beos .api-flow-editor select {
+  background-color: #f0f0f0 !important;
+  color: var(--text-primary, #23272e) !important;
+  border: 1px solid #4A5568 !important;
+}
 /* Pin size and spacing adjustments for workflow editor */
 
 /* Pin size overrides for larger pins */
@@ -8,8 +35,10 @@
 
 /* Pin type-specific styling */
 /* Execution pins are white */
+
+/* Execution pins are white, but label should be light for dark backgrounds */
 .react-flow__handle[data-pin-type="execution"] {
-  background-color: white !important;
+  background-color: #fff !important;
   border-color: #4B5563 !important;
 }
 
@@ -20,10 +49,14 @@
 }
 
 /* Number pins are orange by default */
+
+/* Number pins are orange by default */
 .react-flow__handle[data-pin-data-type="number"] {
   background-color: #F97316 !important; /* orange-500 */
   border-color: #EA580C !important; /* orange-600 */
 }
+
+/* Integer pins (sub-type of number) - currently same as number */
 
 /* Integer pins (sub-type of number) - currently same as number */
 .react-flow__handle[data-pin-data-type="integer"] {
@@ -32,10 +65,14 @@
 }
 
 /* Float pins (sub-type of number) */
+
+/* Float pins (sub-type of number) */
 .react-flow__handle[data-pin-data-type="float"] {
   background-color: #22C55E !important; /* green-500 */
   border-color: #16A34A !important; /* green-600 */
 }
+
+/* Boolean pins are red */
 
 /* Boolean pins are red */
 .react-flow__handle[data-pin-data-type="boolean"] {
@@ -44,10 +81,14 @@
 }
 
 /* Object pins */
+
+/* Object pins */
 .react-flow__handle[data-pin-data-type="object"] {
   background-color: #3B82F6 !important; /* blue-500 */
   border-color: #2563EB !important; /* blue-600 */
 }
+
+/* Array pins */
 
 /* Array pins */
 .react-flow__handle[data-pin-data-type="array"] {
@@ -56,32 +97,42 @@
 }
 
 /* Hover effects for all pins */
+
+/* Hover effects for all pins */
 .react-flow__handle:hover {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
   cursor: crosshair !important;
 }
 
 /* Type-specific hover effects with matching glow colors */
+
+/* Type-specific hover effects with matching glow colors */
 .react-flow__handle[data-pin-type="execution"]:hover {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.8) !important;
 }
 
+
 .react-flow__handle[data-pin-data-type="string"]:hover {
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.8) !important; /* purple glow */
 }
+
 
 .react-flow__handle[data-pin-data-type="number"]:hover,
 .react-flow__handle[data-pin-data-type="integer"]:hover {
   box-shadow: 0 0 8px rgba(249, 115, 22, 0.8) !important; /* orange glow */
 }
 
+
 .react-flow__handle[data-pin-data-type="float"]:hover {
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.8) !important; /* green glow */
 }
 
+
 .react-flow__handle[data-pin-data-type="boolean"]:hover {
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.8) !important; /* red glow */
 }
+
+/* Adjust spacing for pins and labels to accommodate larger pins */
 
 /* Adjust spacing for pins and labels to accommodate larger pins */
 .execution-pin, .input-pin, .output-pin {
@@ -90,14 +141,24 @@
 }
 
 /* Adjust label positioning for the larger pins */
+
+/* Pin label colors for dark backgrounds */
+.execution-pin .execution-label,
+.input-pin .pin-label,
+.output-pin .pin-label {
+  color: #F3F4F6 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
 .execution-pin .execution-label {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
 }
 
+
 .input-pin .pin-label {
   margin-left: 1.25rem;
 }
+
 
 .output-pin .pin-label {
   margin-right: 1.25rem;

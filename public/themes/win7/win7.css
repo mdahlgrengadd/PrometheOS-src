@@ -36,4 +36,101 @@
 .theme-win7 button[style*="background-color"], .theme-win7 [role="button"][style*="background-color"] {
   background-image: none !important;
   min-width: 0 !important;
-} 
+}
+
+/* Fix for nodes in workflow editor - remove extra padding/margin */
+.theme-win7 .workflow-node-base {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 2px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18) !important;
+}
+
+.theme-win7 .react-flow__node {
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: all !important; /* Ensure nodes receive pointer events */
+}
+
+/* Fix interaction with nodes and interactive elements inside nodes */
+.theme-win7 .react-flow__node .workflow-node-base {
+  pointer-events: all !important;
+}
+
+.theme-win7 .react-flow__renderer {
+  z-index: 1 !important;
+}
+
+/* Make sure controls inside workflow nodes are interactive */
+.theme-win7 .node-center-content {
+  pointer-events: all !important;
+}
+
+.theme-win7 .node-center-content input,
+.theme-win7 .node-center-content select,
+.theme-win7 .node-center-content button {
+  pointer-events: all !important;
+}
+
+/* Ensure pins handle interactions properly */
+.theme-win7 .react-flow__handle {
+  pointer-events: all !important;
+  cursor: crosshair !important;
+}
+
+/* Fix edge interactions */
+.theme-win7 .react-flow__edge {
+  pointer-events: all !important;
+}
+
+.theme-win7 .react-flow__edge-interaction {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
+/* Fix React Flow pane to ensure proper panning behavior */
+.theme-win7 .react-flow__pane {
+  cursor: grab !important;
+}
+
+.theme-win7 .react-flow__pane.react-flow__pane--dragging {
+  cursor: grabbing !important;
+}
+
+/* Fix React Flow viewport to ensure proper interaction layering */
+.theme-win7 .react-flow__viewport {
+  pointer-events: all !important;
+}
+
+/* Additional fixes for ReactFlow nodes and interactions */
+.theme-win7 .react-flow__node .workflow-node-base * {
+  pointer-events: auto !important;
+}
+
+.theme-win7 .node-header {
+  cursor: move !important;
+}
+
+/* Fix node selection in Win7 theme */
+.theme-win7 .react-flow__node.selected {
+  z-index: 15 !important;
+}
+
+/* Ensure minimap and controls are clickable */
+.theme-win7 .minimap-wrapper,
+.theme-win7 .controls-wrapper {
+  pointer-events: auto !important;
+  z-index: 20 !important;
+}
+
+/* Fix dropdown interactions */
+.theme-win7 .react-flow__node select,
+.theme-win7 .react-flow__node option {
+  pointer-events: auto !important;
+}
+
+/* Add additional styles for node dragging */
+.theme-win7 .react-flow__node.dragging {
+  cursor: grabbing !important;
+  z-index: 10 !important;
+}
