@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { workerPluginManager } from "../../WorkerPluginManagerClient";
 import MessageInput from "./components/MessageInput";
 import MessageList from "./components/MessageList";
 import ModelSelector from "./components/ModelSelector";
+import { WebLLMChatProvider } from "./WebLLMChatContext";
 
 // Define message interface
 interface Message {
@@ -19,6 +20,71 @@ const AVAILABLE_MODELS = [
   "Mistral-7B-v0.3-q4f32_1-MLC",
 ];
 
+// Inner component that doesn't have the provider
+const ChatUI: React.FC<{
+  messages: Message[];
+  isWorkerReady: boolean;
+  isLoading: boolean;
+  isTyping: boolean;
+  isModelLoaded: boolean;
+  loadingProgress: string;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  onSendMessage: (content: string) => void;
+}> = ({
+  messages,
+  isWorkerReady,
+  isLoading,
+  isTyping,
+  isModelLoaded,
+  loadingProgress,
+  selectedModel,
+  onModelChange,
+  onSendMessage,
+}) => {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-2 border-b">
+        <h2 className="text-lg font-semibold">WebLLM Chat (Worker)</h2>
+        <ModelSelector
+          models={AVAILABLE_MODELS}
+          selectedModel={selectedModel}
+          onSelectModel={onModelChange}
+          disabled={isLoading || isTyping || !isWorkerReady}
+        />
+      </div>
+
+      {!isWorkerReady ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+            <p>Initializing WebLLM worker...</p>
+          </div>
+        </div>
+      ) : isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+            <p>{loadingProgress}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <MessageList messages={messages} />
+          <MessageInput
+            onSendMessage={onSendMessage}
+            disabled={!isModelLoaded || isTyping || !isWorkerReady}
+            isTyping={isTyping}
+            useContext={true}
+            apiId="webllm-chat-input" // Ensure consistent apiId
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+// Main component with state, context provider and UI
 const WorkerChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     { role: "system", content: "You are a helpful AI assistant." },
@@ -33,6 +99,7 @@ const WorkerChatWindow: React.FC = () => {
   const [progressInterval, setProgressInterval] =
     useState<NodeJS.Timeout | null>(null);
   const [isWorkerReady, setIsWorkerReady] = useState(false);
+  const [inputMessage, setInputMessage] = useState("");
 
   // Register the WebLLM worker plugin
   useEffect(() => {
@@ -166,108 +233,110 @@ const WorkerChatWindow: React.FC = () => {
   };
 
   // Handle sending a new message
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim() || !isModelLoaded || !isWorkerReady) return;
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim() || !isModelLoaded || !isWorkerReady) return;
 
-    // Add user message to chat
-    const userMessage: Message = { role: "user", content };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+      // Clear input message
+      setInputMessage("");
 
-    try {
-      setIsTyping(true);
-
-      // Create a temporary message for streaming
-      const assistantMessage: Message = { role: "assistant", content: "" };
-      setMessages([...newMessages, assistantMessage]);
-
-      // Get response stream from worker
-      const stream = await workerPluginManager.chat(newMessages, 0.7);
-
-      // Set up the stream reader
-      const reader = stream.getReader();
-      let streamedContent = "";
+      // Add user message to chat
+      const userMessage: Message = { role: "user", content };
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
 
       try {
-        while (true) {
-          const { done, value } = await reader.read();
+        setIsTyping(true);
 
-          if (done) {
-            break;
+        // Create a temporary message for streaming
+        const assistantMessage: Message = { role: "assistant", content: "" };
+        setMessages([...newMessages, assistantMessage]);
+
+        // Get response stream from worker
+        const stream = await workerPluginManager.chat(newMessages, 0.7);
+
+        // Set up the stream reader
+        const reader = stream.getReader();
+        let streamedContent = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            // Process the chunk
+            streamedContent += value;
+
+            // Update message in real-time
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                role: "assistant",
+                content: streamedContent,
+              };
+              return updated;
+            });
           }
-
-          // Process the chunk
-          streamedContent += value;
-
-          // Update message in real-time
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = {
-              role: "assistant",
-              content: streamedContent,
-            };
-            return updated;
-          });
+        } catch (error) {
+          console.error("Error reading from stream:", error);
+        } finally {
+          reader.releaseLock();
         }
+
+        setIsTyping(false);
       } catch (error) {
-        console.error("Error reading from stream:", error);
-      } finally {
-        reader.releaseLock();
+        console.error("Error generating response:", error);
+
+        const errorMessage: Message = {
+          role: "assistant",
+          content: `Error generating response: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        };
+
+        setMessages([...newMessages, errorMessage]);
+        setIsTyping(false);
       }
+    },
+    [messages, isModelLoaded, isWorkerReady]
+  );
 
-      setIsTyping(false);
-    } catch (error) {
-      console.error("Error generating response:", error);
-
-      const errorMessage: Message = {
-        role: "assistant",
-        content: `Error generating response: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      };
-
-      setMessages([...newMessages, errorMessage]);
-      setIsTyping(false);
-    }
-  };
+  // Wrap the sendMessage function to handle context-based message sending
+  const handleContextSendMessage = useCallback(
+    (msgContent?: string) => {
+      const content = msgContent || inputMessage;
+      if (content.trim()) {
+        handleSendMessage(content);
+      }
+    },
+    [inputMessage, handleSendMessage]
+  );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-2 border-b">
-        <h2 className="text-lg font-semibold">WebLLM Chat (Worker)</h2>
-        <ModelSelector
-          models={AVAILABLE_MODELS}
-          selectedModel={selectedModel}
-          onSelectModel={handleModelChange}
-          disabled={isLoading || isTyping || !isWorkerReady}
-        />
-      </div>
-
-      {!isWorkerReady ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
-            <p>Initializing WebLLM worker...</p>
-          </div>
-        </div>
-      ) : isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
-            <p>{loadingProgress}</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <MessageList messages={messages} />
-          <MessageInput
-            onSendMessage={handleSendMessage}
-            disabled={!isModelLoaded || isTyping || !isWorkerReady}
-            isTyping={isTyping}
-          />
-        </>
-      )}
-    </div>
+    <WebLLMChatProvider
+      key={`webllm-chat-context-${isWorkerReady}-${isModelLoaded}`}
+      apiId="webllm-chat-input" // Must match apiId in MessageInput
+      message={inputMessage}
+      setMessage={setInputMessage}
+      sendMessage={handleContextSendMessage}
+      isDisabled={!isModelLoaded || isTyping || !isWorkerReady}
+      isTyping={isTyping}
+    >
+      <ChatUI
+        messages={messages}
+        isWorkerReady={isWorkerReady}
+        isLoading={isLoading}
+        isTyping={isTyping}
+        isModelLoaded={isModelLoaded}
+        loadingProgress={loadingProgress}
+        selectedModel={selectedModel}
+        onModelChange={handleModelChange}
+        onSendMessage={handleSendMessage}
+      />
+    </WebLLMChatProvider>
   );
 };
 
