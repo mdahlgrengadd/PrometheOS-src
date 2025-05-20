@@ -100,6 +100,7 @@
     "specified": "^1.0.2",
     "tailwind-merge": "^2.5.2",
     "the": "^1.0.2",
+    "tiptap-markdown": "^0.8.10",
     "to": "^0.2.9",
     "uuid": "^11.1.0",
     "vaul": "^0.9.3",

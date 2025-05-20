@@ -3,10 +3,10 @@ import "./word-editor.css"; // Import the CSS file with layout-specific styles
 import "./word-editor.scss"; // Import the SCSS file with theme-specific styles
 
 import React, { useState, useEffect, useRef } from "react";
-import { withApi } from "@/api/hoc/withApi";
+import { useApiComponent } from "@/api/hoc/withApi";
 import { registerApiActionHandler } from "@/api/context/ApiContext";
 import { IActionResult } from "@/api/core/types";
-import { useApiComponent } from "@/api/hoc/withApi";
+import { Markdown } from "tiptap-markdown";
 
 import {
   MenubarItem,
@@ -112,6 +112,10 @@ const WordEditor = () => {
       Subscript,
       Superscript,
       CharacterCount,
+      Markdown.configure({
+        html: false,
+        tightLists: true,
+      }),
     ],
     content: content,
     autofocus: true,
@@ -154,7 +158,31 @@ const WordEditor = () => {
         if (!params || typeof params.value !== "string") {
           return { success: false, error: "setValue requires a 'value' parameter of type string" };
         }
-        editor.commands.setContent(params.value);
+        // Support both Markdown and Tiptap JSON
+        if (params.format === "markdown" || (!params.format && typeof params.value === "string")) {
+          // Set content as Markdown using the Markdown extension's storage
+          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+            editor.storage.markdown.setMarkdown(params.value);
+          } else {
+            // fallback: set as plain text
+            editor.commands.setContent(params.value);
+          }
+        } else if (params.format === "json") {
+          // Set content as Tiptap JSON
+          try {
+            const json = typeof params.value === "string" ? JSON.parse(params.value) : params.value;
+            editor.commands.setContent(json);
+          } catch (e) {
+            return { success: false, error: "Invalid JSON for Tiptap content" };
+          }
+        } else {
+          // Default: treat as Markdown
+          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+            editor.storage.markdown.setMarkdown(params.value);
+          } else {
+            editor.commands.setContent(params.value);
+          }
+        }
         lastTextRef.current = params.value;
         updateState({ value: params.value });
         return { success: true, data: { value: params.value } };
