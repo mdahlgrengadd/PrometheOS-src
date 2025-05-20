@@ -21,7 +21,7 @@ const WordEditorContent = ({
 
   return (
     <div className="document-scroll-container">
-      <div className="document-page">
+      <div className="document-page" style={{ textAlign: "left" }}>
         <EditorContent editor={editor} className="editor-content-area" />
       </div>
     </div>
