@@ -1,15 +1,15 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from "react";
 
-import { Node, NodeProps, Position, useReactFlow } from '@xyflow/react';
+import { Node, NodeProps, Position, useReactFlow } from "@xyflow/react";
 
-import { IApiAction, IApiComponent } from '../../../api/core/types';
-import { usePlugins } from '../../../plugins/PluginContext';
-import { PluginManifest } from '../../../plugins/types';
-import { ApiComponentService } from '../services/ApiComponentService';
-import { ApiAppNodeData, PinDataType } from '../types/flowTypes';
-import ExecutionPin from './ExecutionPin';
-import InputPin from './InputPin';
-import OutputPin from './OutputPin';
+import { IApiAction, IApiComponent } from "../../../api/core/types";
+import { usePlugins } from "../../../plugins/PluginContext";
+import { PluginManifest } from "../../../plugins/types";
+import { ApiComponentService } from "../services/ApiComponentService";
+import { ApiAppNodeData, PinDataType } from "../types/flowTypes";
+import ExecutionPin from "./ExecutionPin";
+import InputPin from "./InputPin";
+import OutputPin from "./OutputPin";
 
 // Props type for our node - use correct type definition
 interface ApiAppNodeProps {
@@ -191,7 +191,7 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
           className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
         >
           <span className="text-sm truncate">
-            {apiComponent?.type || "API Component"}
+            {apiComponent?.name || apiComponent?.type || "API Component"}
           </span>
           <span className="text-xs opacity-70">{data.appId}</span>
         </div>
@@ -207,7 +207,9 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
       <div
         className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
       >
-        <span className="text-sm truncate">{data.label}</span>
+        <span className="text-sm truncate">
+          {apiComponent?.name || data.label}
+        </span>
         <span className="text-xs opacity-70 font-mono">{data.endpoint}</span>
       </div>
 

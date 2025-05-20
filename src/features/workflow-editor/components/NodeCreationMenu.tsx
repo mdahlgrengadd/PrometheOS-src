@@ -361,7 +361,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               <option value="">Select a component...</option>
               {appComponents.map((component) => (
                 <option key={component.id} value={component.id}>
-                  {component.type}
+                  {component.name || component.type}
                 </option>
               ))}
             </select>
@@ -603,7 +603,9 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             </button>
             <button
               className={`flex-1 py-1 text-sm ${
-                nodeMode === "app" ? "bg-green-600 text-primary" : "text-gray-400"
+                nodeMode === "app"
+                  ? "bg-green-600 text-primary"
+                  : "text-gray-400"
               }`}
               onClick={() => setNodeMode("app")}
             >

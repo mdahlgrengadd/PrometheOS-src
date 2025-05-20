@@ -39,7 +39,7 @@ export const AudioPlayerProvider: React.FC<
   currentTrack,
   volume,
   isMuted,
-  exposeApi = undefined, // default to true
+  exposeApi = true, // default to true
 }) => {
   const staticApiDoc = useMemo(() => {
     const { state, ...doc } = audioPlayerApiDoc;
