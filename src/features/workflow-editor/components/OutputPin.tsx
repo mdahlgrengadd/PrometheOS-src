@@ -14,15 +14,16 @@ interface OutputPinProps {
 const getPinColorClass = (dataType?: PinDataType): string => {
   switch (dataType) {
     case "string":
-      return "bg-green-400 border-green-500";
-    case "number":
-      return "bg-blue-400 border-blue-500";
+      return "bg-purple-500 border-purple-600";
+    case "number": 
+      // Check if it's an integer or float - defaulting to orange for now
+      return "bg-orange-500 border-orange-600";
     case "boolean":
-      return "bg-yellow-400 border-yellow-500";
+      return "bg-red-500 border-red-600";
     case "object":
-      return "bg-purple-400 border-purple-500";
+      return "bg-blue-500 border-blue-600";
     case "array":
-      return "bg-pink-400 border-pink-500";
+      return "bg-pink-500 border-pink-600";
     default:
       return "bg-gray-400 border-gray-500";
   }

@@ -23,9 +23,9 @@ function CustomEdge({
     targetY,
     targetPosition,
   });
-
   // Determine if this is an execution edge
   const isExecution = data?.isExecution;
+  const dataType = data?.dataType;
 
   // Set color and style based on pin type
   let edgeColor = "#A78BFA"; // Default to purple for value connections
@@ -39,8 +39,31 @@ function CustomEdge({
   } else if (isExecution) {
     edgeColor = "white"; // White for execution connections
     strokeDasharray = "5, 5"; // Dashed pattern for execution
-  } else {
-    // Data edge (non-execution)
+  } else if (dataType) {
+    // Data edge with specific type
+    switch (dataType) {
+      case "string":
+        edgeColor = "#8B5CF6"; // Purple for string
+        break;
+      case "number":
+      case "integer":
+        edgeColor = "#F97316"; // Orange for numbers/integers
+        break;
+      case "float":
+        edgeColor = "#22C55E"; // Green for floats
+        break;
+      case "boolean":
+        edgeColor = "#EF4444"; // Red for boolean
+        break;
+      case "object":
+        edgeColor = "#3B82F6"; // Blue for objects
+        break;
+      case "array":
+        edgeColor = "#EC4899"; // Pink for arrays
+        break;
+      default:
+        edgeColor = "#A78BFA"; // Default purple
+    }
     strokeDasharray = ""; // Solid for data connections
   }
 
