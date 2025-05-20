@@ -1,9 +1,9 @@
-import React, { memo } from 'react';
+import React, { memo } from "react";
 
-import { Node, Position, useReactFlow } from '@xyflow/react';
+import { Node, Position, useReactFlow } from "@xyflow/react";
 
-import { Pin, StringPrimitiveNodeData } from '../types/flowTypes';
-import OutputPin from './OutputPin';
+import { Pin, StringPrimitiveNodeData } from "../types/flowTypes";
+import OutputPin from "./OutputPin";
 
 interface StringPrimitiveNodeProps {
   id: string;
@@ -40,16 +40,15 @@ const StringPrimitiveNode = ({
   };
 
   return (
-    <div className="primitive-node string-primitive rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-blue-600 min-w-[200px]">
+    <div className="workflow-node-base">
       {/* Header */}
-      <div className="node-header px-3 py-2 bg-blue-600 text-primary font-bold flex items-center justify-between">
+      <div className="node-header bg-blue-600">
         <span className="text-sm truncate">{data.label || "String Value"}</span>
       </div>
-
       {/* Node content */}
-      <div className="node-content flex p-3">
+      <div className="node-content">
         {/* Center content with input field */}
-        <div className="flex-grow flex items-center justify-center">
+        <div className="node-center-content">
           <input
             type="text"
             value={data.value}
@@ -58,9 +57,8 @@ const StringPrimitiveNode = ({
             placeholder="Enter string value..."
           />
         </div>
-
         {/* Right side pin container with output pins */}
-        <div className="right-pins-container flex flex-col gap-3 pl-3 pr-0">
+        <div className="right-pins-container">
           {data.outputs.map((pin) => (
             <OutputPin
               key={pin.id}

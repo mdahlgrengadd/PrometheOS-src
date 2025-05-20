@@ -185,38 +185,32 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
 
   if (isConfiguring) {
     return (
-      <div className="api-app-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-[#4A5568] min-w-[250px]">
+      <div className="workflow-node-base">
         {/* Header section */}
-        <div
-          className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
-        >
+        <div className={`node-header ${getCategoryColor()}`}>
           <span className="text-sm truncate">
             {apiComponent?.name || apiComponent?.type || "API Component"}
           </span>
           <span className="text-xs opacity-70">{data.appId}</span>
         </div>
-
         {renderConfigPanel()}
       </div>
     );
   }
 
   return (
-    <div className="api-app-node rounded-md overflow-hidden shadow-lg bg-[#2D3748] border-2 border-[#4A5568] min-w-[250px]">
+    <div className="workflow-node-base">
       {/* Header section with title */}
-      <div
-        className={`node-header px-3 py-2 ${getCategoryColor()} text-primary font-bold flex items-center justify-between`}
-      >
+      <div className={`node-header ${getCategoryColor()}`}>
         <span className="text-sm truncate">
           {apiComponent?.name || data.label}
         </span>
         <span className="text-xs opacity-70 font-mono">{data.endpoint}</span>
       </div>
-
       {/* Node content with pins */}
-      <div className="node-content flex">
+      <div className="node-content">
         {/* Left side pin container - holds both execution and data input pins */}
-        <div className="left-pins-container flex flex-col gap-3 py-3 pl-0 pr-3 border-r border-[#4A5568]">
+        <div className="left-pins-container">
           {/* Left execution pins (input) */}
           {data.executionInputs.map((pin) => (
             <ExecutionPin
@@ -227,7 +221,6 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
               isConnectable={isConnectable}
             />
           ))}
-
           {/* Left data input pins */}
           {data.inputs.map((pin) => (
             <InputPin
@@ -238,9 +231,8 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
             />
           ))}
         </div>
-
         {/* Center content area */}
-        <div className="node-center-content flex-1 px-3 py-2 flex flex-col items-center justify-center">
+        <div className="node-center-content">
           {appIcon ? (
             <>
               <div className="flex items-center justify-center mb-1 w-10 h-10 transform scale-90">
@@ -262,9 +254,8 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
             </div>
           )}
         </div>
-
         {/* Right side pin container - holds both execution and data output pins */}
-        <div className="right-pins-container flex flex-col gap-3 py-3 pl-3 pr-0 border-l border-[#4A5568]">
+        <div className="right-pins-container">
           {/* Right execution pins (output) */}
           {data.executionOutputs.map((pin) => (
             <ExecutionPin
@@ -275,7 +266,6 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
               isConnectable={isConnectable}
             />
           ))}
-
           {/* Right data output pins */}
           {data.outputs.map((pin) => (
             <OutputPin
@@ -287,9 +277,8 @@ const ApiAppNode = ({ id, data, isConnectable }: ApiAppNodeProps) => {
           ))}
         </div>
       </div>
-
       {/* Footer with additional info */}
-      <div className="node-footer px-3 py-1 bg-[#1A202C] text-xs text-gray-400 border-t border-[#4A5568] flex justify-between">
+      <div className="node-footer">
         <span>{apiComponent?.type || "API"}</span>
         <span>{selectedAction?.name || "No Action"}</span>
       </div>

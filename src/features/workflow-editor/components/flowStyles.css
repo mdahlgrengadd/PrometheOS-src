@@ -1,3 +1,74 @@
+/* Unified workflow node base style for all node types */
+.workflow-node-base {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  background-color: #2D3748;
+  border: 2px solid #4A5568;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.node-header {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  color: var(--text-primary, #fff);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1rem;
+}
+
+.node-content {
+  display: flex;
+}
+
+.left-pins-container, .right-pins-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.left-pins-container {
+  padding-left: 0;
+  padding-right: 0.75rem;
+  border-right: 1px solid #4A5568;
+}
+.right-pins-container {
+  padding-right: 0;
+  padding-left: 0.75rem;
+  border-left: 1px solid #4A5568;
+}
+
+.node-center-content {
+  flex: 1 1 0%;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-footer {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  background-color: #1A202C;
+  font-size: 0.85rem;
+  color: #A0AEC0;
+  border-top: 1px solid #4A5568;
+  display: flex;
+  justify-content: space-between;
+}
 /* Flow Editor styles */
 
 /* Node execution states */
