@@ -1,5 +1,5 @@
 // Built worker plugin: wordeditor
-// Generated on: 2025-05-19T17:17:08.564Z
+// Generated on: 2025-05-20T04:27:07.322Z
 
 // src/worker/plugins/wordeditor.ts
 var wordeditorWorker = {

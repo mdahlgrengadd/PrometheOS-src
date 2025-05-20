@@ -1,5 +1,10 @@
-import { IActionResult, IApiAction, IApiComponent, IApiParameter } from '../../../api/core/types';
-import { useApi } from '../../../api/hooks/useApi';
+import {
+  IActionResult,
+  IApiAction,
+  IApiComponent,
+  IApiParameter,
+} from "../../../api/core/types";
+import { useApi } from "../../../api/hooks/useApi";
 
 /**
  * Service to retrieve and interact with API components from registered apps
@@ -37,7 +42,36 @@ export class ApiComponentService {
   // Get API components by app ID
   public getApiComponentsByApp(appId: string): IApiComponent[] {
     const components = this.getApiComponents();
-    return components.filter((component) => component.path.includes(appId));
+
+    // First try to find components directly associated with this app ID
+    const directMatches = components.filter(
+      (component) =>
+        component.path.includes(`/apps/${appId}/`) || // Standard app path format
+        component.id === appId // Direct ID match
+    );
+
+    // If we have direct matches, return them
+    if (directMatches.length > 0) {
+      return directMatches;
+    }
+
+    // If no direct matches, look for components registered by the app
+    // but with different path structures (like the textarea components)
+    return components.filter((component) => {
+      // Check if this component was registered by our app
+      // This works when the component ID matches the app ID (like "notepad")
+      // or when component ID is derived from app ID with a suffix
+      return (
+        component.id === appId ||
+        component.id.startsWith(`${appId}-`) ||
+        component.id.startsWith(`${appId}_`) ||
+        // Also check metadata for app attribution
+        component.metadata?.appId === appId ||
+        // If none of the above, check if the component is directly referenced
+        // in the app's manifest (like textareas in notepad)
+        (component.path === "/components/textareas" && appId === "notepad")
+      );
+    });
   }
 
   // Get actions for a specific component
@@ -88,6 +122,11 @@ export class ApiComponentService {
         // Use the app part of the path as the name if we don't have a better one
         const appName = component.path.split("/")[2] || appId;
         appMap.set(appId, appName);
+      }
+
+      // Handle special cases like the textarea component used by notepad
+      if (component.path === "/components/textareas") {
+        appMap.set("notepad", "Notepad");
       }
     });
 
