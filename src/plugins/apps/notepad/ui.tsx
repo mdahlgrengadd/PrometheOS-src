@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/windows";
 
 import { Plugin, PluginManifest } from "../../../plugins/types";
-
-import { manifest } from './manifest';
+import { manifest } from "./manifest";
 
 // Create a separate React component for the Notepad
 const NotepadComponent: React.FC = () => {
@@ -175,11 +174,10 @@ const NotepadComponent: React.FC = () => {
             </MenubarItem>
           </WindowsMenubarContent>
         </MenubarMenu>
-      </WindowsMenubar>
-
+      </WindowsMenubar>{" "}
       {/* API-enabled textarea for AI interaction */}
       <Textarea
-        apiId="notepad-text-editor"
+        apiId={manifest.id}
         className="flex-1 w-full p-1 rounded-none resize-none bg-white text-foreground"
         placeholder="Type your notes here..."
         value={noteContent}
@@ -201,4 +199,3 @@ const NotepadPlugin: Plugin = {
 };
 
 export default NotepadPlugin;
-
