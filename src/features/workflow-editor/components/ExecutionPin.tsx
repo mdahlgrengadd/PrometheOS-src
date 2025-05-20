@@ -21,17 +21,15 @@ const ExecutionPin = ({
 
   return (
     <div className="execution-pin flex items-center my-1 relative">
-      <Handle
-        type={position === Position.Left ? "target" : "source"}
+      <Handle        type={position === Position.Left ? "target" : "source"}
         position={position}
         id={handleId}
         isConnectable={isConnectable}
-        className="execution-handle w-4 h-4 bg-white border-2 border-gray-300 rounded-full"
+        className="execution-handle w-5 h-5 bg-white border-2 border-gray-300 rounded-full"
         style={{ zIndex: 100 }}
-      />
-      <div
+      />      <div
         className={`execution-label text-xs text-primary font-mono font-bold ${
-          position === Position.Right ? "mr-4 ml-4" : "ml-4 mr-4"
+          position === Position.Right ? "mr-5 ml-5" : "ml-5 mr-5"
         }`}
       >
         {pin.label}

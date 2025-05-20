@@ -34,17 +34,15 @@ const InputPin = ({ pin, nodeId, isConnectable }: InputPinProps) => {
 
   return (
     <div className="input-pin flex items-center my-1 relative">
-      <Handle
-        type="target"
+      <Handle        type="target"
         position={Position.Left}
         id={handleId}
         isConnectable={isConnectable}
-        className={`w-4 h-4 rounded-full border-2 ${colorClass}`}
+        className={`w-5 h-5 rounded-full border-2 ${colorClass}`}
         style={{ zIndex: 100 }}
         data-pin-type={pin.type}
         data-pin-data-type={pin.dataType || "unknown"}
-      />
-      <div className="pin-label text-xs text-gray-300 font-mono ml-4">
+      />      <div className="pin-label text-xs text-gray-300 font-mono ml-5">
         {pin.label}
       </div>
     </div>
