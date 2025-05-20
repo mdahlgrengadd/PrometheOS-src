@@ -35,14 +35,24 @@ const ActionParameterInput: React.FC<{
   onChange: (name: string, value: string | number | boolean) => void;
   value: string | number | boolean | undefined;
 }> = ({ parameter, onChange, value }) => {
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     onChange(parameter.name, convertValue(e.target.value));
   };
 
+  const handleSelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    onChange(parameter.name, convertValue(e.target.value));
+  };
+
   // Convert input based on parameter type
   const convertValue = (value: string): string | number | boolean => {
+    if ('enum' in parameter && Array.isArray((parameter as any).enum)) {
+      return value;
+    }
     switch (parameter.type) {
       case "number":
         return value === "" ? "" : Number(value);
@@ -65,8 +75,21 @@ const ActionParameterInput: React.FC<{
       </Label>
       <div className="text-xs text-gray-500 mb-1">{parameter.description}</div>
 
-      {parameter.type === "string" &&
-      parameter.name.toLowerCase().includes("text") ? (
+      {'enum' in parameter && Array.isArray((parameter as any).enum) ? (
+        <select
+          id={parameter.name}
+          value={value?.toString() || ""}
+          onChange={handleSelectChange}
+          className="mt-1 border rounded px-2 py-1"
+        >
+          <option value="">Select</option>
+          {(parameter as any).enum.map((option: string) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      ) : parameter.type === "text" ? (
         <Textarea
           id={parameter.name}
           value={value?.toString() || ""}
@@ -74,10 +97,39 @@ const ActionParameterInput: React.FC<{
           placeholder={`Enter ${parameter.name}`}
           className="mt-1"
         />
+      ) : parameter.type === "string" ? (
+        <Input
+          id={parameter.name}
+          type="text"
+          value={value?.toString() || ""}
+          onChange={handleChange}
+          placeholder={`Enter ${parameter.name}`}
+          className="mt-1"
+        />
+      ) : parameter.type === "number" ? (
+        <Input
+          id={parameter.name}
+          type="number"
+          value={value?.toString() || ""}
+          onChange={handleChange}
+          placeholder={`Enter ${parameter.name}`}
+          className="mt-1"
+        />
+      ) : parameter.type === "boolean" ? (
+        <select
+          id={parameter.name}
+          value={value?.toString() || ""}
+          onChange={handleSelectChange}
+          className="mt-1 border rounded px-2 py-1"
+        >
+          <option value="">Select</option>
+          <option value="true">True</option>
+          <option value="false">False</option>
+        </select>
       ) : (
         <Input
           id={parameter.name}
-          type={parameter.type === "number" ? "number" : "text"}
+          type="text"
           value={value?.toString() || ""}
           onChange={handleChange}
           placeholder={`Enter ${parameter.name}`}

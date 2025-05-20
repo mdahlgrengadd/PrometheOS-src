@@ -22,9 +22,6 @@ const WordEditorContent = ({
   return (
     <div className="document-scroll-container">
       <div className="document-page">
-        <div className="mb-4">
-          <h1 className="text-2xl font-medium text-center">{documentName}</h1>
-        </div>
         <EditorContent editor={editor} className="editor-content-area" />
       </div>
     </div>

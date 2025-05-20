@@ -54,14 +54,21 @@ export const wordEditorApiDoc = {
     {
       id: "setValue",
       name: "Set Value",
-      description: "Set the content of the word editor.",
+      description: "Set the content of the word editor. Supports Markdown or Tiptap JSON.",
       available: true,
       parameters: [
         {
           name: "value",
-          type: "string",
-          description: "The text to set in the editor.",
+          type: "text", // Use multiline textbox in API Explorer
+          description: "The content to set in the editor (Markdown or Tiptap JSON).",
           required: true,
+        },
+        {
+          name: "format",
+          type: "string",
+          description: "Content format: 'markdown' (default) or 'json' (Tiptap JSON).",
+          required: false,
+          enum: ["markdown", "json"],
         },
       ],
     },
