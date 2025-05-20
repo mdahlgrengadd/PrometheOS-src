@@ -1,5 +1,5 @@
 // Built worker plugin: calculator
-// Generated on: 2025-05-20T05:05:20.599Z
+// Generated on: 2025-05-20T10:20:27.278Z
 
 // src/worker/plugins/calculator.ts
 var WorkerCalculator = {

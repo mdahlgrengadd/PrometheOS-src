@@ -4,16 +4,20 @@ import { WorkerPlugin } from '../../plugins/types';
  * Worker logic for Wordeditor
  * This runs in a Web Worker context with no DOM access
  */
+
+// Internal state for the document text (since worker has no DOM, just store as string)
+let documentText = "";
+
 const wordeditorWorker: WorkerPlugin = {
   id: "wordeditor",
 
-  /**
-   * Example method that can be called from the UI
-   */
-  exampleMethod(param1: string, param2: number): { result: string } {
-    return {
-      result: `Processed ${param1} with value ${param2}`,
-    };
+  setText(text: string) {
+    documentText = typeof text === "string" ? text : "";
+    return { success: true };
+  },
+
+  getText() {
+    return { success: true, text: documentText };
   },
 
   /**
@@ -21,20 +25,15 @@ const wordeditorWorker: WorkerPlugin = {
    */
   handle(method: string, params?: Record<string, unknown>): unknown {
     switch (method) {
-      case "exampleMethod": {
-        if (
-          !params ||
-          typeof params.param1 !== "string" ||
-          typeof params.param2 !== "number"
-        ) {
-          return { error: "Invalid parameters for exampleMethod" };
+      case "setText": {
+        if (!params || typeof params.text !== "string") {
+          return { error: "setText requires a 'text' parameter of type string" };
         }
-        return this.exampleMethod(
-          params.param1 as string,
-          params.param2 as number
-        );
+        return this.setText(params.text);
       }
-
+      case "getText": {
+        return this.getText();
+      }
       default:
         return { error: `Method ${method} not supported for wordeditor` };
     }

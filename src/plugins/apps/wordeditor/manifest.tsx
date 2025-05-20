@@ -1,7 +1,8 @@
 import React from 'react';
 import { PluginManifest } from '../../../plugins/types';
+import { wordEditorApiDoc } from "./WordEditor";
 
-export const manifest: PluginManifest = {
+export const manifest: PluginManifest & { apiDoc?: typeof wordEditorApiDoc } = {
   id: "wordeditor",
   name: "Word Editor Pro",
   version: "1.0.0",
@@ -21,4 +22,5 @@ export const manifest: PluginManifest = {
     width: 600,
     height: 400,
   },
-}; 
+  apiDoc: wordEditorApiDoc,
+};

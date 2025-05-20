@@ -1,5 +1,5 @@
 // Built worker plugin: chat
-// Generated on: 2025-05-20T05:05:21.150Z
+// Generated on: 2025-05-20T10:20:27.718Z
 
 // src/worker/plugins/chat.ts
 var chatWorker = {
