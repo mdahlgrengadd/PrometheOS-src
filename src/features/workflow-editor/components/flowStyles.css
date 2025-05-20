@@ -1,7 +1,6 @@
 /* Unified workflow node base style for all node types */
 .workflow-node-base {
   border-radius: 0.5rem;
-  overflow: hidden;
   box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   background-color: #2D3748;
   border: 2px solid #4A5568;
