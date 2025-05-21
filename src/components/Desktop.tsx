@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 
 import { useTheme } from '@/lib/ThemeProvider';
 import { useWindowStore } from '@/store/windowStore';
@@ -8,8 +8,18 @@ import { usePlugins } from '../plugins/PluginContext';
 import AppWindow from './AppWindow';
 import DesktopIcons from './DesktopIcons';
 import Taskbar from './Taskbar';
+import { getOpenAppsFromUrl } from '@/utils/url';
 
 const Desktop = () => {
+  // Open apps from URL after all plugins/windows are registered
+  useEffect(() => {
+    const appsToOpen = getOpenAppsFromUrl();
+    appsToOpen.forEach((appId) => {
+      openWindow(appId);
+    });
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const {
     loadedPlugins,
     openWindow,
