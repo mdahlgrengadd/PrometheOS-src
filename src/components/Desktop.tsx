@@ -1,14 +1,14 @@
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { useWindowStore } from '@/store/windowStore';
-import { WindowState } from '@/types/window';
+import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
+import { getOpenAppsFromUrl } from "@/utils/url";
 
-import { usePlugins } from '../plugins/PluginContext';
-import AppWindow from './AppWindow';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
-import { getOpenAppsFromUrl } from '@/utils/url';
+import { usePlugins } from "../plugins/PluginContext";
+import AppWindow from "./AppWindow";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
 
 const Desktop = () => {
   // Open apps from URL after all plugins/windows are registered
