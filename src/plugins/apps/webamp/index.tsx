@@ -4,10 +4,9 @@ import { useWindowStore } from '@/store/windowStore';
 
 import { eventBus } from '../../EventBus';
 import { Plugin } from '../../types';
-import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
-
 // Define the plugin manifest
 import { manifest } from './manifest';
+import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
 
 // CSS preload helper
 const preloadWebampCSS = () => {
@@ -263,6 +262,10 @@ const WebampPlugin: Plugin = {
       .webamp-context-menu {
         z-index: 1000;
       }
+      /* Disable theme window pseudo-element in Webamp container */
+      #webamp .window::before {
+        display: none !important;
+      }
     `;
     document.head.appendChild(style);
 
@@ -284,4 +287,3 @@ const WebampPlugin: Plugin = {
 };
 
 export default WebampPlugin;
-
