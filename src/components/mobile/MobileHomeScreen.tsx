@@ -87,12 +87,12 @@ const MobileHomeScreen: React.FC<MobileHomeScreenProps> = ({
       {/* App grid */}
       <div className="flex-grow flex items-center justify-center pb-16">
         {(() => {
-          // Page size matches desktop: 8 per page
-          const pluginsPerPage = 8;
+          // Change from 8 to 9 apps per page (3x3 grid)
+          const pluginsPerPage = 9;
           const start = currentHomeScreen * pluginsPerPage;
           const end = start + pluginsPerPage;
           const pagePlugins = plugins.slice(start, end);
-          // Always show 8 slots (fill with null if not enough)
+          // Always show 9 slots (fill with null if not enough)
           const slots =
             pagePlugins.length < pluginsPerPage
               ? [
@@ -101,35 +101,42 @@ const MobileHomeScreen: React.FC<MobileHomeScreenProps> = ({
                 ]
               : pagePlugins;
           return (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 p-6 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-4 p-4 overflow-y-auto">
               {slots.map((plugin, idx) => (
                 <div
                   key={plugin?.id ?? idx}
                   className="flex flex-col items-center"
-                  onClick={() => plugin && openApp(plugin.id)}
+                  onClick={() => plugin && plugin.id && openApp(plugin.id)}
                   style={{
-                    cursor: plugin ? "pointer" : "default",
-                    opacity: plugin ? 1 : 0.5,
+                    cursor: plugin && plugin.id ? "pointer" : "default",
+                    opacity: plugin && plugin.id ? 1 : 0.5,
                   }}
                 >
                   <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center overflow-hidden">
                       {plugin?.manifest?.icon ? (
-                        // If icon is a valid React element (built-in plugin)
+                        // If icon is a valid React element
                         plugin.manifest.icon
                       ) : plugin?.manifest?.iconUrl ? (
-                        // If iconUrl is present (remote/dynamic plugin)
+                        // If iconUrl is present
                         <img
                           src={plugin.manifest.iconUrl}
-                          alt={plugin.manifest.name}
+                          alt={plugin.manifest.name || "App"}
                           className="w-8 h-8 object-contain"
                           draggable={false}
                         />
                       ) : plugin?.manifest?.name ? (
+                        // Fallback to first letter of name
                         <span className="text-white font-bold">
                           {plugin.manifest.name.charAt(0)}
                         </span>
+                      ) : plugin?.id ? (
+                        // Last resort: first letter of ID
+                        <span className="text-white font-bold">
+                          {plugin.id.charAt(0).toUpperCase()}
+                        </span>
                       ) : (
+                        // Absolute last resort: question mark
                         <span className="text-white font-bold opacity-50">
                           ?
                         </span>
@@ -137,7 +144,7 @@ const MobileHomeScreen: React.FC<MobileHomeScreenProps> = ({
                     </div>
                   </div>
                   <span className="mt-2 text-xs text-white font-medium text-center max-w-[4.5rem] truncate">
-                    {plugin?.manifest?.name ?? ""}
+                    {plugin?.manifest?.name || plugin?.id || ""}
                   </span>
                 </div>
               ))}
