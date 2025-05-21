@@ -134,3 +134,8 @@
   cursor: grabbing !important;
   z-index: 10 !important;
 }
+
+/* Override border-input color to a neutral dark grey */
+.theme-win7 .border-input {
+  border-color: #666666 !important;
+}

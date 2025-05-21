@@ -1,13 +1,13 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { useWindowStore } from "@/store/windowStore";
-import { WindowState } from "@/types/window";
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
 
-import { usePlugins } from "../plugins/PluginContext";
-import DesktopIcons from "./DesktopIcons";
-import Taskbar from "./Taskbar";
-import Window from "./Window";
+import { usePlugins } from '../plugins/PluginContext';
+import AppWindow from './AppWindow';
+import DesktopIcons from './DesktopIcons';
+import Taskbar from './Taskbar';
 
 const Desktop = () => {
   const {
@@ -189,7 +189,7 @@ const Desktop = () => {
           const winWithContent = { ...w, content };
 
           return (
-            <Window
+            <AppWindow
               key={winWithContent.id}
               window={winWithContent}
               allWindows={windows}

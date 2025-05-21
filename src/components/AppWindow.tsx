@@ -16,7 +16,7 @@ interface WindowProps {
   onTabClick: (id: string) => void;
 }
 
-const Window: React.FC<WindowProps> = ({
+const AppWindow: React.FC<WindowProps> = ({
   window,
   allWindows,
   onClose,
@@ -82,4 +82,4 @@ const Window: React.FC<WindowProps> = ({
   );
 };
 
-export default Window;
+export default AppWindow;

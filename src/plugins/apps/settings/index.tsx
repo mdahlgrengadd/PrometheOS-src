@@ -11,7 +11,11 @@ const SettingsPlugin: Plugin = {
     console.log("Settings plugin initialized");
   },
   render: () => {
-    return <SettingsContent />;
+    return (
+      <div className="p-4">
+        <SettingsContent />
+      </div>
+    );
   },
 };
 
