@@ -1,7 +1,7 @@
 // import * as win7Decorator from './decorators/win7.decorator';
 // import * as win98Decorator from './decorators/win98.decorator';
 // import * as winxpDecorator from './decorators/winxp.decorator';
-import { ThemeConfig, ThemeType } from './theme-types';
+import { ThemeConfig, ThemeType } from "./theme-types";
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -19,6 +19,9 @@ const beosTheme: ThemeConfig = {
     "--title-border": "#b99100",
     "--title-hover": "#ffce6f",
     "--title-active": "#ffc040",
+
+    // Theme card active background
+    "--theme-card-active-bg": "#f7e9c0",
 
     // Text and general colors
     "--text-primary": "#000000",
@@ -83,6 +86,9 @@ const lightTheme: ThemeConfig = {
     "--title-active": "240, 5%, 96%",
     "--title-border": "240, 5%, 84%",
 
+    // Theme card active background
+    "--theme-card-active-bg": "#e6f0ff",
+
     // Text and general colors
     "--text-primary": "240, 10%, 10%",
     "--text-secondary": "240, 5%, 35%",
@@ -146,7 +152,8 @@ const darkTheme: ThemeConfig = {
   cssVariables: {
     // Window variables
     "--window-background": "hsl(220 13% 18%)",
-    "--window-border": "220, 13%, 15%",
+    "--window-border": "#23242a",
+    "--wm-border-color": "#23242a",
     "--window-border-light": "220, 13%, 20%",
     "--window-border-lighter": "220, 13%, 22%",
     "--title-bg": "220, 13%, 16%",
@@ -154,7 +161,11 @@ const darkTheme: ThemeConfig = {
     "--title-active": "220, 13%, 20%",
     "--title-border": "220, 13%, 14%",
     "--window-header-background": "hsl(220, 13%, 14%)",
-    "--window-header-text": "hsl(220, 13%, 90%)",
+    "--window-header-text": "#e6e6e6",
+    "--title-color": "#e6e6e6",
+
+    // Theme card active background
+    "--theme-card-active-bg": "#232b36",
 
     // Text and general colors
     "--text-primary": "220, 13%, 75%",
@@ -243,6 +254,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--window-header-button-active": "#d5d5d5",
       "--window-resize-handle": "rgba(0, 0, 0, 0.08)",
 
+      // Theme card active background
+      "--theme-card-active-bg": "#e3e8f0",
+
       // Control Buttons
       "--wm-btn-size": "12px",
       "--wm-btn-gap": "8px",
@@ -319,6 +333,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--window-header-button-hover": "#555555",
       "--window-header-button-active": "#666666",
       "--window-resize-handle": "rgba(0, 0, 0, 0.3)",
+
+      // Theme card active background
+      "--theme-card-active-bg": "#2a2a2a",
 
       // Control Buttons
       "--wm-btn-size": "10px",

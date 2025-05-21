@@ -122,6 +122,9 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
         pointerEvents: "auto", // Ensure pointer events work properly
         width: "100%",
         boxSizing: "border-box",
+        borderTopLeftRadius: "inherit",
+        borderTopRightRadius: "inherit",
+        background: "var(--wm-header-bg, var(--background, #f8f9fa))",
       }}
     >
       {controlsPosition === "left" && (

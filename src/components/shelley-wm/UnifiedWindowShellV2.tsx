@@ -44,7 +44,7 @@ interface WindowShellProps {
   // Window behavior
   active?: boolean;
   activeOnHover?: boolean;
-  activeTarget?: "window" | "titlebar";  // Window controls
+  activeTarget?: "window" | "titlebar"; // Window controls
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
   showButtonLabels?: boolean;
@@ -430,6 +430,15 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
               pointerEvents: "auto",
               zIndex: 1,
               position: "relative",
+              /* Below settings, should not be used in beos theme */
+              /* FIXME: This is a temporary fix, should be handled in the theme */
+              ...(theme !== "beos" && {
+                margin: 0,
+                padding: 0,
+                width: "100%",
+                left: 0,
+                right: 0,
+              }),
             }}
           >
             <WindowHeader

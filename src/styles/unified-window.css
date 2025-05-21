@@ -115,6 +115,10 @@
   font-size: var(--title-font-size, 14px);
   font-weight: var(--title-font-weight, 500);
   color: var(--title-color, #333);
+}
+
+.theme-dark .unified-window .window-title {
+  color: var(--title-color, #e6e6e6);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
