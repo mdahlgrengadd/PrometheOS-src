@@ -82,25 +82,16 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
       year: "numeric",
     });
 
-  // Styles
-  const containerStyle: React.CSSProperties = {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    width: "100%",
-    height: "3rem",
-    display: "flex",
-    background:
-      "linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)",
-    boxShadow: "inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5",
+  // Auto-hide transform style
+  const transformStyle: React.CSSProperties = {
     transition: autoHide ? "transform 0.3s ease" : undefined,
     transform: autoHide && !isVisible ? "translateY(100%)" : "translateY(0)",
   };
 
   return (
     <div
-      className="taskbar-scope"
-      style={containerStyle}
+      className={`taskbar${autoHide ? " taskbar-auto-hide" : ""}`}
+      style={transformStyle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

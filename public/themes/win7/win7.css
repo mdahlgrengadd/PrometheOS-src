@@ -139,3 +139,21 @@
 .theme-win7 .border {
   border-color: #666666 !important;
 }
+
+/* Restore Win7 Taskbar gradient & shadows */
+.theme-win7 .taskbar {
+  background: linear-gradient(
+    to bottom,
+    #2582d1 0%,
+    #3c96e4 3%,
+    #5cb6ff 6%,
+    #5baef5 10%,
+    #4aa4eb 25%,
+    #3a95dc 40%,
+    #328fd5 50%,
+    #2d8ace 55%,
+    #2888ca 60%,
+    #2582d1 100%
+  ) !important;
+  box-shadow: inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5 !important;
+}
