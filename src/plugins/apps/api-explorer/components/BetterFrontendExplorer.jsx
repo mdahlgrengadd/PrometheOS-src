@@ -28,6 +28,24 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 /**
+ * Helper to provide default placeholder values based on parameter type
+ */
+const getPlaceholderValue = (param) => {
+  switch (param.type) {
+    case 'number':
+      return 1234;
+    case 'string':
+      return '<replace this string>';
+    case 'text':
+      return '<replace this text>';
+    case 'boolean':
+      return false;
+    default:
+      return '<replace this value>';
+  }
+};
+
+/**
  * Renders an input for a single API action parameter based on its type.
  */
 const ActionParameterInput = ({ parameter, value, onChange }) => {
@@ -74,7 +92,7 @@ const ActionParameterInput = ({ parameter, value, onChange }) => {
           type="number"
           value={value != null ? value.toString() : ''}
           onChange={handleChange}
-          placeholder={`Enter ${parameter.name}`}
+          placeholder="1234"
           className="mt-1"
         />
       ) : parameter.type === 'boolean' ? (
@@ -93,6 +111,16 @@ const ActionParameterInput = ({ parameter, value, onChange }) => {
           id={parameter.name}
           value={value != null ? value.toString() : ''}
           onChange={(e) => onChange(parameter.name, e.target.value)}
+          placeholder="<replace this text>"
+          className="mt-1"
+        />
+      ) : parameter.type === 'string' ? (
+        <Input
+          id={parameter.name}
+          type="text"
+          value={value != null ? value.toString() : ''}
+          onChange={handleChange}
+          placeholder="<replace this string>"
           className="mt-1"
         />
       ) : (
@@ -112,7 +140,7 @@ const ActionParameterInput = ({ parameter, value, onChange }) => {
 /**
  * A flat, searchable API explorer that shows all API components and their actions.
  */
-const BetterCustomExplorer = () => {
+const BetterFrontendExplorer = () => {
   const { getComponents, executeAction } = useApi();
   const [components, setComponents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -250,15 +278,10 @@ const BetterCustomExplorer = () => {
             <ScrollArea className="flex-1">
               <Accordion type="multiple" collapsible className="space-y-2">
                 {selectedComponent.actions.map((action) => {
-                  // dynamic params for code snippet: use entered values or defaults
+                  // dynamic params for code snippet: use entered values or placeholder defaults
                   const snippetParams = action.parameters?.reduce((acc, param) => {
-                    const val = paramValues[param.name] !== undefined
-                      ? paramValues[param.name]
-                      : param.type === 'number'
-                        ? 0
-                        : param.type === 'boolean'
-                          ? false
-                          : '';
+                    const hasValue = paramValues[param.name] !== undefined && paramValues[param.name] !== '';
+                    const val = hasValue ? paramValues[param.name] : getPlaceholderValue(param);
                     return { ...acc, [param.name]: val };
                   }, {}) || {};
                   const currentTab = exampleTabs[action.id] || 'js';
@@ -361,4 +384,4 @@ function MyComponent() {
   );
 };
 
-export default BetterCustomExplorer; 
+export default BetterFrontendExplorer; 

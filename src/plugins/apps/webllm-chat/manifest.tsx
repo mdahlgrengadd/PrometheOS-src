@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { PluginManifest } from "../../../plugins/types";
+import { PluginManifest } from '../../../plugins/types';
 
 /**
  * API documentation for the WebLLM Chat
@@ -73,8 +73,8 @@ export const manifest: PluginManifest & { apiDoc?: typeof webllmChatApiDoc } = {
   entry: "apps/webllm-chat",
   workerEntrypoint: "webllm.js",
   preferredSize: {
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 768,
   },
   apiDoc: webllmChatApiDoc,
 };

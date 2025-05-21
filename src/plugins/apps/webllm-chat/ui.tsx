@@ -1,10 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { workerPluginManager } from "../../WorkerPluginManagerClient";
-import MessageInput from "./components/MessageInput";
-import MessageList from "./components/MessageList";
-import ModelSelector from "./components/ModelSelector";
-import { WebLLMChatProvider } from "./WebLLMChatContext";
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import MessageInput from './components/MessageInput';
+import MessageList from './components/MessageList';
+import ModelSelector from './components/ModelSelector';
+import { WebLLMChatProvider } from './WebLLMChatContext';
 
 // Define message interface
 interface Message {
@@ -45,7 +45,7 @@ const ChatUI: React.FC<{
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-2 border-b">
-        <h2 className="text-lg font-semibold">WebLLM Chat (Worker)</h2>
+        <h2 className="text-lg font-semibold">WebLLM Chat (Web Worker)</h2>
         <ModelSelector
           models={AVAILABLE_MODELS}
           selectedModel={selectedModel}

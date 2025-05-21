@@ -18,8 +18,7 @@ export const manifest: PluginManifest = {
   // Uncomment if your plugin has a worker component
   // workerEntrypoint: "api-flow-editor.js",
   preferredSize: {
-    width: 600,
-    height: 400,
+    width: 1024,
+    height: 768,
   },
 };
-
