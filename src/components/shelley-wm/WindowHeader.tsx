@@ -9,6 +9,8 @@ interface WindowControlsProps {
   onMaximize: () => void;
   onClose: () => void;
   controls?: Array<"minimize" | "maximize" | "close">;
+  showButtonLabels?: boolean;
+  showButtonIcons?: boolean;
 }
 
 // Refactored window controls into a functional component
@@ -17,7 +19,12 @@ const WindowControls: React.FC<WindowControlsProps> = ({
   onMaximize,
   onClose,
   controls = ["minimize", "maximize", "close"],
+  showButtonLabels = false,
+  showButtonIcons = false,
 }) => {
+  const { theme } = useTheme();
+  const isBeOSTheme = theme === "beos";
+
   const renderControl = (control: "minimize" | "maximize" | "close") => {
     const handler =
       control === "minimize"
@@ -26,29 +33,18 @@ const WindowControls: React.FC<WindowControlsProps> = ({
         ? onMaximize
         : onClose;
 
-    let icon: React.ReactNode;
     let bgColor: string;
-
     switch (control) {
       case "minimize":
-        icon = <div className="h-1 w-2.5 bg-black/60 rounded-none"></div>;
         bgColor = "var(--wm-btn-minimize-bg, #f1c40f)";
         break;
       case "maximize":
-        icon = <div className="h-2.5 w-2.5 border border-black/60"></div>;
         bgColor = "var(--wm-btn-maximize-bg, #2ecc71)";
         break;
       case "close":
-        icon = (
-          <>
-            <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-            <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
-          </>
-        );
         bgColor = "var(--wm-btn-close-bg, #e74c3c)";
         break;
     }
-
     return (
       <button
         key={control}
@@ -56,13 +52,7 @@ const WindowControls: React.FC<WindowControlsProps> = ({
         onClick={handler}
         aria-label={control.charAt(0).toUpperCase() + control.slice(1)}
         style={{ backgroundColor: bgColor }}
-      >
-        <div
-          className={control === "close" ? "h-2.5 w-2.5 relative" : undefined}
-        >
-          {icon}
-        </div>
-      </button>
+      />
     );
   };
 
@@ -78,6 +68,8 @@ interface WindowHeaderProps {
   isMaximized?: boolean;
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
+  showButtonLabels?: boolean;
+  showButtonImages?: boolean;
 }
 
 export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
@@ -91,6 +83,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
     isMaximized,
     controls = ["minimize", "maximize", "close"],
     controlsPosition = "right",
+    showButtonLabels = false,
   } = props;
 
   // Get the current theme's config
@@ -110,7 +103,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
     // Forward the ref and other props to the custom header
     const CustomHeader = decorator.Header;
     return (
-      <div data-draggable="true" ref={headerRef}>
+      <div data-draggable="true" ref={headerRef} style={{ width: "100%" }}>
         <CustomHeader {...props} />
       </div>
     );
@@ -119,7 +112,7 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
   // Otherwise, provide a default header implementation
   return (
     <div
-      className="window-header flex items-center justify-between p-2"
+      className="window-header flex items-center justify-between p-2 w-full"
       data-draggable="true"
       ref={headerRef}
       style={{
@@ -127,6 +120,8 @@ export const WindowHeader: React.FC<WindowHeaderProps> = (props) => {
         userSelect: "none", // Prevent text selection during drag
         touchAction: "none", // Prevent default touch actions
         pointerEvents: "auto", // Ensure pointer events work properly
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
       {controlsPosition === "left" && (

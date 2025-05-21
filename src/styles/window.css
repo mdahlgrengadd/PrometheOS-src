@@ -696,6 +696,17 @@
   .no-window-chrome .resize-handle-tr {
     top: -8px !important;
   }
+
+  /* Make decorator headers full width under the draggable handle */
+  .window-drag-handle > .window-header {
+    width: 100%;
+  }
+
+  /* Preserve BeOS tab width for BeOS theme */
+  .theme-beos .window-drag-handle > .window-header.beos-header,
+  .theme-beos .window-drag-handle > .window-header.window-header {
+    width: var(--header-width, auto);
+  }
 }
 
 

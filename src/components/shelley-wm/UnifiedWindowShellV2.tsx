@@ -1,18 +1,30 @@
-import '@/styles/unified-window.css';
+import "@/styles/unified-window.css";
 
-import { DragHandlers, motion, MotionStyle, useDragControls, useMotionValue } from 'framer-motion';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-import { useTheme } from '@/lib/ThemeProvider';
-import { cn } from '@/lib/utils';
 import {
-    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
-} from '@dnd-kit/core';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+  DragHandlers,
+  motion,
+  MotionStyle,
+  useDragControls,
+  useMotionValue,
+} from "framer-motion";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Resizable } from './Resizable';
-import { WindowContent } from './WindowContent';
-import { WindowHeader } from './WindowHeader';
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+
+import { Resizable } from "./Resizable";
+import { WindowContent } from "./WindowContent";
+import { WindowHeader } from "./WindowHeader";
 
 interface WindowShellProps {
   id: string;
@@ -32,11 +44,12 @@ interface WindowShellProps {
   // Window behavior
   active?: boolean;
   activeOnHover?: boolean;
-  activeTarget?: "window" | "titlebar";
-
-  // Window controls
+  activeTarget?: "window" | "titlebar";  // Window controls
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
+  showButtonLabels?: boolean;
+  showButtonImages?: boolean;
+  showButtonIcons?: boolean;
 
   // Event handlers
   onClose?: () => void;
