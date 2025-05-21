@@ -227,9 +227,14 @@ const WebampComponent: React.FC = () => {
     }
   }, []);
 
+  // Determine frameless mode
+  const isFrameless = manifest.frameless === true;
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center bg-gray-800 text-white overflow-hidden"
+      className={`h-full w-full flex flex-col items-center justify-center ${
+        isFrameless ? "" : "bg-gray-800 text-white overflow-hidden"
+      }`}
+      style={isFrameless ? { backgroundColor: "transparent" } : {}}
       onDrop={handleFileDrop}
       onDragOver={(e) => e.preventDefault()}
     >

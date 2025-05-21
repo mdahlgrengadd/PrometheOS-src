@@ -14,12 +14,12 @@ import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "beos",
+  theme: "win7",
   setTheme: () => {},
   themes,
   setPadding: () => {},
   padding: 0, // Default padding
-  wallpaper: null,
+  wallpaper: "/wallpapers/background_01.png",
   setWallpaper: () => {},
   backgroundColor: "#6366f1", // Default background color (indigo)
   setBackgroundColor: () => {},
@@ -48,7 +48,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   // Try to get stored theme from localStorage or use 'light' as default
   const [theme, setThemeState] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem("os-theme");
-    return (savedTheme as ThemeType) || "beos";
+    return (savedTheme as ThemeType) || "win7";
   });
 
   // Load Windows UI styles on initial render and when theme changes
@@ -72,7 +72,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Get stored wallpaper from localStorage
   const [wallpaper, setWallpaperState] = useState<string | null>(() => {
-    return localStorage.getItem("os-wallpaper");
+    const saved = localStorage.getItem("os-wallpaper");
+    return saved !== null ? saved : "/wallpapers/background_01.png";
   });
 
   // Get stored background color from localStorage or use default

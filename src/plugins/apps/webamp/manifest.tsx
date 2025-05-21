@@ -1,8 +1,10 @@
 import React from 'react';
+
 import { PluginManifest } from '../../../plugins/types';
 
 export const manifest: PluginManifest = {
   id: "webamp",
+  frameless: true,
   name: "Webamp Music Player",
   version: "1.0.0",
   description: "A Winamp-inspired music player for your desktop",
@@ -14,9 +16,9 @@ export const manifest: PluginManifest = {
   ),
   entry: "apps/webamp",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "webamp.js", 
+  // workerEntrypoint: "webamp.js",
   preferredSize: {
-    width: 600,
-    height: 400,
+    width: 0,
+    height: 0,
   },
-}; 
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { IApiComponent } from '../api/core/types';
 
 /**
@@ -27,7 +28,9 @@ export interface PluginManifest {
    * and should let the app render its own UI edge-to-edge.
    */
   hideWindowChrome?: boolean;
-  apiDoc?: Omit<IApiComponent, 'id'>;
+  /** If true, the window manager should not render any window container (frameless) and let the app render its own UI:**/
+  frameless?: boolean;
+  apiDoc?: Omit<IApiComponent, "id">;
 }
 
 /**
