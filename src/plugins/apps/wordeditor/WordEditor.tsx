@@ -2,7 +2,11 @@ import "./TaskList.css";
 import "./word-editor.css"; // Import the CSS file with layout-specific styles
 import "./word-editor.scss"; // Import the SCSS file with theme-specific styles
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useApiComponent } from "@/api/hoc/withApi";
+import { registerApiActionHandler } from "@/api/context/ApiContext";
+import { IActionResult } from "@/api/core/types";
+import { Markdown } from "tiptap-markdown";
 
 import {
   MenubarItem,
@@ -36,6 +40,48 @@ import content from "./content.json";
 // Internal components (toolbar + page view)
 import WordEditorContent from "./ui";
 import WordEditorToolbar from "./WordEditorToolbar";
+
+// API doc for WordEditor
+export const wordEditorApiDoc = {
+  type: "Tiptap",
+  description: "A rich text editor (Tiptap) for word processing.",
+  state: {
+    enabled: true,
+    visible: true,
+    value: "",
+  },
+  actions: [
+    {
+      id: "setValue",
+      name: "Set Value",
+      description: "Set the content of the word editor. Supports Markdown or Tiptap JSON.",
+      available: true,
+      parameters: [
+        {
+          name: "value",
+          type: "text", // Use multiline textbox in API Explorer
+          description: "The content to set in the editor (Markdown or Tiptap JSON).",
+          required: true,
+        },
+        {
+          name: "format",
+          type: "string",
+          description: "Content format: 'markdown' (default) or 'json' (Tiptap JSON).",
+          required: false,
+          enum: ["markdown", "json"],
+        },
+      ],
+    },
+    {
+      id: "getValue",
+      name: "Get Value",
+      description: "Get the current plain text content of the editor.",
+      available: true,
+      parameters: [],
+    },
+  ],
+  path: "/plugins/apps/wordeditor",
+};
 
 const WordEditor = () => {
   const [documentName, setDocumentName] = useState("Untitled Document");
@@ -73,6 +119,10 @@ const WordEditor = () => {
       Subscript,
       Superscript,
       CharacterCount,
+      Markdown.configure({
+        html: false,
+        tightLists: true,
+      }),
     ],
     content: content,
     autofocus: true,
@@ -84,6 +134,92 @@ const WordEditor = () => {
     },
     editable: true,
   });
+  
+  // Register API action handlers for setValue/getValue
+  const apiId = "wordeditor";
+  const lastTextRef = useRef("");
+  
+  // Use the API component hook to register and update state
+  const staticApiDoc = React.useMemo(() => {
+    const { state, ...doc } = wordEditorApiDoc;
+    return doc;
+  }, []);
+  
+  const { updateState } = useApiComponent(apiId, staticApiDoc);
+  
+  // Track whether handlers have been registered
+  const handlersRef = React.useRef(false);
+  
+  useEffect(() => {
+    if (!editor) return;
+
+    // Update state whenever editor content changes
+    const currentValue = editor.getText();
+    updateState({ value: currentValue });
+
+    if (!handlersRef.current) {
+      handlersRef.current = true;
+      
+      // Handler to set the editor content
+      const setValueHandler = async (params?: Record<string, unknown>): Promise<IActionResult> => {
+        if (!params || typeof params.value !== "string") {
+          return { success: false, error: "setValue requires a 'value' parameter of type string" };
+        }
+        // Support both Markdown and Tiptap JSON
+        if (params.format === "markdown" || (!params.format && typeof params.value === "string")) {
+          // Set content as Markdown using the Markdown extension's storage
+          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+            editor.storage.markdown.setMarkdown(params.value);
+          } else {
+            // fallback: set as plain text
+            editor.commands.setContent(params.value);
+          }
+        } else if (params.format === "json") {
+          // Set content as Tiptap JSON
+          try {
+            const json = typeof params.value === "string" ? JSON.parse(params.value) : params.value;
+            editor.commands.setContent(json);
+          } catch (e) {
+            return { success: false, error: "Invalid JSON for Tiptap content" };
+          }
+        } else {
+          // Default: treat as Markdown
+          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+            editor.storage.markdown.setMarkdown(params.value);
+          } else {
+            editor.commands.setContent(params.value);
+          }
+        }
+        lastTextRef.current = params.value;
+        updateState({ value: params.value });
+        return { success: true, data: { value: params.value } };
+      };
+
+      // Handler to get the current plain text content
+      const getValueHandler = async (): Promise<IActionResult> => {
+        const value = editor.getText();
+        lastTextRef.current = value;
+        return { success: true, data: { value } };
+      };
+
+      registerApiActionHandler(apiId, "setValue", setValueHandler);
+      registerApiActionHandler(apiId, "getValue", getValueHandler);
+
+      // Optionally, register for @src suffix for compatibility
+      registerApiActionHandler(apiId + "@src", "setValue", setValueHandler);
+      registerApiActionHandler(apiId + "@src", "getValue", getValueHandler);
+    }
+
+    // Setup editor change handler to update state
+    editor.on('update', () => {
+      const value = editor.getText();
+      updateState({ value });
+    });
+
+    // Cleanup
+    return () => {};
+  }, [editor, updateState, apiId]);
+
   return (
     <div className="flex flex-col h-full bg-background text-primary">
       {/* Header section - fixed */}
@@ -282,6 +418,6 @@ const WordEditor = () => {
       </div>
     </div>
   );
-};
+}
 
 export default WordEditor;

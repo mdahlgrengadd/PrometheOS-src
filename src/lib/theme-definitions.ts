@@ -20,6 +20,9 @@ const beosTheme: ThemeConfig = {
     "--title-hover": "#ffce6f",
     "--title-active": "#ffc040",
 
+    // Theme card active background
+    "--theme-card-active-bg": "#f7e9c0",
+
     // Text and general colors
     "--text-primary": "#000000",
     "--text-secondary": "#333333",
@@ -82,6 +85,9 @@ const lightTheme: ThemeConfig = {
     "--title-hover": "240, 4%, 90%",
     "--title-active": "240, 5%, 96%",
     "--title-border": "240, 5%, 84%",
+
+    // Theme card active background
+    "--theme-card-active-bg": "#e6f0ff",
 
     // Text and general colors
     "--text-primary": "240, 10%, 10%",
@@ -146,13 +152,20 @@ const darkTheme: ThemeConfig = {
   cssVariables: {
     // Window variables
     "--window-background": "hsl(220 13% 18%)",
-    "--window-border": "220, 13%, 15%",
+    "--window-border": "#23242a",
+    "--wm-border-color": "#23242a",
     "--window-border-light": "220, 13%, 20%",
     "--window-border-lighter": "220, 13%, 22%",
-    "--title-bg": "220, 13%, 22%",
-    "--title-hover": "220, 13%, 24%",
-    "--title-active": "220, 13%, 26%",
-    "--title-border": "220, 13%, 15%",
+    "--title-bg": "220, 13%, 16%",
+    "--title-hover": "220, 13%, 18%",
+    "--title-active": "220, 13%, 20%",
+    "--title-border": "220, 13%, 14%",
+    "--window-header-background": "hsl(220, 13%, 14%)",
+    "--window-header-text": "#e6e6e6",
+    "--title-color": "#e6e6e6",
+
+    // Theme card active background
+    "--theme-card-active-bg": "#232b36",
 
     // Text and general colors
     "--text-primary": "220, 13%, 75%",
@@ -198,6 +211,13 @@ const darkTheme: ThemeConfig = {
     "--has-window-header-dot": "0",
     "--taskbar-bg": "hsla(220, 13%, 16%, 0.8)",
 
+    // Window control button colors
+    "--wm-btn-close-bg": "#ff5f56",
+    "--wm-btn-minimize-bg": "#ffbd2e",
+    "--wm-btn-maximize-bg": "#28c941",
+    "--wm-btn-gap": "6px",
+    "--wm-btn-size": "14px",
+
     // Global app styling - more muted dark theme
     "--app-bg": "hsl(220, 10%, 15%)",
     "--app-text": "hsl(220, 13%, 75%)",
@@ -233,6 +253,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--window-header-button-hover": "#e5e5e5",
       "--window-header-button-active": "#d5d5d5",
       "--window-resize-handle": "rgba(0, 0, 0, 0.08)",
+
+      // Theme card active background
+      "--theme-card-active-bg": "#e3e8f0",
 
       // Control Buttons
       "--wm-btn-size": "12px",
@@ -310,6 +333,9 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       "--window-header-button-hover": "#555555",
       "--window-header-button-active": "#666666",
       "--window-resize-handle": "rgba(0, 0, 0, 0.3)",
+
+      // Theme card active background
+      "--theme-card-active-bg": "#2a2a2a",
 
       // Control Buttons
       "--wm-btn-size": "10px",

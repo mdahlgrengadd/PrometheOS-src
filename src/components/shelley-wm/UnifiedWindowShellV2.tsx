@@ -1,18 +1,30 @@
-import '@/styles/unified-window.css';
+import "@/styles/unified-window.css";
 
-import { DragHandlers, motion, MotionStyle, useDragControls, useMotionValue } from 'framer-motion';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-import { useTheme } from '@/lib/ThemeProvider';
-import { cn } from '@/lib/utils';
 import {
-    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
-} from '@dnd-kit/core';
-import { restrictToWindowEdges } from '@dnd-kit/modifiers';
+  DragHandlers,
+  motion,
+  MotionStyle,
+  useDragControls,
+  useMotionValue,
+} from "framer-motion";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Resizable } from './Resizable';
-import { WindowContent } from './WindowContent';
-import { WindowHeader } from './WindowHeader';
+import { useTheme } from "@/lib/ThemeProvider";
+import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  DragEndEvent,
+  DragMoveEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+
+import { Resizable } from "./Resizable";
+import { WindowContent } from "./WindowContent";
+import { WindowHeader } from "./WindowHeader";
 
 interface WindowShellProps {
   id: string;
@@ -32,11 +44,12 @@ interface WindowShellProps {
   // Window behavior
   active?: boolean;
   activeOnHover?: boolean;
-  activeTarget?: "window" | "titlebar";
-
-  // Window controls
+  activeTarget?: "window" | "titlebar"; // Window controls
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
+  showButtonLabels?: boolean;
+  showButtonImages?: boolean;
+  showButtonIcons?: boolean;
 
   // Event handlers
   onClose?: () => void;
@@ -49,6 +62,12 @@ interface WindowShellProps {
     height: number | string;
   }) => void;
   hideWindowChrome?: boolean;
+
+  /**
+   * If true, header will use full-width/zero-margin/padding styles. If false, header is styled by theme CSS only.
+   * Default: true
+   */
+  headerFullWidth?: boolean;
 }
 
 export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
@@ -83,6 +102,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   onDragEnd = () => {},
   onResize = () => {},
   hideWindowChrome = false,
+  headerFullWidth = true,
 }) => {
   const { theme } = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
@@ -389,7 +409,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
                 top: 0,
                 left: 0,
                 width: "100vw",
-                height: "100vh",
+                height: "calc(100vh - 3rem)",
               }
             : {
                 position: "absolute",
@@ -417,6 +437,13 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
               pointerEvents: "auto",
               zIndex: 1,
               position: "relative",
+              ...(headerFullWidth && {
+                margin: 0,
+                padding: 0,
+                width: "100%",
+                left: 0,
+                right: 0,
+              }),
             }}
           >
             <WindowHeader

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { PluginManifest } from '../../../plugins/types';
 
 export const manifest: PluginManifest = {
@@ -16,9 +17,9 @@ export const manifest: PluginManifest = {
   ),
   entry: "apps/browser",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "browser.js", 
+  // workerEntrypoint: "browser.js",
   preferredSize: {
-    width: 600,
-    height: 400,
+    width: 1024,
+    height: 768,
   },
-}; 
+};

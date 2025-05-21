@@ -318,7 +318,10 @@ const SettingsContent: React.FC = () => {
                 <div className="rounded-md border border-border overflow-hidden aspect-video">
                   <div
                     className="h-full w-full"
-                    style={{ background: backgroundColor }}
+                    style={{
+                      background: backgroundColor,
+                      borderColor: "var(--wm-border-color)",
+                    }}
                   ></div>
                 </div>
                 <div className="mt-1 text-xs text-center">Solid Color</div>
@@ -340,6 +343,7 @@ const SettingsContent: React.FC = () => {
                         backgroundImage: `url(${wallpaperPath})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
+                        borderColor: "var(--wm-border-color)",
                       }}
                     ></div>
                   </div>
@@ -371,7 +375,10 @@ const SettingsContent: React.FC = () => {
                         ? "ring-2 ring-primary"
                         : ""
                     }`}
-                    onClick={() => setBackgroundColor(color.value)}
+                    onClick={() => {
+                      setWallpaper(null);
+                      setBackgroundColor(color.value);
+                    }}
                     title={color.name}
                   >
                     <div
@@ -504,7 +511,10 @@ const SettingsContent: React.FC = () => {
               </div>{" "}
               {/* Information about Windows animations being disabled */}
               {["win98", "winxp", "win7"].includes(theme) && (
-                <div className="border rounded p-3 bg-muted/30">
+                <div
+                  className="border rounded p-3 bg-muted/30"
+                  style={{ borderColor: "var(--wm-border-color)" }}
+                >
                   <p className="text-sm font-medium">Windows Animations</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Window animations are permanently disabled in Windows themes
@@ -609,7 +619,10 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
 
-            <div className="border rounded-md p-4 mb-4">
+            <div
+              className="border rounded-md p-4 mb-4"
+              style={{ borderColor: "var(--wm-border-color)" }}
+            >
               <h4 className="font-medium mb-2">Install Plugin</h4>
               <p className="text-sm text-muted-foreground mb-4">
                 Install plugins from external sources to extend functionality
@@ -632,7 +645,10 @@ const SettingsContent: React.FC = () => {
             {/* Installed Plugins List */}
             <InstalledPluginsList />
 
-            <div className="border rounded-md p-4">
+            <div
+              className="border rounded-md p-4"
+              style={{ borderColor: "var(--wm-border-color)" }}
+            >
               <h4 className="font-medium mb-2">Security Warning</h4>
               <p className="text-sm text-red-500">
                 Third-party plugins can access your system and data. Only

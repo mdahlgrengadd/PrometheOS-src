@@ -134,3 +134,32 @@
   cursor: grabbing !important;
   z-index: 10 !important;
 }
+
+/* Override border-input color to a neutral dark grey */
+.theme-win7 .border {
+  border-color: #666666 !important;
+}
+
+/* Override Taskbar gradient and shadow for Windows 7 theme */
+html.theme-win7 {
+  --taskbar-bg-gradient: linear-gradient(
+    to bottom,
+    #2582d1 0%,
+    #3c96e4 3%,
+    #5cb6ff 6%,
+    #5baef5 10%,
+    #4aa4eb 25%,
+    #3a95dc 40%,
+    #328fd5 50%,
+    #2d8ace 55%,
+    #2888ca 60%,
+    #2582d1 100%
+  );
+  --taskbar-shadow: inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5;
+
+  /* Start Button overrides for Win7 */
+  --start-btn-bg: linear-gradient(to bottom, #67c15f, #37a333);
+  --start-btn-active-bg: linear-gradient(to bottom, #5cb749, #37a333);
+  --start-btn-shadow: inset 0 1px 0 0 #8adf83, inset 0 -1px 0 0 #256e1f;
+  --start-btn-active-shadow: inset 0 0 3px 1px rgba(0,0,0,0.3);
+}

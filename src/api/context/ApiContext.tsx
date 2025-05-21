@@ -1,19 +1,8 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-import { eventBus } from "../../plugins/EventBus";
-import {
-  IActionResult,
-  IApiComponent,
-  IApiContextValue,
-  IOpenApiSpec,
-} from "../core/types";
-import { generateOpenApiSpec } from "../utils/openapi";
+import { eventBus } from '../../plugins/EventBus';
+import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
+import { generateOpenApiSpec } from '../utils/openapi';
 
 // Create the API context with null default value
 const ApiContext = createContext<IApiContextValue | null>(null);

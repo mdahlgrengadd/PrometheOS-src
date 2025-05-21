@@ -422,6 +422,23 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
       plugin.onOpen?.();
 
+      // Center the window on the screen before opening
+      const store = useWindowStore.getState();
+      const winState = store.windows[pluginId];
+      if (winState) {
+        const w =
+          typeof winState.size.width === "number"
+            ? winState.size.width
+            : parseInt(String(winState.size.width), 10) || 0;
+        const h =
+          typeof winState.size.height === "number"
+            ? winState.size.height
+            : parseInt(String(winState.size.height), 10) || 0;
+        const centerX = window.innerWidth / 2 - w / 2;
+        const centerY = window.innerHeight / 2 - h / 2;
+        store.move(pluginId, { x: centerX, y: centerY });
+      }
+
       // Just use the store directly
       setOpen(pluginId, true);
       focus(pluginId);
@@ -462,7 +479,10 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         plugin.onMaximize?.();
 
         // Use store directly with selector
-        useWindowStore.getState().maximize(pluginId);
+        const store = useWindowStore.getState();
+        store.maximize(pluginId);
+        // Bring to top after maximize
+        store.focus(pluginId);
       }
     },
     [pluginManager]

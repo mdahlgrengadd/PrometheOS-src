@@ -296,7 +296,7 @@ export function WindowsWindow({
         data-hide-chrome={hideWindowChrome}
         style={{
           width: isMaximized ? "100vw" : size?.width || width,
-          height: isMaximized ? "100vh" : size?.height || height,
+          height: isMaximized ? "calc(100vh - 3rem)" : size?.height || height,
           zIndex,
           position: isMaximized ? "fixed" : "absolute",
           top: isMaximized ? 0 : undefined,

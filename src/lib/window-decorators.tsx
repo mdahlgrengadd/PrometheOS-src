@@ -16,6 +16,7 @@ export interface ControlProps {
   onMinimize: () => void;
   onMaximize: () => void;
   onClose: () => void;
+  showButtonIcons?: boolean;
 }
 
 export interface WindowDecorator {
@@ -29,6 +30,7 @@ const StandardControls: React.FC<ControlProps> = ({
   onMinimize,
   onMaximize,
   onClose,
+  showButtonIcons = false,
 }) => {
   return (
     <div className="window-controls">
@@ -38,28 +40,32 @@ const StandardControls: React.FC<ControlProps> = ({
         aria-label="Minimize"
         style={{ backgroundColor: "var(--wm-btn-minimize-bg, #f1c40f)" }}
       >
-        <div className="h-1 w-2.5 bg-black/60 rounded-none"></div>
+        {showButtonIcons && (
+          <div className="h-1 w-2.5 bg-black/60 rounded-none"></div>
+        )}
       </button>
-
       <button
         className="window-control"
         onClick={onMaximize}
         aria-label="Maximize"
         style={{ backgroundColor: "var(--wm-btn-maximize-bg, #2ecc71)" }}
       >
-        <div className="h-2.5 w-2.5 border border-black/60"></div>
+        {showButtonIcons && (
+          <div className="h-2.5 w-2.5 border border-black/60"></div>
+        )}
       </button>
-
       <button
         className="window-control"
         onClick={onClose}
         aria-label="Close"
         style={{ backgroundColor: "var(--wm-btn-close-bg, #e74c3c)" }}
       >
-        <div className="h-2.5 w-2.5 relative">
-          <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-          <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
-        </div>
+        {showButtonIcons && (
+          <div className="h-2.5 w-2.5 relative">
+            <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+            <div className="absolute w-3 h-0.5 bg-black/60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+          </div>
+        )}
       </button>
     </div>
   );
@@ -80,6 +86,7 @@ const BeOSHeader: React.FC<HeaderProps> = ({
         onMinimize={onMinimize}
         onMaximize={onMaximize}
         onClose={onClose}
+        showButtonIcons={true}
       />
     </div>
   );
@@ -94,8 +101,17 @@ const ModernHeader: React.FC<HeaderProps> = ({
   headerRef,
 }) => {
   return (
-    <div ref={headerRef} className="window-header modern-header">
-      <div className="flex items-center gap-2">
+    <div
+      ref={headerRef}
+      className="window-header modern-header"
+      style={{
+        borderBottom: "2px solid var(--wm-border-color)",
+        borderTopLeftRadius: "inherit",
+        borderTopRightRadius: "inherit",
+        background: "var(--wm-header-bg, var(--background, #f8f9fa))",
+      }}
+    >
+      <div className="flex items-center gap-2 flex-1">
         <Grip className="h-4 w-4 text-muted-foreground/50" />
         <div className="window-title">{title}</div>
       </div>
@@ -113,6 +129,7 @@ const WindowsControls: React.FC<ControlProps> = ({
   onMinimize,
   onMaximize,
   onClose,
+  showButtonIcons = false,
 }) => {
   return (
     <div className="window-controls windows-controls">
@@ -121,22 +138,24 @@ const WindowsControls: React.FC<ControlProps> = ({
         onClick={onMinimize}
         aria-label="Minimize"
       >
-        <div className="h-0.5 w-2.5 bg-white"></div>
+        {showButtonIcons && <div className="h-0.5 w-2.5 bg-white"></div>}
       </button>
-
       <button
         className="window-control"
         onClick={onMaximize}
         aria-label="Maximize"
       >
-        <div className="h-2.5 w-2.5 border border-white"></div>
+        {showButtonIcons && (
+          <div className="h-2.5 w-2.5 border border-white"></div>
+        )}
       </button>
-
       <button className="window-control" onClick={onClose} aria-label="Close">
-        <div className="h-2.5 w-2.5 relative">
-          <div className="absolute w-3 h-0.5 bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-          <div className="absolute w-3 h-0.5 bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
-        </div>
+        {showButtonIcons && (
+          <div className="h-2.5 w-2.5 relative">
+            <div className="absolute w-3 h-0.5 bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+            <div className="absolute w-3 h-0.5 bg-white top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+          </div>
+        )}
       </button>
     </div>
   );
@@ -167,6 +186,7 @@ const MacOSControls: React.FC<ControlProps> = ({
   onMinimize,
   onMaximize,
   onClose,
+  showButtonIcons = false,
 }) => {
   return (
     <div className="window-controls macos-controls">
@@ -176,28 +196,30 @@ const MacOSControls: React.FC<ControlProps> = ({
         aria-label="Close"
         style={{ backgroundColor: "var(--wm-btn-close-bg, #ff5f56)" }}
       >
-        <div className="h-2.5 w-2.5 relative">
-          <div className="absolute w-2 h-0.5 bg-black/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
-          <div className="absolute w-2 h-0.5 bg-black/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
-        </div>
+        {showButtonIcons && (
+          <div className="h-2.5 w-2.5 relative">
+            <div className="absolute w-2 h-0.5 bg-black/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+            <div className="absolute w-2 h-0.5 bg-black/40 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45"></div>
+          </div>
+        )}
       </button>
-
       <button
         className="window-control"
         onClick={onMinimize}
         aria-label="Minimize"
         style={{ backgroundColor: "var(--wm-btn-minimize-bg, #ffbd2e)" }}
       >
-        <div className="h-0.5 w-2 bg-black/40"></div>
+        {showButtonIcons && <div className="h-0.5 w-2 bg-black/40"></div>}
       </button>
-
       <button
         className="window-control"
         onClick={onMaximize}
         aria-label="Maximize"
         style={{ backgroundColor: "var(--wm-btn-maximize-bg, #28c941)" }}
       >
-        <div className="h-2 w-2 border border-black/40"></div>
+        {showButtonIcons && (
+          <div className="h-2 w-2 border border-black/40"></div>
+        )}
       </button>
     </div>
   );

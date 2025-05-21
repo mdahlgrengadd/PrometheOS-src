@@ -1,7 +1,9 @@
 import React from 'react';
-import { PluginManifest } from '../../../plugins/types';
 
-export const manifest: PluginManifest = {
+import { PluginManifest } from '../../../plugins/types';
+import { wordEditorApiDoc } from './WordEditor';
+
+export const manifest: PluginManifest & { apiDoc?: typeof wordEditorApiDoc } = {
   id: "wordeditor",
   name: "Word Editor Pro",
   version: "1.0.0",
@@ -16,9 +18,10 @@ export const manifest: PluginManifest = {
   ),
   entry: "apps/wordeditor",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "wordeditor.js", 
+  // workerEntrypoint: "wordeditor.js",
   preferredSize: {
-    width: 600,
-    height: 400,
+    width: 1024,
+    height: 768,
   },
-}; 
+  apiDoc: wordEditorApiDoc,
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { PluginManifest } from '../../../plugins/types';
 
 export const manifest: PluginManifest = {
@@ -14,9 +15,9 @@ export const manifest: PluginManifest = {
   ),
   entry: "apps/chat",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "chat.js", 
+  // workerEntrypoint: "chat.js",
   preferredSize: {
-    width: 600,
-    height: 400,
+    width: 1024,
+    height: 768,
   },
-}; 
+};

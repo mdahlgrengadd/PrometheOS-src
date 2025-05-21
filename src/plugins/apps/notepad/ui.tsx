@@ -178,7 +178,7 @@ const NotepadComponent: React.FC = () => {
       {/* API-enabled textarea for AI interaction */}
       <Textarea
         apiId={manifest.id}
-        className="flex-1 w-full p-1 rounded-none resize-none bg-white text-foreground"
+        className="flex-1 w-full p-1 rounded-none resize-none bg-background text-foreground"
         placeholder="Type your notes here..."
         value={noteContent}
         onChange={handleTextChange}
