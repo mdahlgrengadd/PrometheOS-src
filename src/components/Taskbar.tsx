@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useMemo, FC } from 'react';
+// Import component-scoped styles
+import './Taskbar.css';
+
+import { Maximize2, Minimize2, Monitor, Wifi } from 'lucide-react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
+import { FcDocument, FcGlobe, FcSpeaker } from 'react-icons/fc';
+
 import { useTheme } from '@/lib/ThemeProvider';
 import { useWindowStore } from '@/store/windowStore';
 import { WindowState } from '@/types/window';
+
 import { useWebRTCStatus } from '../hooks/useWebRTCStatus';
 import StartButton from './StartButton';
 import StartMenu from './StartMenu';
-import { FcGlobe, FcSpeaker, FcDocument } from 'react-icons/fc';
-import { Monitor, Minimize2, Maximize2, Wifi } from 'lucide-react';
-
-// Import component-scoped styles
-import './Taskbar.css';
 
 interface TaskbarProps {
   onWindowClick: (id: string) => void;
@@ -42,8 +44,8 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
         setIsStartMenuOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, [isStartMenuOpen]);
   const [autoHide, setAutoHide] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -56,7 +58,7 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
   }, []);
 
   useEffect(() => {
-    const stored = localStorage.getItem('taskbar-autohide') === 'true';
+    const stored = localStorage.getItem("taskbar-autohide") === "true";
     setAutoHide(stored);
     setIsVisible(!stored);
   }, []);
@@ -68,23 +70,31 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
 
   // Formatters
   const formatTime = (date: Date) =>
-    date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   const formatDate = (date: Date) =>
-    date.toLocaleDateString([], { month: 'numeric', day: 'numeric', year: 'numeric' });
+    date.toLocaleDateString([], {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    });
 
   // Styles
   const containerStyle: React.CSSProperties = {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
-    width: '100%',
-    height: '3rem',
-    display: 'flex',
+    width: "100%",
+    height: "3rem",
+    display: "flex",
     background:
-      'linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)',
-    boxShadow: 'inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5',
-    transition: autoHide ? 'transform 0.3s ease' : undefined,
-    transform: autoHide && !isVisible ? 'translateY(100%)' : 'translateY(0)',
+      "linear-gradient(to bottom, #2582d1 0%, #3c96e4 3%, #5cb6ff 6%, #5baef5 10%, #4aa4eb 25%, #3a95dc 40%, #328fd5 50%, #2d8ace 55%, #2888ca 60%, #2582d1 100%)",
+    boxShadow: "inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5",
+    transition: autoHide ? "transform 0.3s ease" : undefined,
+    transform: autoHide && !isVisible ? "translateY(100%)" : "translateY(0)",
   };
 
   return (
@@ -114,11 +124,14 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
       <div className="flex items-center ml-2 space-x-1 flex-1">
         {windows.map((win) => {
           const btnClass = [
-            'taskbar-app-btn',
-            win.isMinimized ? 'minimized' : '',
-            win.isOpen && !win.isMinimized ? 'taskbar-app-btn-active' : '',
-            'cursor-pointer',
-          ].filter(Boolean).join(' ');
+            "taskbar-app-btn",
+            "h-8",
+            win.isMinimized ? "minimized" : "",
+            win.isOpen && !win.isMinimized ? "taskbar-app-btn-active" : "",
+            "cursor-pointer",
+          ]
+            .filter(Boolean)
+            .join(" ");
           return (
             <div
               key={win.id}
@@ -126,7 +139,9 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
               onClick={() => onWindowClick(win.id)}
               tabIndex={0}
               role="button"
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onWindowClick(win.id); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") onWindowClick(win.id);
+              }}
             >
               <Monitor className="w-5 h-5 mr-1 text-white" />
               <span className="truncate">{win.title}</span>

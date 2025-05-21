@@ -136,6 +136,6 @@
 }
 
 /* Override border-input color to a neutral dark grey */
-.theme-win7 .border-input {
+.theme-win7 .border {
   border-color: #666666 !important;
 }
