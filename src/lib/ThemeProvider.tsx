@@ -492,6 +492,29 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       // Note: --app-bg is already set from theme.cssVariables above
     }
 
+    // FIXME: Temporary workaround - inline body style override for solid color backgrounds.
+    // CSS variables don't always override the body background correctly due to specificity/order issues.
+    // TODO: Investigate a proper solution ensuring --app-bg and related vars apply as intended via CSS variables.
+    const body = document.body;
+    if (wallpaper === null && backgroundColor) {
+      body.style.backgroundColor = backgroundColor;
+      body.style.backgroundImage = "none";
+    } else if (wallpaper) {
+      body.style.backgroundImage = `url(${wallpaper})`;
+      body.style.backgroundSize = "cover";
+      body.style.backgroundPosition = "center center";
+      body.style.backgroundRepeat = "no-repeat";
+      body.style.backgroundAttachment = "fixed";
+    } else {
+      // Revert to CSS var defaults
+      body.style.backgroundColor = "";
+      body.style.backgroundImage = "";
+      body.style.backgroundSize = "";
+      body.style.backgroundPosition = "";
+      body.style.backgroundRepeat = "";
+      body.style.backgroundAttachment = "";
+    }
+
     // Remove all theme classes
     root.classList.remove(
       "theme-beos",
