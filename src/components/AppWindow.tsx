@@ -56,7 +56,7 @@ const AppWindow: React.FC<WindowProps> = ({
     resize(window.id, newSize);
   };
 
-  if (!window.isOpen || window.isMinimized) return null;
+  if (!window.isOpen) return null;
 
   return (
     <WindowShell

@@ -1,9 +1,9 @@
-import React from "react";
+import React from 'react';
 
-import { WindowsWindow } from "@/components/franky-ui-kit/Window";
-import { useTheme } from "@/lib/ThemeProvider";
+import { WindowsWindow } from '@/components/franky-ui-kit/Window';
+import { useTheme } from '@/lib/ThemeProvider';
 
-import { UnifiedWindowShellV2 } from "./UnifiedWindowShellV2";
+import { UnifiedWindowShellV2 } from './UnifiedWindowShellV2';
 
 interface WindowShellProps {
   id: string;
@@ -59,7 +59,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
   // Check if using a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   // If using a Windows theme, render the WindowsWindow component
   // This is temporary until we've fully migrated to UnifiedWindowShell

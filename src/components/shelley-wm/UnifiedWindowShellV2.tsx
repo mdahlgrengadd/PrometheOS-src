@@ -346,7 +346,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
 
   const dragControls = useDragControls();
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   return (
     <DndContext
@@ -397,6 +397,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
         )}
         data-hide-chrome={hideWindowChrome}
         style={{
+          display: isMinimized ? "none" : undefined,
           zIndex,
           willChange:
             isDragging || isResizing ? "transform, width, height" : "auto",

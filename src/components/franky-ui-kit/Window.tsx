@@ -252,7 +252,7 @@ export function WindowsWindow({
 
   const controlButtons = <>{controlList.map(renderControl)}</>;
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   // Wrap in DndContext to support resizing handles
   return (
@@ -304,6 +304,7 @@ export function WindowsWindow({
         )}
         data-hide-chrome={hideWindowChrome}
         style={{
+          display: isMinimized ? "none" : undefined,
           width: isMaximized ? "100vw" : size?.width || width,
           height: isMaximized ? "calc(100vh - 3rem)" : size?.height || height,
           zIndex,
