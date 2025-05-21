@@ -1,7 +1,7 @@
-import { Grip } from "lucide-react";
-import React from "react";
+import { Grip } from 'lucide-react';
+import React from 'react';
 
-import { ThemeConfig } from "@/lib/theme-types";
+import { ThemeConfig } from '@/lib/theme-types';
 
 // Types for the window decorator components
 export interface HeaderProps {
@@ -95,7 +95,7 @@ const ModernHeader: React.FC<HeaderProps> = ({
 }) => {
   return (
     <div ref={headerRef} className="window-header modern-header">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-1">
         <Grip className="h-4 w-4 text-muted-foreground/50" />
         <div className="window-title">{title}</div>
       </div>

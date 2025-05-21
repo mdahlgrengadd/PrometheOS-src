@@ -327,6 +327,24 @@
     color: var(--window-header-text, #333);
   }
   
+  /* Dark theme specific title bar styling */
+  .theme-dark .window-header {
+    background-color: var(--window-header-background, hsl(220, 13%, 16%));
+    color: var(--window-header-text, hsl(220, 13%, 85%));
+  }
+  
+  /* Ensure window title is properly positioned in dark theme */
+  .theme-dark .window-title {
+    color: var(--window-header-text, hsl(220, 13%, 85%));
+  }
+  
+  /* Correctly style the modern-header layout in dark theme */
+  .theme-dark .modern-header {
+    background-color: var(--window-header-background, hsl(220, 13%, 16%));
+  }
+  
+
+  
   /* Windows style title bar */
   .theme-windows .window-header {
     background: linear-gradient(
@@ -379,6 +397,23 @@
   .window-control:active {
     filter: brightness(0.8);
     background-color: var(--window-header-button-active, #d0d0d0);
+  }
+  
+  /* Dark theme specific controls styling */
+  .theme-dark .window-controls {
+    gap: var(--wm-btn-gap, 6px); /* Slightly larger gap for better visibility */
+  }
+  
+  .theme-dark .window-control {
+    width: var(--wm-btn-size, 14px); /* Slightly larger controls */
+    height: var(--wm-btn-size, 14px);
+    opacity: 0.9; /* Make them slightly more visible */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Add subtle shadow for depth */
+  }
+  
+  .theme-dark .window-control:hover {
+    opacity: 1;
+    transform: scale(1.05); /* Subtle grow effect on hover */
   }
   
   /* Windows style close, minimize, maximize buttons */

@@ -1,7 +1,7 @@
 // import * as win7Decorator from './decorators/win7.decorator';
 // import * as win98Decorator from './decorators/win98.decorator';
 // import * as winxpDecorator from './decorators/winxp.decorator';
-import { ThemeConfig, ThemeType } from "./theme-types";
+import { ThemeConfig, ThemeType } from './theme-types';
 
 // BeOS Theme
 const beosTheme: ThemeConfig = {
@@ -149,10 +149,12 @@ const darkTheme: ThemeConfig = {
     "--window-border": "220, 13%, 15%",
     "--window-border-light": "220, 13%, 20%",
     "--window-border-lighter": "220, 13%, 22%",
-    "--title-bg": "220, 13%, 22%",
-    "--title-hover": "220, 13%, 24%",
-    "--title-active": "220, 13%, 26%",
-    "--title-border": "220, 13%, 15%",
+    "--title-bg": "220, 13%, 16%",
+    "--title-hover": "220, 13%, 18%",
+    "--title-active": "220, 13%, 20%",
+    "--title-border": "220, 13%, 14%",
+    "--window-header-background": "hsl(220, 13%, 14%)",
+    "--window-header-text": "hsl(220, 13%, 90%)",
 
     // Text and general colors
     "--text-primary": "220, 13%, 75%",
@@ -197,6 +199,13 @@ const darkTheme: ThemeConfig = {
     // Theme specific
     "--has-window-header-dot": "0",
     "--taskbar-bg": "hsla(220, 13%, 16%, 0.8)",
+
+    // Window control button colors
+    "--wm-btn-close-bg": "#ff5f56",
+    "--wm-btn-minimize-bg": "#ffbd2e",
+    "--wm-btn-maximize-bg": "#28c941",
+    "--wm-btn-gap": "6px",
+    "--wm-btn-size": "14px",
 
     // Global app styling - more muted dark theme
     "--app-bg": "hsl(220, 10%, 15%)",
