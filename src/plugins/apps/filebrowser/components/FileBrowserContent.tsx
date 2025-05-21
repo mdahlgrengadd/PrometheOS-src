@@ -17,10 +17,12 @@ const FileBrowserContent: React.FC = () => {
     navigateToDirectory,
     navigateToDrive,
     currentDrive,
+    currentDirectory,
     moveItem,
     selectedItems,
     setSelectedItems,
     updateItem,
+    createFile,
   } = useFileSystem();
 
   const [files, setFiles] = useState<FileSystemItem[]>([]);
@@ -33,7 +35,7 @@ const FileBrowserContent: React.FC = () => {
   // Load files when directory changes
   useEffect(() => {
     refreshFiles();
-  }, [getCurrentDirectoryFiles]);
+  }, [currentDrive, currentDirectory]);
 
   const refreshFiles = () => {
     const dirFiles = getCurrentDirectoryFiles();
@@ -184,8 +186,6 @@ const FileBrowserContent: React.FC = () => {
         const content = e.target?.result?.toString() || "";
 
         try {
-          // Import file to the file system
-          const { createFile } = useFileSystem();
           createFile(name, content);
           resolve();
         } catch (error) {
@@ -235,7 +235,6 @@ const FileBrowserContent: React.FC = () => {
 
             reader.onload = (e) => {
               try {
-                const { createFile } = useFileSystem();
                 createFile(file.name, e.target?.result?.toString() || "");
                 resolve();
               } catch (error) {
