@@ -1,31 +1,25 @@
-
+import { Folder, Github, HardDrive, Network } from 'lucide-react';
 import React from 'react';
-import { 
-  HardDrive,
-  Github,
-  Network,
-  Folder,
-} from 'lucide-react';
+
 import { cn } from '@/lib/utils';
-import { useFileSystem } from '@/hooks/useFileSystem';
-import { fileSystem, Drive } from '@/services/FileSystem';
+import { Drive } from '@/services/FileSystem';
 
 interface FileBrowserSidebarProps {
   selectedDrive: string;
   onDriveSelect: (driveId: string) => void;
+  drives: Drive[];
 }
 
 const FileBrowserSidebar: React.FC<FileBrowserSidebarProps> = ({
   selectedDrive,
-  onDriveSelect
+  onDriveSelect,
+  drives,
 }) => {
-  const { drives } = useFileSystem();
-
   const getDriveIcon = (driveType: string) => {
     switch (driveType) {
-      case 'github':
+      case "github":
         return <Github className="h-4 w-4 mr-2" />;
-      case 'network':
+      case "network":
         return <Network className="h-4 w-4 mr-2" />;
       default:
         return <HardDrive className="h-4 w-4 mr-2" />;
@@ -48,7 +42,9 @@ const FileBrowserSidebar: React.FC<FileBrowserSidebarProps> = ({
             {getDriveIcon(drive.type)}
             <span className="truncate">{drive.name}</span>
             {drive.readOnly && (
-              <span className="ml-auto text-xs text-muted-foreground">(RO)</span>
+              <span className="ml-auto text-xs text-muted-foreground">
+                (RO)
+              </span>
             )}
           </div>
         ))}

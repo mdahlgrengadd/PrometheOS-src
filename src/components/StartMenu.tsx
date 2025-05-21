@@ -85,7 +85,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               customIcon={<FcDocument className="w-8 h-8" />}
               label="My Documents"
               type="my"
-              onClick={() => openWindow("file-explorer")}
+              onClick={() => openWindow("filebrowser")}
             />
 
             {/* My Recent Documents */}

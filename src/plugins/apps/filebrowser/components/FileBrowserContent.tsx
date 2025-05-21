@@ -15,14 +15,20 @@ const FileBrowserContent: React.FC = () => {
     getCurrentDirectoryFiles,
     getCurrentDirectoryInfo,
     navigateToDirectory,
+    navigateToParentDirectory,
     navigateToDrive,
     currentDrive,
     currentDirectory,
+    drives,
+    createFile,
+    createFolder,
+    deleteItem,
+    addNetworkDrive,
+    connectToGitHub,
     moveItem,
     selectedItems,
     setSelectedItems,
     updateItem,
-    createFile,
   } = useFileSystem();
 
   const [files, setFiles] = useState<FileSystemItem[]>([]);
@@ -43,6 +49,9 @@ const FileBrowserContent: React.FC = () => {
   };
 
   const currentDir = getCurrentDirectoryInfo();
+  // Normalize display path to avoid double slashes
+  const rawPath = currentDir?.path || "/";
+  const displayPath = rawPath.replace(/\/\/+/, "/");
 
   const getFileIcon = (file: FileSystemItem) => {
     if (file.type === "folder") {
@@ -272,12 +281,20 @@ const FileBrowserContent: React.FC = () => {
       <FileBrowserToolbar
         selectedItems={selectedItems}
         refreshFiles={refreshFiles}
+        navigateToParentDirectory={navigateToParentDirectory}
+        currentDir={currentDir}
+        createFile={createFile}
+        createFolder={createFolder}
+        deleteItem={deleteItem}
+        addNetworkDrive={addNetworkDrive}
+        connectToGitHub={connectToGitHub}
       />
 
       <div className="flex flex-1 overflow-hidden">
         <FileBrowserSidebar
           selectedDrive={currentDrive}
           onDriveSelect={navigateToDrive}
+          drives={drives}
         />
 
         <div
@@ -289,7 +306,7 @@ const FileBrowserContent: React.FC = () => {
           onDrop={handleExternalDrop}
         >
           <div className="text-sm mb-2 pb-1 border-b border-border">
-            <span>Current path: {currentDir?.path || "/"}</span>
+            <span>Current path: {displayPath}</span>
           </div>
 
           <div className="grid grid-cols-6 gap-2">
