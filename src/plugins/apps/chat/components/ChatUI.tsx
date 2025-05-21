@@ -1,8 +1,8 @@
-import { nanoid } from "nanoid";
-import { usePartySocket } from "partysocket/react";
-import React, { useEffect, useState } from "react";
+import { nanoid } from 'nanoid';
+import { usePartySocket } from 'partysocket/react';
+import React, { useEffect, useState } from 'react';
 
-import { ChatMessage, Message, names } from "../types";
+import { ChatMessage, Message, names } from '../types';
 
 // ← set this to whatever your live Worker URL is:
 const CHAT_HOST = "https://cloudflare-chat.mdahlgrengadd.workers.dev";
@@ -23,6 +23,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
     () => names[Math.floor(Math.random() * names.length)]
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     // Clear messages when changing rooms
@@ -72,12 +73,32 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
     setRoomId(randomRoom);
   };
 
+  const handleCopy = (id: string, content: string) => {
+    navigator.clipboard
+      .writeText(content)
+      .then(() => {
+        setCopiedMessageId(id);
+        setTimeout(() => setCopiedMessageId(null), 2000);
+      })
+      .catch((err) => console.error("Failed to copy text: ", err));
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-2 border-b">
         <div className="flex items-center mb-2">
-          <div className="text-sm text-gray-500 flex-1">
-            Current room: {fullUrl}
+          <div className="text-sm text-gray-500 flex-1 flex items-center">
+            <span className="truncate">Current room: {roomId}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard
+                  .writeText(fullUrl)
+                  .catch((err) => console.error("Failed to copy URL: ", err));
+              }}
+              className="ml-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+            >
+              Copy URL
+            </button>
           </div>
           <button
             onClick={handleRandomRoom}
@@ -103,8 +124,19 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
       </div>
       <div className="flex-1 overflow-auto">
         {messages.map((m) => (
-          <div key={m.id} className="p-2 border-b">
-            <strong>{m.user}:</strong> {m.content}
+          <div
+            key={m.id}
+            className="p-2 border-b flex justify-between items-start"
+          >
+            <div className="flex-1 break-all">
+              <strong>{m.user}:</strong> {m.content}
+            </div>
+            <button
+              onClick={() => handleCopy(m.id, m.content)}
+              className="ml-2 px-2 py-1 bg-gray-200 text-xs rounded hover:bg-gray-300"
+            >
+              {copiedMessageId === m.id ? "Copied!" : "Copy"}
+            </button>
           </div>
         ))}
       </div>

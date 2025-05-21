@@ -1,15 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { eventBus } from "../plugins/EventBus";
+import { eventBus } from '../plugins/EventBus';
 import {
-  decodeShortCode,
-  generatePinCode,
-  generateShortCode,
-  lookupShortCodeByPin,
-} from "../utils/sessionUtils";
-import { toast } from "./use-toast";
-import { useWebRTCSession } from "./useWebRTCSession";
-import { useWebRTCStatus } from "./useWebRTCStatus";
+    decodeShortCode, generatePinCode, generateShortCode, lookupShortCodeByPin
+} from '../utils/sessionUtils';
+import { toast } from './use-toast';
+import { useWebRTCSession } from './useWebRTCSession';
+import { useWebRTCStatus } from './useWebRTCStatus';
 
 let isApplyingRemote = false;
 
@@ -79,13 +76,18 @@ export function useSessionHandshake(): UseSessionHandshakeReturn {
 
   // Auto‐decode pasted short code
   useEffect(() => {
-    if (connectionData.startsWith("$")) {
+    // Auto‐decode pasted short code if not JSON and not 6-digit PIN
+    if (
+      connectionData &&
+      !connectionData.startsWith("{") &&
+      !/^\d{6}$/.test(connectionData)
+    ) {
       try {
         const json = decodeShortCode(connectionData);
         JSON.parse(json);
         setConnectionData(json);
       } catch {
-        // keep raw
+        // keep raw if decode or parse fails
       }
     }
   }, [connectionData]);
@@ -230,7 +232,8 @@ export function useSessionHandshake(): UseSessionHandshakeReturn {
           const stored = lookupShortCodeByPin(dataToProcess);
           if (!stored) throw new Error("Invalid PIN");
           dataToProcess = decodeShortCode(stored);
-        } else if (dataToProcess.startsWith("$")) {
+        } else if (!dataToProcess.startsWith("{")) {
+          // treat as compressed short code
           dataToProcess = decodeShortCode(dataToProcess);
         }
 
