@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import CustomExplorer from './CustomExplorer';
+import BetterCustomExplorer from './BetterCustomExplorer';
 import SwaggerExplorer from './SwaggerExplorer';
 
 /**
@@ -20,8 +20,8 @@ const ApiExplorerSwitcher: React.FC = () => {
         className="flex-1 flex flex-col"
       >
         <TabsList className="w-full justify-start mb-4">
+          <TabsTrigger value="custom">Frontend Explorer</TabsTrigger>
           <TabsTrigger value="swagger">Swagger UI (FastAPI Style)</TabsTrigger>
-          <TabsTrigger value="custom">Custom Explorer</TabsTrigger>
         </TabsList>
 
         <TabsContent value="swagger" className="flex-1">
@@ -29,7 +29,7 @@ const ApiExplorerSwitcher: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="custom" className="flex-1">
-          <CustomExplorer />
+          <BetterCustomExplorer />
         </TabsContent>
       </Tabs>
     </div>
