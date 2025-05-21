@@ -14,7 +14,7 @@ import { ThemeConfig, ThemeContextType, ThemeInstallResult, ThemeType } from './
 
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "win7",
+  theme: "beos",
   setTheme: () => {},
   themes,
   setPadding: () => {},
@@ -48,7 +48,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   // Try to get stored theme from localStorage or use 'light' as default
   const [theme, setThemeState] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem("os-theme");
-    return (savedTheme as ThemeType) || "win7";
+    return (savedTheme as ThemeType) || "beos";
   });
 
   // Load Windows UI styles on initial render and when theme changes

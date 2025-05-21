@@ -13,8 +13,8 @@
 /* Status bar fixed at bottom */
 .fixed-status-bar {
   position: sticky;
-  bottom: 0;
-  background-color: var(--muted, #f5f5f5);
+  bottom: -1px;
+  background-color: var(--background, white);
   z-index: 10;
   border-top: 1px solid var(--border, #e5e7eb);
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
