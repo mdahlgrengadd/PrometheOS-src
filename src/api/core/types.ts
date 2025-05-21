@@ -84,7 +84,7 @@ export interface IApiParameter {
   required: boolean;
 
   /** Default value for the parameter */
-  defaultValue?: any;
+  defaultValue?: unknown;
 }
 
 /**
@@ -108,8 +108,8 @@ export interface IApiContextValue {
   executeAction: (
     componentId: string,
     actionId: string,
-    parameters?: Record<string, any>
-  ) => Promise<any>;
+    parameters?: Record<string, unknown>
+  ) => Promise<IActionResult>;
 
   /** Get all registered components */
   getComponents: () => IApiComponent[];
@@ -129,9 +129,9 @@ export interface IOpenApiSpec {
     description: string;
     version: string;
   };
-  paths: Record<string, any>;
+  paths: Record<string, Record<string, unknown>>;
   components: {
-    schemas: Record<string, any>;
+    schemas: Record<string, Record<string, unknown>>;
   };
 }
 
