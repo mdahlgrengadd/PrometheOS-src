@@ -266,6 +266,12 @@ const WebampPlugin: Plugin = {
       #webamp .window::before {
         display: none !important;
       }
+
+      /* Fix equalizer-top sizing under Win7 theme */
+      .theme-win7 #webamp .equalizer-top {
+        height: 0px !important;
+        width: 0px !important;
+      }
     `;
     document.head.appendChild(style);
 
