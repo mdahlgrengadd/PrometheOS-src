@@ -140,9 +140,9 @@
   border-color: #666666 !important;
 }
 
-/* Restore Win7 Taskbar gradient & shadows */
-.theme-win7 .taskbar {
-  background: linear-gradient(
+/* Override Taskbar gradient and shadow for Windows 7 theme */
+html.theme-win7 {
+  --taskbar-bg-gradient: linear-gradient(
     to bottom,
     #2582d1 0%,
     #3c96e4 3%,
@@ -154,6 +154,12 @@
     #2d8ace 55%,
     #2888ca 60%,
     #2582d1 100%
-  ) !important;
-  box-shadow: inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5 !important;
+  );
+  --taskbar-shadow: inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5;
+
+  /* Start Button overrides for Win7 */
+  --start-btn-bg: linear-gradient(to bottom, #67c15f, #37a333);
+  --start-btn-active-bg: linear-gradient(to bottom, #5cb749, #37a333);
+  --start-btn-shadow: inset 0 1px 0 0 #8adf83, inset 0 -1px 0 0 #256e1f;
+  --start-btn-active-shadow: inset 0 0 3px 1px rgba(0,0,0,0.3);
 }
