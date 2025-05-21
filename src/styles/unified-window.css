@@ -90,12 +90,19 @@
 .unified-window .window-header {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* Ensure space between title and controls */
   padding: var(--header-padding, 4px 8px);
   background-color: var(--header-bg, #f5f5f5);
   cursor: move;
   user-select: none;
   min-height: var(--header-height, 30px);
   border-bottom: var(--header-border-bottom, 1px solid #e0e0e0);
+}
+
+/* Dark theme specific header styling - ensure proper background color */
+.theme-dark .unified-window .window-header {
+  background-color: var(--window-header-background, hsl(220, 13%, 14%));
+  color: var(--window-header-text, hsl(220, 13%, 90%));
 }
 
 .unified-window .window-header.active {
@@ -108,6 +115,10 @@
   font-size: var(--title-font-size, 14px);
   font-weight: var(--title-font-weight, 500);
   color: var(--title-color, #333);
+}
+
+.theme-dark .unified-window .window-title {
+  color: var(--title-color, #e6e6e6);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

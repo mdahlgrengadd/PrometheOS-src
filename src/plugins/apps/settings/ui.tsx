@@ -1,26 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 import {
-    AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
-    AlertDialogTitle
-} from '@/components/franky-ui-kit/AlertDialog';
-import { WindowsButton } from '@/components/franky-ui-kit/Button';
-import { WindowsRadioGroup } from '@/components/franky-ui-kit/RadioGroup';
-import { WindowsSwitch } from '@/components/franky-ui-kit/Switch';
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/franky-ui-kit/AlertDialog";
+import { WindowsButton } from "@/components/franky-ui-kit/Button";
+import { WindowsRadioGroup } from "@/components/franky-ui-kit/RadioGroup";
+import { WindowsSwitch } from "@/components/franky-ui-kit/Switch";
 import {
-    WinTabs, WinTabsContent, WinTabsList, WinTabsTrigger
-} from '@/components/franky-ui-kit/Tabs';
-import { WindowSlider } from '@/components/franky-ui-kit/WindowSlider';
-import InstalledPluginsList from '@/components/InstalledPluginsList';
-import PluginInstaller from '@/components/PluginInstaller';
-import ThemeManager from '@/components/ThemeManager';
-import { Label } from '@/components/ui/label';
+  WinTabs,
+  WinTabsContent,
+  WinTabsList,
+  WinTabsTrigger,
+} from "@/components/franky-ui-kit/Tabs";
+import { WindowSlider } from "@/components/franky-ui-kit/WindowSlider";
+import InstalledPluginsList from "@/components/InstalledPluginsList";
+import PluginInstaller from "@/components/PluginInstaller";
+import ThemeManager from "@/components/ThemeManager";
+import { Label } from "@/components/ui/label";
 // Import Windows components
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useViewMode } from '@/hooks/useViewMode';
-import { ThemeType } from '@/lib/theme-types';
-import { useTheme } from '@/lib/ThemeProvider';
-import { resetDesktopState } from '@/utils/resetDesktop';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useViewMode } from "@/hooks/useViewMode";
+import { ThemeType } from "@/lib/theme-types";
+import { useTheme } from "@/lib/ThemeProvider";
+import { resetDesktopState } from "@/utils/resetDesktop";
 
 const SettingsContent: React.FC = () => {
   const {
@@ -311,7 +318,10 @@ const SettingsContent: React.FC = () => {
                 <div className="rounded-md border border-border overflow-hidden aspect-video">
                   <div
                     className="h-full w-full"
-                    style={{ background: backgroundColor }}
+                    style={{
+                      background: backgroundColor,
+                      borderColor: "var(--wm-border-color)",
+                    }}
                   ></div>
                 </div>
                 <div className="mt-1 text-xs text-center">Solid Color</div>
@@ -333,6 +343,7 @@ const SettingsContent: React.FC = () => {
                         backgroundImage: `url(${wallpaperPath})`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
+                        borderColor: "var(--wm-border-color)",
                       }}
                     ></div>
                   </div>
@@ -500,7 +511,10 @@ const SettingsContent: React.FC = () => {
               </div>{" "}
               {/* Information about Windows animations being disabled */}
               {["win98", "winxp", "win7"].includes(theme) && (
-                <div className="border rounded p-3 bg-muted/30">
+                <div
+                  className="border rounded p-3 bg-muted/30"
+                  style={{ borderColor: "var(--wm-border-color)" }}
+                >
                   <p className="text-sm font-medium">Windows Animations</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Window animations are permanently disabled in Windows themes
@@ -605,7 +619,10 @@ const SettingsContent: React.FC = () => {
               </p>
             </div>
 
-            <div className="border rounded-md p-4 mb-4">
+            <div
+              className="border rounded-md p-4 mb-4"
+              style={{ borderColor: "var(--wm-border-color)" }}
+            >
               <h4 className="font-medium mb-2">Install Plugin</h4>
               <p className="text-sm text-muted-foreground mb-4">
                 Install plugins from external sources to extend functionality
@@ -628,7 +645,10 @@ const SettingsContent: React.FC = () => {
             {/* Installed Plugins List */}
             <InstalledPluginsList />
 
-            <div className="border rounded-md p-4">
+            <div
+              className="border rounded-md p-4"
+              style={{ borderColor: "var(--wm-border-color)" }}
+            >
               <h4 className="font-medium mb-2">Security Warning</h4>
               <p className="text-sm text-red-500">
                 Third-party plugins can access your system and data. Only
