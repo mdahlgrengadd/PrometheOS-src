@@ -1,13 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { Node } from "@xyflow/react";
+import { Node } from '@xyflow/react';
 
-import { IApiComponent } from "../../../api/core/types";
-import { useApi } from "../../../api/hooks/useApi";
-import { useDataPin, useExecPin } from "../../../hooks/usePin";
-import { ApiComponentService } from "../services/ApiComponentService";
-import { ApiAppNodeData, Pin, PinDataType, PinType } from "../types/flowTypes";
-import { DataTypeConversionNodeData } from "./DataTypeConversionNode";
+import { IApiComponent } from '../../../api/core/types';
+import { useApi } from '../../../api/hooks/useApi';
+import { useDataPin, useExecPin } from '../../../hooks/usePin';
+import { eventBus } from '../../../plugins/EventBus';
+import { ApiComponentService } from '../services/ApiComponentService';
+import { ApiAppNodeData, Pin, PinDataType, PinType } from '../types/flowTypes';
+import { DataTypeConversionNodeData } from './DataTypeConversionNode';
 
 interface NodeCreationMenuProps {
   onAddNode: (node: Node) => void;
@@ -68,15 +69,8 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
   const numberValuePin = useDataPin("output", "number", "Value");
 
   // Data type converter pins - these depend on the selected data types
-  const typeCoverterInputPin = useMemo(
-    () => useDataPin("input", inputDataType, "Input"),
-    [inputDataType]
-  );
-
-  const typeCoverterOutputPin = useMemo(
-    () => useDataPin("output", outputDataType, "Output"),
-    [outputDataType]
-  );
+  const typeCoverterInputPin = useDataPin("input", inputDataType, "Input");
+  const typeCoverterOutputPin = useDataPin("output", outputDataType, "Output");
 
   // API App node pins - these need to be created when the component is selected
   const createAppPins = (
@@ -145,14 +139,34 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
     };
   };
 
-  // Initialize the API component service
+  // Initialize the API component service and dynamically update available apps
   useEffect(() => {
     const apiService = ApiComponentService.getInstance();
     apiService.setApiContext(apiContext);
 
-    // Get available apps with API components
-    const apps = apiService.getAvailableApps();
-    setAvailableApps(apps);
+    // Helper to refresh app list
+    const updateApps = () => {
+      const apps = apiService.getAvailableApps();
+      setAvailableApps(apps);
+    };
+
+    // Initial load of apps
+    updateApps();
+
+    // Update on component registration/unregistration
+    const unsubscribeReg = eventBus.subscribe(
+      "api:component:registered",
+      updateApps
+    );
+    const unsubscribeUnreg = eventBus.subscribe(
+      "api:component:unregistered",
+      updateApps
+    );
+
+    return () => {
+      unsubscribeReg();
+      unsubscribeUnreg();
+    };
   }, [apiContext]);
 
   // Load app components when an app is selected

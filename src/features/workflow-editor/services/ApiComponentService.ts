@@ -1,10 +1,5 @@
-import {
-  IActionResult,
-  IApiAction,
-  IApiComponent,
-  IApiParameter,
-} from "../../../api/core/types";
-import { useApi } from "../../../api/hooks/useApi";
+import { IActionResult, IApiAction, IApiComponent, IApiParameter } from '../../../api/core/types';
+import { useApi } from '../../../api/hooks/useApi';
 
 /**
  * Service to retrieve and interact with API components from registered apps
@@ -115,15 +110,25 @@ export class ApiComponentService {
     const appMap = new Map<string, string>();
 
     components.forEach((component) => {
-      // Extract app ID from the path - typically in format "/apps/{appId}/..."
       const pathParts = component.path.split("/");
-      if (pathParts.length >= 3 && pathParts[1] === "apps") {
+      // System APIs: /api/{componentId}
+      if (pathParts.length >= 3 && pathParts[1] === "api") {
         const appId = pathParts[2];
-        // Use the app part of the path as the name if we don't have a better one
-        const appName = component.path.split("/")[2] || appId;
+        const appName = component.name || appId;
         appMap.set(appId, appName);
       }
-
+      // Top-level apps: /apps/{appId}/...
+      if (pathParts.length >= 3 && pathParts[1] === "apps") {
+        const appId = pathParts[2];
+        const appName = component.name || appId;
+        appMap.set(appId, appName);
+      }
+      // Plugin-based apps: /plugins/apps/{appId}/...
+      if (pathParts.length >= 4 && pathParts[2] === "apps") {
+        const appId = pathParts[3];
+        const appName = component.name || appId;
+        appMap.set(appId, appName);
+      }
       // Handle special cases like the textarea component used by notepad
       if (component.path === "/components/textareas") {
         appMap.set("notepad", "Notepad");
@@ -133,7 +138,10 @@ export class ApiComponentService {
     // Convert to array of objects
     return Array.from(appMap.entries()).map(([id, name]) => ({
       id,
-      name: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize first letter
+      name:
+        typeof name === "string"
+          ? name.charAt(0).toUpperCase() + name.slice(1)
+          : String(name),
     }));
   }
 }

@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react';
 
-import { Editor, EditorContent } from "@tiptap/react";
+import { Editor, EditorContent } from '@tiptap/react';
 
 interface WordEditorContentProps {
   editor: Editor | null;
@@ -21,7 +21,10 @@ const WordEditorContent = ({
 
   return (
     <div className="document-scroll-container">
-      <div className="document-page" style={{ textAlign: "left" }}>
+      <div
+        className="document-page"
+        style={{ textAlign: "left", minHeight: "800px" }}
+      >
         <EditorContent editor={editor} className="editor-content-area" />
       </div>
     </div>
