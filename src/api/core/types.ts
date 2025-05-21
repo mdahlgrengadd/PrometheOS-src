@@ -85,6 +85,9 @@ export interface IApiParameter {
 
   /** Default value for the parameter */
   defaultValue?: unknown;
+
+  /** Optional enumeration of allowed values for dropdowns */
+  enum?: string[];
 }
 
 /**

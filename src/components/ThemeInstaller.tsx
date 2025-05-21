@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { ThemeInstallResult } from "@/lib/theme-types";
-import { useTheme } from "@/lib/ThemeProvider";
+import { ThemeInstallResult } from '@/lib/theme-types';
+import { useTheme } from '@/lib/ThemeProvider';
 
 interface ThemeInstallerProps {
   onInstall?: () => void;
@@ -53,7 +53,7 @@ const ThemeInstaller: React.FC<ThemeInstallerProps> = ({
   };
 
   return (
-    <div className="theme-installer bg-background p-4 rounded-lg shadow-lg w-full max-w-md mx-auto">
+    <div className="theme-installer border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-black dark:text-white p-4 rounded-lg shadow-lg w-full max-w-md mx-auto">
       <div className="flex justify-between items-center mb-4 pb-2 border-b">
         <h2 className="text-xl font-semibold text-foreground">Install Theme</h2>
         <button

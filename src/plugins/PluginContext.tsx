@@ -253,7 +253,6 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
     loadPlugins();
 
-    // Return cleanup function
     return () => {
       unsubscribe();
       // Clean up all plugins when unmounting
@@ -446,6 +445,21 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     [pluginManager, setOpen, focus]
   );
 
+  // Listen for plugin:openWindow event (used by the API system)
+  useEffect(() => {
+    const openWindowUnsubscribe = eventBus.subscribe(
+      "plugin:openWindow",
+      (pluginId: string) => {
+        console.log(`[PluginContext] Opening window ${pluginId} from event`);
+        openWindow(pluginId);
+      }
+    );
+
+    return () => {
+      openWindowUnsubscribe();
+    };
+  }, [openWindow]);
+
   const closeWindow = useCallback(
     (pluginId: string) => {
       const plugin = pluginManager.getPlugin(pluginId);
@@ -458,6 +472,20 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [pluginManager, setOpen]
   );
+
+  // Listen for plugin:closeWindow event (used by the API system)
+  useEffect(() => {
+    const closeWindowUnsubscribe = eventBus.subscribe(
+      "plugin:closeWindow",
+      (pluginId: string) => {
+        console.log(`[PluginContext] Closing window ${pluginId} from event`);
+        closeWindow(pluginId);
+      }
+    );
+    return () => {
+      closeWindowUnsubscribe();
+    };
+  }, [closeWindow]);
 
   const minimizeWindow = useCallback(
     (pluginId: string) => {

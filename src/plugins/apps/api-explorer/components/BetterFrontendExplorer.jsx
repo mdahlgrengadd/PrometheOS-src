@@ -26,6 +26,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import GettingStarted from './GettingStarted';
 
 /**
  * Helper to provide default placeholder values based on parameter type
@@ -254,11 +255,7 @@ const BetterFrontendExplorer = () => {
 
       {/* Right pane: Component details */}
       <div className="flex-1 p-4 flex flex-col">
-        {!selectedComponent && (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            Select a component
-          </div>
-        )}
+        {!selectedComponent && <GettingStarted />}
         {selectedComponent && (
           <>  
             <div className="mb-4">
