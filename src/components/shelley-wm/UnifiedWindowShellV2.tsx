@@ -1,30 +1,19 @@
-import "@/styles/unified-window.css";
+import '@/styles/unified-window.css';
 
+import { DragHandlers, motion, MotionStyle, useDragControls, useMotionValue } from 'framer-motion';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+import { useTheme } from '@/lib/ThemeProvider';
+import { cn } from '@/lib/utils';
+import { useWindowStore } from '@/store/windowStore';
 import {
-  DragHandlers,
-  motion,
-  MotionStyle,
-  useDragControls,
-  useMotionValue,
-} from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+    DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
+} from '@dnd-kit/core';
+import { restrictToWindowEdges } from '@dnd-kit/modifiers';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { cn } from "@/lib/utils";
-import {
-  DndContext,
-  DragEndEvent,
-  DragMoveEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
-
-import { Resizable } from "./Resizable";
-import { WindowContent } from "./WindowContent";
-import { WindowHeader } from "./WindowHeader";
+import { Resizable } from './Resizable';
+import { WindowContent } from './WindowContent';
+import { WindowHeader } from './WindowHeader';
 
 interface WindowShellProps {
   id: string;
@@ -115,6 +104,8 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
 
   // Check if using a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
+  // Get highest z-index from store for persistent focus
+  const highestZ = useWindowStore((state) => state.highestZ);
 
   // For framer-motion dragging
   const x = useMotionValue(position.x);
@@ -129,12 +120,18 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     })
   );
 
-  // If activeOnHover prop is undefined, use default behavior based on theme
+  // Determine whether to activate window on hover: disable for Win7, enable for other Windows themes
   const shouldActivateOnHover =
-    activeOnHover !== undefined ? activeOnHover : isWindowsTheme;
+    activeOnHover !== undefined
+      ? activeOnHover
+      : theme === "win7"
+      ? false
+      : isWindowsTheme;
 
-  // Set active state based on hover or explicit active prop
-  const isActive = shouldActivateOnHover ? hovered : active;
+  // Set active state based on hover, explicit active prop, or persistent focus
+  const isActive = shouldActivateOnHover
+    ? hovered
+    : active || zIndex === highestZ;
 
   // Update motion values when position prop changes and not dragging
   useEffect(() => {
