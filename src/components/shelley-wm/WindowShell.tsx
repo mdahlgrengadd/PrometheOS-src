@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 
-import { WindowsWindow } from '@/components/franky-ui-kit/Window';
-import { useTheme } from '@/lib/ThemeProvider';
+import { WindowsWindow } from "@/components/franky-ui-kit/Window";
+import { useTheme } from "@/lib/ThemeProvider";
 
-import { UnifiedWindowShellV2 } from './UnifiedWindowShellV2';
+import { UnifiedWindowShellV2 } from "./UnifiedWindowShellV2";
 
 interface WindowShellProps {
   id: string;
@@ -89,6 +89,8 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
   }
 
   // For all other themes, use our new UnifiedWindowShellV2
+  // For all other themes, use our new UnifiedWindowShellV2
+  // BeOS: headerFullWidth = false, all others: true (default)
   return (
     <UnifiedWindowShellV2
       id={id}
@@ -107,6 +109,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
       onDragEnd={onDragEnd}
       onResize={onResize}
       hideWindowChrome={hideWindowChrome}
+      headerFullWidth={theme !== "beos"}
     >
       {children}
     </UnifiedWindowShellV2>

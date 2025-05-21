@@ -62,6 +62,12 @@ interface WindowShellProps {
     height: number | string;
   }) => void;
   hideWindowChrome?: boolean;
+
+  /**
+   * If true, header will use full-width/zero-margin/padding styles. If false, header is styled by theme CSS only.
+   * Default: true
+   */
+  headerFullWidth?: boolean;
 }
 
 export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
@@ -96,6 +102,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   onDragEnd = () => {},
   onResize = () => {},
   hideWindowChrome = false,
+  headerFullWidth = true,
 }) => {
   const { theme } = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
@@ -430,9 +437,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
               pointerEvents: "auto",
               zIndex: 1,
               position: "relative",
-              /* Below settings, should not be used in beos theme */
-              /* FIXME: This is a temporary fix, should be handled in the theme */
-              ...(theme !== "beos" && {
+              ...(headerFullWidth && {
                 margin: 0,
                 padding: 0,
                 width: "100%",
