@@ -72,8 +72,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Get stored wallpaper from localStorage
   const [wallpaper, setWallpaperState] = useState<string | null>(() => {
-    const saved = localStorage.getItem("os-wallpaper");
-    return saved !== null ? saved : "/wallpapers/background_01.png";
+    const savedWallpaper = localStorage.getItem("os-wallpaper");
+    const savedBgColor = localStorage.getItem("os-background-color");
+    if (savedWallpaper !== null) {
+      // Use the explicitly saved wallpaper URL
+      return savedWallpaper;
+    }
+    // If a background color was chosen, do not override it with the default wallpaper
+    if (savedBgColor !== null) {
+      return null;
+    }
+    // No user preference: fallback to default wallpaper image
+    return "/wallpapers/background_01.png";
   });
 
   // Get stored background color from localStorage or use default
