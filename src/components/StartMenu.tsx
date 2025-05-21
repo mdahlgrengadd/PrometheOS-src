@@ -1,32 +1,20 @@
-import "./Taskbar.css";
+import './Taskbar.css';
 
-import React from "react";
+import React from 'react';
 import {
-  FcCommandLine,
-  FcDocument,
-  FcFolder,
-  FcGlobe,
-  FcHome,
-  FcInternal,
-  FcInvite,
-  FcMultipleDevices,
-  FcMusic,
-  FcOpenedFolder,
-  FcPicture,
-  FcPrint,
-  FcSearch,
-  FcServiceMark,
-  FcSettings,
-  FcViewDetails,
-} from "react-icons/fc";
+    FcCommandLine, FcDocument, FcFolder, FcGlobe, FcHome, FcInternal, FcInvite, FcMultipleDevices,
+    FcMusic, FcOpenedFolder, FcPicture, FcPrint, FcSearch, FcServiceMark, FcSettings, FcViewDetails
+} from 'react-icons/fc';
 
-import StartMenuItem from "./StartMenuItem";
+import { usePlugins } from '../plugins/PluginContext';
+import StartMenuItem from './StartMenuItem';
 
 interface StartMenuProps {
   isOpen: boolean;
 }
 
 const StartMenu = ({ isOpen }: StartMenuProps) => {
+  const { openWindow } = usePlugins();
   if (!isOpen) return null;
 
   return (
@@ -56,6 +44,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               intent="Internet"
               program="Internet Explorer"
               type="intent"
+              onClick={() => openWindow("browser")}
             />
 
             {/* Email */}
@@ -64,6 +53,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               intent="E-mail"
               program="Outlook Express"
               type="intent"
+              onClick={() => openWindow("messenger")}
             />
 
             <div className="my-1 h-px bg-gradient-to-r from-white via-gray-300 to-white" />
@@ -73,6 +63,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               customIcon={<FcViewDetails className="w-8 h-8" />}
               label="Notepad"
               type="favorite"
+              onClick={() => openWindow("notepad")}
             />
 
             <div className="mt-auto">
@@ -94,6 +85,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               customIcon={<FcDocument className="w-8 h-8" />}
               label="My Documents"
               type="my"
+              onClick={() => openWindow("file-explorer")}
             />
 
             {/* My Recent Documents */}
@@ -139,6 +131,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               customIcon={<FcSettings className="w-6 h-6" />}
               label="Control Panel"
               type="shortcut"
+              onClick={() => openWindow("settings")}
             />
 
             {/* Printers */}
@@ -170,6 +163,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
               customIcon={<FcCommandLine className="w-6 h-6" />}
               label="Run..."
               type="shortcut"
+              onClick={() => openWindow("run")}
             />
           </div>
         </div>

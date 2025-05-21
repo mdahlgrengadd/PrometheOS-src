@@ -69,7 +69,11 @@ export const manifest: PluginManifest & { apiDoc?: typeof webllmChatApiDoc } = {
   version: "1.0.0",
   description: "Chat with an AI using WebLLM running in a Web Worker",
   author: "Desktop System",
-  icon: <img src="/icons/ai_icon.png" className="h-8 w-8" alt="WebLLM Chat" />,
+  icon: (
+    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-primary font-bold">
+      WC
+    </div>
+  ),
   entry: "apps/webllm-chat",
   workerEntrypoint: "webllm.js",
   preferredSize: {
