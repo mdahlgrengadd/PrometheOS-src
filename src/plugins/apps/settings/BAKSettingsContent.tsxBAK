@@ -55,7 +55,7 @@ const SettingsContent: React.FC = () => {
   } = useViewMode();
 
   const [availableWallpapers, setAvailableWallpapers] = useState<string[]>([
-    "/wallpapers/background_01.png",
+    "/wallpapers/background_01.avif",
     "/wallpapers/background_02.png",
   ]);
 

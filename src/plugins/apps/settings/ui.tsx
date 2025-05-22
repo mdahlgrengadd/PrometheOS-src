@@ -1,33 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/franky-ui-kit/AlertDialog";
-import { WindowsButton } from "@/components/franky-ui-kit/Button";
-import { WindowsRadioGroup } from "@/components/franky-ui-kit/RadioGroup";
-import { WindowsSwitch } from "@/components/franky-ui-kit/Switch";
+    AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
+    AlertDialogTitle
+} from '@/components/franky-ui-kit/AlertDialog';
+import { WindowsButton } from '@/components/franky-ui-kit/Button';
+import { WindowsRadioGroup } from '@/components/franky-ui-kit/RadioGroup';
+import { WindowsSwitch } from '@/components/franky-ui-kit/Switch';
 import {
-  WinTabs,
-  WinTabsContent,
-  WinTabsList,
-  WinTabsTrigger,
-} from "@/components/franky-ui-kit/Tabs";
-import { WindowSlider } from "@/components/franky-ui-kit/WindowSlider";
-import InstalledPluginsList from "@/components/InstalledPluginsList";
-import PluginInstaller from "@/components/PluginInstaller";
-import ThemeManager from "@/components/ThemeManager";
-import { Label } from "@/components/ui/label";
+    WinTabs, WinTabsContent, WinTabsList, WinTabsTrigger
+} from '@/components/franky-ui-kit/Tabs';
+import { WindowSlider } from '@/components/franky-ui-kit/WindowSlider';
+import InstalledPluginsList from '@/components/InstalledPluginsList';
+import PluginInstaller from '@/components/PluginInstaller';
+import ThemeManager from '@/components/ThemeManager';
+import { Label } from '@/components/ui/label';
 // Import Windows components
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useViewMode } from "@/hooks/useViewMode";
-import { ThemeType } from "@/lib/theme-types";
-import { useTheme } from "@/lib/ThemeProvider";
-import { resetDesktopState } from "@/utils/resetDesktop";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useViewMode } from '@/hooks/useViewMode';
+import { ThemeType } from '@/lib/theme-types';
+import { useTheme } from '@/lib/ThemeProvider';
+import { resetDesktopState } from '@/utils/resetDesktop';
 
 const SettingsContent: React.FC = () => {
   const {
@@ -55,7 +48,7 @@ const SettingsContent: React.FC = () => {
   } = useViewMode();
 
   const [availableWallpapers, setAvailableWallpapers] = useState<string[]>([
-    "/wallpapers/background_01.png",
+    "/wallpapers/background_01.avif",
     "/wallpapers/background_02.png",
   ]);
 
