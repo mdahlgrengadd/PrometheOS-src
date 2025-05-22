@@ -10,7 +10,10 @@ export const manifest: PluginManifest = {
   author: "Desktop System",
   icon: (
     <img
-      src="/icons/34689_beos_blocks_cubos_serv_app_beos_blocks_cubos_serv_app.png"
+      src={
+        import.meta.env.BASE_URL +
+        "/icons/34689_beos_blocks_cubos_serv_app_beos_blocks_cubos_serv_app.png"
+      }
       className="h-8 w-8"
       alt="Calculator"
     />

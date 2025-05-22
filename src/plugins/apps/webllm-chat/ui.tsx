@@ -4,6 +4,7 @@ import { workerPluginManager } from '../../WorkerPluginManagerClient';
 import MessageInput from './components/MessageInput';
 import MessageList from './components/MessageList';
 import ModelSelector from './components/ModelSelector';
+import { manifest } from './manifest';
 import { WebLLMChatProvider } from './WebLLMChatContext';
 
 // Define message interface
@@ -112,10 +113,14 @@ const WorkerChatWindow: React.FC = () => {
 
         if (!isRegistered) {
           // Get the correct worker path based on environment
-          const workerPath = import.meta.env.PROD
-            ? "/worker/webllm.js" // Production path
-            : "/worker/webllm.js"; // Development path
-
+          let workerPath = undefined;
+          if (manifest.workerEntrypoint) {
+            workerPath = import.meta.env.PROD
+              ? `/worker/${manifest.workerEntrypoint}`
+              : `/worker/${manifest.workerEntrypoint}`;
+          } else {
+            console.error("No workerEntrypoint defined in manifest");
+          }
           // Register the webllm plugin with its worker URL
           const success = await workerPluginManager.registerPlugin(
             "webllm",

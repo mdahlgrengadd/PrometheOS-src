@@ -10,7 +10,9 @@ export const manifest: PluginManifest = {
   author: "Desktop System",
   icon: (
     <img
-      src="/icons/34686_acrobat_beos_acrobat_beos.png"
+      src={
+        import.meta.env.BASE_URL + "/icons/34686_acrobat_beos_acrobat_beos.png"
+      }
       className="h-8 w-8"
       alt="Browser"
     />

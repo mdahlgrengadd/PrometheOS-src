@@ -48,8 +48,8 @@ const SettingsContent: React.FC = () => {
   } = useViewMode();
 
   const [availableWallpapers, setAvailableWallpapers] = useState<string[]>([
-    "/wallpapers/background_01.avif",
-    "/wallpapers/background_02.png",
+    import.meta.env.BASE_URL + "/wallpapers/background_01.avif",
+    import.meta.env.BASE_URL + "/wallpapers/background_02.png",
   ]);
 
   // For view mode confirmation dialog
@@ -656,8 +656,7 @@ const SettingsContent: React.FC = () => {
             <div className="space-y-2">
               <h3 className="text-lg font-medium">About</h3>
               <p className="text-sm text-muted-foreground">
-                Draggable Desktop Dreamscape - A modular, customizable browser
-                desktop environment
+                PrometheOS - A modular, customizable browser desktop environment
               </p>
               <p className="text-sm text-muted-foreground mt-2">
                 Version: 1.0.0

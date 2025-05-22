@@ -5,7 +5,7 @@ import ApiExplorerSwitcher from './components/ApiExplorerSwitcher';
 import { manifest } from './manifest';
 
 /**
- * API Explorer plugin that integrates with the Desktop Dreamscape API system
+ * API Explorer plugin that integrates with the PrometheOS API system
  * providing both a Swagger UI (FastAPI style) view and a custom explorer view
  */
 const ApiExplorerPlugin: Plugin = {

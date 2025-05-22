@@ -1,11 +1,8 @@
-import React from "react";
+import React from 'react';
 
-import {
-  textareaApiActions,
-  textareaApiDoc,
-} from "@/components/ui/api/textarea-api";
+import { textareaApiActions, textareaApiDoc } from '@/components/ui/api/textarea-api';
 
-import { PluginManifest } from "../../../plugins/types";
+import { PluginManifest } from '../../../plugins/types';
 
 // Export for backwards compatibility
 export { textareaApiDoc, textareaApiActions };
@@ -18,7 +15,7 @@ export const manifest: PluginManifest & { apiDoc?: typeof textareaApiDoc } = {
   author: "Desktop System",
   icon: (
     <img
-      src="/icons/34688_ans_beos_ans_beos.png"
+      src={import.meta.env.BASE_URL + "/icons/34688_ans_beos_ans_beos.png"}
       className="h-8 w-8"
       alt="Notepad"
     />

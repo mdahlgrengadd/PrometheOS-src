@@ -1,36 +1,28 @@
-import { Howl, Howler } from "howler";
-import {
-  List,
-  Pause,
-  Play,
-  SkipBack,
-  SkipForward,
-  Volume,
-  VolumeX,
-} from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Howl, Howler } from 'howler';
+import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Button } from "@/components/ui/api/button";
+import { Button } from '@/components/ui/api/button';
 
-import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
+import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
   {
     title: "Vibe Machine",
-    file: "/audio/sample1.mp3",
+    file: import.meta.env.BASE_URL + "/audio/sample1.mp3",
   },
   {
     title: "Rave Digger",
-    file: "/audio/sample2.mp3",
+    file: import.meta.env.BASE_URL + "/audio/sample2.mp3",
   },
   // {
   //   title: "80s Vibe",
-  //   file: "/audio/sample3.mp3",
+  //   file:  import.meta.env.BASE_URL + "/audio/sample3.mp3",
   // },
   // {
   //   title: "Running Out",
-  //   file: "/audio/sample4.mp3",
+  //   file:  import.meta.env.BASE_URL + "/audio/sample4.mp3",
   // },
 ];
 
@@ -73,7 +65,7 @@ const AudioPlayerUI = () => {
 
   // Function to kick iOS media channel
   const kickMediaChannel = () => {
-    const s = new Audio("/audio/silence.mp3");
+    const s = new Audio(import.meta.env.BASE_URL + "/audio/silence.mp3");
     s.volume = 0;
     s.loop = true; // Keep it playing forever
     s.play(); // Must be in the user's tap handler

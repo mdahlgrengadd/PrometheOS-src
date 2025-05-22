@@ -647,7 +647,7 @@ const SettingsContent: React.FC = () => {
             <div className="space-y-2">
               <h3 className="text-lg font-medium">About</h3>
               <p className="text-sm text-muted-foreground">
-                Draggable Desktop Dreamscape - A modular, customizable browser
+                PrometheOS- A modular, customizable browser
                 desktop environment
               </p>
               <p className="text-sm text-muted-foreground mt-2">

@@ -1,7 +1,7 @@
 import './App.css';
 
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 
 import DialogListener from '@/components/DialogListener';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
@@ -28,7 +28,7 @@ function App() {
 
   return (
     <AppProviders>
-      <BrowserRouter>
+      <Router>
         <Suspense
           fallback={
             <div
@@ -52,7 +52,7 @@ function App() {
             />
           </Routes>
         </Suspense>
-      </BrowserRouter>
+      </Router>
       <Toaster />
       <SonnerToaster />
       <DialogListener />

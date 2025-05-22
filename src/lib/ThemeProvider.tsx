@@ -19,7 +19,7 @@ const ThemeContext = createContext<ThemeContextType>({
   themes,
   setPadding: () => {},
   padding: 0, // Default padding
-  wallpaper: "/wallpapers/background_01.avif",
+  wallpaper: import.meta.env.BASE_URL + "/wallpapers/background_01.avif",
   setWallpaper: () => {},
   backgroundColor: "#6366f1", // Default background color (indigo)
   setBackgroundColor: () => {},
@@ -83,7 +83,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       return null;
     }
     // No user preference: fallback to default wallpaper image
-    return "/wallpapers/background_01.avif";
+    return import.meta.env.BASE_URL + "/wallpapers/background_01.avif";
   });
 
   // Get stored background color from localStorage or use default

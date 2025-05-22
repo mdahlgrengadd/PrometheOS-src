@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@cubone/react-file-manager": "^1.20.2",
@@ -138,5 +140,6 @@
     "vite": "^5.4.1",
     "vite-plugin-comlink": "^5.1.0",
     "vitest": "^3.1.2"
-  }
+  },
+  "homepage": "https://mdahlgrengadd.github.io/prometheos"
 }

@@ -56,15 +56,13 @@ class WorkerPluginManager {
         `Attempting to register plugin: ${pluginId} from ${pluginUrl}`
       );
 
-      // Handle potential edge cases with the URL
+      // Prefix non-absolute plugin URLs with Vite base path
+      const base = import.meta.env.BASE_URL;
       let resolvedUrl = pluginUrl;
-
-      // Ensure URL starts with / for dynamic import
-      if (!resolvedUrl.startsWith("/") && !resolvedUrl.startsWith("http")) {
-        resolvedUrl = `/${resolvedUrl}`;
+      if (!resolvedUrl.startsWith("http")) {
+        // Remove any leading slash to avoid double slashes
+        resolvedUrl = base + resolvedUrl.replace(/^\//, "");
       }
-
-      // Handle base path issues in production vs development
       const importUrl = new URL(resolvedUrl, self.location.origin).href;
       console.log(`Resolved import URL: ${importUrl}`);
 

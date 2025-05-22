@@ -34,7 +34,8 @@ export async function preload(previousTheme) {
       const overrideLink = document.createElement("link");
       overrideLink.id = "win7-override-css";
       overrideLink.rel = "stylesheet";
-      overrideLink.href = "/themes/win7/win7.css";
+      // Resolve win7.css relative to this decorator module
+      overrideLink.href = new URL("win7.css", import.meta.url).href;
       overrideLink.setAttribute("data-theme", "win7");
       document.head.appendChild(overrideLink);
       resolve(true);

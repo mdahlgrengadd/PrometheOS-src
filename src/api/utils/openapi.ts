@@ -12,8 +12,8 @@ export const generateOpenApiSpec = (
   const spec: IOpenApiSpec = {
     openapi: "3.0.0",
     info: {
-      title: "Desktop Dreamscape API",
-      description: "API for AI agent interaction with the Desktop Dreamscape",
+      title: "PrometheOS API",
+      description: "API for AI agent interaction with the PrometheOS",
       version: "1.0.0",
     },
     paths: {},

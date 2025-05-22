@@ -11,7 +11,7 @@ export const manifest: PluginManifest & { apiDoc?: typeof wordEditorApiDoc } = {
   author: "Desktop System",
   icon: (
     <img
-      src="/icons/34684_aim_be_be_aim.png"
+      src={import.meta.env.BASE_URL + "/icons/34684_aim_be_be_aim.png"}
       className="h-8 w-8"
       alt="Word Editor Pro"
     />

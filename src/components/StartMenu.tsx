@@ -24,7 +24,7 @@ const StartMenu = ({ isOpen }: StartMenuProps) => {
         <div className="flex items-center h-[65px] px-2 py-2 bg-gradient-to-b from-winxp-medium-blue to-winxp-light-blue shadow-inner">
           <div className="bg-white rounded p-0.5 h-[52px] shadow-md">
             <img
-              src="/images/winxp-profile.png"
+              src={import.meta.env.BASE_URL + "/images/winxp-profile.png"}
               alt="User"
               className="h-full rounded"
             />

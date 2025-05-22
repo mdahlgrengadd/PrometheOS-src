@@ -10,7 +10,10 @@ export const manifest: PluginManifest = {
   author: "Desktop System",
   icon: (
     <img
-      src="/icons/34685_display_beos_apple_17_beos_studio_display_apple_17_studio.png"
+      src={
+        import.meta.env.BASE_URL +
+        "/icons/34685_display_beos_apple_17_beos_studio_display_apple_17_studio.png"
+      }
       className="h-8 w-8"
       alt="Settings"
     />
