@@ -114,6 +114,40 @@ export const dialogApiComponent: IApiComponent = {
   state: { enabled: true, visible: true },
 };
 
+// Define the On Event API component
+export const onEventApiComponent: IApiComponent = {
+  id: "onEvent",
+  type: "System",
+  name: "On Event",
+  description: "Wait for a specific event by ID or until timeout",
+  path: "/api/onEvent",
+  actions: [
+    {
+      id: "waitForEvent",
+      name: "Wait For Event",
+      description:
+        "Waits for the specified event to be emitted or until the timeout is reached",
+      available: true,
+      parameters: [
+        {
+          name: "eventId",
+          type: "string",
+          description: "The name of the event to wait for",
+          required: true,
+        },
+        {
+          name: "timeout",
+          type: "number",
+          description:
+            "Timeout in milliseconds (optional, default is infinite)",
+          required: false,
+        },
+      ],
+    },
+  ],
+  state: { enabled: true, visible: true },
+};
+
 // Register the component and its action handler at startup
 export function registerLauncherApi(apiContext: IApiContextValue) {
   // Register the component
@@ -214,6 +248,32 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
           resolve({ success: true, data: { confirmed: result } });
         }
       );
+    });
+  });
+
+  // Register the On Event component and its handler
+  apiContext.registerComponent(onEventApiComponent);
+  registerApiActionHandler("onEvent", "waitForEvent", async (params) => {
+    const { eventId, timeout } = params || {};
+    if (!eventId) {
+      return { success: false, error: "Missing eventId" };
+    }
+    return new Promise((resolve) => {
+      let timerId: number | undefined;
+      const unsubscribe = eventBus.subscribe(eventId, (...args) => {
+        if (timerId !== undefined) clearTimeout(timerId);
+        unsubscribe();
+        resolve({ success: true, data: { args } });
+      });
+      if (typeof timeout === "number") {
+        timerId = window.setTimeout(() => {
+          unsubscribe();
+          resolve({
+            success: false,
+            error: `Timeout of ${timeout}ms reached waiting for event ${eventId}`,
+          });
+        }, timeout);
+      }
     });
   });
 }
