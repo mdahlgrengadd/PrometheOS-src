@@ -293,8 +293,24 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
         (...args: unknown[]) => {
           if (timerId !== undefined) clearTimeout(timerId);
           unsubscribe();
-          // Use the event payload: if only one argument, use it; otherwise include all args
-          const resultData = args.length <= 1 ? args[0] : args;
+          // Extract payload
+          const payload = args.length <= 1 ? args[0] : args;
+          let resultData: unknown;
+          // If payload is an object, attempt to unwrap single-property values
+          if (
+            payload !== null &&
+            typeof payload === "object" &&
+            !Array.isArray(payload)
+          ) {
+            const keys = Object.keys(payload as Record<string, unknown>);
+            if (keys.length === 1) {
+              resultData = (payload as Record<string, unknown>)[keys[0]];
+            } else {
+              resultData = payload;
+            }
+          } else {
+            resultData = payload;
+          }
           resolve({ success: true, data: resultData });
         }
       );

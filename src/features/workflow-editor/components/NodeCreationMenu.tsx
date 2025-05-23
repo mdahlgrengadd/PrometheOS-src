@@ -90,18 +90,16 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
       };
     }
 
-    // Create inputs based on parameters
+    // Create inputs based on the action's parameters
     const inputs =
-      selectedComponent.actions[0]?.parameters?.map((param) => {
-        return {
-          id: `input-${Date.now()}-${param.name}`,
-          type: "input" as PinType,
-          label: param.name,
-          dataType: param.type as PinDataType,
-          acceptsMultipleConnections: true,
-        };
-      }) || [];
-
+      selectedComponent.actions[0]?.parameters?.map((param) => ({
+        id: `input-${Date.now()}-${param.name}`,
+        type: "input" as PinType,
+        label: param.name,
+        dataType: param.type as PinDataType,
+        acceptsMultipleConnections: true,
+      })) || [];
+    const isOnEvent = selectedComponent.id === "onEvent";
     // Create a standard output
     const outputs = [
       {
@@ -112,7 +110,7 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
       },
     ];
 
-    // Create standard execution pins
+    // Single execution input for all
     const executionInputs = [
       {
         id: `exec-in-${Date.now()}`,
@@ -122,14 +120,30 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
       },
     ];
 
-    const executionOutputs = [
-      {
-        id: `exec-out-${Date.now()}`,
-        type: "execution" as PinType,
-        label: "Success",
-        acceptsMultipleConnections: true,
-      },
-    ];
+    // Execution outputs: onEvent has both Success and Error pins; others only Success
+    const executionOutputs = isOnEvent
+      ? [
+          {
+            id: `exec-success-${Date.now()}`,
+            type: "execution" as PinType,
+            label: "Success",
+            acceptsMultipleConnections: true,
+          },
+          {
+            id: `exec-error-${Date.now()}`,
+            type: "execution" as PinType,
+            label: "Error",
+            acceptsMultipleConnections: true,
+          },
+        ]
+      : [
+          {
+            id: `exec-out-${Date.now()}`,
+            type: "execution" as PinType,
+            label: "Success",
+            acceptsMultipleConnections: true,
+          },
+        ];
 
     return {
       inputs,
