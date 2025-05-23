@@ -27,6 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import GettingStarted from './GettingStarted';
+import { eventBus } from '@/plugins/EventBus';
 
 /**
  * Helper to provide default placeholder values based on parameter type
@@ -155,6 +156,18 @@ const BetterFrontendExplorer = () => {
   useEffect(() => {
     const fetchComponents = () => {
       const all = getComponents().filter((c) => c.actions && c.actions.length > 0);
+      // Dynamically update onEvent.waitForEvent parameter enum
+      all.forEach((comp) => {
+        if (comp.id === 'onEvent') {
+          const waitAction = comp.actions.find((a) => a.id === 'waitForEvent');
+          if (waitAction?.parameters) {
+            const eventParam = waitAction.parameters.find((p) => p.name === 'eventId');
+            if (eventParam) {
+              eventParam.enum = eventBus.getEventNames();
+            }
+          }
+        }
+      });
       setComponents(all);
       // refresh selected component details
       if (selectedComponent) {

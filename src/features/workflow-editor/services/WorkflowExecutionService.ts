@@ -495,6 +495,22 @@ export class WorkflowExecutionService {
     // Store the result in the context
     context.setResult(node.id, result);
 
+    // Special case: for onEvent.waitForEvent, only pass the data value to the result pin
+    if (
+      nodeData.componentId === "onEvent" &&
+      nodeData.actionId === "waitForEvent" &&
+      nodeData.outputs &&
+      nodeData.outputs.length > 0
+    ) {
+      const resultPin = nodeData.outputs[0];
+      // Only add the raw data payload as WorkflowVariableValue
+      context.addVariable(
+        resultPin.id,
+        (result as { data?: unknown }).data as WorkflowVariableValue
+      );
+      return;
+    }
+
     // Always set the main result to the 'result' output pin if it exists
     if (nodeData.outputs && nodeData.outputs.length > 0) {
       // Find the result output pin - typically named with 'result' or is the first output pin
@@ -543,7 +559,11 @@ export class WorkflowExecutionService {
           if (result.data) {
             // For pins with a specific data type, try to provide appropriate data
             if (output.dataType === "object") {
-              context.addVariable(output.id, result.data);
+              // Cast to WorkflowVariableValue
+              context.addVariable(
+                output.id,
+                result.data as WorkflowVariableValue
+              );
               console.log(
                 `Set output for pin ${output.id} to result.data:`,
                 result.data

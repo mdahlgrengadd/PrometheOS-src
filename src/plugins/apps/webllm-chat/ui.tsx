@@ -152,6 +152,14 @@ const WorkerChatWindow: React.FC = () => {
     };
   }, []);
 
+  // Register the 'webllm:answerCompleted' event for system-wide discovery
+  useEffect(() => {
+    eventBus.registerEvent("webllm:answerCompleted");
+    return () => {
+      eventBus.unregisterEvent("webllm:answerCompleted");
+    };
+  }, []);
+
   // Initialize model once worker is ready
   useEffect(() => {
     if (!isWorkerReady) {

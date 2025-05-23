@@ -148,6 +148,25 @@ export const onEventApiComponent: IApiComponent = {
   state: { enabled: true, visible: true },
 };
 
+// Define the Event API component for listing registered event IDs
+export const eventApiComponent: IApiComponent = {
+  id: "event",
+  type: "System",
+  name: "Events",
+  description: "List currently registered event IDs",
+  path: "/api/event",
+  actions: [
+    {
+      id: "listEvents",
+      name: "List Events",
+      description: "Returns all known event names",
+      available: true,
+      parameters: [],
+    },
+  ],
+  state: { enabled: true, visible: true },
+};
+
 // Register the component and its action handler at startup
 export function registerLauncherApi(apiContext: IApiContextValue) {
   // Register the component
@@ -251,29 +270,49 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     });
   });
 
-  // Register the On Event component and its handler
+  // Populate eventId parameter enum for UI dropdowns
+  const eventIdParam = onEventApiComponent.actions[0].parameters.find(
+    (p) => p.name === "eventId"
+  );
+  if (eventIdParam) {
+    eventIdParam.enum = eventBus.getEventNames();
+  }
   apiContext.registerComponent(onEventApiComponent);
   registerApiActionHandler("onEvent", "waitForEvent", async (params) => {
-    const { eventId, timeout } = params || {};
-    if (!eventId) {
-      return { success: false, error: "Missing eventId" };
+    // Validate parameters
+    const eventIdRaw = params?.eventId;
+    const timeout = params?.timeout;
+    if (typeof eventIdRaw !== "string") {
+      return { success: false, error: "Missing or invalid eventId" };
     }
+    const eventName: string = eventIdRaw;
     return new Promise((resolve) => {
       let timerId: number | undefined;
-      const unsubscribe = eventBus.subscribe(eventId, (...args) => {
-        if (timerId !== undefined) clearTimeout(timerId);
-        unsubscribe();
-        resolve({ success: true, data: { args } });
-      });
+      const unsubscribe = eventBus.subscribe(
+        eventName,
+        (...args: unknown[]) => {
+          if (timerId !== undefined) clearTimeout(timerId);
+          unsubscribe();
+          // Use the event payload: if only one argument, use it; otherwise include all args
+          const resultData = args.length <= 1 ? args[0] : args;
+          resolve({ success: true, data: resultData });
+        }
+      );
       if (typeof timeout === "number") {
         timerId = window.setTimeout(() => {
           unsubscribe();
           resolve({
             success: false,
-            error: `Timeout of ${timeout}ms reached waiting for event ${eventId}`,
+            error: `Timeout of ${timeout}ms reached waiting for event ${eventName}`,
           });
         }, timeout);
       }
     });
+  });
+
+  // Register Event listing API component and handler
+  apiContext.registerComponent(eventApiComponent);
+  registerApiActionHandler("event", "listEvents", async () => {
+    return { success: true, data: eventBus.getEventNames() };
   });
 }
