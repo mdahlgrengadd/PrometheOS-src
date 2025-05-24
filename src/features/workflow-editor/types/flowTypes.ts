@@ -61,18 +61,47 @@ export interface PinConnectionData {
 // Value type for workflow variables
 export type WorkflowVariableValue = string | number | boolean | object | null;
 
-// Workflow execution context that maintains state between node executions
+/**
+ * Context for workflow execution, used to store variables and
+ * pass data between nodes during execution.
+ */
 export interface WorkflowExecutionContext {
+  /** Variables keyed by ID, used to store values during execution */
   variables: Record<string, WorkflowVariableValue>;
+
+  /** Store results for each node (by node ID) */
   results: Record<string, unknown>;
-  currentNodeId?: string;
-  error?: string;
-  isExecuting: boolean;
-  allEdges?: Edge[]; // Add allEdges for access during execution
-  addVariable: (name: string, value: WorkflowVariableValue) => void;
-  getVariable: (name: string) => WorkflowVariableValue;
-  setResult: (nodeId: string, result: unknown) => void;
-  getResult: (nodeId: string) => unknown;
+
+  /** ID of the currently executing node */
+  currentNodeId: string;
+
+  /** All edges in the workflow, useful for finding connections */
+  allEdges?: Edge[];
+
+  /** Add a variable to the execution context */
+  addVariable(id: string, value: WorkflowVariableValue): void;
+
+  /** Add a node-scoped variable to prevent data leakage between nodes */
+  addNodeScopedVariable(
+    nodeId: string,
+    pinId: string,
+    value: WorkflowVariableValue
+  ): void;
+
+  /** Get a variable from the execution context */
+  getVariable(id: string): WorkflowVariableValue | undefined;
+
+  /** Get a node-scoped variable */
+  getNodeScopedVariable(
+    nodeId: string,
+    pinId: string
+  ): WorkflowVariableValue | undefined;
+
+  /** Set a result for a node */
+  setResult(nodeId: string, result: unknown): void;
+
+  /** Get a result for a node */
+  getResult(nodeId: string): unknown;
 }
 
 // For primitive node types that provide literal values

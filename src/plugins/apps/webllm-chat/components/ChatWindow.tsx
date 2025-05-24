@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from 'react';
 
-import * as webllm from "@mlc-ai/web-llm";
+import { eventBus } from '@/plugins/EventBus';
+import * as webllm from '@mlc-ai/web-llm';
 
-import { WebLLMChatProvider } from "../WebLLMChatContext";
-import MessageInput from "./MessageInput";
-import MessageList from "./MessageList";
-import ModelSelector from "./ModelSelector";
+import { WebLLMChatProvider } from '../WebLLMChatContext';
+import MessageInput from './MessageInput';
+import MessageList from './MessageList';
+import ModelSelector from './ModelSelector';
 
 // Define message interface
 interface Message {
@@ -186,6 +187,8 @@ const ChatWindow: React.FC = () => {
         }
 
         setIsTyping(false);
+        // Emit event when answer streaming is completed
+        eventBus.emit("webllm:answerCompleted", { answer: streamedContent });
       } catch (error) {
         console.error("Error generating response:", error);
 

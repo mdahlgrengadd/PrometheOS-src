@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { eventBus } from '@/plugins/EventBus';
+
 import { workerPluginManager } from '../../WorkerPluginManagerClient';
 import MessageInput from './components/MessageInput';
 import MessageList from './components/MessageList';
@@ -150,6 +152,14 @@ const WorkerChatWindow: React.FC = () => {
     };
   }, []);
 
+  // Register the 'webllm:answerCompleted' event for system-wide discovery
+  useEffect(() => {
+    eventBus.registerEvent("webllm:answerCompleted");
+    return () => {
+      eventBus.unregisterEvent("webllm:answerCompleted");
+    };
+  }, []);
+
   // Initialize model once worker is ready
   useEffect(() => {
     if (!isWorkerReady) {
@@ -292,6 +302,8 @@ const WorkerChatWindow: React.FC = () => {
         }
 
         setIsTyping(false);
+        // Emit event when worker answer streaming is completed
+        eventBus.emit("webllm:answerCompleted", { answer: streamedContent });
       } catch (error) {
         console.error("Error generating response:", error);
 
