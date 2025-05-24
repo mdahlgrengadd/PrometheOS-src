@@ -1,13 +1,19 @@
-import React from "react";
+import './index.css';
+import './styles.css';
 
-import { Plugin } from "../../types";
-import { manifest } from "./manifest";
-import IdeLayout from "./layout/IdeLayout"; // Import the IDE styles
+import React from 'react';
+
+import { Plugin } from '../../types';
+import IdeLayout from './layout/IdeLayout'; // Import the IDE styles
+import { manifest } from './manifest';
 
 // Create the plugin component
 const BuilderComponent: React.FC = () => {
   return (
-    <div className="h-full w-full" style={{ height: '100%', width: '100%' }}>
+    <div
+      className="h-full w-full overflow-hidden"
+      style={{ height: "100%", width: "100%" }}
+    >
       <IdeLayout />
     </div>
   );

@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* IDE Builder Variables */
+@layer base {
+  :root {
+    /* Override with builder-specific dark theme variables */
+    --background: 220 13% 18%;
+    --foreground: 0 0% 98%;
+
+    --card: 220 13% 20%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 220 13% 18%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 262 80% 60%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 40% 25%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 215 28% 30%;
+    --input: 214 30% 25%;
+    --ring: 262 80% 60%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar theming */
+    --sidebar-background: 220 13% 15%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 262 80% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 220 13% 20%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 215 28% 20%;
+    --sidebar-ring: 217 91% 60%;
+    
+    /* Editor theming */
+    --editor-background: 220 13% 18%;
+    --editor-foreground: 0 0% 85%;
+    --editor-line-highlight: 220 13% 20%;
+    --editor-selection: 217 19% 27%;
+    --editor-gutter: 220 13% 15%;
+    --editor-active-tab: 220 13% 25%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 220 13% 10%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 220 13% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 10%;
+
+    --primary: 262 80% 60%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 217 19% 80%;
+    --secondary-foreground: 220 13% 10%;
+
+    --muted: 217 19% 90%;
+    --muted-foreground: 215 25% 40%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 85%;
+    --input: 220 13% 90%;
+    --ring: 262 80% 60%;
+    
+    /* Sidebar theming */
+    --sidebar-background: 0 0% 95%;
+    --sidebar-foreground: 220 13% 30%;
+    --sidebar-primary: 262 80% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 217 19% 90%;
+    --sidebar-accent-foreground: 220 13% 30%;
+    --sidebar-border: 220 13% 85%;
+    --sidebar-ring: 217 91% 60%;
+    
+    /* Editor theming */
+    --editor-background: 0 0% 100%;
+    --editor-foreground: 220 13% 10%;
+    --editor-line-highlight: 0 0% 96%;
+    --editor-selection: 217 19% 90%;
+    --editor-gutter: 0 0% 95%;
+    --editor-active-tab: 0 0% 90%;
+  }
+}
+
+@layer components {
+  .bg-sidebar {
+    background-color: hsl(var(--sidebar-background));
+  }
+  
+  .bg-sidebar-background {
+    background-color: hsl(var(--sidebar-background));
+  }
+  
+  .bg-editor-active-tab {
+    background-color: hsl(var(--editor-active-tab));
+  }
+}
+
+.resize-handle {
+  @apply bg-border cursor-col-resize;
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+.resize-handle.vertical {
+  @apply cursor-row-resize;
+  width: 100%;
+  height: 4px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Tab styling */
+.editor-tabs {
+  @apply flex overflow-x-auto bg-sidebar-background border-b border-sidebar-border;
+  height: 38px;
+}
+
+.editor-tab {
+  @apply flex items-center px-3 py-2 text-sm text-sidebar-foreground cursor-pointer;
+  min-width: 120px;
+  max-width: 200px;
+}
+
+.editor-tab.active {
+  @apply bg-editor-active-tab border-b-2 border-primary;
+}
+
+.editor-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Explorer tree styling */
+.explorer-tree {
+  @apply text-sidebar-foreground text-sm;
+}
+
+.tree-item {
+  @apply flex items-center px-2 py-1 cursor-pointer hover:bg-sidebar-accent;
+}
+
+.tree-item-indent {
+  @apply ml-4;
+}
+
+/* Command palette */
+.command-palette {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-[10vh];
+}
+
+.command-palette-content {
+  @apply w-[600px] bg-card rounded-lg shadow-lg overflow-hidden;
+}
+
+.command-palette-input {
+  @apply w-full p-3 bg-input text-foreground outline-none border-b border-border;
+}
+
+.command-palette-results {
+  @apply max-h-[50vh] overflow-y-auto;
+}
+
+.command-palette-item {
+  @apply px-3 py-2 cursor-pointer hover:bg-secondary flex items-center;
+}
+
+.command-palette-item.selected {
+  @apply bg-secondary;
+}
+
