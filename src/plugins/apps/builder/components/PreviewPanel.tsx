@@ -1,37 +1,63 @@
+import { Play, Square, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import React, { useRef, useState, useEffect } from 'react';
-import { X, Play, Square } from 'lucide-react';
 import useIdeStore from '../store/ide-store';
 import { buildCode, initializeEsbuild, parseEsbuildCommand } from '../utils/esbuild-service';
 
-const PreviewPanel: React.FC = () => {
-  const { previewPanelVisible, togglePreviewPanel, getFileById, getTabById, activeTab } = useIdeStore();
+// Props for preview targeting a specific tab
+interface PreviewPanelProps {
+  previewTabId?: string;
+}
+
+const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
+  const {
+    previewPanelVisible,
+    togglePreviewPanel,
+    getFileById,
+    getTabById,
+    activeTab,
+  } = useIdeStore();
   const [isBuilding, setIsBuilding] = useState(false);
-  const [buildOutput, setBuildOutput] = useState<string>('');
+  const [buildOutput, setBuildOutput] = useState<string>("");
   const [buildError, setBuildError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  
+
   // Initialize esbuild when component mounts
   useEffect(() => {
-    initializeEsbuild().catch(err => {
-      console.error('Failed to initialize ESBuild:', err);
+    initializeEsbuild().catch((err) => {
+      console.error("Failed to initialize ESBuild:", err);
       setBuildError(`Failed to initialize ESBuild: ${err}`);
     });
   }, []);
-  
-  const getActiveFileContent = (): { fileId: string, content: string, filePath: string } | null => {
-    const activeTabItem = activeTab ? getTabById(activeTab) : null;
-    
+
+  // Auto-run build when preview panel opens
+  useEffect(() => {
+    if (previewPanelVisible) {
+      runBuild();
+    }
+  }, [previewPanelVisible]);
+
+  const getActiveFileContent = (): {
+    fileId: string;
+    content: string;
+    filePath: string;
+  } | null => {
+    // Use previewTabId if provided, otherwise fallback to activeTab
+    const targetTabId = previewTabId ?? activeTab;
+    const activeTabItem = targetTabId ? getTabById(targetTabId) : null;
+
     if (!activeTabItem) return null;
-    
+
     const file = getFileById(activeTabItem.fileId);
     if (!file) return null;
-    
+
     // Get the editor content
-    const editorContent = document.querySelector(`div[data-tab-id="${activeTabItem.id}"]`);
-    const content = editorContent ? (file.content || '') : '';
-    
+    const editorContent = document.querySelector(
+      `div[data-tab-id="${activeTabItem.id}"]`
+    );
+    const content = editorContent ? file.content || "" : "";
+
     return {
       fileId: file.id,
       content,
@@ -42,22 +68,22 @@ const PreviewPanel: React.FC = () => {
   const runBuild = async (command?: string) => {
     setIsBuilding(true);
     setBuildError(null);
-    
+
     try {
       const activeFile = getActiveFileContent();
-      
+
       if (!activeFile) {
-        setBuildError('No active file to build');
+        setBuildError("No active file to build");
         setIsBuilding(false);
         return;
       }
-      
+
       let buildOptions;
-      
+
       if (command) {
         buildOptions = parseEsbuildCommand(command);
         if (!buildOptions) {
-          setBuildError('Invalid esbuild command');
+          setBuildError("Invalid esbuild command");
           setIsBuilding(false);
           return;
         }
@@ -72,41 +98,45 @@ const PreviewPanel: React.FC = () => {
           },
         };
       }
-      
+
       const result = await buildCode(buildOptions);
-      
+
       if (result.error) {
         setBuildError(result.error);
-        setBuildOutput('');
+        setBuildOutput("");
       } else {
         setBuildOutput(result.code);
         setBuildError(null);
-        
+
         // Auto-run the preview if successful
         if (result.code) {
           runPreview(result.code);
         }
       }
     } catch (error) {
-      console.error('Build failed:', error);
-      setBuildError(`Build failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Build failed:", error);
+      setBuildError(
+        `Build failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
       setIsBuilding(false);
     }
   };
-  
+
   const runPreview = (code: string) => {
     if (!iframeRef.current) return;
-    
+
     setIsRunning(true);
-    
+
     // Get iframe document
     const iframeDoc = iframeRef.current.contentDocument;
     if (!iframeDoc) return;
-    
+
     // Clear iframe
     iframeDoc.open();
-    
+
     // Write HTML with the bundled script
     iframeDoc.write(`
       <!DOCTYPE html>
@@ -127,88 +157,87 @@ const PreviewPanel: React.FC = () => {
       </body>
       </html>
     `);
-    
+
     iframeDoc.close();
   };
-  
+
   const stopPreview = () => {
     if (!iframeRef.current) return;
-    
+
     const iframeDoc = iframeRef.current.contentDocument;
     if (!iframeDoc) return;
-    
+
     // Clear iframe
     iframeDoc.open();
-    iframeDoc.write('<html><body><p>Preview stopped</p></body></html>');
+    iframeDoc.write("<html><body><p>Preview stopped</p></body></html>");
     iframeDoc.close();
-    
+
     setIsRunning(false);
   };
-  
+
   const runCommand = (command: string) => {
-    if (command.startsWith('esbuild ')) {
+    if (command.startsWith("esbuild ")) {
       runBuild(command);
     }
   };
-  
+
   return (
-    <div className="panel-area">
-      <div className="flex items-center border-b border-sidebar-border p-1">
-        <div className="font-medium text-sm px-2">Preview</div>
-        
-        <div className="flex items-center ml-4">
+    <div
+      className="panel-area flex flex-col"
+      style={{ height: "100%", minHeight: 0, maxHeight: "none" }}
+    >
+      <div className="flex flex-col flex-1 relative">
+        <div className="relative" style={{ height: "70%" }}>
+          <iframe
+            ref={iframeRef}
+            title="Preview"
+            className="w-full h-full border-none bg-white"
+          />
           <button
-            className={`p-1 rounded ${isRunning ? 'text-red-500 hover:bg-red-500/10' : 'text-green-500 hover:bg-green-500/10'}`}
-            onClick={() => isRunning ? stopPreview() : runBuild()}
+            className={`absolute top-2 right-2 p-1 rounded ${
+              isRunning
+                ? "text-red-500 hover:bg-red-500/10"
+                : "text-green-500 hover:bg-green-500/10"
+            }`}
+            onClick={() => (isRunning ? stopPreview() : runBuild())}
             title={isRunning ? "Stop Preview" : "Run Preview"}
           >
             {isRunning ? <Square size={16} /> : <Play size={16} />}
           </button>
         </div>
-        
-        <button 
-          className="ml-auto text-sidebar-foreground hover:text-foreground p-1"
-          onClick={togglePreviewPanel}
+        <div
+          className="border-t border-sidebar-border p-2"
+          style={{ height: "30%", overflow: "auto" }}
         >
-          <X size={16} />
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-2 h-[calc(100%-30px)]">
-        <div className="border-r border-sidebar-border p-2">
           <div className="mb-2">
             <input
               type="text"
-              placeholder="esbuild app.jsx --bundle"
+              placeholder={`esbuild ${
+                getActiveFileContent()?.filePath
+              } --bundle`}
               className="w-full bg-input text-foreground px-2 py-1 rounded text-sm font-mono"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   runCommand(e.currentTarget.value);
                 }
               }}
             />
           </div>
-          
+
           {buildError && (
-            <div className="bg-destructive/10 text-destructive p-2 rounded text-sm font-mono whitespace-pre-wrap overflow-auto max-h-[calc(100%-60px)]">
+            <div className="bg-destructive/10 text-destructive p-2 rounded text-sm font-mono whitespace-pre-wrap overflow-auto">
               {buildError}
             </div>
           )}
-          
+
           {!buildError && buildOutput && (
-            <div className="text-xs font-mono bg-sidebar-accent p-2 rounded overflow-auto max-h-[calc(100%-60px)]">
-              <pre className="whitespace-pre-wrap">{buildOutput.slice(0, 1000)}{buildOutput.length > 1000 ? '...' : ''}</pre>
+            <div className="text-xs font-mono bg-sidebar-accent p-2 rounded overflow-auto">
+              <pre className="whitespace-pre-wrap">
+                {buildOutput.slice(0, 1000)}
+                {buildOutput.length > 1000 ? "..." : ""}
+              </pre>
             </div>
           )}
-        </div>
-        
-        <div className="h-full">
-          <iframe
-            ref={iframeRef}
-            title="Preview"
-            className="w-full h-full border-none bg-white"
-            sandbox="allow-scripts allow-same-origin"
-          />
         </div>
       </div>
     </div>

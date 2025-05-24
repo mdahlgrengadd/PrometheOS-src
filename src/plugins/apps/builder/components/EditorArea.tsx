@@ -37,11 +37,17 @@ const EditorArea: React.FC = () => {
     panelVisible,
     previewPanelVisible,
     theme,
+    togglePreviewPanel,
+    getFileById,
+    getTabById,
   } = useIdeStore();
   const [editorContent, setEditorContent] = useState<{ [key: string]: string }>(
     {}
   );
   const editorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [previewTargetTabId, setPreviewTargetTabId] = useState<string | null>(
+    null
+  );
 
   // Initialize Monaco editor when activeTab or theme changes
   useEffect(() => {
@@ -82,9 +88,24 @@ const EditorArea: React.FC = () => {
     };
   }, [activeTab, theme]);
 
+  // Sync preview panel with tabs, remembering which file we preview
+  useEffect(() => {
+    if (previewPanelVisible) {
+      if (activeTab && activeTab !== "preview") {
+        setPreviewTargetTabId(activeTab);
+      }
+      setActiveTab("preview");
+    } else {
+      if (activeTab === "preview" && previewTargetTabId) {
+        setActiveTab(previewTargetTabId);
+      }
+      setPreviewTargetTabId(null);
+    }
+  }, [previewPanelVisible]);
+
   return (
     <div className="editor-area">
-      {tabs.length > 0 ? (
+      {tabs.length > 0 || previewPanelVisible ? (
         <>
           <div className="editor-tabs">
             {tabs.map((tab) => (
@@ -106,6 +127,34 @@ const EditorArea: React.FC = () => {
                 </button>
               </div>
             ))}
+            {previewPanelVisible &&
+              previewTargetTabId &&
+              (() => {
+                const fileTab = getTabById(previewTargetTabId);
+                const previewTitle = fileTab
+                  ? `Preview - ${fileTab.title}`
+                  : "Preview";
+                return (
+                  <div
+                    key="preview"
+                    className={`editor-tab ${
+                      activeTab === "preview" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("preview")}
+                  >
+                    <span className="truncate flex-1">{previewTitle}</span>
+                    <button
+                      className="ml-2 hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePreviewPanel();
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                );
+              })()}
           </div>
           <div className="editor-content">
             {tabs.map((tab) => (
@@ -117,6 +166,15 @@ const EditorArea: React.FC = () => {
                 data-tab-id={tab.id}
               ></div>
             ))}
+            {previewPanelVisible && previewTargetTabId && (
+              <div
+                key="preview"
+                className="h-full w-full"
+                style={{ display: activeTab === "preview" ? "block" : "none" }}
+              >
+                <PreviewPanel previewTabId={previewTargetTabId} />
+              </div>
+            )}
           </div>
         </>
       ) : (
@@ -129,7 +187,6 @@ const EditorArea: React.FC = () => {
       )}
 
       {panelVisible && <PanelArea />}
-      {previewPanelVisible && <PreviewPanel />}
     </div>
   );
 };
