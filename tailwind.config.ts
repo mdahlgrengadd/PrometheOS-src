@@ -74,6 +74,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        editor: {
+          background: "hsl(var(--editor-background))",
+          foreground: "hsl(var(--editor-foreground))",
+          lineHighlight: "hsl(var(--editor-line-highlight))",
+          selection: "hsl(var(--editor-selection))",
+          gutter: "hsl(var(--editor-gutter))",
+          activeTab: "hsl(var(--editor-active-tab))",
+        },
         winxp: {
           "medium-blue": "#245edb",
           "light-blue": "#0c8dea",
@@ -93,6 +101,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", ...fontFamily.sans],
+        mono: ["JetBrains Mono", ...fontFamily.mono],
       },
       typography: {
         DEFAULT: {

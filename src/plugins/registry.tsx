@@ -2,6 +2,7 @@ import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
 import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
 import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
 import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
 import { manifest as calculatorManifest } from './apps/calculator/manifest';
 import { manifest as chatManifest } from './apps/chat/manifest';
 import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
@@ -21,6 +22,7 @@ export const staticPlugins: PluginManifest[] = [
   calculatorManifest,
   audioPlayerManifest,
   browserManifest,
+  builderManifest,
   settingsManifest,
   wordEditorManifest,
   webampManifest,

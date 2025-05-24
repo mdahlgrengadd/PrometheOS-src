@@ -1,0 +1,32 @@
+import React from "react";
+
+import { Plugin } from "../../types";
+import { manifest } from "./manifest";
+import IdeLayout from "./layout/IdeLayout"; // Import the IDE styles
+
+// Create the plugin component
+const BuilderComponent: React.FC = () => {
+  return (
+    <div className="h-full w-full" style={{ height: '100%', width: '100%' }}>
+      <IdeLayout />
+    </div>
+  );
+};
+
+// Create and export the plugin
+const BuilderPlugin: Plugin = {
+  id: manifest.id,
+  manifest,
+  init: async () => {
+    console.log("Builder IDE plugin initialized");
+  },
+  render: () => <BuilderComponent />,
+  onOpen: () => {
+    console.log("Builder IDE opened");
+  },
+  onClose: () => {
+    console.log("Builder IDE closed");
+  },
+};
+
+export default BuilderPlugin;

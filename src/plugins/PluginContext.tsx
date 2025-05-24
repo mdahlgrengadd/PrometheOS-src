@@ -9,6 +9,7 @@ import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
 import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
 import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
 import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
 import { manifest as calculatorManifest } from './apps/calculator/manifest';
 import { manifest as chatManifest } from './apps/chat/manifest';
 import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
@@ -43,6 +44,7 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   notepad: () => import("./apps/notepad").then((m) => m.default),
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
+  builder: () => import("./apps/builder").then((m) => m.default),
   settings: () => import("./apps/settings").then((m) => m.default),
   wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
   audioplayer: () => import("./apps/audioplayer").then((m) => m.default),
@@ -104,6 +106,7 @@ const manifestMap: Record<string, PluginManifest> = {
   notepad: notepadManifest,
   calculator: calculatorManifest,
   browser: browserManifest,
+  builder: builderManifest,
   settings: settingsManifest,
   wordeditor: wordEditorManifest,
   audioplayer: audioPlayerManifest,
