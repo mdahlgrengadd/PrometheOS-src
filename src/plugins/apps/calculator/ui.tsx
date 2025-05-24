@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { workerPluginManager } from "../../WorkerPluginManagerClient";
-import { manifest } from "./manifest";
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import { manifest } from './manifest';
 
 const CalculatorContent: React.FC = () => {
   const [display, setDisplay] = useState("0");
@@ -148,8 +148,8 @@ const CalculatorContent: React.FC = () => {
   };
 
   return (
-    <div className="p-4 calculator-root">
-      <div className="flex justify-between items-center mb-2">
+    <div className="flex flex-col p-4 calculator-root h-full">
+      <div className="flex-row justify-between items-center mb-2">
         <div className="text-xs text-muted-foreground">Worker Calculator</div>
         {isCalculating && (
           <div className="text-xs text-blue-500">Computing...</div>
@@ -158,10 +158,10 @@ const CalculatorContent: React.FC = () => {
           <div className="text-xs text-amber-500">Initializing worker...</div>
         )}
       </div>
-      <div className="bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
+      <div className="flex-row bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
         {display}
       </div>
-      <div className="grid grid-cols-4 gap-1">
+      <div className="flex-row grid grid-cols-4 gap-1 grow">
         <button
           onClick={clearDisplay}
           className="col-span-2 bg-red-500 text-white p-2"
