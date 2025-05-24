@@ -79,7 +79,7 @@
     "date-fns": "^3.6.0",
     "dependencies": "^0.0.1",
     "embla-carousel-react": "^8.3.0",
-    "esbuild-wasm": "^0.25.4",
+    "esbuild-wasm": "^0.18.7",
     "framer-motion": "^12.7.4",
     "howler": "^2.2.4",
     "in": "^0.19.0",
