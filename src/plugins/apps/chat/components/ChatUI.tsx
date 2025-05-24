@@ -36,7 +36,6 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
     setRoomCreated(false);
     setError("");
   }, [roomId]);
-
   const socket = usePartySocket({
     party: "chat",
     room: roomId,
@@ -48,9 +47,16 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
         return;
       }
       if (data.ok) {
-        setRoomCreated(true);
-        setPasswordConfirmed(true);
-        setError("");
+        if (data.verified) {
+          // Password verification successful
+          setPasswordConfirmed(true);
+          setError("");
+        } else {
+          // Room creation successful
+          setRoomCreated(true);
+          setPasswordConfirmed(true);
+          setError("");
+        }
         return;
       }
       const msg = data as Message;
@@ -76,15 +82,14 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
     }
     socket.send(JSON.stringify({ type: "create-room", password, ttl }));
   };
-
   // Password confirmation for joining existing room
   const verifyPassword = () => {
     if (!password) {
       setError("Password is required");
       return;
     }
-    setPasswordConfirmed(true);
-    setError("");
+    // Send password verification request to server
+    socket.send(JSON.stringify({ type: "verify-password", password }));
   };
 
   // UI for room selection and password/TTL prompt
