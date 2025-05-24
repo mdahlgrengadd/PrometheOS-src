@@ -11,7 +11,7 @@ import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
 import { manifest as browserManifest } from './apps/browser/manifest';
 import { manifest as calculatorManifest } from './apps/calculator/manifest';
 import { manifest as chatManifest } from './apps/chat/manifest';
-import { manifest as fileBrowserManifest } from './apps/filebrowser/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
 import { manifest as notepadManifest } from './apps/notepad/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
@@ -48,9 +48,9 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   audioplayer: () => import("./apps/audioplayer").then((m) => m.default),
   webamp: () => import("./apps/webamp").then((m) => m.default),
   "webllm-chat": () => import("./apps/webllm-chat").then((m) => m.default),
-  filebrowser: () => import("./apps/filebrowser").then((m) => m.default),
   session: () => import("./apps/session").then((m) => m.default),
   chat: () => import("./apps/chat").then((m) => m.default),
+  "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -109,9 +109,9 @@ const manifestMap: Record<string, PluginManifest> = {
   audioplayer: audioPlayerManifest,
   webamp: webampManifest,
   "webllm-chat": webllmChatManifest,
-  filebrowser: fileBrowserManifest,
   session: sessionManifest,
   chat: chatManifest,
+  "file-explorer": fileExplorerManifest,
 };
 
 // Debug: Log available plugins

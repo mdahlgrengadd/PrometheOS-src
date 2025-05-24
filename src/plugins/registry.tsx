@@ -4,7 +4,7 @@ import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
 import { manifest as browserManifest } from './apps/browser/manifest';
 import { manifest as calculatorManifest } from './apps/calculator/manifest';
 import { manifest as chatManifest } from './apps/chat/manifest';
-import { manifest as fileBrowserManifest } from './apps/filebrowser/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
 // Import all plugin manifests
 import { manifest as notepadManifest } from './apps/notepad/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
@@ -27,9 +27,9 @@ export const staticPlugins: PluginManifest[] = [
   webllmChatManifest,
   apiExplorerManifest,
   apiFlowEditorManifest,
-  fileBrowserManifest,
   sessionManifest,
   chatManifest,
+  fileExplorerManifest,
 ];
 
 // For backward compatibility
