@@ -1,12 +1,12 @@
 // Register all basic languages contributions
-import '../lib/monaco'; // Import Monaco configuration first
+import "../lib/monaco"; // Import Monaco configuration first
 
-import { Save, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Play, Save, Square, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-import useIdeStore from '../store/ide-store';
-import { registerEditor, unregisterEditor } from '../utils/editor-registry';
-import PreviewPanel from './PreviewPanel';
+import useIdeStore from "../store/ide-store";
+import { registerEditor, unregisterEditor } from "../utils/editor-registry";
+import PreviewPanel from "./PreviewPanel";
 
 import type * as monacoType from "monaco-editor";
 
@@ -24,11 +24,12 @@ const EditorArea: React.FC = () => {
     togglePreviewPanel,
     getTabById,
     initFileSystem,
+    runBuild,
   } = useIdeStore();
-
   const [editorContent, setEditorContent] = useState<{ [key: string]: string }>(
     {}
   );
+  const [isPreviewRunning, setIsPreviewRunning] = useState(false);
   const editorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const editorInstances = useRef<{
     [key: string]: monacoType.editor.IStandaloneCodeEditor;
@@ -36,11 +37,10 @@ const EditorArea: React.FC = () => {
   const [previewTargetTabId, setPreviewTargetTabId] = useState<string | null>(
     null
   );
-
   // Load shadow filesystem on mount
   useEffect(() => {
     initFileSystem();
-  }, []);
+  }, [initFileSystem]);
 
   // Load Monaco editor on component mount
   useEffect(() => {
@@ -148,7 +148,6 @@ const EditorArea: React.FC = () => {
       }, 10);
     }
   }, [activeTab]);
-
   // Sync preview-as-tab behavior with preview panel toggle
   useEffect(() => {
     if (previewPanelVisible) {
@@ -162,8 +161,7 @@ const EditorArea: React.FC = () => {
       }
       setPreviewTargetTabId(null);
     }
-  }, [previewPanelVisible]);
-
+  }, [previewPanelVisible, activeTab, previewTargetTabId, setActiveTab]);
   const handleSaveFile = (tabId: string) => {
     const editor = editorInstances.current[tabId];
     if (!editor) return;
@@ -172,68 +170,154 @@ const EditorArea: React.FC = () => {
     saveFile(fileTab.fileId, editor.getValue());
   };
 
+  const handleRunPreview = async () => {
+    if (isPreviewRunning) {
+      // Stop preview
+      setIsPreviewRunning(false);
+      if (previewPanelVisible) {
+        togglePreviewPanel();
+      }
+      return;
+    }
+
+    // Run build first, then open preview
+    await runBuild();
+    setIsPreviewRunning(true);
+
+    // Open preview panel if not already open
+    if (!previewPanelVisible) {
+      togglePreviewPanel();
+    }
+  };
+  // Stop preview when preview panel is closed
+  useEffect(() => {
+    if (!previewPanelVisible && isPreviewRunning) {
+      setIsPreviewRunning(false);
+    }
+  }, [previewPanelVisible, isPreviewRunning]);
+
+  // Handle panel visibility when switching between preview and editor tabs
+  useEffect(() => {
+    const handlePanelVisibilityForTabs = async () => {
+      const { ideSettings } = await import("../utils/esbuild-settings");
+      if (!ideSettings.hideTerminalDuringPreview) return;
+
+      const { panelVisible, panelVisibilityBeforePreview, togglePanel } =
+        useIdeStore.getState();
+
+      if (activeTab === "preview") {
+        // Switching to preview tab - hide panel if visible and remember state
+        if (panelVisible) {
+          useIdeStore.setState({ panelVisibilityBeforePreview: true });
+          if (panelVisible) togglePanel();
+        }
+      } else if (activeTab && activeTab !== "preview") {
+        // Switching to non-preview tab - restore panel if it was visible before
+        if (panelVisibilityBeforePreview && !panelVisible) {
+          togglePanel();
+          useIdeStore.setState({ panelVisibilityBeforePreview: false });
+        }
+      }
+    };
+
+    handlePanelVisibilityForTabs();
+  }, [activeTab]);
+
   return (
     <div className="editor-area">
       {tabs.length > 0 || previewPanelVisible ? (
         <>
           <div className="editor-tabs">
-            {tabs.map((tab) => (
-              <div
-                key={tab.id}
-                className={`editor-tab ${activeTab === tab.id ? "active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <span className="truncate flex-1">{tab.title}</span>
-                {tab.isDirty && <span className="ml-1 text-amber-400">•</span>}
-                <button
-                  className="ml-2 text-blue-500 hover:text-blue-400"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSaveFile(tab.id);
-                  }}
-                  title="Save"
-                >
-                  <Save size={14} />
-                </button>
-                <button
-                  className="ml-2 hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    closeTab(tab.id);
-                  }}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            ))}
-            {previewPanelVisible &&
-              previewTargetTabId &&
-              (() => {
-                const fileTab = getTabById(previewTargetTabId);
-                const previewTitle = fileTab
-                  ? `Preview - ${fileTab.title}`
-                  : "Preview";
-                return (
+            <div className="flex items-center justify-between w-full">
+              <div className="flex">
+                {tabs.map((tab) => (
                   <div
-                    key="preview"
+                    key={tab.id}
                     className={`editor-tab ${
-                      activeTab === "preview" ? "active" : ""
+                      activeTab === tab.id ? "active" : ""
                     }`}
-                    onClick={() => setActiveTab("preview")}
+                    onClick={() => setActiveTab(tab.id)}
                   >
-                    <span className="truncate flex-1">{previewTitle}</span>
+                    <span className="truncate flex-1">{tab.title}</span>
+                    {tab.isDirty && (
+                      <span className="ml-1 text-amber-400">•</span>
+                    )}
+                    <button
+                      className="ml-2 text-blue-500 hover:text-blue-400"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSaveFile(tab.id);
+                      }}
+                      title="Save"
+                    >
+                      <Save size={14} />
+                    </button>
                     <button
                       className="ml-2 hover:text-foreground"
                       onClick={(e) => {
                         e.stopPropagation();
-                        togglePreviewPanel();
+                        closeTab(tab.id);
                       }}
                     >
                       <X size={16} />
                     </button>
                   </div>
-                );
-              })()}
+                ))}
+                {previewPanelVisible &&
+                  previewTargetTabId &&
+                  (() => {
+                    const fileTab = getTabById(previewTargetTabId);
+                    const previewTitle = fileTab
+                      ? `Preview - ${fileTab.title}`
+                      : "Preview";
+                    return (
+                      <div
+                        key="preview"
+                        className={`editor-tab ${
+                          activeTab === "preview" ? "active" : ""
+                        }`}
+                        onClick={() => setActiveTab("preview")}
+                      >
+                        <span className="truncate flex-1">{previewTitle}</span>
+                        <button
+                          className="ml-2 hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePreviewPanel();
+                          }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    );
+                  })()}
+              </div>
+
+              {/* Run Preview button in upper right corner */}
+              {activeTab && activeTab !== "preview" && (
+                <button
+                  className={`px-3 py-1 rounded text-sm flex items-center gap-1 mr-2 ${
+                    isPreviewRunning
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
+                  onClick={handleRunPreview}
+                  title={isPreviewRunning ? "Stop Preview" : "Run Preview"}
+                >
+                  {isPreviewRunning ? (
+                    <>
+                      <Square size={14} />
+                      Stop Preview
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} />
+                      Run Preview
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
           <div className="editor-content">
             {tabs.map((tab) => (
@@ -259,7 +343,7 @@ const EditorArea: React.FC = () => {
       ) : (
         <div className="flex items-center justify-center h-full text-muted-foreground">
           <div className="text-center">
-            <h3 className="text-xl mb-2">Welcome to IDE Clone</h3>
+            <h3 className="text-xl mb-2">Welcome to Code Builder</h3>
             <p>Open a file to start editing</p>
           </div>
         </div>
@@ -271,21 +355,47 @@ const EditorArea: React.FC = () => {
 };
 
 const PanelArea: React.FC = () => {
-  const { togglePanel, buildOutput, buildError, isBuilding } = useIdeStore();
+  const {
+    togglePanel,
+    buildOutput,
+    buildError,
+    isBuilding,
+    runBuild,
+    togglePreviewPanel,
+  } = useIdeStore();
   const [activeTab, setActiveTab] = useState<"terminal" | "output">("terminal");
   const [command, setCommand] = useState<string>("");
 
   useEffect(() => {
-    if (buildOutput || buildError) {
+    if (buildOutput || buildError || isBuilding) {
       setActiveTab("output");
     }
-  }, [buildOutput, buildError]);
+  }, [buildOutput, buildError, isBuilding]);
 
-  const runCommand = (cmd: string) => {
-    if (cmd.startsWith("esbuild ") && typeof window.runBuild === "function") {
-      window.runBuild(cmd);
+  const runCommand = async (cmd: string) => {
+    if (cmd.startsWith("esbuild ")) {
+      await runBuild(cmd);
       setCommand("");
     }
+  };
+  // Get active file for default command
+  const getDefaultCommand = () => {
+    const {
+      activeTab: activeTabId,
+      getTabById,
+      getFileById,
+    } = useIdeStore.getState();
+    if (!activeTabId) return "esbuild app.js --bundle --minify --format=esm";
+
+    const tab = getTabById(activeTabId);
+    if (!tab) return "esbuild app.js --bundle --minify --format=esm";
+
+    const file = getFileById(tab.fileId);
+    if (!file || file.type !== "file")
+      return "esbuild app.js --bundle --minify --format=esm";
+
+    // Use file.id for correct path, especially for files in subfolders
+    return `esbuild ${file.id} --bundle --minify --format=esm`;
   };
 
   return (
@@ -319,18 +429,20 @@ const PanelArea: React.FC = () => {
       <div className="flex-1 p-2 font-mono text-sm overflow-auto">
         {activeTab === "terminal" && (
           <div className="text-muted-foreground">~ $</div>
-        )}
+        )}{" "}
         {activeTab === "output" && (
           <div>
             <div className="mb-2">
               <input
                 type="text"
-                placeholder="esbuild app.jsx --bundle"
-                className="w-full bg-input text-foreground px-2 py-1 rounded text-sm font-mono"
+                placeholder={getDefaultCommand()}
                 value={command}
+                className="w-full bg-input text-foreground px-2 py-1 rounded text-sm font-mono"
                 onChange={(e) => setCommand(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") runCommand(command);
+                  if (e.key === "Enter") {
+                    runCommand(e.currentTarget.value);
+                  }
                 }}
               />
             </div>
@@ -344,15 +456,13 @@ const PanelArea: React.FC = () => {
             )}
             {!buildError && buildOutput && (
               <div className="text-xs font-mono bg-sidebar-accent p-2 rounded overflow-auto">
-                <pre className="whitespace-pre-wrap">
-                  {buildOutput.slice(0, 1000)}
-                  {buildOutput.length > 1000 ? "..." : ""}
-                </pre>
+                <pre className="whitespace-pre-wrap">{buildOutput}</pre>
               </div>
             )}
             {!isBuilding && !buildError && !buildOutput && (
               <div className="text-muted-foreground">
-                Run preview to see build output here
+                Enter an esbuild command above or run preview to see build
+                output here
               </div>
             )}
           </div>

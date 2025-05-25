@@ -40,4 +40,7 @@ export interface AppState {
   buildOutput: string;
   buildError: string | null;
   isBuilding: boolean;
+  buildCode: string; // Clean JavaScript code for preview
+  // Panel state management for preview mode
+  panelVisibilityBeforePreview: boolean;
 }
