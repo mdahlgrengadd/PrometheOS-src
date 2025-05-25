@@ -1,6 +1,6 @@
 import './index.css';
-import './styles.css';
 
+//import './styles.css';
 import React from 'react';
 
 import { Plugin } from '../../types';

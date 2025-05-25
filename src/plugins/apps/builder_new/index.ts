@@ -1,13 +1,6 @@
 // Main builder components and utilities
 export { default as IdeLayout } from "./layout/IdeLayout";
 export { default as useIdeStore } from "./store/ide-store";
-// Styles
-import './index.css';
-
-// Main plugin export
-import BuilderPlugin from './ui';
-
-export default BuilderPlugin;
 
 // Components
 export { default as ActivityBar } from "./components/ActivityBar";
@@ -24,7 +17,5 @@ export * from "./types";
 export * from "./utils/esbuild-service";
 export * from "./vfs/virtual-fs";
 
-// Utility exports
-export * from "./utils/esbuild-service";
-export { commands, mockFileSystem } from "./utils/mock-data";
-export { cn } from "./lib/utils";
+// Styles
+import "./index.css";
