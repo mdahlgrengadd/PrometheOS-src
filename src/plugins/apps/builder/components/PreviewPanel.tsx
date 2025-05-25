@@ -94,7 +94,8 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
           content: activeFile.content,
           options: {
             bundle: true,
-            minify: false,
+            minify: true,
+            format: "esm",
           },
         };
       }
@@ -214,7 +215,10 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
               type="text"
               placeholder={`esbuild ${
                 getActiveFileContent()?.filePath
-              } --bundle`}
+              } --bundle --minify --format=esm`}
+              defaultValue={`esbuild ${
+                getActiveFileContent()?.filePath
+              } --bundle --minify --format=esm`}
               className="w-full bg-input text-foreground px-2 py-1 rounded text-sm font-mono"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {

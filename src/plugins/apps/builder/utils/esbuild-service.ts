@@ -1,5 +1,7 @@
 import * as esbuild from 'esbuild-wasm';
 
+import { reactDevUrl, reactDomDevUrl, reactDomProdUrl, reactProdUrl } from './esbuild-settings';
+
 let isInitialized = false;
 // Prevent multiple concurrent initializations
 let initializePromise: Promise<boolean> | null = null;
@@ -50,17 +52,21 @@ export const buildCode = async ({
   }
 
   try {
+    // Choose React URLs based on minify option
+    const reactUrl = options.minify ? reactProdUrl : reactDevUrl;
+    const reactDomUrl = options.minify ? reactDomProdUrl : reactDomDevUrl;
+
     // Create a virtual file system plugin
     const virtualFileSystemPlugin = {
       name: "virtual-file-system",
       setup(build: esbuild.PluginBuild) {
         // Special-case React and ReactDOM to use UMD bundles
         build.onResolve({ filter: /^react$/ }, () => ({
-          path: "https://unpkg.com/react@18.3.1/umd/react.development.js",
+          path: reactUrl,
           namespace: "http-url",
         }));
         build.onResolve({ filter: /^react-dom$/ }, () => ({
-          path: "https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js",
+          path: reactDomUrl,
           namespace: "http-url",
         }));
         // Handle absolute HTTP imports by routing them to http-url namespace
