@@ -302,7 +302,7 @@ const EditorArea: React.FC = () => {
                       : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                   onClick={handleRunPreview}
-                  title={isPreviewRunning ? "Stop Preview" : "Run Preview"}
+                  title={isPreviewRunning ? "Stop" : "Run"}
                 >
                   {isPreviewRunning ? (
                     <>

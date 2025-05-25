@@ -27,8 +27,24 @@ The IDE Builder is a complete code editor interface built with React, TypeScript
 import { IdeLayout } from './path/to/builder';
 
 function App() {
-  return <IdeLayout />;
+  return <div className="ide-builder-app"><IdeLayout /></div>;
 }
+```
+
+### CSS Isolation
+
+To prevent CSS conflicts with the rest of your application, all IDE Builder styles are scoped to the `.ide-builder-app` class. Always wrap the IDE components with this class:
+
+```tsx
+// Correct usage
+<div className="ide-builder-app">
+  <IdeLayout />
+</div>
+
+// This ensures that:
+// 1. The IDE styles don't leak into your application
+// 2. The theme switching works correctly
+// 3. Components render as expected
 ```
 
 ### Path Aliases

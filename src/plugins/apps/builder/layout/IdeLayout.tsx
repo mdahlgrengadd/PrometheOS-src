@@ -18,8 +18,12 @@ const IdeLayout: React.FC = () => {
 
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.classList.toggle("light", theme === "light");
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    // Find the closest ide-builder-app container and apply theme there
+    const ideContainer = document.querySelector(".ide-builder-app");
+    if (ideContainer) {
+      ideContainer.classList.toggle("light", theme === "light");
+      ideContainer.classList.toggle("dark", theme === "dark");
+    }
   }, [theme]);
 
   // Set up keyboard shortcuts

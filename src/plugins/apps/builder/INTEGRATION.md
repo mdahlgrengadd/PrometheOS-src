@@ -50,9 +50,27 @@ import { IdeLayout } from '@src/builder';
 import '@src/builder/styles.css';
 
 function App() {
-  return <IdeLayout />;
+  return <div className="ide-builder-app"><IdeLayout /></div>;
 }
 ```
+
+## CSS Scoping
+
+All IDE Builder styles are scoped with the `.ide-builder-app` class to prevent CSS leakage into your application. 
+
+**Important**: Always wrap the IDE component with a div that has the `ide-builder-app` class:
+
+```tsx
+<div className="ide-builder-app">
+  <IdeLayout />
+</div>
+```
+
+This ensures that:
+
+1. All IDE styles are contained within this wrapper
+2. The theme system works correctly (light/dark mode)
+3. No CSS leakage affects your other application components
 
 ## Path Aliases
 
