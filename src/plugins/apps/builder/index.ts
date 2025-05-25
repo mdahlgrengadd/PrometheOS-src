@@ -3,6 +3,7 @@ export { default as IdeLayout } from "./layout/IdeLayout";
 export { default as useIdeStore } from "./store/ide-store";
 // Styles
 import './index.css';
+import './styles.css';
 
 // Main plugin export
 import BuilderPlugin from './ui';
