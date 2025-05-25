@@ -1,12 +1,12 @@
 // Register all basic languages contributions
-import "../lib/monaco"; // Import Monaco configuration first
+import '../lib/monaco'; // Import Monaco configuration first
 
-import { Play, Save, Square, X } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Play, Save, Square, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import useIdeStore from "../store/ide-store";
-import { registerEditor, unregisterEditor } from "../utils/editor-registry";
-import PreviewPanel from "./PreviewPanel";
+import useIdeStore from '../store/ide-store';
+import { registerEditor, unregisterEditor } from '../utils/editor-registry';
+import PreviewPanel from './PreviewPanel';
 
 import type * as monacoType from "monaco-editor";
 
@@ -72,7 +72,7 @@ const EditorArea: React.FC = () => {
         value: file.content,
         language: tab.language,
         theme: theme === "dark" ? "vs-dark" : "vs",
-        automaticLayout: false,
+        automaticLayout: true,
         minimap: { enabled: true },
         scrollBeyondLastLine: false,
         fontSize: 14,

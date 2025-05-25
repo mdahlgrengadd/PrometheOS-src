@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from 'react';
 
-import useIdeStore from "../store/ide-store";
+import useIdeStore from '../store/ide-store';
 
 // Props for preview targeting a specific tab
 interface PreviewPanelProps {
