@@ -312,7 +312,7 @@ const EditorArea: React.FC = () => {
                   ) : (
                     <>
                       <Play size={14} />
-                      Run Preview
+                      Run
                     </>
                   )}
                 </button>
