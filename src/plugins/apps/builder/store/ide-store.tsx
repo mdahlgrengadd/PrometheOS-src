@@ -1,8 +1,7 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-import { AppState, FileSystemItem, Tab, ViewType } from "../types";
-import { mockFileSystem } from "../utils/mock-data";
-import { loadShadowFolder } from "../vfs/virtual-fs";
+import { loadShadowFolder } from '../../../../utils/virtual-fs';
+import { AppState, FileSystemItem, Tab, ViewType } from '../types';
 
 interface IdeStore extends AppState {
   toggleSidebar: () => void;
@@ -24,7 +23,7 @@ interface IdeStore extends AppState {
   setIsBuilding: (isBuilding: boolean) => void;
   runBuild: (command?: string) => Promise<void>;
   setFileSystem: (fs: FileSystemItem[]) => void;
-  initFileSystem: (source?: "shadow" | "mock") => Promise<void>;
+  initFileSystem: () => Promise<void>;
 }
 
 // Default state
@@ -35,7 +34,7 @@ const initialState: AppState = {
   previewPanelVisible: false,
   activeTab: null,
   tabs: [],
-  fileSystem: mockFileSystem,
+  fileSystem: [],
   theme: "light",
   commandPaletteOpen: false,
   buildOutput: "",
@@ -50,18 +49,9 @@ const useIdeStore = create<IdeStore>((set, get) => ({
 
   setFileSystem: (fs) => set({ fileSystem: fs }),
 
-  // Initialize the file system from shadow or mock
-  initFileSystem: async (source = "shadow") => {
-    let fs: FileSystemItem[] = [];
-    if (source === "shadow") {
-      fs = await loadShadowFolder();
-      if (!fs || fs.length === 0) {
-        // fallback to mock if shadow is empty
-        fs = mockFileSystem;
-      }
-    } else {
-      fs = mockFileSystem;
-    }
+  // Initialize the file system from shadow
+  initFileSystem: async () => {
+    const fs = await loadShadowFolder();
     set({ fileSystem: fs });
   },
 

@@ -27,5 +27,4 @@ export * from "./vfs/virtual-fs";
 
 // Utility exports
 export * from "./utils/esbuild-service";
-export { commands, mockFileSystem } from "./utils/mock-data";
 export { cn } from "./lib/utils";
