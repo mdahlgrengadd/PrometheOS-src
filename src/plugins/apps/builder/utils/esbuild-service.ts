@@ -164,41 +164,28 @@ export const buildCode = async ({
           }
         );
 
-        // 3a. ESM modules for React & React-DOM - only if not externalized
-        if (!options.external || !options.external.includes("react")) {
-          build.onResolve(
-            { filter: /^react$/, namespace: "virtual-fs" },
-            () => ({
-              path: "https://esm.sh/react@18.3.1",
+        // Bare imports resolution: prefer shadowed node_modules before CDN
+        build.onResolve(
+          { filter: /^[^./].*/, namespace: "virtual-fs" },
+          (args) => {
+            const pkgPath = args.path;
+            // Try direct .js file (e.g. react-dom/client.js)
+            const fileJs = `node_modules/${pkgPath}.js`;
+            if (virtualFs[fileJs]) {
+              return { path: fileJs, namespace: "virtual-fs" };
+            }
+            // Try package folder index.js (e.g. react/index.js or react-dom/client/index.js)
+            const folderIndex = `node_modules/${pkgPath}/index.js`;
+            if (virtualFs[folderIndex]) {
+              return { path: folderIndex, namespace: "virtual-fs" };
+            }
+            // Fallback to CDN
+            return {
+              path: `https://unpkg.com/${pkgPath}`,
               namespace: "http-url",
-            })
-          );
-        }
-
-        // Support both React-DOM and React-DOM/client imports - only if not externalized
-        if (!options.external || !options.external.includes("react-dom")) {
-          build.onResolve(
-            { filter: /^react-dom$/, namespace: "virtual-fs" },
-            () => ({
-              path: "https://esm.sh/react-dom@18.3.1",
-              namespace: "http-url",
-            })
-          );
-
-          build.onResolve(
-            { filter: /^react-dom\/client$/, namespace: "virtual-fs" },
-            () => ({
-              path: "https://esm.sh/react-dom@18.3.1/client",
-              namespace: "http-url",
-            })
-          );
-        }
-
-        // 3b. Bare imports from your entry file (e.g. "lodash")
-        build.onResolve({ filter: /.*/, namespace: "virtual-fs" }, (args) => ({
-          path: `https://unpkg.com/${args.path}`,
-          namespace: "http-url",
-        }));
+            };
+          }
+        );
 
         // 4. Any imports inside HTTP-fetched modules (so nested `require('./cjs/…')`)
         build.onResolve({ filter: /.*/, namespace: "http-url" }, (args) => {

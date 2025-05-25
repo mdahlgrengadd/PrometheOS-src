@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './styles.css';
 
 const App = () => {
@@ -24,4 +24,5 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />, document.getElementById('app')); 
+const container = document.getElementById('app');
+createRoot(container).render(<App />); 

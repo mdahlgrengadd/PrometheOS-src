@@ -1,5 +1,6 @@
 // Test file for panel behavior verification
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 
 function TestComponent() {
   const [count, setCount] = React.useState(0);
@@ -66,5 +67,5 @@ function TestComponent() {
 
 // Render the component
 const container = document.getElementById('app');
-const root = ReactDOM.createRoot(container);
-root.render(React.createElement(TestComponent));
+const root = createRoot(container);
+root.render(<TestComponent />);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import "./styles.css"
 
 
@@ -61,10 +61,6 @@ function App() {
 
   return (
     <div className="game">
-      <style jsx>{`
-        
-      `}</style>
-
       <h1 className="game-title">Tic Tac Toe</h1>
       
       <div className="game-info">
@@ -87,4 +83,5 @@ function App() {
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('app'));
+const container = document.getElementById('app');
+createRoot(container).render(<App />);

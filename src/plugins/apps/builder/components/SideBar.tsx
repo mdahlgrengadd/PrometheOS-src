@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import useIdeStore from '../store/ide-store';
 import { FileSystemItem } from '../types';
@@ -89,10 +89,49 @@ const SideBar: React.FC = () => {
 const ExplorerView: React.FC = () => {
   const { fileSystem } = useIdeStore();
 
+  // Load ignore patterns from .vfsignore at root
+  const ignoreFile = fileSystem.find(
+    (item) => item.name === ".vfsignore" && item.type === "file"
+  );
+  const ignorePatterns = useMemo(() => {
+    if (!ignoreFile || !ignoreFile.content) return [];
+    return ignoreFile.content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+  }, [ignoreFile]);
+  const ignoreMatchers = useMemo(() => {
+    return ignorePatterns.map((pattern) => {
+      const isDirPattern = pattern.endsWith("/");
+      const basePattern = isDirPattern ? pattern.slice(0, -1) : pattern;
+      // Convert wildcards: ** → .*, * → [^/]*, ? → .
+      let regexStr = basePattern
+        .replace(/\*\*/g, ".*")
+        .replace(/\*/g, "[^/]*")
+        .replace(/\?/g, ".");
+      // If it's a directory pattern, match the dir itself and any sub-paths
+      if (isDirPattern) {
+        regexStr = `${regexStr}(/.*)?`;
+      }
+      return new RegExp(`^${regexStr}$`);
+    });
+  }, [ignorePatterns]);
+  // Filter out ignored items and the ignore file itself
+  const rootItems = fileSystem.filter(
+    (item) =>
+      item.name !== ".vfsignore" &&
+      !ignoreMatchers.some((rx) => rx.test(item.id))
+  );
+
   return (
     <div className="explorer-tree">
-      {fileSystem.map((item) => (
-        <TreeItem key={item.id} item={item} level={0} />
+      {rootItems.map((item) => (
+        <TreeItem
+          key={item.id}
+          item={item}
+          level={0}
+          ignoreMatchers={ignoreMatchers}
+        />
       ))}
     </div>
   );
@@ -101,9 +140,11 @@ const ExplorerView: React.FC = () => {
 interface TreeItemProps {
   item: FileSystemItem;
   level: number;
+  // Patterns to filter out hidden files
+  ignoreMatchers: RegExp[];
 }
 
-const TreeItem: React.FC<TreeItemProps> = ({ item, level }) => {
+const TreeItem: React.FC<TreeItemProps> = ({ item, level, ignoreMatchers }) => {
   const [expanded, setExpanded] = React.useState(true);
   const { openTab } = useIdeStore();
 
@@ -155,9 +196,20 @@ const TreeItem: React.FC<TreeItemProps> = ({ item, level }) => {
 
       {expanded && item.type === "folder" && item.children && (
         <div>
-          {item.children.map((child) => (
-            <TreeItem key={child.id} item={child} level={level + 1} />
-          ))}
+          {item.children
+            .filter(
+              (child) =>
+                child.name !== ".vfsignore" &&
+                !ignoreMatchers.some((rx) => rx.test(child.id))
+            )
+            .map((child) => (
+              <TreeItem
+                key={child.id}
+                item={child}
+                level={level + 1}
+                ignoreMatchers={ignoreMatchers}
+              />
+            ))}
         </div>
       )}
     </div>
