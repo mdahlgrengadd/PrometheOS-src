@@ -5,7 +5,7 @@ import useIdeStore from '../store/ide-store';
 import { FileSystemItem } from '../types';
 
 const SideBar: React.FC = () => {
-  const { sidebarVisible, toggleSidebar, activeView } = useIdeStore();
+  const { sidebarVisible, previewPanelVisible, activeView } = useIdeStore();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -55,7 +55,8 @@ const SideBar: React.FC = () => {
     e.preventDefault(); // Prevent text selection
   };
 
-  if (!sidebarVisible) {
+  // Hide sidebar if user toggled off or if preview is active
+  if (!sidebarVisible || previewPanelVisible) {
     return null;
   }
 

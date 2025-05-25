@@ -116,11 +116,11 @@
   /* CSS Grid for IDE layout */
   .ide-container {
     display: grid;
-    grid-template-columns: 60px auto 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-rows: 1fr auto;
     grid-template-areas: 
-      "activity-bar side-bar editor-area"
-      "status-bar status-bar status-bar";
+      "side-bar editor-area"
+      "status-bar status-bar";
     height: 100vh;
     width: 100vw;
     overflow: hidden;

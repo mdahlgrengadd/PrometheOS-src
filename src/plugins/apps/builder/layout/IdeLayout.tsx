@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 
-import ActivityBar from '../components/ActivityBar';
 import CommandPalette from '../components/CommandPalette';
 import EditorArea from '../components/EditorArea';
 import SideBar from '../components/SideBar';
@@ -59,7 +58,7 @@ const IdeLayout: React.FC = () => {
 
   return (
     <div className="ide-container">
-      <ActivityBar />
+      {/* <ActivityBar /> */}
       {sidebarVisible && <SideBar />}
       <EditorArea />
       <StatusBar />
