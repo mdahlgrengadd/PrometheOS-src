@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTheme } from '@/lib/ThemeProvider';
 import { cn } from '@/lib/utils';
+import { useWindowStore } from '@/store/windowStore';
 import {
     DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
 } from '@dnd-kit/core';
@@ -32,11 +33,12 @@ interface WindowShellProps {
   // Window behavior
   active?: boolean;
   activeOnHover?: boolean;
-  activeTarget?: "window" | "titlebar";
-
-  // Window controls
+  activeTarget?: "window" | "titlebar"; // Window controls
   controls?: Array<"minimize" | "maximize" | "close">;
   controlsPosition?: "left" | "right";
+  showButtonLabels?: boolean;
+  showButtonImages?: boolean;
+  showButtonIcons?: boolean;
 
   // Event handlers
   onClose?: () => void;
@@ -49,6 +51,12 @@ interface WindowShellProps {
     height: number | string;
   }) => void;
   hideWindowChrome?: boolean;
+
+  /**
+   * If true, header will use full-width/zero-margin/padding styles. If false, header is styled by theme CSS only.
+   * Default: true
+   */
+  headerFullWidth?: boolean;
 }
 
 export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
@@ -83,6 +91,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
   onDragEnd = () => {},
   onResize = () => {},
   hideWindowChrome = false,
+  headerFullWidth = true,
 }) => {
   const { theme } = useTheme();
   const windowRef = useRef<HTMLDivElement>(null);
@@ -95,6 +104,8 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
 
   // Check if using a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
+  // Get highest z-index from store for persistent focus
+  const highestZ = useWindowStore((state) => state.highestZ);
 
   // For framer-motion dragging
   const x = useMotionValue(position.x);
@@ -109,12 +120,18 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
     })
   );
 
-  // If activeOnHover prop is undefined, use default behavior based on theme
+  // Determine whether to activate window on hover: disable for Win7, enable for other Windows themes
   const shouldActivateOnHover =
-    activeOnHover !== undefined ? activeOnHover : isWindowsTheme;
+    activeOnHover !== undefined
+      ? activeOnHover
+      : theme === "win7"
+      ? false
+      : isWindowsTheme;
 
-  // Set active state based on hover or explicit active prop
-  const isActive = shouldActivateOnHover ? hovered : active;
+  // Set active state based on hover, explicit active prop, or persistent focus
+  const isActive = shouldActivateOnHover
+    ? hovered
+    : active || zIndex === highestZ;
 
   // Update motion values when position prop changes and not dragging
   useEffect(() => {
@@ -329,7 +346,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
 
   const dragControls = useDragControls();
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   return (
     <DndContext
@@ -380,6 +397,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
         )}
         data-hide-chrome={hideWindowChrome}
         style={{
+          display: isMinimized ? "none" : undefined,
           zIndex,
           willChange:
             isDragging || isResizing ? "transform, width, height" : "auto",
@@ -389,7 +407,7 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
                 top: 0,
                 left: 0,
                 width: "100vw",
-                height: "100vh",
+                height: "calc(100vh - 3rem)",
               }
             : {
                 position: "absolute",
@@ -417,6 +435,13 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
               pointerEvents: "auto",
               zIndex: 1,
               position: "relative",
+              ...(headerFullWidth && {
+                margin: 0,
+                padding: 0,
+                width: "100%",
+                left: 0,
+                right: 0,
+              }),
             }}
           >
             <WindowHeader

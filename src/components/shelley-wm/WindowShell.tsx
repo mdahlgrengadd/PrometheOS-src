@@ -59,7 +59,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
   // Check if using a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   // If using a Windows theme, render the WindowsWindow component
   // This is temporary until we've fully migrated to UnifiedWindowShell
@@ -89,6 +89,8 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
   }
 
   // For all other themes, use our new UnifiedWindowShellV2
+  // For all other themes, use our new UnifiedWindowShellV2
+  // BeOS: headerFullWidth = false, all others: true (default)
   return (
     <UnifiedWindowShellV2
       id={id}
@@ -107,6 +109,7 @@ export const WindowShell: React.FC<WindowShellProps> = (props) => {
       onDragEnd={onDragEnd}
       onResize={onResize}
       hideWindowChrome={hideWindowChrome}
+      headerFullWidth={theme !== "beos"}
     >
       {children}
     </UnifiedWindowShellV2>

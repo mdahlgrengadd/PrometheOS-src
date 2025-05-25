@@ -36,4 +36,130 @@
 .theme-win7 button[style*="background-color"], .theme-win7 [role="button"][style*="background-color"] {
   background-image: none !important;
   min-width: 0 !important;
-} 
+}
+
+/* Fix for nodes in workflow editor - remove extra padding/margin */
+.theme-win7 .workflow-node-base {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-width: 2px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18) !important;
+}
+
+.theme-win7 .react-flow__node {
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: all !important; /* Ensure nodes receive pointer events */
+}
+
+/* Fix interaction with nodes and interactive elements inside nodes */
+.theme-win7 .react-flow__node .workflow-node-base {
+  pointer-events: all !important;
+}
+
+.theme-win7 .react-flow__renderer {
+  z-index: 1 !important;
+}
+
+/* Make sure controls inside workflow nodes are interactive */
+.theme-win7 .node-center-content {
+  pointer-events: all !important;
+}
+
+.theme-win7 .node-center-content input,
+.theme-win7 .node-center-content select,
+.theme-win7 .node-center-content button {
+  pointer-events: all !important;
+}
+
+/* Ensure pins handle interactions properly */
+.theme-win7 .react-flow__handle {
+  pointer-events: all !important;
+  cursor: crosshair !important;
+}
+
+/* Fix edge interactions */
+.theme-win7 .react-flow__edge {
+  pointer-events: all !important;
+}
+
+.theme-win7 .react-flow__edge-interaction {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
+/* Fix React Flow pane to ensure proper panning behavior */
+.theme-win7 .react-flow__pane {
+  cursor: grab !important;
+}
+
+.theme-win7 .react-flow__pane.react-flow__pane--dragging {
+  cursor: grabbing !important;
+}
+
+/* Fix React Flow viewport to ensure proper interaction layering */
+.theme-win7 .react-flow__viewport {
+  pointer-events: all !important;
+}
+
+/* Additional fixes for ReactFlow nodes and interactions */
+.theme-win7 .react-flow__node .workflow-node-base * {
+  pointer-events: auto !important;
+}
+
+.theme-win7 .node-header {
+  cursor: move !important;
+}
+
+/* Fix node selection in Win7 theme */
+.theme-win7 .react-flow__node.selected {
+  z-index: 15 !important;
+}
+
+/* Ensure minimap and controls are clickable */
+.theme-win7 .minimap-wrapper,
+.theme-win7 .controls-wrapper {
+  pointer-events: auto !important;
+  z-index: 20 !important;
+}
+
+/* Fix dropdown interactions */
+.theme-win7 .react-flow__node select,
+.theme-win7 .react-flow__node option {
+  pointer-events: auto !important;
+}
+
+/* Add additional styles for node dragging */
+.theme-win7 .react-flow__node.dragging {
+  cursor: grabbing !important;
+  z-index: 10 !important;
+}
+
+/* Override border-input color to a neutral dark grey */
+.theme-win7 .border {
+  border-color: #666666 !important;
+}
+
+/* Override Taskbar gradient and shadow for Windows 7 theme */
+html.theme-win7 {
+  --taskbar-bg-gradient: linear-gradient(
+    to bottom,
+    #2582d1 0%,
+    #3c96e4 3%,
+    #5cb6ff 6%,
+    #5baef5 10%,
+    #4aa4eb 25%,
+    #3a95dc 40%,
+    #328fd5 50%,
+    #2d8ace 55%,
+    #2888ca 60%,
+    #2582d1 100%
+  );
+  --taskbar-shadow: inset 0 1px 0 0 #8ebcf1, 0 -1px 0 0 #5590e5;
+
+  /* Start Button overrides for Win7 */
+  --start-btn-bg: linear-gradient(to bottom, #67c15f, #37a333);
+  --start-btn-active-bg: linear-gradient(to bottom, #5cb749, #37a333);
+  --start-btn-shadow: inset 0 1px 0 0 #8adf83, inset 0 -1px 0 0 #256e1f;
+  --start-btn-active-shadow: inset 0 0 3px 1px rgba(0,0,0,0.3);
+}

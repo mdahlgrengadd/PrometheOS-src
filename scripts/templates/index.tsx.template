@@ -1,0 +1,25 @@
+import { Plugin } from '../../plugins/types';
+import { manifest } from './manifest';
+import PLUGIN_IDContent from './ui';
+
+/**
+ * PLUGIN_NAME plugin
+ */
+const PLUGIN_IDPlugin: Plugin = {
+  id: manifest.id,
+  manifest,
+  init: async () => {
+    console.log("PLUGIN_NAME plugin initialized");
+  },
+  render: () => {
+    return <PLUGIN_IDContent />;
+  },
+  onOpen: () => {
+    console.log("PLUGIN_NAME window opened");
+  },
+  onClose: () => {
+    console.log("PLUGIN_NAME window closed");
+  }
+};
+
+export default PLUGIN_IDPlugin; 

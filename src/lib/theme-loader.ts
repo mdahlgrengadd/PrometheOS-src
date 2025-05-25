@@ -1,10 +1,7 @@
-import {
-  isValidThemeManifest,
-  validateThemeManifest,
-} from "@/utils/validateTheme";
+import { isValidThemeManifest, validateThemeManifest } from '@/utils/validateTheme';
 
-import themeManifest from "./theme-manifest.json";
-import { ExternalThemeManifest, ThemeConfig, ThemeType } from "./theme-types";
+import themeManifest from './theme-manifest.json';
+import { ExternalThemeManifest, ThemeConfig, ThemeType } from './theme-types';
 
 // Storage keys
 const INSTALLED_THEMES_KEY = "installed-themes";
@@ -16,6 +13,9 @@ interface ThemeDecoratorModule {
   cleanup?: () => void;
   [key: string]: unknown;
 }
+
+// Base URL for public assets under Vite
+const base = import.meta.env.BASE_URL;
 
 /**
  * Validate that a theme has all required fields
@@ -111,7 +111,13 @@ export const loadThemeCSS = async (
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if this CSS is already loaded
-    const existingLink = document.querySelector(`link[href="${cssUrl}"]`);
+    // Resolve path relative to base
+    const resolvedCssUrl = cssUrl.startsWith("http")
+      ? cssUrl
+      : base + cssUrl.replace(/^\/+/, "");
+    const existingLink = document.querySelector(
+      `link[href="${resolvedCssUrl}"]`
+    );
     if (existingLink) {
       resolve();
       return;
@@ -119,7 +125,7 @@ export const loadThemeCSS = async (
 
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = cssUrl;
+    link.href = resolvedCssUrl;
     // Add data attributes to make it easier to identify and remove theme CSS
     link.setAttribute("data-theme-css", "true");
     if (themeId) {
@@ -145,14 +151,13 @@ const loadThemeDecorator = async (
 
     let decoratorModule: Record<string, unknown> | null = null;
 
-    // In development mode, we need to handle imports from public directory differently
-    // because Vite doesn't allow direct imports from public
-    if (
-      process.env.NODE_ENV === "development" &&
-      decoratorPath.startsWith("/themes/")
-    ) {
-      // For development mode, fetch the file via AJAX and evaluate it as a module
-      const response = await fetch(decoratorPath);
+    // Resolve decoratorPath against base
+    const resolvedDecoratorPath = decoratorPath.startsWith("http")
+      ? decoratorPath
+      : base + decoratorPath.replace(/^\/+/, "");
+    // In development mode, fetch via AJAX and evaluate as module
+    if (process.env.NODE_ENV === "development") {
+      const response = await fetch(resolvedDecoratorPath);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch decorator: ${response.statusText}`);
@@ -173,11 +178,15 @@ const loadThemeDecorator = async (
         URL.revokeObjectURL(blobURL);
       }
     } else {
-      // For production or if not in public/themes, use normal import
+      // For production or other cases, use normal import
       // Add a random query parameter to bypass cache during development
       const cacheBuster =
         process.env.NODE_ENV === "development" ? `?_=${Date.now()}` : "";
-      const fullPath = `${decoratorPath}${cacheBuster}`;
+      // Prefix with base for correct public path
+      const importPath = decoratorPath.startsWith("http")
+        ? decoratorPath
+        : base + decoratorPath.replace(/^\/+/, "");
+      const fullPath = `${importPath}${cacheBuster}`;
 
       // Dynamic import of the module
       const module = await import(/* @vite-ignore */ fullPath);
@@ -309,8 +318,12 @@ export const installTheme = async (
   manifestUrl: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Fetch the manifest
-    const response = await fetch(manifestUrl);
+    // Fetch the manifest, resolving against base if needed
+    const manifestFetchUrl = manifestUrl.startsWith("http")
+      ? manifestUrl
+      : base + manifestUrl.replace(/^\/+/, "");
+    const response = await fetch(manifestFetchUrl);
+
     if (!response.ok) {
       return {
         success: false,

@@ -1,0 +1,4 @@
+# Ignore all dotfiles (files or directories starting with a dot)
+
+# Ignore node_modules folder and its contents
+node_modules/ 

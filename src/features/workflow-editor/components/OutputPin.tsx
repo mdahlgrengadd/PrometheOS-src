@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position } from "@xyflow/react";
 
-import { Pin, PinDataType } from '../types/flowTypes';
+import { Pin, PinDataType } from "../types/flowTypes";
 
 interface OutputPinProps {
   pin: Pin;
@@ -14,15 +14,16 @@ interface OutputPinProps {
 const getPinColorClass = (dataType?: PinDataType): string => {
   switch (dataType) {
     case "string":
-      return "bg-green-400 border-green-500";
+      return "bg-purple-500 border-purple-600";
     case "number":
-      return "bg-blue-400 border-blue-500";
+      // Check if it's an integer or float - defaulting to orange for now
+      return "bg-orange-500 border-orange-600";
     case "boolean":
-      return "bg-yellow-400 border-yellow-500";
+      return "bg-red-500 border-red-600";
     case "object":
-      return "bg-purple-400 border-purple-500";
+      return "bg-blue-500 border-blue-600";
     case "array":
-      return "bg-pink-400 border-pink-500";
+      return "bg-pink-500 border-pink-600";
     default:
       return "bg-gray-400 border-gray-500";
   }
@@ -34,7 +35,8 @@ const OutputPin = ({ pin, nodeId, isConnectable }: OutputPinProps) => {
 
   return (
     <div className="output-pin flex items-center justify-end my-1 relative">
-      <div className="pin-label text-xs text-gray-300 font-mono mr-4">
+      {" "}
+      <div className="pin-label text-xs text-gray-300 font-mono mr-5">
         {pin.label}
       </div>
       <Handle
@@ -42,7 +44,7 @@ const OutputPin = ({ pin, nodeId, isConnectable }: OutputPinProps) => {
         position={Position.Right}
         id={handleId}
         isConnectable={isConnectable}
-        className={`w-4 h-4 rounded-full border-2 ${colorClass}`}
+        className={`w-5 h-5 rounded-full border-2 ${colorClass}`}
         style={{ zIndex: 100 }}
         data-pin-type={pin.type}
         data-pin-data-type={pin.dataType || "unknown"}

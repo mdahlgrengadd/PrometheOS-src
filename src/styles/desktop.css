@@ -57,6 +57,22 @@
   /* Removed z-index override so individual windows can control their own z-index via inline style */
 }
 
+/* Responsive fix: Make desktop icons grid on mobile */
+@media (max-width: 768px) {
+  .desktop-icons {
+    position: static !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr); /* Adjust columns as needed */
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 8px !important;
+    gap: 16px !important;
+    column-gap: 16px !important;
+  }
+}
+
 /* Ensure all child elements of windows receive pointer events */
 .windows-wrapper .window *,
 .windows-wrapper .draggable-window * {

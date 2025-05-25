@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
+import { eventBus } from '@/plugins/EventBus';
 import * as webllm from '@mlc-ai/web-llm';
 
+import { WebLLMChatProvider } from '../WebLLMChatContext';
 import MessageInput from './MessageInput';
 import MessageList from './MessageList';
 import ModelSelector from './ModelSelector';
@@ -20,6 +22,62 @@ const AVAILABLE_MODELS = [
   "Mistral-7B-v0.3-q4f32_1-MLC",
 ];
 
+// Inner component that doesn't have the provider
+const ChatUI: React.FC<{
+  messages: Message[];
+  isLoading: boolean;
+  isTyping: boolean;
+  loadingProgress: string;
+  selectedModel: string;
+  engineLoaded: boolean;
+  onModelChange: (model: string) => void;
+  onSendMessage: (content: string) => void;
+}> = ({
+  messages,
+  isLoading,
+  isTyping,
+  loadingProgress,
+  selectedModel,
+  engineLoaded,
+  onModelChange,
+  onSendMessage,
+}) => {
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-2 border-b">
+        <h2 className="text-lg font-semibold">WebLLM Chat</h2>
+        <ModelSelector
+          models={AVAILABLE_MODELS}
+          selectedModel={selectedModel}
+          onSelectModel={onModelChange}
+          disabled={isLoading || isTyping}
+        />
+      </div>
+
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+            <p>{loadingProgress}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <MessageList messages={messages} />
+          <MessageInput
+            onSendMessage={onSendMessage}
+            disabled={!engineLoaded || isTyping}
+            isTyping={isTyping}
+            useContext={true}
+            apiId="webllm-chat-input" // Ensure consistent apiId
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+// Main component with state, context provider and UI
 const ChatWindow: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     { role: "system", content: "You are a helpful AI assistant." },
@@ -31,6 +89,7 @@ const ChatWindow: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingProgress, setLoadingProgress] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [inputMessage, setInputMessage] = useState("");
 
   // Initialize model
   useEffect(() => {
@@ -78,97 +137,107 @@ const ChatWindow: React.FC = () => {
   };
 
   // Handle sending a new message
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim() || !engine) return;
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim() || !engine) return;
 
-    // Add user message to chat
-    const userMessage: Message = { role: "user", content };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+      // Clear input field
+      setInputMessage("");
 
-    try {
-      setIsTyping(true);
+      // Add user message to chat
+      const userMessage: Message = { role: "user", content };
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
 
-      // Create a temporary message for streaming
-      const assistantMessage: Message = { role: "assistant", content: "" };
-      setMessages([...newMessages, assistantMessage]);
+      try {
+        setIsTyping(true);
 
-      // Convert messages to format expected by webllm
-      const apiMessages = newMessages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+        // Create a temporary message for streaming
+        const assistantMessage: Message = { role: "assistant", content: "" };
+        setMessages([...newMessages, assistantMessage]);
 
-      // Stream response
-      const chunks = await engine.chat.completions.create({
-        messages: apiMessages,
-        temperature: 0.7,
-        stream: true,
-      });
+        // Convert messages to format expected by webllm
+        const apiMessages = newMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
 
-      let streamedContent = "";
-
-      for await (const chunk of chunks) {
-        const content = chunk.choices[0]?.delta.content || "";
-        streamedContent += content;
-
-        // Update message in real-time
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "assistant",
-            content: streamedContent,
-          };
-          return updated;
+        // Stream response
+        const chunks = await engine.chat.completions.create({
+          messages: apiMessages,
+          temperature: 0.7,
+          stream: true,
         });
+
+        let streamedContent = "";
+
+        for await (const chunk of chunks) {
+          const content = chunk.choices[0]?.delta.content || "";
+          streamedContent += content;
+
+          // Update message in real-time
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              role: "assistant",
+              content: streamedContent,
+            };
+            return updated;
+          });
+        }
+
+        setIsTyping(false);
+        // Emit event when answer streaming is completed
+        eventBus.emit("webllm:answerCompleted", { answer: streamedContent });
+      } catch (error) {
+        console.error("Error generating response:", error);
+
+        const errorMessage: Message = {
+          role: "assistant",
+          content: `Error generating response: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        };
+
+        setMessages([...newMessages, errorMessage]);
+        setIsTyping(false);
       }
+    },
+    [messages, engine]
+  );
 
-      setIsTyping(false);
-    } catch (error) {
-      console.error("Error generating response:", error);
-
-      const errorMessage: Message = {
-        role: "assistant",
-        content: `Error generating response: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      };
-
-      setMessages([...newMessages, errorMessage]);
-      setIsTyping(false);
-    }
-  };
+  // Wrap the sendMessage function to handle context-based message sending
+  const handleContextSendMessage = useCallback(
+    (msgContent?: string) => {
+      const content = msgContent || inputMessage;
+      if (content.trim()) {
+        handleSendMessage(content);
+      }
+    },
+    [inputMessage, handleSendMessage]
+  );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-2 border-b">
-        <h2 className="text-lg font-semibold">WebLLM Chat</h2>
-        <ModelSelector
-          models={AVAILABLE_MODELS}
-          selectedModel={selectedModel}
-          onSelectModel={handleModelChange}
-          disabled={isLoading || isTyping}
-        />
-      </div>
-
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
-            <p>{loadingProgress}</p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <MessageList messages={messages} />
-          <MessageInput
-            onSendMessage={handleSendMessage}
-            disabled={!engine || isTyping}
-            isTyping={isTyping}
-          />
-        </>
-      )}
-    </div>
+    <WebLLMChatProvider
+      key={`webllm-chat-context-${!!engine}`}
+      apiId="webllm-chat-input" // Must match apiId in MessageInput
+      message={inputMessage}
+      setMessage={setInputMessage}
+      sendMessage={handleContextSendMessage}
+      isDisabled={!engine || isTyping}
+      isTyping={isTyping}
+    >
+      <ChatUI
+        messages={messages}
+        isLoading={isLoading}
+        isTyping={isTyping}
+        loadingProgress={loadingProgress}
+        selectedModel={selectedModel}
+        engineLoaded={!!engine}
+        onModelChange={handleModelChange}
+        onSendMessage={handleSendMessage}
+      />
+    </WebLLMChatProvider>
   );
 };
 

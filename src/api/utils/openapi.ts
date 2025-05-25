@@ -12,8 +12,8 @@ export const generateOpenApiSpec = (
   const spec: IOpenApiSpec = {
     openapi: "3.0.0",
     info: {
-      title: "Desktop Dreamscape API",
-      description: "API for AI agent interaction with the Desktop Dreamscape",
+      title: "PrometheOS API",
+      description: "API for AI agent interaction with the PrometheOS",
       version: "1.0.0",
     },
     paths: {},
@@ -24,12 +24,13 @@ export const generateOpenApiSpec = (
 
   // Generate paths for each component and action
   components.forEach((component) => {
-    // Create a path for the component
+    // Create a path for the component - make sure it starts with /api
     const basePath = `/api${component.path}`;
 
     // Add each action as an operation
     component.actions.forEach((action) => {
-      const actionPath = `${basePath}/${action.id}`;
+      // Create a simple path format that our interceptor can parse: /api/componentId/actionId
+      const actionPath = `/api/${component.id}/${action.id}`;
 
       // Create request body from parameters
       const requestBody =
@@ -87,7 +88,29 @@ export const generateOpenApiSpec = (
                 },
               },
             },
+            "400": {
+              description: "Error response",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: {
+                        type: "boolean",
+                        example: false,
+                        description: "Operation failed",
+                      },
+                      error: {
+                        type: "string",
+                        description: "Error message",
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
+          tags: [component.type || "default"],
         },
       };
     });

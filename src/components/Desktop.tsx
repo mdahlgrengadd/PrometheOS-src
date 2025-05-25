@@ -1,15 +1,25 @@
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useTheme } from "@/lib/ThemeProvider";
-import { useWindowStore } from "@/store/windowStore";
-import { WindowState } from "@/types/window";
+import { useTheme } from '@/lib/ThemeProvider';
+import { useWindowStore } from '@/store/windowStore';
+import { WindowState } from '@/types/window';
+import { getOpenAppsFromUrl } from '@/utils/url';
 
-import { usePlugins } from "../plugins/PluginContext";
-import DesktopIcons from "./DesktopIcons";
-import Taskbar from "./Taskbar";
-import Window from "./Window";
+import { usePlugins } from '../plugins/PluginContext';
+import AppWindow from './AppWindow';
+import DesktopIcons from './DesktopIcons';
+import Taskbar from './Taskbar';
 
 const Desktop = () => {
+  // Open apps from URL after all plugins/windows are registered
+  useEffect(() => {
+    const appsToOpen = getOpenAppsFromUrl();
+    appsToOpen.forEach((appId) => {
+      openWindow(appId);
+    });
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const {
     loadedPlugins,
     openWindow,
@@ -181,15 +191,39 @@ const Desktop = () => {
       {/* Windows Layer - absolute positioned, won't move when icons visibility changes */}
       <div className="windows-wrapper">
         {openWindows.map((w) => {
-          // Look up the matching plugin and re-render its content
+          // Look up the matching plugin
           const plugin = loadedPlugins.find((p) => p.id === w.id);
+          // If frameless, render only the plugin content
+          if (plugin?.manifest.frameless) {
+            // Render plugin content without window container, positioned using stored state
+            return (
+              <div
+                key={w.id}
+                style={{
+                  position: "absolute",
+                  top: w.position.y,
+                  left: w.position.x,
+                  width:
+                    typeof w.size.width === "number"
+                      ? w.size.width
+                      : w.size.width,
+                  height:
+                    typeof w.size.height === "number"
+                      ? w.size.height
+                      : w.size.height,
+                  pointerEvents: "auto",
+                  zIndex: w.zIndex,
+                }}
+              >
+                {plugin.render()}
+              </div>
+            );
+          }
+          // Regular windows: render via AppWindow
           const content = plugin ? plugin.render() : w.content;
-
-          // Spread in fresh content for this render pass
           const winWithContent = { ...w, content };
-
           return (
-            <Window
+            <AppWindow
               key={winWithContent.id}
               window={winWithContent}
               allWindows={windows}

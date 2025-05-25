@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 
 import { useTheme } from '@/lib/ThemeProvider';
 import { cn } from '@/lib/utils';
+import { useWindowStore } from '@/store/windowStore';
 import {
     DndContext, DragEndEvent, DragMoveEvent, DragStartEvent, PointerSensor, useSensor, useSensors
 } from '@dnd-kit/core';
@@ -192,13 +193,21 @@ export function WindowsWindow({
 
   // Determine if this is a Windows theme
   const isWindowsTheme = ["win98", "winxp", "win7"].includes(theme);
+  // Get highest z-index from store for persistent focus
+  const highestZ = useWindowStore((state) => state.highestZ);
 
-  // If activeOnHover prop is undefined, use default behavior based on theme
+  // Determine whether to activate window on hover: disable for Win7, enable for other Windows themes
   const shouldActivateOnHover =
-    activeOnHover !== undefined ? activeOnHover : isWindowsTheme;
+    activeOnHover !== undefined
+      ? activeOnHover
+      : theme === "win7"
+      ? false
+      : isWindowsTheme;
 
-  // Set active state based on hover or explicit active prop
-  const isActive = shouldActivateOnHover ? hovered : active;
+  // Set active state based on hover, explicit active prop, or persistent focus
+  const isActive = shouldActivateOnHover
+    ? hovered
+    : active || zIndex === highestZ;
 
   // Handle drag start
   const handleDragStart: DragHandlers["onDragStart"] = () => {
@@ -243,7 +252,7 @@ export function WindowsWindow({
 
   const controlButtons = <>{controlList.map(renderControl)}</>;
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   // Wrap in DndContext to support resizing handles
   return (
@@ -295,8 +304,9 @@ export function WindowsWindow({
         )}
         data-hide-chrome={hideWindowChrome}
         style={{
+          display: isMinimized ? "none" : undefined,
           width: isMaximized ? "100vw" : size?.width || width,
-          height: isMaximized ? "100vh" : size?.height || height,
+          height: isMaximized ? "calc(100vh - 3rem)" : size?.height || height,
           zIndex,
           position: isMaximized ? "fixed" : "absolute",
           top: isMaximized ? 0 : undefined,

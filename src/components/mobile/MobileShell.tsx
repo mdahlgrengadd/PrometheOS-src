@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useTheme } from "@/lib/ThemeProvider";
 import { usePlugins } from "@/plugins/PluginContext";
+import { useWindowStore } from "@/store/windowStore";
 
 import MobileAppScreen from "./MobileAppScreen";
 import MobileDockBar from "./MobileDockBar";
@@ -16,9 +17,12 @@ const MobileShell: React.FC<MobileShellProps> = ({
   activeApp,
   setActiveApp,
 }) => {
-  const { loadedPlugins } = usePlugins();
+  const { loadedPlugins, pluginManager, openWindow } = usePlugins();
   const { wallpaper, backgroundColor } = useTheme();
   const [currentHomeScreen, setCurrentHomeScreen] = useState(0);
+
+  // Use the same data source as the desktop
+  const windowsDict = useWindowStore((s) => s.windows);
 
   // Set up mobile viewport meta tag
   useEffect(() => {
@@ -49,15 +53,70 @@ const MobileShell: React.FC<MobileShellProps> = ({
     };
   }, []);
 
+  // FIXED: Get all plugins from multiple sources to ensure we have data
+  const allPlugins = useMemo(() => {
+    // First try getting from plugin manager
+    const registeredPlugins = pluginManager.getAllPlugins() || [];
+
+    // Also check loaded plugins
+    const loadedPluginsArray = Array.isArray(loadedPlugins)
+      ? loadedPlugins
+      : Object.values(loadedPlugins || {});
+
+    // Get manifests from the window store for desktop icons
+    const windowPlugins = Object.values(windowsDict || {}).map((w) => ({
+      id: w.id,
+      manifest: {
+        name: w.title,
+        icon: w.icon,
+        iconUrl: typeof w.icon === "string" ? w.icon : undefined,
+      },
+    }));
+
+    // Combine and deduplicate all sources
+    const allSources = [
+      ...registeredPlugins,
+      ...loadedPluginsArray,
+      ...windowPlugins,
+    ];
+    const uniquePlugins = new Map();
+
+    allSources.forEach((plugin) => {
+      if (plugin && plugin.id) {
+        // If we already have this plugin, only update if the new one has more data
+        const existing = uniquePlugins.get(plugin.id);
+        if (!existing || (!existing.manifest && plugin.manifest)) {
+          uniquePlugins.set(plugin.id, plugin);
+        }
+      }
+    });
+
+    // Convert back to array
+    return Array.from(uniquePlugins.values());
+  }, [pluginManager, loadedPlugins, windowsDict]);
+
+  console.log(
+    "Available plugins (combined sources):",
+    allPlugins.length,
+    allPlugins.map(
+      (p) => p.id + (p.manifest ? " (has manifest)" : " (no manifest)")
+    )
+  );
+
   // Organize plugins into pages
   const pluginsPerPage = 8;
-  const pluginPages = [];
-
-  for (let i = 0; i < loadedPlugins.length; i += pluginsPerPage) {
-    pluginPages.push(loadedPlugins.slice(i, i + pluginsPerPage));
-  }
+  const pluginPages = useMemo(() => {
+    const pages = [];
+    for (let i = 0; i < allPlugins.length; i += pluginsPerPage) {
+      pages.push(allPlugins.slice(i, i + pluginsPerPage));
+    }
+    // Always have at least one page, even if empty
+    return pages.length > 0 ? pages : [[]];
+  }, [allPlugins]);
 
   const openApp = (appId: string) => {
+    console.log("Opening app:", appId);
+    openWindow(appId);
     setActiveApp(appId);
   };
 
@@ -77,7 +136,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-screen overflow-auto"
       style={{
         height: "var(--app-height, 100vh)",
         ...backgroundStyle,
@@ -86,7 +145,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
       {/* Home screen (visible when no app is active) */}
       {!activeApp && (
         <MobileHomeScreen
-          plugins={loadedPlugins}
+          plugins={allPlugins}
           pluginPages={pluginPages}
           currentHomeScreen={currentHomeScreen}
           setCurrentHomeScreen={setCurrentHomeScreen}
@@ -112,7 +171,7 @@ const MobileShell: React.FC<MobileShellProps> = ({
         }}
       >
         <MobileDockBar
-          plugins={loadedPlugins.slice(0, 4)}
+          plugins={allPlugins.slice(0, 4)}
           activeApp={activeApp}
           openApp={openApp}
         />

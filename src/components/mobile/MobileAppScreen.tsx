@@ -27,7 +27,7 @@ const MobileAppScreen: React.FC<MobileAppScreenProps> = ({
         >
           <ArrowLeft className="text-white" size={20} />
         </button>
-        <h1 className="ml-4 text-white font-semibold">
+        <h1 className="ml-4 text-white font-semibold text-xl">
           {plugin.manifest.name}
         </h1>
       </div>

@@ -1,13 +1,19 @@
-import "./App.css";
+import './App.css';
 
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import React, { lazy, Suspense } from 'react';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 
-import { ThemeProvider } from "@/lib/ThemeProvider";
+import DialogListener from '@/components/DialogListener';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/lib/ThemeProvider';
 
-import { WindowDndContext } from "./components/shelley-wm/WindowDndContext";
-import { useViewMode } from "./hooks/useViewMode";
-import Index from "./pages/index";
-import MobileIndex from "./pages/MobileIndex";
+import { WindowDndContext } from './components/shelley-wm/WindowDndContext';
+import { useViewMode } from './hooks/useViewMode';
+
+// Lazy-loaded pages
+const Index = lazy(() => import("./pages/index"));
+const MobileIndex = lazy(() => import("./pages/MobileIndex"));
 
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -22,18 +28,34 @@ function App() {
 
   return (
     <AppProviders>
-      <BrowserRouter>
-        {/* Navigation Links */}
-
-        <Routes>
-          <Route path="/" element={isMobile ? <MobileIndex /> : <Index />} />
-
-          <Route
-            path="/apps/:id"
-            element={isMobile ? <MobileIndex /> : <Index />}
-          />
-        </Routes>
-      </BrowserRouter>
+      <Router>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                width: "100vw",
+                height: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Loading...
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={isMobile ? <MobileIndex /> : <Index />} />
+            <Route
+              path="/apps/:id"
+              element={isMobile ? <MobileIndex /> : <Index />}
+            />
+          </Routes>
+        </Suspense>
+      </Router>
+      <Toaster />
+      <SonnerToaster />
+      <DialogListener />
     </AppProviders>
   );
 }

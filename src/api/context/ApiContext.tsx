@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 
 import { eventBus } from '../../plugins/EventBus';
 import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
+import { registerLauncherApi } from '../system/registerSystemApi';
 import { generateOpenApiSpec } from '../utils/openapi';
 
 // Create the API context with null default value
@@ -44,7 +45,6 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     // Emit event for component registration
     eventBus.emit("api:component:registered", component);
   };
-
   /**
    * Unregister a component from the API
    * @param id The ID of the component to unregister
@@ -282,6 +282,12 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     getComponents,
     getOpenApiSpec,
   };
+
+  // Register system API components
+  useEffect(() => {
+    // Register the launcher API component and handler
+    registerLauncherApi(contextValue);
+  }, []);
 
   return (
     <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>

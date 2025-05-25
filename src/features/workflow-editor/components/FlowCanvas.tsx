@@ -1,5 +1,6 @@
 import "@xyflow/react/dist/style.css";
 import "./flowStyles.css"; // Import our custom flow styles
+import "./pin-size-adjustments.css"; // Import pin size adjustments
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 

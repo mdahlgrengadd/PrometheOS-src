@@ -3,28 +3,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowStore } from '@/store/windowStore';
 
 import { eventBus } from '../../EventBus';
-import { Plugin, PluginManifest } from '../../types';
-import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
-
+import { Plugin } from '../../types';
 // Define the plugin manifest
-export const manifest: PluginManifest = {
-  id: "webamp",
-  name: "Webamp Music Player",
-  version: "1.0.0",
-  description: "A Winamp-inspired music player for your desktop",
-  author: "Based on Webamp by captbaritone",
-  icon: (
-    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-      W
-    </div>
-  ),
-  entry: "apps/webamp",
-  preferredSize: {
-    width: 275,
-    height: 350,
-  },
-  hideWindowChrome: true,
-};
+import { manifest } from './manifest';
+import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
 
 // CSS preload helper
 const preloadWebampCSS = () => {
@@ -245,9 +227,14 @@ const WebampComponent: React.FC = () => {
     }
   }, []);
 
+  // Determine frameless mode
+  const isFrameless = manifest.frameless === true;
   return (
     <div
-      className="h-full w-full flex flex-col items-center justify-center bg-gray-800 text-white overflow-hidden"
+      className={`h-full w-full flex flex-col items-center justify-center ${
+        isFrameless ? "" : "bg-gray-800 text-white overflow-hidden"
+      }`}
+      style={isFrameless ? { backgroundColor: "transparent" } : {}}
       onDrop={handleFileDrop}
       onDragOver={(e) => e.preventDefault()}
     >
@@ -279,6 +266,16 @@ const WebampPlugin: Plugin = {
       }
       .webamp-context-menu {
         z-index: 1000;
+      }
+      /* Disable theme window pseudo-element in Webamp container */
+      #webamp .window::before {
+        display: none !important;
+      }
+
+      /* Fix equalizer-top sizing under Win7 theme */
+      .theme-win7 #webamp .equalizer-top {
+        height: 0px !important;
+        width: 0px !important;
       }
     `;
     document.head.appendChild(style);

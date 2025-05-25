@@ -1,140 +1,195 @@
-import * as Comlink from "comlink";
-
-// Import the worker-specific calculator
-import { WorkerCalculator, WorkerCalculatorType } from "./plugins/calculator";
-
-// Define type for calculator params
-interface CalculatorParams {
-  firstOperand: number;
-  secondOperand: number;
-  operator: string;
-}
+import * as Comlink from 'comlink';
 
 // Define interface for worker plugins
 interface WorkerPlugin {
   id: string;
+  handle?: (method: string, params?: Record<string, unknown>) => unknown;
   [key: string]: unknown;
 }
 
+// Generic plugin method handler type
+type PluginMethodHandler = (
+  method: string,
+  params?: Record<string, unknown>
+) => Promise<unknown>;
+
 // Define the response type
-type PluginResponse = { error: string } | number | Record<string, unknown>;
+type PluginResponse =
+  | { error: string }
+  | { status: string; message?: string }
+  | Record<string, unknown>
+  | ReadableStream<unknown>
+  | number
+  | string
+  | boolean
+  | null;
 
 /**
  * Worker-compatible version of Plugin Manager that doesn't rely on DOM
  * and exposes a serializable interface for Comlink
  */
 class WorkerPluginManager {
-  private plugins: Map<string, unknown> = new Map();
-  private calculatorPlugin: WorkerCalculatorType | null = null;
+  private plugins: Map<string, WorkerPlugin> = new Map();
+  private pluginHandlers: Map<string, PluginMethodHandler> = new Map();
 
   constructor() {
-    // Register the Calculator plugin
-    this.registerCalculator(WorkerCalculator);
+    console.log("Worker Plugin Manager initialized");
   }
 
   /**
-   * Register the calculator plugin
+   * Dynamically import and register a plugin
    */
-  registerCalculator(calculator: WorkerCalculatorType): void {
-    this.calculatorPlugin = calculator;
-    this.plugins.set(calculator.id, calculator);
-    console.log(`Worker registered calculator plugin: ${calculator.id}`);
+  async registerPlugin(
+    pluginId: string,
+    pluginUrl: string
+  ): Promise<PluginResponse> {
+    try {
+      // If already registered, don't register again
+      if (this.plugins.has(pluginId)) {
+        return {
+          status: "success",
+          message: `Plugin ${pluginId} already registered`,
+        };
+      }
+
+      console.log(
+        `Attempting to register plugin: ${pluginId} from ${pluginUrl}`
+      );
+
+      // Prefix non-absolute plugin URLs with Vite base path
+      const base = import.meta.env.BASE_URL;
+      let resolvedUrl = pluginUrl;
+      if (!resolvedUrl.startsWith("http")) {
+        // Remove any leading slash to avoid double slashes
+        resolvedUrl = base + resolvedUrl.replace(/^\//, "");
+      }
+      const importUrl = new URL(resolvedUrl, self.location.origin).href;
+      console.log(`Resolved import URL: ${importUrl}`);
+
+      // Try dynamic import with the resolved URL
+      const pluginModule = await import(/* @vite-ignore */ importUrl);
+
+      // Get the plugin instance
+      const plugin = pluginModule.default || pluginModule;
+
+      if (!plugin || !plugin.id) {
+        return { error: `Invalid plugin module: ${importUrl}` };
+      }
+
+      // Register the plugin
+      this.plugins.set(pluginId, plugin as WorkerPlugin);
+
+      // Register the handler function
+      if (typeof plugin.handle === "function") {
+        // Create a wrapper function to maintain proper typing
+        const handlerFn: PluginMethodHandler = async (method, params) => {
+          return (
+            (plugin as WorkerPlugin).handle?.(method, params) ?? {
+              error: `Handler returned undefined`,
+            }
+          );
+        };
+
+        this.pluginHandlers.set(pluginId, handlerFn);
+      } else {
+        // Create a default handler that calls methods directly on the plugin
+        this.pluginHandlers.set(pluginId, async (method, params) => {
+          const typedPlugin = plugin as WorkerPlugin;
+          const methodFn = typedPlugin[method];
+
+          if (typeof methodFn !== "function") {
+            throw new Error(`Method ${method} not found in plugin ${pluginId}`);
+          }
+
+          // Since we can't type this better without generics, we need to cast
+          return (methodFn as (...args: unknown[]) => unknown)(
+            ...(params ? Object.values(params) : [])
+          );
+        });
+      }
+
+      console.log(`Worker registered plugin: ${pluginId}`);
+
+      return { status: "success", message: `Plugin ${pluginId} registered` };
+    } catch (error) {
+      console.error(`Failed to register plugin ${pluginId}:`, error);
+      return {
+        error: `Failed to register plugin ${pluginId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
   }
 
   /**
-   * Check if a plugin is active
+   * Unregister a plugin
    */
-  isPluginActive(pluginId: string): boolean {
+  unregisterPlugin(pluginId: string): PluginResponse {
+    if (!this.plugins.has(pluginId)) {
+      return { error: `Plugin ${pluginId} not registered` };
+    }
+
+    this.plugins.delete(pluginId);
+    this.pluginHandlers.delete(pluginId);
+
+    console.log(`Worker unregistered plugin: ${pluginId}`);
+    return { status: "success" };
+  }
+
+  /**
+   * Check if a plugin is registered
+   */
+  isPluginRegistered(pluginId: string): boolean {
     return this.plugins.has(pluginId);
   }
 
   /**
-   * Get plugin configuration (simplified for worker)
+   * Get plugin basic information
    */
   getPluginInfo(pluginId: string): { id: string } | null {
-    if (pluginId === "calculator" && this.calculatorPlugin) {
-      return { id: this.calculatorPlugin.id };
-    }
-    return null;
+    const plugin = this.plugins.get(pluginId);
+    return plugin ? { id: plugin.id } : null;
   }
 
   /**
    * Get all registered plugins' basic info
    */
   getAllPlugins(): Array<{ id: string }> {
-    return Array.from(this.plugins.keys()).map((id) => ({ id }));
+    return Array.from(this.plugins.values()).map((plugin) => ({
+      id: plugin.id,
+    }));
   }
 
   /**
    * Call a plugin's method and return a serializable result
-   * For the Calculator, we'll implement special support for its functions
    */
   async callPlugin(
     pluginId: string,
     method: string,
     params?: Record<string, unknown>
   ): Promise<PluginResponse> {
-    if (pluginId === "calculator") {
-      if (!this.calculatorPlugin) {
-        return { error: "Calculator plugin not registered" };
-      }
+    const handler = this.pluginHandlers.get(pluginId);
 
-      if (!params) {
-        return { error: "Missing parameters for calculator" };
-      }
-
-      // Type check for calculator params
-      if (
-        typeof params.firstOperand !== "number" ||
-        typeof params.secondOperand !== "number" ||
-        typeof params.operator !== "string"
-      ) {
-        return { error: "Invalid parameters for calculator" };
-      }
-
-      // Now we can safely call the calculator
-      return this.handleCalculatorCall(method, {
-        firstOperand: params.firstOperand,
-        secondOperand: params.secondOperand,
-        operator: params.operator,
-      });
+    if (!handler) {
+      return { error: `Plugin ${pluginId} not registered` };
     }
 
-    return { error: `Plugin ${pluginId} not supported in worker yet` };
-  }
+    try {
+      const result = await handler(method, params);
 
-  /**
-   * Handle Calculator plugin operations
-   */
-  private handleCalculatorCall(
-    method: string,
-    params: CalculatorParams
-  ): PluginResponse {
-    if (!this.calculatorPlugin) {
-      return { error: "Calculator plugin not registered" };
-    }
-
-    switch (method) {
-      case "calculate": {
-        const { firstOperand, secondOperand, operator } = params;
-        try {
-          console.log(
-            `Worker calculating: ${firstOperand} ${operator} ${secondOperand}`
-          );
-          const result = this.calculatorPlugin.calculate(
-            firstOperand,
-            secondOperand,
-            operator
-          );
-          console.log(`Worker result: ${result}`);
-          return result;
-        } catch (error) {
-          console.error("Worker calculation error:", error);
-          return { error: "Calculation failed in worker" };
-        }
+      // If the result is a ReadableStream, transfer it using Comlink
+      if (result instanceof ReadableStream) {
+        return Comlink.transfer(result, [result]);
       }
-      default:
-        return { error: `Method ${method} not supported for calculator` };
+
+      return result as PluginResponse;
+    } catch (error) {
+      console.error(`Error calling plugin ${pluginId}.${method}:`, error);
+      return {
+        error: `Error in ${pluginId}.${method}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
     }
   }
 }

@@ -1,0 +1,25 @@
+{
+  "name": "ide-builder",
+  "version": "1.0.0",
+  "description": "A relocatable IDE component for React applications",
+  "main": "index.ts",
+  "private": true,
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "monaco-editor": "^0.44.0",
+    "esbuild-wasm": "^0.18.0",
+    "lucide-react": "^0.300.0",
+    "zustand": "^4.0.0"
+  },
+  "dependencies": {
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
+  },
+  "keywords": [
+    "react",
+    "ide",
+    "code-editor",
+    "monaco-editor",
+    "component"
+  ]
+}

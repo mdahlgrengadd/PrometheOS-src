@@ -1,60 +1,124 @@
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+    createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState
+} from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
+import { useWindowStore } from '@/store/windowStore';
 
-import ApiExplorerPlugin from "./apps/api-explorer";
-import ApiFlowEditorPlugin from "./apps/api-flow-editor";
-import AudioPlayerPlugin from "./apps/audioplayer";
-import BrowserPlugin from "./apps/browser";
-//import CalculatorPlugin from "./apps/calculator";
-import WorkerCalculatorPlugin from "./apps/calculator/workerCalculator";
-import ChatPlugin from "./apps/chat";
-import FileBrowserPlugin from "./apps/filebrowser";
-// Import plugins directly for reliable loading
-import NotepadPlugin from "./apps/notepad";
-import SessionPlugin from "./apps/session";
-import SettingsPlugin from "./apps/settings";
-import WebampPlugin from "./apps/webamp";
-import WebLLMChatPlugin from "./apps/webllm-chat";
-import WordEditorPlugin from "./apps/wordeditor";
-import { eventBus } from "./EventBus";
-import { PluginManager } from "./PluginManager";
+// Import manifests instead of full plugin implementations
+import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
+import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
+import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
+import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
+import { manifest as calculatorManifest } from './apps/calculator/manifest';
+import { manifest as chatManifest } from './apps/chat/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
+import { manifest as notepadManifest } from './apps/notepad/manifest';
+import { manifest as sessionManifest } from './apps/session/manifest';
+import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as webampManifest } from './apps/webamp/manifest';
+import { manifest as webllmChatManifest } from './apps/webllm-chat/manifest';
+import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { eventBus } from './EventBus';
+import { PluginManager } from './PluginManager';
 import {
-  getAllManifests,
-  installPlugin,
-  uninstallPlugin as removePluginFromRegistry,
-} from "./registry";
-import { Plugin, PluginManifest } from "./types";
+    getAllManifests, installPlugin, uninstallPlugin as removePluginFromRegistry
+} from './registry';
+import { Plugin, PluginManifest } from './types';
+import { workerPluginManager } from './WorkerPluginManagerClient';
 
-// Map of plugin modules for direct access
-const pluginModules: Record<string, Plugin> = {
-  "api-explorer": ApiExplorerPlugin,
-  "api-flow-editor": ApiFlowEditorPlugin,
-  notepad: NotepadPlugin,
-  // calculator: CalculatorPlugin,
-  "worker-calculator": WorkerCalculatorPlugin,
-  browser: BrowserPlugin,
-  settings: SettingsPlugin,
-  WordEditor: WordEditorPlugin,
-  audioplayer: AudioPlayerPlugin,
-  webamp: WebampPlugin,
-  "webllm-chat": WebLLMChatPlugin,
-  filebrowser: FileBrowserPlugin,
-  session: SessionPlugin,
-  chat: ChatPlugin,
+// Lazy loading factory for plugins
+const createLazyPlugin = (pluginId: string) => {
+  return lazy(() =>
+    import(`./apps/${pluginId}/index.ts`).then((module) => ({
+      default: module.default,
+    }))
+  );
+};
+
+// Map of plugin loaders - these don't load the actual plugin until needed
+const pluginLoaders: Record<string, () => Promise<Plugin>> = {
+  "api-explorer": () => import("./apps/api-explorer").then((m) => m.default),
+  "api-flow-editor": () =>
+    import("./apps/api-flow-editor").then((m) => m.default),
+  notepad: () => import("./apps/notepad").then((m) => m.default),
+  calculator: () => import("./apps/calculator").then((m) => m.default),
+  browser: () => import("./apps/browser").then((m) => m.default),
+  builder: () => import("./apps/builder").then((m) => m.default),
+  settings: () => import("./apps/settings").then((m) => m.default),
+  wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
+  audioplayer: () => import("./apps/audioplayer").then((m) => m.default),
+  webamp: () => import("./apps/webamp").then((m) => m.default),
+  "webllm-chat": () => import("./apps/webllm-chat").then((m) => m.default),
+  session: () => import("./apps/session").then((m) => m.default),
+  chat: () => import("./apps/chat").then((m) => m.default),
+  "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
+};
+
+// Create a wrapper component that renders the plugin
+const PluginWrapper = ({ pluginId }: { pluginId: string }) => {
+  const [plugin, setPlugin] = useState<Plugin | null>(null);
+
+  useEffect(() => {
+    const loadPlugin = async () => {
+      try {
+        if (pluginLoaders[pluginId]) {
+          const loadedPlugin = await pluginLoaders[pluginId]();
+          setPlugin(loadedPlugin);
+        }
+      } catch (error) {
+        console.error(`Error loading plugin ${pluginId}:`, error);
+      }
+    };
+
+    loadPlugin();
+  }, [pluginId]);
+
+  if (!plugin) {
+    return <LoadingFallback />;
+  }
+
+  return plugin.render ? plugin.render() : <div>No content for {pluginId}</div>;
+};
+
+type PluginWrapperProps = {
+  pluginId: string;
+};
+
+// Map of plugin components
+const lazyPluginComponents: Record<
+  string,
+  React.ComponentType<PluginWrapperProps>
+> = Object.keys(pluginLoaders).reduce(
+  (acc, pluginId) => ({
+    ...acc,
+    [pluginId]: (props: PluginWrapperProps) => (
+      <PluginWrapper pluginId={pluginId} {...props} />
+    ),
+  }),
+  {} as Record<string, React.ComponentType<PluginWrapperProps>>
+);
+
+// Map of manifests by plugin ID
+const manifestMap: Record<string, PluginManifest> = {
+  "api-explorer": apiExplorerManifest,
+  "api-flow-editor": apiFlowEditorManifest,
+  notepad: notepadManifest,
+  calculator: calculatorManifest,
+  browser: browserManifest,
+  builder: builderManifest,
+  settings: settingsManifest,
+  wordeditor: wordEditorManifest,
+  audioplayer: audioPlayerManifest,
+  webamp: webampManifest,
+  "webllm-chat": webllmChatManifest,
+  session: sessionManifest,
+  chat: chatManifest,
+  "file-explorer": fileExplorerManifest,
 };
 
 // Debug: Log available plugins
-console.log("Available plugin modules:", Object.keys(pluginModules));
-console.log("AudioPlayerPlugin:", AudioPlayerPlugin);
-console.log("FileBrowserPlugin:", FileBrowserPlugin);
+console.log("Available plugin loaders:", Object.keys(pluginLoaders));
 
 type PluginContextType = {
   pluginManager: PluginManager;
@@ -70,6 +134,16 @@ type PluginContextType = {
 };
 
 const PluginContext = createContext<PluginContextType | undefined>(undefined);
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="text-center">
+      <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+      <p>Loading plugin...</p>
+    </div>
+  </div>
+);
 
 export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -101,22 +175,18 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
         for (const manifest of manifests) {
           try {
-            if (pluginModules[manifest.id]) {
-              // Static plugin - load from direct import
-              const plugin = pluginModules[manifest.id];
-              pluginManager.registerPlugin(plugin);
-
-              // Register window in the store immediately after plugin registration
+            if (pluginLoaders[manifest.id]) {
+              // Register window in the store before loading the actual plugin
               const defaultSize = { width: 400, height: 300 };
-              const size = plugin.manifest.preferredSize || defaultSize;
+              const size = manifest.preferredSize || defaultSize;
 
               registerWindow({
-                id: plugin.id,
-                title: plugin.manifest.name,
-                content: plugin.render ? (
-                  plugin.render()
-                ) : (
-                  <div>No content</div>
+                id: manifest.id,
+                title: manifest.name,
+                content: (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <PluginWrapper pluginId={manifest.id} />
+                  </Suspense>
                 ),
                 isOpen: false,
                 isMinimized: false,
@@ -127,41 +197,27 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                 },
                 size,
                 isMaximized: false,
-                hideWindowChrome: plugin.manifest.hideWindowChrome,
+                hideWindowChrome: manifest.hideWindowChrome,
               });
+
+              // We'll fully load the plugin only when it's first opened
             } else if (manifest.entrypoint) {
               // Dynamic plugin - load from entrypoint URL
               try {
-                const module = await import(
-                  /* @vite-ignore */ manifest.entrypoint
-                );
-
-                // If the plugin has iconUrl but not icon, create a React element for the icon
-                if (manifest.iconUrl && !manifest.icon) {
-                  module.default.manifest.icon = (
-                    <img
-                      src={manifest.iconUrl}
-                      className="h-8 w-8"
-                      alt={manifest.name}
-                    />
-                  );
-                }
-
-                pluginManager.registerPlugin(module.default);
-                dynamicIds.push(manifest.id);
-
-                // Register window for dynamic plugin too
-                const plugin = module.default;
+                // Register window immediately but load content lazily
                 const defaultSize = { width: 400, height: 300 };
-                const size = plugin.manifest.preferredSize || defaultSize;
+                const size = manifest.preferredSize || defaultSize;
 
                 registerWindow({
-                  id: plugin.id,
-                  title: plugin.manifest.name,
-                  content: plugin.render ? (
-                    plugin.render()
-                  ) : (
-                    <div>No content</div>
+                  id: manifest.id,
+                  title: manifest.name,
+                  content: (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <DynamicPlugin
+                        manifest={manifest}
+                        pluginManager={pluginManager}
+                      />
+                    </Suspense>
                   ),
                   isOpen: false,
                   isMinimized: false,
@@ -172,8 +228,10 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                   },
                   size,
                   isMaximized: false,
-                  hideWindowChrome: plugin.manifest.hideWindowChrome,
+                  hideWindowChrome: manifest.hideWindowChrome,
                 });
+
+                dynamicIds.push(manifest.id);
               } catch (error) {
                 console.error(
                   `Failed to load dynamic plugin ${manifest.id}:`,
@@ -198,7 +256,6 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
     loadPlugins();
 
-    // Return cleanup function
     return () => {
       unsubscribe();
       // Clean up all plugins when unmounting
@@ -208,33 +265,203 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [pluginManager, registerWindow]);
 
+  // Dynamic plugin component that loads remote plugins
+  const DynamicPlugin = ({
+    manifest,
+    pluginManager,
+  }: {
+    manifest: PluginManifest;
+    pluginManager: PluginManager;
+  }) => {
+    const [Component, setComponent] = useState<React.ReactNode>(null);
+
+    useEffect(() => {
+      const loadPlugin = async () => {
+        try {
+          const module = await import(/* @vite-ignore */ manifest.entrypoint!);
+
+          // If the plugin has iconUrl but not icon, create a React element for the icon
+          if (manifest.iconUrl && !manifest.icon) {
+            module.default.manifest.icon = (
+              <img
+                src={manifest.iconUrl}
+                className="h-8 w-8"
+                alt={manifest.name}
+              />
+            );
+          }
+
+          pluginManager.registerPlugin(module.default);
+
+          // Register worker component if specified
+          if (module.default.manifest.workerEntrypoint) {
+            console.log(
+              `Registering worker for dynamic plugin ${module.default.id}`
+            );
+
+            // Determine the worker URL based on environment
+            const workerUrl = import.meta.env.PROD
+              ? `/worker/${module.default.id}.js` // Production path
+              : `/worker/${module.default.id}.js`; // Development path
+
+            try {
+              const success = await workerPluginManager.registerPlugin(
+                module.default.id,
+                workerUrl
+              );
+
+              if (success) {
+                console.log(
+                  `Worker for ${module.default.id} registered successfully`
+                );
+              } else {
+                console.error(
+                  `Failed to register worker for ${module.default.id}`
+                );
+              }
+            } catch (error) {
+              console.error(
+                `Error registering worker for ${module.default.id}:`,
+                error
+              );
+            }
+          }
+
+          setComponent(module.default.render());
+        } catch (error) {
+          console.error(`Failed to load dynamic plugin ${manifest.id}:`, error);
+          setComponent(<div>Failed to load plugin: {manifest.name}</div>);
+        }
+      };
+
+      loadPlugin();
+    }, [manifest, pluginManager]);
+
+    return Component || <LoadingFallback />;
+  };
+
+  // Load a plugin on demand when it's first opened
+  const loadPlugin = async (pluginId: string) => {
+    // Check if the plugin is already loaded
+    if (pluginManager.getPlugin(pluginId)) {
+      return pluginManager.getPlugin(pluginId);
+    }
+
+    try {
+      // Get the plugin loader
+      const loader = pluginLoaders[pluginId];
+      if (!loader) {
+        console.error(`No loader found for plugin ${pluginId}`);
+        return undefined;
+      }
+
+      // Load the plugin
+      const plugin = await loader();
+
+      // Register the plugin
+      pluginManager.registerPlugin(plugin);
+
+      // Register worker if needed
+      if (plugin.manifest.workerEntrypoint) {
+        console.log(`Registering worker for plugin ${plugin.id}`);
+
+        // Determine the worker URL based on environment
+        const workerUrl = import.meta.env.PROD
+          ? `/worker/${plugin.id}.js` // Production path
+          : `/worker/${plugin.id}.js`; // Development path
+
+        // Register the worker plugin
+        workerPluginManager
+          .registerPlugin(plugin.id, workerUrl)
+          .then((success) => {
+            if (success) {
+              console.log(`Worker for ${plugin.id} registered successfully`);
+            } else {
+              console.error(`Failed to register worker for ${plugin.id}`);
+            }
+          })
+          .catch((error) => {
+            console.error(`Error registering worker for ${plugin.id}:`, error);
+          });
+      }
+
+      return plugin;
+    } catch (error) {
+      console.error(`Failed to load plugin ${pluginId}:`, error);
+      return undefined;
+    }
+  };
+
   // Wrap callbacks in useCallback to prevent unnecessary re-renders
   const openWindow = useCallback(
-    (pluginId: string) => {
-      const plugin = pluginManager.getPlugin(pluginId);
-      if (plugin) {
-        // If opening API Explorer, make sure notepad is activated first
-        if (pluginId === "api-explorer") {
-          const notepadPlugin = pluginManager.getPlugin("notepad");
-          if (notepadPlugin && !pluginManager.isPluginActive("notepad")) {
-            console.log("Activating notepad plugin for API Explorer");
-            pluginManager.activatePlugin("notepad");
-          }
+    async (pluginId: string) => {
+      // Ensure the plugin is loaded
+      let plugin = pluginManager.getPlugin(pluginId);
+
+      if (!plugin) {
+        plugin = await loadPlugin(pluginId);
+        if (!plugin) {
+          console.error(`Failed to load plugin ${pluginId}`);
+          return;
         }
-
-        if (!pluginManager.isPluginActive(pluginId)) {
-          pluginManager.activatePlugin(pluginId);
-        }
-
-        plugin.onOpen?.();
-
-        // Just use the store directly
-        setOpen(pluginId, true);
-        focus(pluginId);
       }
+
+      // If opening API Explorer, make sure notepad is activated first
+      if (pluginId === "api-explorer") {
+        const notepadPlugin = pluginManager.getPlugin("notepad");
+        if (!notepadPlugin) {
+          await loadPlugin("notepad");
+        }
+        if (!pluginManager.isPluginActive("notepad")) {
+          console.log("Activating notepad plugin for API Explorer");
+          pluginManager.activatePlugin("notepad");
+        }
+      }
+
+      if (!pluginManager.isPluginActive(pluginId)) {
+        pluginManager.activatePlugin(pluginId);
+      }
+
+      plugin.onOpen?.();
+
+      // Center the window on the screen before opening
+      const store = useWindowStore.getState();
+      const winState = store.windows[pluginId];
+      if (winState) {
+        const w =
+          typeof winState.size.width === "number"
+            ? winState.size.width
+            : parseInt(String(winState.size.width), 10) || 0;
+        const h =
+          typeof winState.size.height === "number"
+            ? winState.size.height
+            : parseInt(String(winState.size.height), 10) || 0;
+        const centerX = window.innerWidth / 2 - w / 2;
+        const centerY = window.innerHeight / 2 - h / 2;
+        store.move(pluginId, { x: centerX, y: centerY });
+      }
+
+      // Just use the store directly
+      setOpen(pluginId, true);
+      focus(pluginId);
     },
     [pluginManager, setOpen, focus]
   );
+
+  // Listen for plugin:openWindow event (used by the API system)
+  useEffect(() => {
+    const openWindowUnsubscribe = eventBus.subscribe(
+      "plugin:openWindow",
+      (pluginId: string) => {
+        console.log(`[PluginContext] Opening window ${pluginId} from event`);
+        openWindow(pluginId);
+      }
+    );
+
+    return () => {
+      openWindowUnsubscribe();
+    };
+  }, [openWindow]);
 
   const closeWindow = useCallback(
     (pluginId: string) => {
@@ -248,6 +475,20 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [pluginManager, setOpen]
   );
+
+  // Listen for plugin:closeWindow event (used by the API system)
+  useEffect(() => {
+    const closeWindowUnsubscribe = eventBus.subscribe(
+      "plugin:closeWindow",
+      (pluginId: string) => {
+        console.log(`[PluginContext] Closing window ${pluginId} from event`);
+        closeWindow(pluginId);
+      }
+    );
+    return () => {
+      closeWindowUnsubscribe();
+    };
+  }, [closeWindow]);
 
   const minimizeWindow = useCallback(
     (pluginId: string) => {
@@ -269,7 +510,10 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         plugin.onMaximize?.();
 
         // Use store directly with selector
-        useWindowStore.getState().maximize(pluginId);
+        const store = useWindowStore.getState();
+        store.maximize(pluginId);
+        // Bring to top after maximize
+        store.focus(pluginId);
       }
     },
     [pluginManager]

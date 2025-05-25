@@ -1,49 +1,105 @@
-# Phase 3: Web Workers for Plugin Execution
+# Worker Plugin Architecture
 
-This implementation fulfills Phase 3's goals from the roadmap:
+This directory contains the core worker infrastructure for our application. The worker system enables computationally intensive tasks to be offloaded from the main UI thread to Web Workers, improving application responsiveness and user experience.
 
-1. **Workerize PluginManager** - The entire plugin initialization, message passing, and rendering logic now lives in a Web Worker.
-2. **Use Comlink for RPC boundary** - Comlink provides the thin RPC boundary between the React UI thread and the worker.
-3. **Migrate Calculator plugin** - The Calculator plugin has been migrated as a proof-of-concept.
+## Architecture Overview
 
-## Architecture
+The worker plugin system consists of:
 
-### Components
+1. **Plugin Worker (`pluginWorker.ts`)**: The main worker thread that dynamically loads and manages worker plugins.
 
-1. **Worker** (`src/worker/pluginWorker.ts`)
-   - Hosts the PluginManager and specific plugin logic
-   - Exposed via Comlink
-   - Contains serializable interfaces for cross-thread communication
+2. **Worker Plugin Manager Client (`WorkerPluginManagerClient.ts`)**: Client-side wrapper that provides a clean API for React components to interact with the worker.
 
-2. **Client** (`src/plugins/WorkerPluginManagerClient.ts`)
-   - Wraps the worker with a clean API
-   - Hides Comlink implementation details
-   - Provides specific helper methods for each plugin (e.g. `calculate`)
+3. **Worker Plugins**: Individual plugin modules (located in `plugins/`) that implement specific functionality to run in a worker context.
 
-3. **Worker Calculator** (`src/plugins/apps/calculator/WorkerCalculatorContent.tsx`)
-   - UI component that uses the worker for computation
-   - Shows indicator during calculation
-   - Handles errors and async state
+4. **Plugin UI Components**: React components that use the Worker Plugin Manager Client to interact with worker plugins.
 
-## How to Use
+## Key Features
 
-Adding new plugins to the worker requires:
+- **Dynamic loading** of worker plugins at runtime
+- **Type-safe communication** between the main thread and worker thread
+- **Pluggable architecture** that allows adding new worker plugins without modifying the core system
+- **Standardized error handling** across all worker plugins
+- **Automatic worker lifecycle management**
 
-1. Import the plugin in the worker
-2. Register it in the WorkerPluginManager
-3. Add specific method handlers for the plugin
-4. Extend the client wrapper with helper methods
+## Adding a New Worker Plugin
 
-## Testing
+To add a new worker plugin:
 
-A test file (`src/tests/WorkerPluginManager.test.ts`) verifies:
-- Worker connection
-- Plugin registration
-- Calculator operations
+1. Create a new TypeScript file in `src/worker/plugins/` (see template in `plugins/README.md`)
+2. Implement the `WorkerPlugin` interface
+3. Create React components in `src/plugins/apps/your-plugin/` that use the worker
 
-## Next Steps
+Worker plugins are automatically built and included in the production bundle when running `npm run build` or `npm run build:workers`.
 
-- Complete migration of other plugins to the worker architecture
-- Add proper sandboxing for security
-- Implement capability negotiation for plugins
-- Consider OffscreenCanvas for graphical plugins 
+## Development vs. Production
+
+In development, worker plugins are loaded directly from their source directories. In production, plugins are built using the `build-workers.cjs` script and placed in the `public/workers/` directory with the naming convention `plugin-name-worker.js`.
+
+The system automatically determines the appropriate path to load plugins based on the current environment.
+
+## Using Worker Plugins in React Components
+
+```tsx
+import React, { useEffect, useState } from 'react';
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
+
+const MyPluginComponent: React.FC = () => {
+  const [result, setResult] = useState<string>('');
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
+
+  useEffect(() => {
+    // Register the plugin
+    const initPlugin = async () => {
+      const success = await workerPluginManager.registerPlugin(
+        'my-plugin',
+        import.meta.env.PROD
+          ? '/workers/my-plugin-worker.js'  // Production path (no 'public')
+          : '/worker/plugins/my-plugin.js'         // Development path
+      );
+      
+      if (success) {
+        setIsWorkerReady(true);
+      }
+    };
+
+    initPlugin();
+  }, []);
+
+  const handleOperation = async () => {
+    try {
+      const result = await workerPluginManager.callPlugin(
+        'my-plugin',
+        'myOperation',
+        { param1: 'hello', param2: 42 }
+      );
+      
+      setResult(String(result));
+    } catch (error) {
+      console.error('Error calling worker plugin:', error);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleOperation} disabled={!isWorkerReady}>
+        Run Operation
+      </button>
+      <div>Result: {result}</div>
+    </div>
+  );
+};
+
+export default MyPluginComponent;
+```
+
+## Build Process
+
+The `scripts/build-workers.cjs` script:
+
+1. Scans `src/worker/plugins/` for TypeScript files
+2. Bundles each file with esbuild
+3. Places the bundled files in `public/workers/` with the `-worker.js` suffix
+4. Adds metadata comments to the bundled files
+
+This happens automatically when running `npm run build`. 

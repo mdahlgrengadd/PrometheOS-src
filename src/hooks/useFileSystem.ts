@@ -1,22 +1,22 @@
+import { useEffect, useState } from 'react';
 
-import { useState, useEffect } from 'react';
-import { fileSystem, FileSystemItem, Drive } from '../services/FileSystem';
+import { Drive, fileSystem, FileSystemItem } from '../services/FileSystem';
 
 export function useFileSystem() {
   const [files, setFiles] = useState<FileSystemItem[]>([]);
   const [drives, setDrives] = useState<Drive[]>([]);
   const [currentDirectory, setCurrentDirectory] = useState<string | null>(null);
-  const [currentDrive, setCurrentDrive] = useState<string>('local-drive');
+  const [currentDrive, setCurrentDrive] = useState<string>("local-drive");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // Load files and drives from localStorage
   useEffect(() => {
     loadFiles();
     loadDrives();
-    
+
     // Set initial directory to root of local drive
     if (!currentDirectory) {
-      const rootFolder = fileSystem.getFilesByParent(null, 'local-drive')[0];
+      const rootFolder = fileSystem.getFilesByParent(null, "local-drive")[0];
       if (rootFolder) {
         setCurrentDirectory(rootFolder.id);
       }
@@ -54,7 +54,7 @@ export function useFileSystem() {
 
   // Navigate to parent directory
   const navigateToParentDirectory = () => {
-    const currentDir = fileSystem.getFileById(currentDirectory || '');
+    const currentDir = fileSystem.getFileById(currentDirectory || "");
     if (currentDir && currentDir.parent !== null) {
       navigateToDirectory(currentDir.parent);
     }
@@ -71,23 +71,25 @@ export function useFileSystem() {
   };
 
   // Create new file
-  const createFile = (name: string, content: string = '') => {
+  const createFile = (name: string, content: string = "") => {
     const id = `file-${Date.now()}`;
-    const currentDir = fileSystem.getFileById(currentDirectory || '');
-    const path = currentDir ? `${currentDir.path}/${name}` : `/${name}`;
-    
+    const currentDir = fileSystem.getFileById(currentDirectory || "");
+    // Normalize parent path (avoid trailing slash) then append
+    const parentPath = currentDir ? currentDir.path.replace(/\/$/, "") : "";
+    const path = currentDir ? `${parentPath}/${name}` : `/${name}`;
+
     const newFile: FileSystemItem = {
       id,
       name,
-      type: 'file',
+      type: "file",
       parent: currentDirectory,
       content,
       path,
       driveId: currentDrive,
       modifiedAt: Date.now(),
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     fileSystem.saveFile(newFile);
     loadFiles();
     return newFile;
@@ -96,20 +98,22 @@ export function useFileSystem() {
   // Create new folder
   const createFolder = (name: string) => {
     const id = `folder-${Date.now()}`;
-    const currentDir = fileSystem.getFileById(currentDirectory || '');
-    const path = currentDir ? `${currentDir.path}/${name}` : `/${name}`;
-    
+    const currentDir = fileSystem.getFileById(currentDirectory || "");
+    // Normalize parent path (avoid trailing slash) then append
+    const parentPath = currentDir ? currentDir.path.replace(/\/$/, "") : "";
+    const path = currentDir ? `${parentPath}/${name}` : `/${name}`;
+
     const newFolder: FileSystemItem = {
       id,
       name,
-      type: 'folder',
+      type: "folder",
       parent: currentDirectory,
       path,
       driveId: currentDrive,
       modifiedAt: Date.now(),
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     fileSystem.saveFile(newFolder);
     loadFiles();
     return newFolder;
@@ -118,12 +122,12 @@ export function useFileSystem() {
   // Delete item
   const deleteItem = (id: string) => {
     fileSystem.deleteFile(id);
-    
+
     // If we deleted the current directory, navigate to parent
     if (id === currentDirectory) {
       navigateToParentDirectory();
     }
-    
+
     loadFiles();
   };
 
@@ -131,8 +135,8 @@ export function useFileSystem() {
   const moveItem = (itemId: string, targetDirId: string) => {
     const item = fileSystem.getFileById(itemId);
     const targetDir = fileSystem.getFileById(targetDirId);
-    
-    if (item && targetDir && targetDir.type === 'folder') {
+
+    if (item && targetDir && targetDir.type === "folder") {
       const newPath = `${targetDir.path}/${item.name}`;
       fileSystem.moveFile(itemId, targetDirId, newPath);
       loadFiles();
@@ -145,7 +149,7 @@ export function useFileSystem() {
     if (item) {
       fileSystem.saveFile({
         ...item,
-        ...updates
+        ...updates,
       });
       loadFiles();
     }
@@ -159,8 +163,16 @@ export function useFileSystem() {
   };
 
   // Connect to GitHub
-  const connectToGitHub = async (accessToken: string, repoUrl: string, readOnly: boolean) => {
-    const drive = await fileSystem.connectToGitHub(accessToken, repoUrl, readOnly);
+  const connectToGitHub = async (
+    accessToken: string,
+    repoUrl: string,
+    readOnly: boolean
+  ) => {
+    const drive = await fileSystem.connectToGitHub(
+      accessToken,
+      repoUrl,
+      readOnly
+    );
     loadDrives();
     return drive;
   };
@@ -183,6 +195,6 @@ export function useFileSystem() {
     moveItem,
     updateItem,
     addNetworkDrive,
-    connectToGitHub
+    connectToGitHub,
   };
 }

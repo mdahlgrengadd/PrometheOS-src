@@ -45,6 +45,25 @@ export class WorkflowExecutionService {
     context: WorkflowExecutionContext,
     options: ExecutionOptions = {}
   ): Promise<void> {
+    // Ensure the context has our node-scoped variable methods implemented
+    if (!context.addNodeScopedVariable) {
+      context.addNodeScopedVariable = (
+        nodeId: string,
+        pinId: string,
+        value: WorkflowVariableValue
+      ) => {
+        const scopedKey = `${nodeId}:${pinId}`;
+        context.addVariable(scopedKey, value);
+      };
+    }
+
+    if (!context.getNodeScopedVariable) {
+      context.getNodeScopedVariable = (nodeId: string, pinId: string) => {
+        const scopedKey = `${nodeId}:${pinId}`;
+        return context.getVariable(scopedKey);
+      };
+    }
+
     // Find the start node
     const startNode = nodes.find((node) => node.id === startNodeId);
     if (!startNode) {
@@ -85,6 +104,9 @@ export class WorkflowExecutionService {
     options.onNodeStart?.(node.id);
 
     try {
+      // Clear any previous node-specific variables to prevent leakage
+      console.log(`Executing node: ${node.id} (${node.type || "unknown"})`);
+
       // Process data connections to populate input values before execution
       this.processDataConnections(node, allNodes, allEdges, context);
 
@@ -241,7 +263,6 @@ export class WorkflowExecutionService {
     });
 
     // For each incoming data edge, get the value from the source node's output pin
-    // and store it in the context for the target node's input pin
     for (const edge of incomingDataEdges) {
       const sourceNode = allNodes.find((n) => n.id === edge.source);
 
@@ -256,16 +277,40 @@ export class WorkflowExecutionService {
             `Processing connection: ${sourceNode.id}.${sourcePinId} → ${node.id}.${targetPinId}`
           );
 
-          // Try to get the value from the context (should have been set when source node was executed)
-          const value = context.getVariable(sourcePinId);
+          // Try to get node-scoped value first, fall back to regular variable
+          let value = context.getNodeScopedVariable(sourceNode.id, sourcePinId);
+          if (value === undefined) {
+            value = context.getVariable(sourcePinId);
+          }
 
           if (value !== undefined) {
             console.log(
               `Transferring value from ${sourcePinId} to ${targetPinId}:`,
               value
             );
-            // Store the value for the target pin
-            context.addVariable(targetPinId, value);
+
+            // For API nodes, ensure we're not mixing values from different executions
+            if (
+              node.type === "apiAppNode" ||
+              sourceNode.type === "apiAppNode"
+            ) {
+              console.log(
+                `API node connection detected - using node-scoped variable to prevent data leakage`
+              );
+              // Make a deep copy of value to prevent unintended mutations
+              const valueCopy =
+                typeof value === "object" && value !== null
+                  ? JSON.parse(JSON.stringify(value))
+                  : value;
+
+              // Store using node-scoped method to prevent leakage
+              context.addNodeScopedVariable(node.id, targetPinId, valueCopy);
+              // Regular variable for backward compatibility
+              context.addVariable(targetPinId, valueCopy);
+            } else {
+              // For non-API nodes, just use the regular variable assignment
+              context.addVariable(targetPinId, value);
+            }
           } else {
             console.warn(
               `No value found for source pin ${sourcePinId} from node ${sourceNode.id}`
@@ -495,6 +540,64 @@ export class WorkflowExecutionService {
     // Store the result in the context
     context.setResult(node.id, result);
 
+    // Special case: unwrap getValue action raw payload
+    const isGetValueAction = nodeData.actionId === "getValue";
+    if (isGetValueAction && (result as { data?: unknown }).data !== undefined) {
+      let rawValue: WorkflowVariableValue;
+      const dataPayload = (result as { data?: unknown }).data;
+      if (
+        typeof dataPayload === "object" &&
+        dataPayload !== null &&
+        "value" in (dataPayload as Record<string, unknown>)
+      ) {
+        rawValue = (dataPayload as Record<string, unknown>)
+          .value as WorkflowVariableValue;
+      } else {
+        rawValue = dataPayload as WorkflowVariableValue;
+      }
+      console.log(
+        `getValue action - sending raw value to output pins:`,
+        rawValue
+      );
+      if (nodeData.outputs) {
+        for (const output of nodeData.outputs) {
+          context.addNodeScopedVariable(node.id, output.id, rawValue);
+          context.addVariable(output.id, rawValue);
+        }
+      }
+      return;
+    }
+
+    // Special case: for onEvent.waitForEvent, only pass the data value to the result pin
+    if (
+      nodeData.componentId === "onEvent" &&
+      nodeData.actionId === "waitForEvent" &&
+      nodeData.outputs &&
+      nodeData.outputs.length > 0
+    ) {
+      const resultPin = nodeData.outputs[0];
+      // Extract the raw event data - get directly from result.data if available
+      let eventData: WorkflowVariableValue;
+
+      if (result && typeof result === "object" && "data" in result) {
+        // Get the raw data payload directly
+        eventData = result.data as WorkflowVariableValue;
+      } else {
+        // Fallback to the entire result if data isn't available
+        eventData = result as WorkflowVariableValue;
+      }
+
+      console.log(
+        `Event received - sending raw event data to result pin:`,
+        eventData
+      );
+
+      // Use node-scoped variable to prevent leakage
+      context.addNodeScopedVariable(node.id, resultPin.id, eventData);
+      context.addVariable(resultPin.id, eventData);
+      return;
+    }
+
     // Always set the main result to the 'result' output pin if it exists
     if (nodeData.outputs && nodeData.outputs.length > 0) {
       // Find the result output pin - typically named with 'result' or is the first output pin
@@ -504,11 +607,22 @@ export class WorkflowExecutionService {
         ) || nodeData.outputs[0];
 
       if (resultPin) {
+        // Get the actual result for this specific API call
         console.log(
-          `Setting API result to output pin ${resultPin.id}:`,
-          result
+          `Setting API result for node ${node.id} to output pin ${resultPin.id}:`,
+          result.data !== undefined ? result.data : result
         );
-        context.addVariable(resultPin.id, result);
+
+        // Set the variable with a scoped name to prevent leakage between nodes
+        const nodeSpecificValue: WorkflowVariableValue =
+          result.data !== undefined
+            ? (result.data as WorkflowVariableValue)
+            : (result as WorkflowVariableValue);
+
+        // Use node-scoped variable to prevent leakage
+        context.addNodeScopedVariable(node.id, resultPin.id, nodeSpecificValue);
+        // Also set the regular variable for backward compatibility
+        context.addVariable(resultPin.id, nodeSpecificValue);
       }
     }
 
@@ -543,7 +657,11 @@ export class WorkflowExecutionService {
           if (result.data) {
             // For pins with a specific data type, try to provide appropriate data
             if (output.dataType === "object") {
-              context.addVariable(output.id, result.data);
+              // Cast to WorkflowVariableValue
+              context.addVariable(
+                output.id,
+                result.data as WorkflowVariableValue
+              );
               console.log(
                 `Set output for pin ${output.id} to result.data:`,
                 result.data
@@ -738,6 +856,9 @@ export class WorkflowExecutionService {
     // For each output pin, make the string value available as a variable
     if (nodeData.outputs && nodeData.outputs.length > 0) {
       for (const output of nodeData.outputs) {
+        // Use node-scoped variable to prevent leakage between nodes
+        context.addNodeScopedVariable(node.id, output.id, value);
+        // Also set regular variable for backward compatibility
         context.addVariable(output.id, value);
       }
     }
@@ -771,6 +892,9 @@ export class WorkflowExecutionService {
     // For each output pin, make the number value available as a variable
     if (nodeData.outputs && nodeData.outputs.length > 0) {
       for (const output of nodeData.outputs) {
+        // Use node-scoped variable to prevent leakage between nodes
+        context.addNodeScopedVariable(node.id, output.id, value);
+        // Also set regular variable for backward compatibility
         context.addVariable(output.id, value);
       }
     }
@@ -845,7 +969,8 @@ export class WorkflowExecutionService {
     // Try various methods to get input value
     const inputValue: WorkflowVariableValue | undefined = this.findValueForPin(
       inputPin.id,
-      context
+      context,
+      node.id
     );
 
     if (inputValue === undefined) {
@@ -926,6 +1051,7 @@ export class WorkflowExecutionService {
     });
 
     // Make the converted value available as a variable for the output pin
+    context.addNodeScopedVariable(node.id, outputPin.id, convertedValue);
     context.addVariable(outputPin.id, convertedValue);
     console.log(`Set output variable ${outputPin.id} to:`, convertedValue);
 
@@ -942,58 +1068,22 @@ export class WorkflowExecutionService {
    */
   private findValueForPin(
     pinId: string,
-    context: WorkflowExecutionContext
+    context: WorkflowExecutionContext,
+    currentNodeId?: string
   ): WorkflowVariableValue | undefined {
-    // First, try to get directly from variables
-    const value = context.getVariable(pinId);
-    if (value !== undefined) {
-      return value;
-    }
-
-    console.log(
-      `No direct value found for pin ${pinId}, searching in all variables...`
-    );
-
-    // Check all variables for any matching data
-    console.log(`All available variables:`, context.variables);
-
-    // Look for any matching value in the variables
-    for (const [varId, varValue] of Object.entries(context.variables)) {
-      console.log(`Checking variable ${varId}:`, varValue);
-
-      // Try to match the pin by ID suffix or other pattern
-      if (varId.includes(pinId) || pinId.includes(varId)) {
-        console.log(`Found potential match in variable ${varId}`);
-        return varValue;
+    // First, prefer node-scoped variable (set during processDataConnections)
+    if (currentNodeId) {
+      const scoped = context.getNodeScopedVariable(currentNodeId, pinId);
+      if (scoped !== undefined) {
+        return scoped;
       }
     }
-
-    console.log(`No value found in variables, checking node results...`);
-
-    // If not found, check results from all nodes
-    for (const [nodeId, result] of Object.entries(context.results)) {
-      console.log(`Checking results from node ${nodeId}:`, result);
-
-      if (result && typeof result === "object") {
-        // Check for data in standard format
-        if ("data" in result && result.data !== undefined) {
-          console.log(`Node ${nodeId} has data property:`, result.data);
-
-          if (typeof result.data === "object" && "value" in result.data) {
-            console.log(`Found value in result.data.value:`, result.data.value);
-            return result.data.value as WorkflowVariableValue;
-          } else {
-            console.log(`Using result.data as value:`, result.data);
-            return result.data as WorkflowVariableValue;
-          }
-        } else {
-          // Try using the whole result object
-          console.log(`Using entire result as value:`, result);
-          return result as WorkflowVariableValue;
-        }
-      }
+    // Next, try direct variable (should have been set on the input pin)
+    const direct = context.getVariable(pinId);
+    if (direct !== undefined) {
+      return direct;
     }
-
+    // No fallback beyond direct and scoped variables to prevent cross-node leakage
     return undefined;
   }
 
