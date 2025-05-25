@@ -2,7 +2,11 @@ import { Play, Square, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import useIdeStore from '../store/ide-store';
-import { buildCode, initializeEsbuild, parseEsbuildCommand } from '../utils/esbuild-service';
+import { FileSystemItem } from '../types';
+import { getAllEditors } from '../utils/editor-registry';
+import {
+    addToVirtualFs, buildCode, initializeEsbuild, parseEsbuildCommand
+} from '../utils/esbuild-service';
 
 // Props for preview targeting a specific tab
 interface PreviewPanelProps {
@@ -13,15 +17,30 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
   const {
     previewPanelVisible,
     togglePreviewPanel,
+    togglePanel,
     getFileById,
     getTabById,
     activeTab,
+    fileSystem,
   } = useIdeStore();
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildOutput, setBuildOutput] = useState<string>("");
   const [buildError, setBuildError] = useState<string | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Flatten the entire fileSystem into the ESBuild virtual FS
+  const addAllFilesToVirtualFs = (items: FileSystemItem[], parentPath = "") => {
+    items.forEach((item) => {
+      const filePath = item.id; // shadow FS id is full path
+      if (item.type === "file" && item.content !== undefined) {
+        addToVirtualFs(filePath, item.content);
+      }
+      if (item.type === "folder" && item.children) {
+        addAllFilesToVirtualFs(item.children, filePath);
+      }
+    });
+  };
 
   // Initialize esbuild when component mounts
   useEffect(() => {
@@ -52,16 +71,15 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
     const file = getFileById(activeTabItem.fileId);
     if (!file) return null;
 
-    // Get the editor content
-    const editorContent = document.querySelector(
-      `div[data-tab-id="${activeTabItem.id}"]`
-    );
-    const content = editorContent ? file.content || "" : "";
+    // Get the current content from the Monaco editor if available
+    const editors = getAllEditors();
+    const editor = editors[activeTabItem.id];
+    const content = editor ? editor.getValue() : file.content || "";
 
     return {
       fileId: file.id,
       content,
-      filePath: file.name,
+      filePath: file.id, // use full path for correct resolution
     };
   };
 
@@ -77,6 +95,9 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
         setIsBuilding(false);
         return;
       }
+
+      // Load all shadow FS files into virtual FS
+      addAllFilesToVirtualFs(fileSystem);
 
       let buildOptions;
 

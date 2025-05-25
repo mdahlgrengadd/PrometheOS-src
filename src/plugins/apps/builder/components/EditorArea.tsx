@@ -1,32 +1,14 @@
 // Register all basic languages contributions
-import 'monaco-editor/esm/vs/basic-languages/monaco.contribution.js';
+import '../lib/monaco'; // Import Monaco configuration first
 
-import { X } from 'lucide-react';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+import { Save, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import useIdeStore from '../store/ide-store';
+import { registerEditor, unregisterEditor } from '../utils/editor-registry';
 import PreviewPanel from './PreviewPanel';
 
-if (typeof window !== "undefined") {
-  window.MonacoEnvironment = {
-    getWorker(_moduleId: string, label: string) {
-      if (label === "json") return new jsonWorker();
-      if (label === "css" || label === "scss" || label === "less")
-        return new cssWorker();
-      if (label === "html" || label === "handlebars" || label === "razor")
-        return new htmlWorker();
-      if (label === "typescript" || label === "javascript")
-        return new tsWorker();
-      return new editorWorker();
-    },
-  };
-}
+import type * as monacoType from "monaco-editor";
 
 const EditorArea: React.FC = () => {
   const {
@@ -37,22 +19,38 @@ const EditorArea: React.FC = () => {
     panelVisible,
     previewPanelVisible,
     theme,
+    setTabDirty,
+    saveFile,
     togglePreviewPanel,
-    getFileById,
     getTabById,
+    initFileSystem,
   } = useIdeStore();
+
   const [editorContent, setEditorContent] = useState<{ [key: string]: string }>(
     {}
   );
   const editorRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const editorInstances = useRef<{
+    [key: string]: monacoType.editor.IStandaloneCodeEditor;
+  }>({});
   const [previewTargetTabId, setPreviewTargetTabId] = useState<string | null>(
     null
   );
 
-  // Initialize Monaco editor when activeTab or theme changes
+  // Load shadow filesystem on mount
   useEffect(() => {
-    // Create the editor for the active tab
-    const initializeEditor = (tabId: string) => {
+    initFileSystem();
+  }, []);
+
+  // Load Monaco editor on component mount
+  useEffect(() => {
+    let monaco: typeof monacoType | undefined;
+    const disposables: { dispose: () => void }[] = [];
+    const listeners: (() => void)[] = [];
+    const currentEditorInstances = editorInstances.current;
+
+    // Function to initialize Monaco editor for a given tab
+    const initializeEditor = async (tabId: string) => {
       const { getFileById, getTabById } = useIdeStore.getState();
       const tab = getTabById(tabId);
       if (!tab) return;
@@ -60,35 +58,98 @@ const EditorArea: React.FC = () => {
       const file = getFileById(tab.fileId);
       if (!file || !file.content) return;
 
+      if (!monaco) {
+        // Import the configured Monaco
+        const monacoModule = await import("../lib/monaco");
+        monaco = monacoModule.default;
+      }
+
       const editorDiv = editorRefs.current[tabId];
       if (!editorDiv) return;
 
+      // Create the editor
       const editor = monaco.editor.create(editorDiv, {
         value: file.content,
         language: tab.language,
         theme: theme === "dark" ? "vs-dark" : "vs",
-        automaticLayout: true,
+        automaticLayout: false,
         minimap: { enabled: true },
         scrollBeyondLastLine: false,
         fontSize: 14,
         fontFamily: "JetBrains Mono, monospace",
       });
 
-      editor.onDidChangeModelContent(() => {
-        setEditorContent((prev) => ({ ...prev, [tabId]: editor.getValue() }));
-      });
+      // Store and register the editor instance
+      editorInstances.current[tabId] = editor;
+      registerEditor(tabId, editor);
+
+      // Initial layout
+      editor.layout();
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => editor.layout());
+      } else {
+        setTimeout(() => editor.layout(), 100);
+      }
+
+      // Window resize
+      const onResize = () => editor.layout();
+      window.addEventListener("resize", onResize);
+      listeners.push(() => window.removeEventListener("resize", onResize));
+
+      // Layout on focus
+      disposables.push(editor.onDidFocusEditorText(() => editor.layout()));
+
+      // Track content changes
+      disposables.push(
+        editor.onDidChangeModelContent(() => {
+          const content = editor.getValue();
+          setEditorContent((prev) => ({ ...prev, [tabId]: content }));
+          setTabDirty(tabId, true);
+        })
+      );
+
       return editor;
     };
 
-    if (activeTab) initializeEditor(activeTab);
-    monaco.editor.setTheme(theme === "dark" ? "vs-dark" : "vs");
+    // Initialize editor for active tab
+    if (activeTab) {
+      initializeEditor(activeTab);
+    }
+
+    // Update theme when it changes
+    if (monaco && monaco.editor) {
+      monaco.editor.setTheme(theme === "dark" ? "vs-dark" : "vs");
+      Object.values(editorInstances.current).forEach((e) => e.layout());
+    }
 
     return () => {
-      monaco.editor.getModels().forEach((model) => model.dispose());
+      listeners.forEach((fn) => fn());
+      disposables.forEach((d) => d.dispose());
+      if (monaco && monaco.editor) {
+        Object.keys(currentEditorInstances).forEach((tabId) => {
+          const e = currentEditorInstances[tabId];
+          if (e) {
+            e.dispose();
+            unregisterEditor(tabId);
+          }
+        });
+        monaco.editor.getModels().forEach((m) => m.dispose());
+      }
     };
-  }, [activeTab, theme]);
+  }, [activeTab, theme, setTabDirty]);
 
-  // Sync preview panel with tabs, remembering which file we preview
+  // Ensure layout update when switching tabs
+  useEffect(() => {
+    if (activeTab && editorInstances.current[activeTab]) {
+      const e = editorInstances.current[activeTab];
+      setTimeout(() => {
+        e.layout();
+        e.focus();
+      }, 10);
+    }
+  }, [activeTab]);
+
+  // Sync preview-as-tab behavior with preview panel toggle
   useEffect(() => {
     if (previewPanelVisible) {
       if (activeTab && activeTab !== "preview") {
@@ -103,6 +164,14 @@ const EditorArea: React.FC = () => {
     }
   }, [previewPanelVisible]);
 
+  const handleSaveFile = (tabId: string) => {
+    const editor = editorInstances.current[tabId];
+    if (!editor) return;
+    const fileTab = useIdeStore.getState().tabs.find((t) => t.id === tabId);
+    if (!fileTab) return;
+    saveFile(fileTab.fileId, editor.getValue());
+  };
+
   return (
     <div className="editor-area">
       {tabs.length > 0 || previewPanelVisible ? (
@@ -115,7 +184,17 @@ const EditorArea: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
               >
                 <span className="truncate flex-1">{tab.title}</span>
-                {tab.isDirty && <span className="ml-1">•</span>}
+                {tab.isDirty && <span className="ml-1 text-amber-400">•</span>}
+                <button
+                  className="ml-2 text-blue-500 hover:text-blue-400"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveFile(tab.id);
+                  }}
+                  title="Save"
+                >
+                  <Save size={14} />
+                </button>
                 <button
                   className="ml-2 hover:text-foreground"
                   onClick={(e) => {
@@ -164,7 +243,7 @@ const EditorArea: React.FC = () => {
                 className="h-full w-full"
                 style={{ display: activeTab === tab.id ? "block" : "none" }}
                 data-tab-id={tab.id}
-              ></div>
+              />
             ))}
             {previewPanelVisible && previewTargetTabId && (
               <div
@@ -192,12 +271,44 @@ const EditorArea: React.FC = () => {
 };
 
 const PanelArea: React.FC = () => {
-  const { togglePanel } = useIdeStore();
+  const { togglePanel, buildOutput, buildError, isBuilding } = useIdeStore();
+  const [activeTab, setActiveTab] = useState<"terminal" | "output">("terminal");
+  const [command, setCommand] = useState<string>("");
+
+  useEffect(() => {
+    if (buildOutput || buildError) {
+      setActiveTab("output");
+    }
+  }, [buildOutput, buildError]);
+
+  const runCommand = (cmd: string) => {
+    if (cmd.startsWith("esbuild ") && typeof window.runBuild === "function") {
+      window.runBuild(cmd);
+      setCommand("");
+    }
+  };
 
   return (
-    <div className="panel-area">
+    <div className="panel-area flex flex-col h-1/3 border-t border-sidebar-border">
       <div className="flex items-center border-b border-sidebar-border p-1">
-        <div className="font-medium text-sm px-2">Terminal</div>
+        <div className="flex space-x-2">
+          <button
+            className={`px-2 ${
+              activeTab === "terminal" ? "border-b-2 border-foreground" : ""
+            }`}
+            onClick={() => setActiveTab("terminal")}
+          >
+            Terminal
+          </button>
+          <button
+            className={`px-2 ${
+              activeTab === "output" ? "border-b-2 border-foreground" : ""
+            }`}
+            onClick={() => setActiveTab("output")}
+          >
+            Output
+          </button>
+        </div>
         <button
           className="ml-auto text-sidebar-foreground hover:text-foreground p-1"
           onClick={togglePanel}
@@ -205,8 +316,47 @@ const PanelArea: React.FC = () => {
           <X size={16} />
         </button>
       </div>
-      <div className="p-2 font-mono text-sm">
-        <div className="text-muted-foreground">~ $</div>
+      <div className="flex-1 p-2 font-mono text-sm overflow-auto">
+        {activeTab === "terminal" && (
+          <div className="text-muted-foreground">~ $</div>
+        )}
+        {activeTab === "output" && (
+          <div>
+            <div className="mb-2">
+              <input
+                type="text"
+                placeholder="esbuild app.jsx --bundle"
+                className="w-full bg-input text-foreground px-2 py-1 rounded text-sm font-mono"
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") runCommand(command);
+                }}
+              />
+            </div>
+            {isBuilding && (
+              <div className="text-blue-500 mb-2">Building...</div>
+            )}
+            {buildError && (
+              <div className="bg-destructive/10 text-destructive p-2 rounded whitespace-pre-wrap overflow-auto mb-2">
+                {buildError}
+              </div>
+            )}
+            {!buildError && buildOutput && (
+              <div className="text-xs font-mono bg-sidebar-accent p-2 rounded overflow-auto">
+                <pre className="whitespace-pre-wrap">
+                  {buildOutput.slice(0, 1000)}
+                  {buildOutput.length > 1000 ? "..." : ""}
+                </pre>
+              </div>
+            )}
+            {!isBuilding && !buildError && !buildOutput && (
+              <div className="text-muted-foreground">
+                Run preview to see build output here
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

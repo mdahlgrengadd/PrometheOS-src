@@ -3,6 +3,9 @@ import * as path from 'path-browserify';
 
 let isInitialized = false;
 
+// Add a module-level promise for initialization
+let initializePromise: Promise<boolean> | null = null;
+
 interface BuildOptions {
   entryPoint: string;
   content: string;
@@ -26,19 +29,33 @@ interface VirtualFile {
 const virtualFs: Record<string, VirtualFile> = {};
 
 export const initializeEsbuild = async () => {
-  if (!isInitialized) {
-    try {
-      await esbuild.initialize({
+  if (!initializePromise) {
+    initializePromise = esbuild
+      .initialize({
         wasmURL: "https://unpkg.com/esbuild-wasm@0.18.7/esbuild.wasm",
+      })
+      .then(() => {
+        isInitialized = true;
+        console.log("ESBuild initialized successfully");
+        return isInitialized;
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof Error &&
+          error.message.includes("initialize") &&
+          error.message.includes("once")
+        ) {
+          console.warn(
+            "ESBuild initialize called multiple times; suppressing error"
+          );
+          isInitialized = true;
+          return isInitialized;
+        }
+        console.error("Failed to initialize ESBuild:", error);
+        throw error;
       });
-      isInitialized = true;
-      console.log("ESBuild initialized successfully");
-    } catch (error) {
-      console.error("Failed to initialize ESBuild:", error);
-      throw error;
-    }
   }
-  return isInitialized;
+  return initializePromise;
 };
 
 export const buildCode = async ({
@@ -46,9 +63,8 @@ export const buildCode = async ({
   content,
   options,
 }: BuildOptions) => {
-  if (!isInitialized) {
-    await initializeEsbuild();
-  }
+  // Always ensure ESBuild is initialized before building
+  await initializeEsbuild();
 
   try {
     // Store the entry file in our virtual filesystem
