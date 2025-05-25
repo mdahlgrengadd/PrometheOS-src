@@ -122,10 +122,15 @@ const ExplorerView: React.FC = () => {
       item.name !== ".vfsignore" &&
       !ignoreMatchers.some((rx) => rx.test(item.id))
   );
+  // Sort: folders first, then files, both alphabetically
+  const sortedRootItems = [...rootItems].sort((a, b) => {
+    if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div className="explorer-tree">
-      {rootItems.map((item) => (
+      {sortedRootItems.map((item) => (
         <TreeItem
           key={item.id}
           item={item}
@@ -168,7 +173,7 @@ const TreeItem: React.FC<TreeItemProps> = ({ item, level, ignoreMatchers }) => {
       <div
         className="tree-item"
         onClick={handleClick}
-        style={{ paddingLeft: `${level * 8 + 4}px` }}
+        style={{ paddingLeft: `${level * 20 + 4}px` }}
       >
         <span className="flex items-center">
           {item.type === "folder" && (
@@ -196,20 +201,26 @@ const TreeItem: React.FC<TreeItemProps> = ({ item, level, ignoreMatchers }) => {
 
       {expanded && item.type === "folder" && item.children && (
         <div>
-          {item.children
-            .filter(
+          {(() => {
+            // Filter and sort child items: folders first, then files, alphabetically
+            const visibleChildren = item.children.filter(
               (child) =>
                 child.name !== ".vfsignore" &&
                 !ignoreMatchers.some((rx) => rx.test(child.id))
-            )
-            .map((child) => (
+            );
+            const sortedChildren = [...visibleChildren].sort((a, b) => {
+              if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
+              return a.name.localeCompare(b.name);
+            });
+            return sortedChildren.map((child) => (
               <TreeItem
                 key={child.id}
                 item={child}
                 level={level + 1}
                 ignoreMatchers={ignoreMatchers}
               />
-            ))}
+            ));
+          })()}
         </div>
       )}
     </div>
