@@ -30,8 +30,8 @@ export interface Drive {
 
 class FileSystem {
   private static instance: FileSystem;
-  private FILES_KEY = 'filebrowser_files';
-  private DRIVES_KEY = 'filebrowser_drives';
+  private FILES_KEY = 'filesystem_files';
+  private DRIVES_KEY = 'filesystem_drives';
   
   private constructor() {
     // Initialize with default local drive if none exists

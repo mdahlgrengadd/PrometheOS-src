@@ -1,3 +1,5 @@
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @import './styles/base.css';
 @import './styles/window.css';
 @import './styles/desktop.css';
@@ -338,4 +340,3 @@ html, body, #root {
 [role="switch"][data-state="checked"] span {
   transform: translateX(1.25rem) !important; /* move it 20px over */
 }
-

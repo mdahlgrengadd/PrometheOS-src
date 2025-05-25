@@ -19,12 +19,61 @@
     --start-btn-active-bg: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
     --start-btn-shadow: inset 0 1px 0 0 #ccc, inset 0 -1px 0 0 #aaa;
     --start-btn-active-shadow: inset 0 0 3px 1px rgba(0,0,0,0.15);
+
+    /* IDE Builder Variables - Light Theme */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 215.4 16.3% 46.9%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-accent: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --accent: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
   }
 
   .theme-dark {
     color-scheme: dark;
     /* In dark theme, primary text should use foreground variable */
     --text-primary: var(--foreground);
+
+    /* IDE Builder Variables - Dark Theme */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 215 20.2% 65.1%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --accent: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+  }
+
+  .dark {
+    color-scheme: dark;
+    
+    /* IDE Builder Variables - Dark Theme */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 215 20.2% 65.1%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --accent: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
   }
 
   * {
@@ -149,6 +198,6 @@
     /* Use the complete hsla() value */
     background-color: var(--background);
   }
-} 
+}
 
 

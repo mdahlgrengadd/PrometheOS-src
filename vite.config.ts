@@ -6,6 +6,8 @@ import comlink from 'vite-plugin-comlink';
 
 import react from '@vitejs/plugin-react-swc';
 
+import shadowFsPlugin from './vite.shadowfs';
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -14,12 +16,14 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    shadowFsPlugin(),
     comlink(),
     mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@src": path.resolve(__dirname, "./src"),
     },
   },
   css: {
@@ -34,4 +38,23 @@ export default defineConfig(({ mode }) => ({
     },
   },
   base: "/prometheos/",
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
+  worker: {
+    format: "es",
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "monaco-editor": ["monaco-editor"],
+        },
+      },
+    },
+  },
 }));
