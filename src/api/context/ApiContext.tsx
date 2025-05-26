@@ -1,9 +1,26 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { eventBus } from '../../plugins/EventBus';
-import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
-import { registerLauncherApi } from '../system/registerSystemApi';
-import { generateOpenApiSpec } from '../utils/openapi';
+import { eventBus } from "../../plugins/EventBus";
+import {
+  setGlobalApiContext,
+  setupGlobalDesktopApiBridge,
+} from "../bridges/DesktopApiBridge";
+import {
+  IActionResult,
+  IApiComponent,
+  IApiContextValue,
+  IOpenApiSpec,
+} from "../core/types";
+import { registerLauncherApi } from "../system/registerSystemApi";
+import { generateOpenApiSpec } from "../utils/openapi";
 
 // Create the API context with null default value
 const ApiContext = createContext<IApiContextValue | null>(null);
@@ -234,20 +251,22 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
   };
-
   /**
    * Get all registered components
    * @returns Array of all registered components
    */
-  const getComponents = () => Object.values(components);
+  const getComponents = useCallback(
+    () => Object.values(components),
+    [components]
+  );
 
   /**
    * Generate OpenAPI documentation
    * @returns OpenAPI specification
    */
-  const getOpenApiSpec = (): IOpenApiSpec => {
+  const getOpenApiSpec = useCallback((): IOpenApiSpec => {
     return generateOpenApiSpec(getComponents());
-  };
+  }, [getComponents]);
 
   // Expose methods for registering action handlers
   useEffect(() => {
@@ -267,27 +286,57 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
         registerActionHandler(componentId, actionId, handler);
       }
     );
-
     return () => {
       unsubscribe();
     };
   }, []);
 
-  // Context value
-  const contextValue: IApiContextValue = {
-    registerComponent,
-    unregisterComponent,
-    updateComponentState,
-    executeAction,
-    getComponents,
-    getOpenApiSpec,
-  };
-
-  // Register system API components
+  // Context value - memoized to prevent infinite re-renders
+  const contextValue: IApiContextValue = useMemo(
+    () => ({
+      registerComponent,
+      unregisterComponent,
+      updateComponentState,
+      executeAction,
+      getComponents,
+      getOpenApiSpec,
+    }),
+    [getComponents, getOpenApiSpec]
+  ); // Register system API components
   useEffect(() => {
-    // Register the launcher API component and handler
-    registerLauncherApi(contextValue);
-  }, []);
+    // Only run once on mount, don't use changing functions
+    let mounted = true;
+
+    const initApi = async () => {
+      if (!mounted) return;
+
+      // Create context with current function references
+      const apiContext: IApiContextValue = {
+        registerComponent,
+        unregisterComponent,
+        updateComponentState,
+        executeAction,
+        getComponents,
+        getOpenApiSpec,
+      };
+
+      // Register the launcher API component and handler
+      registerLauncherApi(apiContext);
+
+      // Store API context globally for Desktop API Bridge
+      setGlobalApiContext(apiContext);
+
+      // Initialize the Desktop API Bridge for Pyodide workers
+      setupGlobalDesktopApiBridge();
+    };
+
+    initApi();
+
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty array - only run on mount, ignore deps to prevent infinite loop
 
   return (
     <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>

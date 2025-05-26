@@ -1,6 +1,8 @@
-import * as Comlink from 'comlink';
+// Import the manifest for pyodide-test to get the workerEntrypoint
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+import * as Comlink from "comlink";
 
-import { PluginManifest } from './types';
+import { PluginManifest } from "./types";
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
@@ -312,6 +314,326 @@ class WorkerPluginManagerClient {
       return; // No need to clean up if not registered
     }
     await this.callPlugin("webllm", "cleanup");
+  }
+
+  // Pyodide Helper Methods
+
+  /**
+   * Initialize Pyodide runtime
+   */
+  async initPyodide(): Promise<{ status: string; message?: string }> {
+    // Make sure pyodide plugin is registered
+    if (!this.registeredPlugins.has("pyodide")) {
+      // Use the manifest's workerEntrypoint directly
+      // Import the manifest at the top of the file:
+      // import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "initPyodide");
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("Pyodide initPyodide returned invalid result");
+  }
+
+  /**
+   * Execute Python code
+   */
+  async executePython(
+    code: string,
+    returnStdout: boolean = false
+  ): Promise<{
+    success: boolean;
+    result?: unknown;
+    error?: string;
+    stdout?: string;
+  }> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "executePython", {
+      code,
+      returnStdout,
+    });
+
+    if (typeof result === "object" && result !== null && "success" in result) {
+      return result as {
+        success: boolean;
+        result?: unknown;
+        error?: string;
+        stdout?: string;
+      };
+    }
+
+    throw new Error("Python execution returned invalid result");
+  }
+
+  /**
+   * Install Python package via micropip
+   */
+  async installPythonPackage(
+    packageName: string
+  ): Promise<{ success: boolean; result?: string; error?: string }> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "installPackage", {
+      packageName,
+    });
+
+    if (typeof result === "object" && result !== null && "success" in result) {
+      return result as { success: boolean; result?: string; error?: string };
+    }
+
+    throw new Error("Python package installation returned invalid result");
+  }
+
+  /**
+   * Get Pyodide initialization progress
+   */
+  async getPyodideProgress(): Promise<{
+    phase: string;
+    message: string;
+    progress?: number;
+  } | null> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return null;
+    }
+
+    const result = await this.callPlugin("pyodide", "getProgress");
+
+    if (result === null) {
+      return null;
+    }
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "phase" in result &&
+      "message" in result
+    ) {
+      return result as { phase: string; message: string; progress?: number };
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if Pyodide is ready for execution
+   */
+  async isPyodideReady(): Promise<boolean> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return false;
+    }
+
+    const result = await this.callPlugin("pyodide", "isReady");
+    return Boolean(result);
+  }
+
+  /**
+   * Clean up Pyodide resources
+   */
+  async cleanupPyodide(): Promise<void> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return;
+    }
+    await this.callPlugin("pyodide", "cleanup");
+  }
+
+  // MCP Server Helper Methods
+
+  /**
+   * Initialize MCP server
+   */
+  async initMCPServer(): Promise<{ status: string; message?: string }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/mcp-server.js"
+        : import.meta.env.BASE_URL + "/worker/mcp-server.js";
+
+      await this.registerPlugin("mcp-server", workerPath);
+    }
+
+    const result = await this.callPlugin("mcp-server", "initialize");
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("MCP Server initialization returned invalid result");
+  }
+
+  /**
+   * Register an MCP tool from API component
+   */
+  async registerMCPTool(
+    componentId: string,
+    action: string,
+    description: string,
+    parameters?: Record<
+      string,
+      { type: string; description?: string; required?: boolean }
+    >
+  ): Promise<{ status: string; message?: string }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      await this.initMCPServer();
+    }
+
+    const result = await this.callPlugin("mcp-server", "registerTool", {
+      componentId,
+      action,
+      description,
+      parameters,
+    });
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("MCP tool registration returned invalid result");
+  }
+  /**
+   * Get all available MCP tools
+   */
+  async getMCPTools(): Promise<
+    Array<{
+      name: string;
+      description: string;
+      inputSchema: Record<string, unknown>;
+    }>
+  > {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return [];
+    }
+
+    const result = await this.callPlugin("mcp-server", "getAvailableTools");
+
+    if (Array.isArray(result)) {
+      return result as Array<{
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }>;
+    }
+
+    return [];
+  }
+  /**
+   * Execute an MCP tool
+   */
+  async executeMCPTool(toolCall: {
+    name: string;
+    arguments: Record<string, unknown>;
+  }): Promise<{
+    content: Array<{ type: string; text?: string }>;
+    isError?: boolean;
+  }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return {
+        content: [{ type: "text", text: "MCP Server not initialized" }],
+        isError: true,
+      };
+    }
+
+    const result = await this.callPlugin("mcp-server", "executeTool", {
+      toolCall,
+    });
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "content" in result &&
+      Array.isArray((result as Record<string, unknown>).content)
+    ) {
+      return result as {
+        content: Array<{ type: string; text?: string }>;
+        isError?: boolean;
+      };
+    }
+
+    return {
+      content: [{ type: "text", text: "Invalid tool execution result" }],
+      isError: true,
+    };
+  }
+
+  /**
+   * Auto-register all API components as MCP tools
+   */
+  async autoRegisterMCPTools(
+    components: Array<{
+      id: string;
+      actions: Array<{
+        name: string;
+        description: string;
+        parameters?: Record<
+          string,
+          { type: string; description?: string; required?: boolean }
+        >;
+      }>;
+    }>
+  ): Promise<{ status: string; registered: number; errors: string[] }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      await this.initMCPServer();
+    }
+
+    const result = await this.callPlugin(
+      "mcp-server",
+      "autoRegisterFromApiComponents",
+      { components }
+    );
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      "registered" in result &&
+      "errors" in result
+    ) {
+      return result as { status: string; registered: number; errors: string[] };
+    }
+
+    throw new Error("Auto-registration returned invalid result");
+  }
+
+  /**
+   * Get MCP server statistics
+   */
+  async getMCPStats(): Promise<{ toolCount: number; isInitialized: boolean }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return { toolCount: 0, isInitialized: false };
+    }
+
+    const result = await this.callPlugin("mcp-server", "getStats");
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "toolCount" in result &&
+      "isInitialized" in result
+    ) {
+      return result as { toolCount: number; isInitialized: boolean };
+    }
+
+    return { toolCount: 0, isInitialized: false };
+  }
+
+  /**
+   * Clean up MCP server resources
+   */
+  async cleanupMCPServer(): Promise<void> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return;
+    }
+    await this.callPlugin("mcp-server", "cleanup");
   }
 
   /**
