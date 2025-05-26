@@ -11,7 +11,7 @@ import { processWindowUrlParams } from './store/windowStore';
 processWindowUrlParams();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+  <React.StrictMode> // Commented out to prevent double-mounting in development
     <Suspense
       fallback={
         <div

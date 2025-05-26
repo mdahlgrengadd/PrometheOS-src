@@ -223,7 +223,7 @@ export function withApi<P extends object>(
             },
           });
         }
-      }, [props]); // Setup component registration once on mount with cleanup on unmount
+      }, [props]);      // Setup component registration once on mount with cleanup on unmount
       // Using empty deps array to ensure this only runs on mount/unmount
       useEffect(() => {
         const id = uniqueId.current;
@@ -231,7 +231,7 @@ export function withApi<P extends object>(
         const unregisterFn = unregisterComponent;
         const clickHandlerFn = registerClickHandler;
 
-        // Only register if not already registered
+        // Only register if not already registered and not already in registry
         if (!isRegisteredRef.current && !componentRegistry.isMounted(id)) {
           const apiDoc = fullApiDocRef.current;
 
@@ -250,6 +250,10 @@ export function withApi<P extends object>(
             // Register click handler if available
             clickHandlerFn();
           }
+        } else if (componentRegistry.isMounted(id)) {
+          // Component is already mounted, just mark our ref as registered
+          isRegisteredRef.current = true;
+          console.log(`[API] Component ${id} already registered, skipping duplicate registration`);
         }
 
         // Return cleanup function - use captured variables to prevent closure issues
