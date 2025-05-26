@@ -1,7 +1,12 @@
+import { Settings, Trash2 } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
 import { eventBus } from '@/plugins/EventBus';
-import * as webllm from '@mlc-ai/web-llm';
+import { workerPluginManager } from '@/plugins/WorkerPluginManagerClient';
 
 import { WebLLMChatProvider } from '../WebLLMChatContext';
 import MessageInput from './MessageInput';
@@ -12,6 +17,7 @@ import ModelSelector from './ModelSelector';
 interface Message {
   role: "system" | "user" | "assistant";
   content: string;
+  timestamp?: number;
 }
 
 // Available models
@@ -21,6 +27,10 @@ const AVAILABLE_MODELS = [
   "Gemma-2B-it-q4f32_1-MLC",
   "Mistral-7B-v0.3-q4f32_1-MLC",
 ];
+
+// System prompt
+const DEFAULT_SYSTEM_PROMPT =
+  "You are a helpful AI assistant. You have access to tools that can help you perform tasks.";
 
 // Inner component that doesn't have the provider
 const ChatUI: React.FC<{
@@ -32,6 +42,10 @@ const ChatUI: React.FC<{
   engineLoaded: boolean;
   onModelChange: (model: string) => void;
   onSendMessage: (content: string) => void;
+  enableFunctionCalling: boolean;
+  onEnableFunctionCalling: (enabled: boolean) => void;
+  onClearMessages: () => void;
+  onToggleSettings: () => void;
 }> = ({
   messages,
   isLoading,
@@ -41,17 +55,53 @@ const ChatUI: React.FC<{
   engineLoaded,
   onModelChange,
   onSendMessage,
+  enableFunctionCalling,
+  onEnableFunctionCalling,
+  onClearMessages,
+  onToggleSettings,
 }) => {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-2 border-b">
-        <h2 className="text-lg font-semibold">WebLLM Chat</h2>
-        <ModelSelector
-          models={AVAILABLE_MODELS}
-          selectedModel={selectedModel}
-          onSelectModel={onModelChange}
-          disabled={isLoading || isTyping}
-        />
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      <div className="border-b bg-white dark:bg-gray-800 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ModelSelector
+            models={AVAILABLE_MODELS}
+            selectedModel={selectedModel}
+            onSelectModel={onModelChange}
+            disabled={isLoading || isTyping}
+          />
+
+          <div className="ml-4 flex items-center">
+            <Switch
+              id="function-calling"
+              checked={enableFunctionCalling}
+              onCheckedChange={onEnableFunctionCalling}
+            />
+            <Label htmlFor="function-calling" className="ml-2">
+              Enable tools
+            </Label>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClearMessages}
+            title="Clear conversation"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSettings}
+            title="Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -63,14 +113,18 @@ const ChatUI: React.FC<{
         </div>
       ) : (
         <>
-          <MessageList messages={messages} />
-          <MessageInput
-            onSendMessage={onSendMessage}
-            disabled={!engineLoaded || isTyping}
-            isTyping={isTyping}
-            useContext={true}
-            apiId="webllm-chat-input" // Ensure consistent apiId
-          />
+          <div className="flex-1 overflow-y-auto p-4">
+            <MessageList messages={messages} />
+          </div>
+          <div className="border-t p-4 bg-white dark:bg-gray-800">
+            <MessageInput
+              onSendMessage={onSendMessage}
+              disabled={!engineLoaded || isTyping}
+              isTyping={isTyping}
+              useContext={true}
+              apiId="webllm-chat-input" // Ensure consistent apiId
+            />
+          </div>
         </>
       )}
     </div>
@@ -79,152 +133,177 @@ const ChatUI: React.FC<{
 
 // Main component with state, context provider and UI
 const ChatWindow: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "system", content: "You are a helpful AI assistant." },
-  ]);
-  const [engine, setEngine] = useState<webllm.MLCEngine | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>(
-    AVAILABLE_MODELS[0]
-  );
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [model, setModel] = useState<string>(AVAILABLE_MODELS[0]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingProgress, setLoadingProgress] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [inputMessage, setInputMessage] = useState("");
+  const [message, setMessage] = useState("");
+  const [enableFunctionCalling, setEnableFunctionCalling] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
+  const [temperature, setTemperature] = useState(0.7);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Initialize model
+  // Initialize model when selected
   useEffect(() => {
-    const initModel = async () => {
+    const loadSelectedModel = async () => {
       try {
         setIsLoading(true);
         setLoadingProgress("Starting model initialization...");
 
-        // Initialize engine with progress callback
-        const newEngine = await webllm.CreateMLCEngine(selectedModel, {
-          initProgressCallback: (progress) => {
-            setLoadingProgress(
-              `Loading model: ${
-                progress.text || "Initializing..."
-              } (${Math.round(progress.progress * 100)}%)`
-            );
-          },
-        });
+        // Load the model using worker plugin manager
+        const result = await workerPluginManager.loadModel(model);
 
-        setEngine(newEngine);
-        setIsLoading(false);
+        if (result.status === "success") {
+          setIsLoading(false);
+        } else {
+          throw new Error(result.message || "Failed to load model");
+        }
       } catch (error) {
-        console.error("Error initializing model:", error);
+        console.error("Error loading model:", error);
         setLoadingProgress(
           `Error: ${error instanceof Error ? error.message : String(error)}`
         );
         setIsLoading(false);
+
+        toast({
+          title: "Error",
+          description: `Failed to load model: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+          variant: "destructive",
+        });
       }
     };
 
-    // Initialize model when component mounts or model changes
-    initModel();
+    loadSelectedModel();
 
-    // Cleanup function
+    // Start progress polling
+    const progressInterval = setInterval(async () => {
+      if (isLoading) {
+        try {
+          const progress = await workerPluginManager.getModelProgress();
+          if (progress) {
+            setLoadingProgress(
+              `Loading model: ${progress.text} (${Math.round(
+                progress.progress * 100
+              )}%)`
+            );
+          }
+        } catch (error) {
+          console.error("Error getting progress:", error);
+        }
+      }
+    }, 500);
+
     return () => {
-      if (engine) {
-        // Clean up engine resources if needed
-      }
+      clearInterval(progressInterval);
     };
-  }, [selectedModel]);
+  }, [model, isLoading]);
 
-  // Handle model change
-  const handleModelChange = (model: string) => {
-    setSelectedModel(model);
-  };
-
-  // Handle sending a new message
+  // Handle sending a message
   const handleSendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim() || !engine) return;
+      if (!model) {
+        console.error("No model selected");
+        return;
+      }
 
-      // Clear input field
-      setInputMessage("");
-
-      // Add user message to chat
-      const userMessage: Message = { role: "user", content };
-      const newMessages = [...messages, userMessage];
-      setMessages(newMessages);
+      if (content.trim() === "") return;
 
       try {
         setIsTyping(true);
+        setMessage("");
 
-        // Create a temporary message for streaming
-        const assistantMessage: Message = { role: "assistant", content: "" };
-        setMessages([...newMessages, assistantMessage]);
+        // Add user message to the list
+        setMessages((prev) => [
+          ...prev,
+          { role: "user", content, timestamp: Date.now() },
+        ]);
 
-        // Convert messages to format expected by webllm
-        const apiMessages = newMessages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        }));
+        // Get all messages for context
+        const messageHistory = [
+          { role: "system", content: systemPrompt },
+          ...messages.map((m) => ({ role: m.role, content: m.content })),
+          { role: "user", content },
+        ];
 
-        // Stream response
-        const chunks = await engine.chat.completions.create({
-          messages: apiMessages,
-          temperature: 0.7,
-          stream: true,
-        });
+        // Choose the appropriate chat method based on enableFunctionCalling
+        const chatMethod = enableFunctionCalling
+          ? workerPluginManager.chatWithTools.bind(workerPluginManager)
+          : workerPluginManager.chat.bind(workerPluginManager);
 
-        let streamedContent = "";
+        // Stream the response
+        const stream = await chatMethod(messageHistory, temperature);
 
-        for await (const chunk of chunks) {
-          const content = chunk.choices[0]?.delta.content || "";
-          streamedContent += content;
+        let assistantMessage = "";
+        const reader = stream.getReader();
 
-          // Update message in real-time
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = {
-              role: "assistant",
-              content: streamedContent,
-            };
-            return updated;
-          });
+        // Create a timestamp for this message
+        const timestamp = Date.now();
+
+        // Add empty assistant message to start
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "", timestamp },
+        ]);
+
+        // Process the streaming response
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          // Append to the assistant's message
+          assistantMessage += value;
+
+          // Update the assistant's message in the list
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.role === "assistant" && m.timestamp === timestamp
+                ? { ...m, content: assistantMessage }
+                : m
+            )
+          );
         }
 
         setIsTyping(false);
-        // Emit event when answer streaming is completed
-        eventBus.emit("webllm:answerCompleted", { answer: streamedContent });
+
+        // Emit event when answer is completed
+        eventBus.emit("webllm:answerCompleted", { answer: assistantMessage });
       } catch (error) {
-        console.error("Error generating response:", error);
-
-        const errorMessage: Message = {
-          role: "assistant",
-          content: `Error generating response: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        };
-
-        setMessages([...newMessages, errorMessage]);
+        console.error("Error in chat:", error);
         setIsTyping(false);
+
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error
+              ? error.message
+              : "An error occurred during chat",
+          variant: "destructive",
+        });
       }
     },
-    [messages, engine]
+    [model, messages, systemPrompt, temperature, enableFunctionCalling]
   );
 
-  // Wrap the sendMessage function to handle context-based message sending
-  const handleContextSendMessage = useCallback(
-    (msgContent?: string) => {
-      const content = msgContent || inputMessage;
-      if (content.trim()) {
-        handleSendMessage(content);
-      }
-    },
-    [inputMessage, handleSendMessage]
-  );
+  // Clear all messages
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
+
+  // Toggle settings panel
+  const toggleSettings = useCallback(() => {
+    setShowSettings((prev) => !prev);
+  }, []);
 
   return (
     <WebLLMChatProvider
-      key={`webllm-chat-context-${!!engine}`}
       apiId="webllm-chat-input" // Must match apiId in MessageInput
-      message={inputMessage}
-      setMessage={setInputMessage}
-      sendMessage={handleContextSendMessage}
-      isDisabled={!engine || isTyping}
+      message={message}
+      setMessage={setMessage}
+      sendMessage={handleSendMessage}
+      isDisabled={isLoading || isTyping}
       isTyping={isTyping}
     >
       <ChatUI
@@ -232,11 +311,17 @@ const ChatWindow: React.FC = () => {
         isLoading={isLoading}
         isTyping={isTyping}
         loadingProgress={loadingProgress}
-        selectedModel={selectedModel}
-        engineLoaded={!!engine}
-        onModelChange={handleModelChange}
+        selectedModel={model}
+        engineLoaded={!isLoading}
+        onModelChange={setModel}
         onSendMessage={handleSendMessage}
+        enableFunctionCalling={enableFunctionCalling}
+        onEnableFunctionCalling={setEnableFunctionCalling}
+        onClearMessages={clearMessages}
+        onToggleSettings={toggleSettings}
       />
+
+      {/* Settings panel would go here */}
     </WebLLMChatProvider>
   );
 };

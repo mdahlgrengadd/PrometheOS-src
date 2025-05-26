@@ -47,6 +47,62 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Emit event for component registration
     eventBus.emit("api:component:registered", component);
+
+    // Auto-register new component as MCP tool if MCP is available
+    const workerManager = (
+      window as unknown as {
+        workerPluginManager?: {
+          autoRegisterMCPTools?: (
+            components: Array<{
+              id: string;
+              actions: Array<{
+                name: string;
+                description: string;
+                parameters?: Record<
+                  string,
+                  { type: string; description?: string; required?: boolean }
+                >;
+              }>;
+            }>
+          ) => Promise<{
+            status: string;
+            registered: number;
+            errors: string[];
+          }>;
+        };
+      }
+    ).workerPluginManager;
+
+    if (workerManager?.autoRegisterMCPTools) {
+      setTimeout(async () => {
+        try {
+          // Convert component to MCP tool format
+          const mcpComponent = {
+            id: component.id,
+            actions: component.actions.map((action) => ({
+              name: action.id,  // Use action.id for consistency
+              description: action.description,
+              parameters: action.parameters?.reduce(
+                (params, param) => ({
+                  ...params,
+                  [param.name]: {
+                    type: param.type,
+                    description: param.description,
+                    required: param.required,
+                  },
+                }),
+                {}
+              ),
+            })),
+          };
+
+          const registerResult = await workerManager.autoRegisterMCPTools([mcpComponent]);
+          console.log(`Auto-registered MCP tool for ${component.id}:`, registerResult);
+        } catch (error) {
+          console.error(`Failed to auto-register MCP tool for ${component.id}:`, error);
+        }
+      }, 100); // Small delay to ensure component is fully registered
+    }
   };
   /**
    * Unregister a component from the API
@@ -64,6 +120,28 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     const handlers = actionHandlersRef.current;
     if (handlers[id]) {
       delete handlers[id];
+    }
+
+    // Clean up MCP tools for this component
+    const workerManager = (
+      window as unknown as {
+        workerPluginManager?: {
+          unregisterMCPComponent?: (
+            componentId: string
+          ) => Promise<{ status: string; unregistered: number; errors: string[] }>;
+        };
+      }
+    ).workerPluginManager;
+
+    if (workerManager?.unregisterMCPComponent) {
+      setTimeout(async () => {
+        try {
+          const unregisterResult = await workerManager.unregisterMCPComponent(id);
+          console.log(`Auto-unregistered MCP tools for ${id}:`, unregisterResult);
+        } catch (error) {
+          console.error(`Failed to auto-unregister MCP tools for ${id}:`, error);
+        }
+      }, 100); // Small delay to ensure component is fully unregistered
     }
 
     // Emit event for component unregistration
@@ -309,15 +387,70 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
         window as unknown as {
           workerPluginManager?: {
             setupComlinkBridge?: () => Promise<void>;
+            initMCPServer?: () => Promise<{ status: string; message?: string }>;
+            autoRegisterMCPTools?: (
+              components: Array<{
+                id: string;
+                actions: Array<{
+                  name: string;
+                  description: string;
+                  parameters?: Record<
+                    string,
+                    { type: string; description?: string; required?: boolean }
+                  >;
+                }>;
+              }>
+            ) => Promise<{
+              status: string;
+              registered: number;
+              errors: string[];
+            }>;
           };
         }
       ).workerPluginManager;
 
-      if (workerManager && workerManager.setupComlinkBridge) {
+      if (workerManager) {
         try {
+          // Setup Comlink bridge
           await workerManager.setupComlinkBridge();
+
+          // Initialize MCP server
+          const mcpInitResult = await workerManager.initMCPServer?.();
+          console.log("MCP server initialized:", mcpInitResult);
+
+          // Auto-register API components as MCP tools
+          if (
+            mcpInitResult?.status === "success" &&
+            workerManager.autoRegisterMCPTools
+          ) {
+            // Convert API components to the format expected by autoRegisterMCPTools
+            const components = getComponents().map((component) => ({
+              id: component.id,
+              actions: component.actions.map((action) => ({
+                name: action.id,
+                description: action.description,
+                parameters: action.parameters?.reduce(
+                  (acc, param) => ({
+                    ...acc,
+                    [param.name]: {
+                      type: param.type,
+                      description: param.description,
+                      required: param.required,
+                    },
+                  }),
+                  {}
+                ),
+              })),
+            }));
+
+            // Register the tools
+            const registerResult = await workerManager.autoRegisterMCPTools(
+              components
+            );
+            console.log("Auto-registered MCP tools:", registerResult);
+          }
         } catch (error) {
-          console.error("Failed to setup Comlink bridge:", error);
+          console.error("Failed to setup API integration:", error);
         }
       }
     };

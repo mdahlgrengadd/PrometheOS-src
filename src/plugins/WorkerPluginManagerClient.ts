@@ -271,10 +271,10 @@ class WorkerPluginManagerClient {
   }
 
   /**
-   * Helper method to chat with WebLLM
+   * Helper method to chat with WebLLM with tools enabled
    * Returns a ReadableStream that can be consumed in the UI
    */
-  async chat(
+  async chatWithTools(
     messages: { role: string; content: string }[],
     temperature: number = 0.7
   ): Promise<ReadableStream<string>> {
@@ -288,10 +288,27 @@ class WorkerPluginManagerClient {
       await this.registerPlugin("webllm", workerPath);
     }
 
-    // Call the worker and get the response
+    // Make sure MCP server is registered
+    if (!this.registeredPlugins.has("mcp-server")) {
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/mcp-server.js"
+        : import.meta.env.BASE_URL + "/worker/mcp-server.js";
+
+      await this.registerPlugin("mcp-server", workerPath);
+      await this.initMCPServer();
+    }
+
+    // Check if model supports function calling
+    const supportsFunctionCalling = await this.callPlugin(
+      "webllm",
+      "supportsFunctionCalling"
+    );
+
+    // Call the worker with tools enabled if supported
     const result = await this.callPlugin("webllm", "chat", {
       messages,
       temperature,
+      enableTools: Boolean(supportsFunctionCalling),
     });
 
     // If result is an error object
@@ -607,25 +624,30 @@ class WorkerPluginManagerClient {
   }
 
   /**
-   * Get MCP server statistics
+   * Unregister all MCP tools for a specific component
    */
-  async getMCPStats(): Promise<{ toolCount: number; isInitialized: boolean }> {
+  async unregisterMCPComponent(
+    componentId: string
+  ): Promise<{ status: string; unregistered: number; errors: string[] }> {
     if (!this.registeredPlugins.has("mcp-server")) {
-      return { toolCount: 0, isInitialized: false };
+      return { status: "error", unregistered: 0, errors: ["MCP server not available"] };
     }
 
-    const result = await this.callPlugin("mcp-server", "getStats");
+    const result = await this.callPlugin("mcp-server", "unregisterComponent", {
+      componentId,
+    });
 
     if (
       typeof result === "object" &&
       result !== null &&
-      "toolCount" in result &&
-      "isInitialized" in result
+      "status" in result &&
+      "unregistered" in result &&
+      "errors" in result
     ) {
-      return result as { toolCount: number; isInitialized: boolean };
+      return result as { status: string; unregistered: number; errors: string[] };
     }
 
-    return { toolCount: 0, isInitialized: false };
+    throw new Error("Component unregistration returned invalid result");
   }
 
   /**
@@ -755,6 +777,50 @@ class WorkerPluginManagerClient {
           });
         }
       }
+      // Handle MCP tool execution requests
+      else if (data && data.type === "mcp-tool-request") {
+        const { requestId, componentId, action, params } = data;
+        console.log(`MCP tool request received: ${requestId} for ${componentId}.${action}`, params);
+
+        try {
+          // Get the global API bridge
+          const bridge = (globalThis as Record<string, unknown>)
+            .desktop_api_bridge;
+
+          if (!bridge) {
+            throw new Error("Desktop API bridge not available");
+          }
+
+          // Execute the action on the specified component
+          const result = await (
+            bridge as {
+              execute(
+                componentId: string,
+                action: string,
+                params?: Record<string, unknown>
+              ): Promise<unknown>;
+            }
+          ).execute(componentId, action, params);
+
+          console.log(`MCP tool execution success: ${requestId}`, result);
+
+          // Send successful response back to worker
+          this.worker.postMessage({
+            type: "mcp-tool-response",
+            requestId,
+            result,
+          });
+        } catch (error) {
+          console.error(`MCP tool execution error: ${requestId}`, error);
+
+          // Send error response back to worker
+          this.worker.postMessage({
+            type: "mcp-tool-response",
+            requestId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
       // Handle MCP protocol messages
       else if (data && data.type === "mcp-protocol-message") {
         const message = data.message;
@@ -803,11 +869,15 @@ class WorkerPluginManagerClient {
    * This exposes the bridge methods directly to the Pyodide worker via Comlink
    */
   async setupComlinkBridge(): Promise<void> {
-    // Get the desktop API bridge
+    // Get the desktop API bridge and MCP protocol handler
     const bridge = (globalThis as Record<string, unknown>).desktop_api_bridge;
+    const mcpHandler = (globalThis as Record<string, unknown>)
+      .desktop_mcp_handler;
 
-    if (!bridge) {
-      console.error("Desktop API bridge not available for Comlink exposure");
+    if (!bridge || !mcpHandler) {
+      console.error(
+        "Desktop API bridge or MCP handler not available for Comlink exposure"
+      );
       return;
     }
 
@@ -819,13 +889,54 @@ class WorkerPluginManagerClient {
       console.log("Sending Comlink port to plugin worker");
       this.worker.postMessage({ type: "comlink-port", port: port2 }, [port2]);
 
-      // Expose the desktop API bridge via Comlink on port1
-      Comlink.expose(bridge, port1);
+      // Expose both the desktop API bridge and MCP handler via Comlink on port1
+      Comlink.expose({ api: bridge, mcp: mcpHandler }, port1);
 
-      console.log("Desktop API bridge exposed via Comlink on message channel");
+      console.log(
+        "Desktop API bridge and MCP handler exposed via Comlink on message channel"
+      );
     } catch (error) {
       console.error("Failed to expose Desktop API bridge via Comlink:", error);
     }
+  }
+
+  /**
+   * Helper method to chat with WebLLM
+   * Returns a ReadableStream that can be consumed in the UI
+   */
+  async chat(
+    messages: { role: string; content: string }[],
+    temperature: number = 0.7
+  ): Promise<ReadableStream<string>> {
+    // Make sure webllm plugin is registered
+    if (!this.registeredPlugins.has("webllm")) {
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/webllm.js" // Production path
+        : import.meta.env.BASE_URL + "/worker/webllm.js"; // Development path
+
+      await this.registerPlugin("webllm", workerPath);
+    }
+
+    // Call the worker with tools disabled
+    const result = await this.callPlugin("webllm", "chat", {
+      messages,
+      temperature,
+      enableTools: false,
+    });
+
+    // If result is an error object
+    if (typeof result === "object" && result !== null && "error" in result) {
+      throw new Error(String(result.error));
+    }
+
+    // The worker transfers the ReadableStream, so it should be usable directly
+    if (result instanceof ReadableStream) {
+      return result;
+    }
+
+    // In case it's not a ReadableStream for some reason, throw an error
+    throw new Error("WebLLM chat did not return a ReadableStream");
   }
 }
 
