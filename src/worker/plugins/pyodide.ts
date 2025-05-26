@@ -3,7 +3,7 @@
  * Follows the established worker plugin pattern from webllm.ts
  */
 
-import { WorkerPlugin } from "../../plugins/types";
+import { WorkerPlugin } from '../../plugins/types';
 
 // Interface for Python execution results
 export interface PythonResult {

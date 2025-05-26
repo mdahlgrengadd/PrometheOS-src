@@ -3,9 +3,9 @@
  * This is a simple test to ensure Pyodide integration works
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 
-import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { workerPluginManager } from '../../WorkerPluginManagerClient';
 
 export const PyodideTest: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
