@@ -815,13 +815,14 @@ class WorkerPluginManagerClient {
       // Create a message channel for dedicated Comlink communication
       const { port1, port2 } = new MessageChannel();
 
-      // Send the port to the worker
-      this.worker.postMessage({ type: "comlink-port" }, [port2]);
+      // Send the port to the plugin worker for Comlink bridging
+      console.log("Sending Comlink port to plugin worker");
+      this.worker.postMessage({ type: "comlink-port", port: port2 }, [port2]);
 
-      // Expose the bridge via Comlink on port1
+      // Expose the desktop API bridge via Comlink on port1
       Comlink.expose(bridge, port1);
 
-      console.log("Desktop API bridge exposed via Comlink");
+      console.log("Desktop API bridge exposed via Comlink on message channel");
     } catch (error) {
       console.error("Failed to expose Desktop API bridge via Comlink:", error);
     }

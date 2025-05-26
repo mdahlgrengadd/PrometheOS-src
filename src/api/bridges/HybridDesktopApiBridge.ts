@@ -9,8 +9,8 @@ import { eventBus } from '../../plugins/EventBus';
 import { IApiComponent, IApiContextValue } from '../core/types';
 
 export interface DesktopApiBridge {
-  // Core API methods
-  listComponents(): string[];
+  // Core API methods (all promise-based to support Comlink remote)
+  listComponents(): Promise<string[]>;
   execute(
     componentId: string,
     action: string,
@@ -19,8 +19,8 @@ export interface DesktopApiBridge {
   subscribeEvent(
     eventName: string,
     callback: (data: unknown) => void
-  ): () => void;
-  emitEvent(eventName: string, data?: unknown): void;
+  ): Promise<() => void>;
+  emitEvent(eventName: string, data?: unknown): Promise<void>;
 }
 
 /**
@@ -32,7 +32,7 @@ export function createDesktopApiBridge(): DesktopApiBridge {
     /**
      * List all available API components
      */
-    listComponents(): string[] {
+    async listComponents(): Promise<string[]> {
       try {
         // Access the global API context if available
         const apiContext = (globalThis as Record<string, unknown>)
@@ -78,10 +78,10 @@ export function createDesktopApiBridge(): DesktopApiBridge {
     /**
      * Subscribe to EventBus events
      */
-    subscribeEvent(
+    async subscribeEvent(
       eventName: string,
       callback: (data: unknown) => void
-    ): () => void {
+    ): Promise<() => void> {
       const unsubscribe = eventBus.subscribe(eventName, callback);
       return unsubscribe;
     },
@@ -89,7 +89,7 @@ export function createDesktopApiBridge(): DesktopApiBridge {
     /**
      * Emit an event to the EventBus
      */
-    emitEvent(eventName: string, data?: unknown): void {
+    async emitEvent(eventName: string, data?: unknown): Promise<void> {
       eventBus.emit(eventName, data);
     },
   };

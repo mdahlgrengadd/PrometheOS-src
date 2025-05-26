@@ -7,6 +7,8 @@ import * as Comlink from 'comlink';
 
 import { WorkerPlugin } from '../../plugins/types';
 
+import type { DesktopApiBridge } from "../../api/bridges/HybridDesktopApiBridge";
+
 // Interface for Python execution results
 export interface PythonResult {
   success: boolean;
@@ -200,7 +202,7 @@ class DesktopAPI:
                 
             # Direct call to the Comlink proxy
             result = await api_comlink.listComponents()
-            return result
+            return result.to_py()
             
         except Exception as e:
             print(f"Error listing components via Comlink: {e}")
@@ -224,7 +226,7 @@ class DesktopAPI:
             
             # Direct call that returns the actual result
             result = await api_comlink.execute(component_id, action, js_params)
-            return result
+            return result.to_py()
             
         except Exception as e:
             print(f"Error executing {component_id}.{action} via Comlink: {e}")
@@ -718,40 +720,20 @@ await micropip.install('${packageName}')
     try {
       console.log("Received Comlink port from main thread");
 
-      // Store the port for Python to access
-      (self as unknown as Record<string, MessagePort>).comlinkPort = port;
+      // Wrap the port via Comlink and expose as desktop_api_comlink
+      console.log("Wrapping Comlink port for desktop_api_comlink");
+      // Comlink.wrap returns a remote proxy; cast to DesktopApiBridge
+      const comlinkBridge = Comlink.wrap<DesktopApiBridge>(
+        port
+      ) as unknown as DesktopApiBridge;
+      (
+        globalThis as unknown as { desktop_api_comlink?: DesktopApiBridge }
+      ).desktop_api_comlink = comlinkBridge;
+      console.log("desktop_api_comlink proxy set on globalThis");
 
-      // Setup port message handler
-      port.onmessage = (event) => {
-        console.log("Received message via Comlink port:", event.data);
-        // Messages will be handled by Comlink automatically
-      };
-
-      // Initialize the port connection
+      // Start the port for Comlink
       port.start();
-
-      // Set up Comlink on the port
-      Comlink.expose(port);
-
-      // Make sure Python knows about the port
-      if (this._pyodide) {
-        // Expose the port to Python
-        this._pyodide.globals.set("comlinkPort", port);
-
-        // Run Python code to set up Comlink communication
-        this._pyodide.runPython(`
-import js
-from pyodide.ffi import create_proxy, to_js
-
-# Set up Comlink port access
-comlinkPort = js.comlinkPort
-print("Comlink port exposed to Python, ready for communication")
-        `);
-
-        console.log("Comlink port exposed to Python");
-      } else {
-        console.warn("Pyodide not initialized, saving port for later use");
-      }
+      console.log("Comlink bridge proxy exposed to Python context");
     } catch (error) {
       console.error("Error handling Comlink port:", error);
     }
