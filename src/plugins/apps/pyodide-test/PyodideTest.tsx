@@ -183,7 +183,6 @@ export const PyodideTest: React.FC = () => {
               Simple arithmetic and output
             </div>
           </button>
-
           <button
             onClick={() =>
               setPythonCode(
@@ -193,23 +192,101 @@ export const PyodideTest: React.FC = () => {
             className="p-3 border rounded-lg text-left hover:bg-gray-50"
           >
             <div className="font-semibold">JSON Processing</div>
-            <div className="text-sm text-gray-600">Test JSON manipulation</div>
-          </button>
-
+            <div className="text-sm text-gray-600">Test JSON manipulation</div>          </button>
           <button
             onClick={() =>
               setPythonCode(
-                '# This will test desktop API bridge when implemented\n# desktop.api.list_components()\nprint("Desktop API bridge not yet implemented")'
+                `# Simple Desktop API Verification Test
+print("=== Desktop API Verification ===")
+
+# Check if desktop object exists
+try:
+    print(f"Desktop object type: {type(desktop)}")
+    print(f"Desktop API type: {type(desktop.api)}")
+    print(f"Desktop Events type: {type(desktop.events)}")
+    print("✓ Desktop object is available")
+except NameError as e:
+    print(f"✗ Desktop object not found: {e}")
+    print("This indicates the Desktop API bridge setup failed")
+
+# Check available methods
+try:
+    print(f"Desktop API methods: {dir(desktop.api)}")
+    print(f"Desktop Events methods: {dir(desktop.events)}")
+except:
+    print("Could not inspect desktop object methods")
+
+print("=== Verification Complete ===")
+"Desktop API verification completed"`
               )
             }
             className="p-3 border rounded-lg text-left hover:bg-gray-50"
           >
-            <div className="font-semibold">Desktop API Bridge</div>
+            <div className="font-semibold">Desktop API Verification</div>
             <div className="text-sm text-gray-600">
-              Future: Call desktop APIs
+              Check if desktop API is available
             </div>
           </button>
+          <button
+            onClick={() =>
+              setPythonCode(
+                `# Comprehensive Desktop API Bridge Test
+print("=== Desktop API Bridge Test Suite ===")
+print()
 
+# Test 1: List available components
+print("1. Testing component listing...")
+components = desktop.api.list_components()
+comp_count = len(components) if hasattr(components, '__len__') else "unknown"
+print(f"   Found {comp_count} components")
+print(f"   Result: {components}")
+print()
+
+# Test 2: Test event emission
+print("2. Testing event emission...")
+events_result = desktop.events.emit("python_test_event", {
+    "message": "Hello from Python!",
+    "timestamp": "2025-05-26", 
+    "test": True
+})
+print(f"   Event emission result: {events_result}")
+print()
+
+# Test 3: Test API execution (calculator example)
+print("3. Testing API execution...")
+exec_result = desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
+print(f"   Calculator execution result: {exec_result}")
+print()
+
+# Test 4: Test system API call
+print("4. Testing system API call...")
+system_result = desktop.api.execute("launcher", "notify", {
+    "message": "Python API test notification",
+    "type": "sonner"
+})
+print(f"   System notification result: {system_result}")
+print()
+
+# Test 5: Test error handling
+print("5. Testing error handling...")
+try:
+    error_result = desktop.api.execute("nonexistent", "fakeAction", {})
+    print(f"   Error test result: {error_result}")
+except Exception as e:
+    print(f"   Caught exception: {e}")
+print()
+
+print("=== Desktop API Bridge Test Complete ===")
+"Success: All API bridge tests executed!"`
+              )
+            }
+            className="p-3 border rounded-lg text-left hover:bg-gray-50"
+          >
+            <div className="font-semibold">API Bridge Test Suite</div>
+            <div className="text-sm text-gray-600">
+              Comprehensive API bridge testing
+            </div>
+          </button>
           <button
             onClick={() =>
               setPythonCode(
@@ -220,6 +297,19 @@ export const PyodideTest: React.FC = () => {
           >
             <div className="font-semibold">Loops & Variables</div>
             <div className="text-sm text-gray-600">Test control flow</div>
+          </button>
+          <button
+            onClick={() =>
+              setPythonCode(
+                '# Test Event Subscription\nprint("Testing event subscription...")\n\n# Define event handler\ndef handle_test_event(data):\n    print(f"Received event: {data}")\n\n# Subscribe to events\nunsubscribe = desktop.events.subscribe("python_test_event", handle_test_event)\nprint("Subscribed to python_test_event")\n\n# Emit a test event\ndesktop.events.emit("python_test_event", {"timestamp": "2025-05-26", "source": "Python"})\n\nprint("Event subscription test completed")'
+              )
+            }
+            className="p-3 border rounded-lg text-left hover:bg-gray-50"
+          >
+            <div className="font-semibold">Event Subscription</div>
+            <div className="text-sm text-gray-600">
+              Test Python event handling
+            </div>
           </button>
         </div>
       </div>

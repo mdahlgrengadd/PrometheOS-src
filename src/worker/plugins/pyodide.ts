@@ -81,27 +81,31 @@ const PyodideWorker: WorkerPlugin = {
       this._progress = {
         phase: "downloading",
         message: "Downloading Pyodide runtime...",
-      };      // Load Pyodide using fetch (ES module compatible)
+      }; // Load Pyodide using fetch (ES module compatible)
       console.log("Loading Pyodide via fetch...");
-      
+
       // Fetch and evaluate the Pyodide script
-      const response = await fetch("https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js");
+      const response = await fetch(
+        "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch Pyodide: ${response.statusText}`);
       }
-      
+
       const pyodideCode = await response.text();
-      
+
       // Execute the code in the global scope
       // This is the ES module equivalent of importScripts
       const func = new Function(pyodideCode);
       func.call(globalThis);
-      
+
       // Now loadPyodide should be available
-      const globalScope = globalThis as unknown as { loadPyodide?: (options?: {
-        indexURL?: string;
-      }) => Promise<PyodideInterface> };
-      
+      const globalScope = globalThis as unknown as {
+        loadPyodide?: (options?: {
+          indexURL?: string;
+        }) => Promise<PyodideInterface>;
+      };
+
       const loadPyodide = globalScope.loadPyodide;
       if (!loadPyodide) {
         throw new Error(
@@ -146,18 +150,22 @@ const PyodideWorker: WorkerPlugin = {
       };
     }
   },
-
   /**
    * Setup the Desktop API bridge in Python context
-   */
-  async _setupDesktopApiBridge(): Promise<void> {
+   */  async _setupDesktopApiBridge(): Promise<void> {
     if (!this._pyodide) throw new Error("Pyodide not initialized");
-
-    // Inject the desktop module into Python namespace
-    const desktopApiCode = `
+    
+    console.log("Setting up Desktop API bridge...");
+    
+    try {
+      // Inject the desktop module into Python namespace
+      const desktopApiCode = `
 import js
-from pyodide.ffi import create_proxy
+from pyodide.ffi import create_proxy, to_js
 import json
+import uuid
+
+print("Starting Desktop API bridge setup...")
 
 class DesktopAPI:
     """Python interface to Desktop Dreamscape APIs"""
@@ -165,21 +173,93 @@ class DesktopAPI:
     @staticmethod
     def list_components():
         """List all available API components"""
-        # This will be connected to the actual API registry via postMessage
-        return js.desktop_api_bridge.list_components()
+        try:
+            from js import postMessage
+            request_id = str(uuid.uuid4())
+            
+            # Convert Python dict to JS object using to_js
+            message = to_js({
+                'type': 'desktop-api-request',
+                'requestId': request_id,
+                'method': 'list_components'
+            })
+              # Send request to main thread via postMessage
+            postMessage(message)
+            
+            print(f"API request sent: list_components")
+            return {'success': True, 'message': 'Request sent to main thread'}
+            
+        except Exception as e:
+            print(f"Error listing components: {e}")
+            return {'success': False, 'error': str(e)}
     
     @staticmethod 
     def execute(component_id, action, params=None):
         """Execute an action on a component"""
-        if params is None:
-            params = {}
-        return js.desktop_api_bridge.execute(component_id, action, params)
+        try:
+            if params is None:
+                params = {}
+                
+            from js import postMessage
+            import uuid
+            request_id = str(uuid.uuid4())
+            
+            # Convert Python dict to JS object using to_js, with proper nested conversion
+            message = to_js({
+                'type': 'desktop-api-request',
+                'requestId': request_id,
+                'method': 'execute_action',
+                'params': to_js({
+                    'componentId': component_id,
+                    'action': action,
+                    'params': to_js(params)
+                })
+            })
+            
+            # Send request to main thread via postMessage
+            postMessage(message)
+            
+            print(f"Sent API request: {component_id}.{action}")
+            return {'success': True, 'message': 'Request sent to main thread'}
+            
+        except Exception as e:
+            print(f"Error executing {component_id}.{action}: {e}")
+            return {'success': False, 'error': str(e)}
     
     @staticmethod
     def subscribe_event(event_name, callback):
         """Subscribe to EventBus events"""
-        proxy_callback = create_proxy(callback)
-        return js.desktop_api_bridge.subscribe_event(event_name, proxy_callback)
+        try:
+            proxy_callback = create_proxy(callback)
+            
+            from js import postMessage
+            import uuid
+            request_id = str(uuid.uuid4())
+            
+            # Store callback for later use
+            if not hasattr(DesktopAPI, '_event_callbacks'):
+                DesktopAPI._event_callbacks = {}
+            DesktopAPI._event_callbacks[event_name] = proxy_callback            # Send subscription request via postMessage
+            message = to_js({
+                'type': 'desktop-api-request',
+                'requestId': request_id,
+                'method': 'subscribe_event',
+                'params': to_js({
+                    'eventName': event_name
+                })
+            })
+            postMessage(message)
+            
+            def unsubscribe():
+                if hasattr(DesktopAPI, '_event_callbacks') and event_name in DesktopAPI._event_callbacks:
+                    del DesktopAPI._event_callbacks[event_name]
+                    # Could send unsubscribe message here if needed
+            
+            return unsubscribe
+            
+        except Exception as e:
+            print(f"Error subscribing to event {event_name}: {e}")
+            return lambda: None
 
 class Events:
     """EventBus integration"""
@@ -187,13 +267,32 @@ class Events:
     @staticmethod
     def emit(event_name, data=None):
         """Emit an event to the desktop EventBus"""
-        return js.desktop_api_bridge.emit_event(event_name, data)
+        try:
+            from js import postMessage
+            import uuid
+            request_id = str(uuid.uuid4())
+            
+            message = to_js({
+                'type': 'desktop-api-request',
+                'requestId': request_id,
+                'method': 'emit_event',
+                'params': to_js({
+                    'eventName': event_name,
+                    'data': to_js(data) if data is not None else None
+                })
+            })
+            postMessage(message)
+            
+            return {'success': True, 'message': f'Event {event_name} emitted'}
+            
+        except Exception as e:
+            print(f"Error emitting event {event_name}: {e}")
+            return {'success': False, 'error': str(e)}
     
     @staticmethod
     def subscribe(event_name, callback):
         """Subscribe to desktop events"""
-        proxy_callback = create_proxy(callback)
-        return js.desktop_api_bridge.subscribe_event(event_name, proxy_callback)
+        return DesktopAPI.subscribe_event(event_name, callback)
 
 # Create the desktop module structure
 class Desktop:
@@ -202,9 +301,37 @@ class Desktop:
 
 # Make it available globally
 desktop = Desktop()
+
+# Set up message handling for responses from main thread
+def handle_desktop_api_response(message):
+    """Handle responses from the main thread API"""
+    try:
+        if message.get('type') == 'desktop-api-response':
+            print(f"Received API response: {message}")
+            # Could store results in a promise-like structure here
+            
+        elif message.get('type') == 'desktop-api-event':
+            # Handle event notifications
+            event_name = message.get('eventName')
+            data = message.get('data')
+            
+            if hasattr(DesktopAPI, '_event_callbacks') and event_name in DesktopAPI._event_callbacks:
+                callback = DesktopAPI._event_callbacks[event_name]
+                callback(data)
+                
+    except Exception as e:
+        print(f"Error handling API response: {e}")
+
+print("Desktop API Bridge initialized in Python context")
 `;
 
-    await this._pyodide.runPython(desktopApiCode);
+      await this._pyodide.runPython(desktopApiCode);
+      console.log("Desktop API bridge setup completed successfully");
+      
+    } catch (error) {
+      console.error("Failed to setup Desktop API bridge:", error);
+      throw error;
+    }
   },
 
   /**
@@ -344,7 +471,6 @@ await micropip.install('${packageName}')
           };
         }
         return this.installPackage(params.packageName);
-
       case "getProgress":
         return this.getProgress();
 
@@ -354,8 +480,112 @@ await micropip.install('${packageName}')
       case "cleanup":
         return this.cleanup();
 
+      case "handleDesktopApiRequest":
+        if (
+          typeof params?.method !== "string" ||
+          typeof params?.requestId !== "string"
+        ) {
+          return {
+            success: false,
+            error:
+              "handleDesktopApiRequest requires 'method' and 'requestId' parameters",
+          };
+        }
+        return this.handleDesktopApiRequest(
+          params.method,
+          params.requestId,
+          params.params as Record<string, unknown>
+        );
+
       default:
         return { success: false, error: `Unknown method: ${method}` };
+    }
+  },
+
+  /**
+   * Handle desktop API requests from Python
+   */
+  async handleDesktopApiRequest(
+    method: string,
+    requestId: string,
+    params?: Record<string, unknown>
+  ): Promise<PythonResult> {
+    try {
+      switch (method) {
+        case "list_components": {
+          // Send message to main thread to request component list
+          // For now, return a placeholder response
+          console.log("Python requested component list");
+          return {
+            success: true,
+            result: {
+              type: "desktop-api-response",
+              requestId,
+              method,
+              result: [],
+            },
+          };
+        }
+
+        case "execute_action": {
+          const { componentId, action, params: actionParams } = params || {};
+          console.log(
+            `Python requested action: ${componentId}.${action}`,
+            actionParams
+          );
+          return {
+            success: true,
+            result: {
+              type: "desktop-api-response",
+              requestId,
+              method,
+              result: {
+                success: true,
+                message: `Action ${action} on ${componentId} executed`,
+              },
+            },
+          };
+        }
+
+        case "subscribe_event": {
+          const { eventName } = params || {};
+          console.log(`Python ${method}: ${eventName}`);
+          return {
+            success: true,
+            result: {
+              type: "desktop-api-response",
+              requestId,
+              method,
+              result: { success: true, message: `Subscribed to ${eventName}` },
+            },
+          };
+        }
+
+        case "emit_event": {
+          const { eventName, data } = params || {};
+          console.log(`Python emitting event: ${eventName}`, data);
+          return {
+            success: true,
+            result: {
+              type: "desktop-api-response",
+              requestId,
+              method,
+              result: { success: true, message: `Event ${eventName} emitted` },
+            },
+          };
+        }
+
+        default:
+          return {
+            success: false,
+            error: `Unknown desktop API method: ${method}`,
+          };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   },
 };

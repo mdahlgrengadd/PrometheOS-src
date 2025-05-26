@@ -1,7 +1,7 @@
-// Import the manifest for pyodide-test to get the workerEntrypoint
-import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
 import * as Comlink from "comlink";
 
+// Import the manifest for pyodide-test to get the workerEntrypoint
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
 import { PluginManifest } from "./types";
 
 // Define interfaces matching the worker's API
@@ -34,7 +34,6 @@ class WorkerPluginManagerClient {
   private workerApi: Comlink.Remote<WorkerPluginManager>;
   private isConnected = false;
   private registeredPlugins: Map<string, PluginWorkerInfo> = new Map();
-
   constructor() {
     // Create the worker with the pluginWorker.ts file
     this.worker = new Worker(
@@ -44,6 +43,9 @@ class WorkerPluginManagerClient {
 
     // Wrap the worker with Comlink
     this.workerApi = Comlink.wrap<WorkerPluginManager>(this.worker);
+
+    // Set up message handler for desktop API bridge requests
+    this.setupDesktopApiBridgeHandler();
   }
 
   /**
@@ -643,6 +645,117 @@ class WorkerPluginManagerClient {
     this.worker.terminate();
     this.isConnected = false;
     this.registeredPlugins.clear();
+  }
+
+  /**
+   * Set up message handler for desktop API bridge requests from Pyodide workers
+   */
+  private setupDesktopApiBridgeHandler(): void {
+    this.worker.addEventListener("message", async (event) => {
+      const { data } = event;
+
+      // Check if this is a desktop API request
+      if (data && data.type === "desktop-api-request") {
+        const { requestId, method, params } = data;
+
+        try {
+          let result: unknown; // Get the global API bridge
+          const bridge = (globalThis as Record<string, unknown>)
+            .desktop_api_bridge;
+
+          if (!bridge) {
+            throw new Error("Desktop API bridge not available");
+          } // Handle different API methods
+          switch (method) {
+            case "list_components": {
+              result = (
+                bridge as { listComponents(): string[] }
+              ).listComponents();
+              break;
+            }
+
+            case "execute_action": {
+              if (!params || !params.componentId || !params.action) {
+                throw new Error(
+                  "Missing required parameters for execute_action"
+                );
+              }
+              result = await (
+                bridge as {
+                  execute(
+                    componentId: string,
+                    action: string,
+                    params?: Record<string, unknown>
+                  ): Promise<unknown>;
+                }
+              ).execute(
+                params.componentId as string,
+                params.action as string,
+                params.params as Record<string, unknown>
+              );
+              break;
+            }
+
+            case "subscribe_event": {
+              if (!params || !params.eventName) {
+                throw new Error("Missing eventName for subscribe_event");
+              }
+              // For event subscription, we need to set up a callback that sends messages back to worker
+              const unsubscribe = (
+                bridge as {
+                  subscribeEvent(
+                    eventName: string,
+                    callback: (data: unknown) => void
+                  ): () => void;
+                }
+              ).subscribeEvent(
+                params.eventName as string,
+                (eventData: unknown) => {
+                  this.worker.postMessage({
+                    type: "desktop-api-event",
+                    requestId,
+                    eventName: params.eventName,
+                    data: eventData,
+                  });
+                }
+              );
+              result = { success: true, unsubscribe: requestId }; // Use requestId as unsubscribe token
+              break;
+            }
+
+            case "emit_event": {
+              if (!params || !params.eventName) {
+                throw new Error("Missing eventName for emit_event");
+              }
+              (
+                bridge as { emitEvent(eventName: string, data?: unknown): void }
+              ).emitEvent(params.eventName as string, params.data);
+              result = { success: true };
+              break;
+            }
+
+            default:
+              throw new Error(`Unknown desktop API method: ${method}`);
+          }
+
+          // Send successful response back to worker
+          this.worker.postMessage({
+            type: "desktop-api-response",
+            requestId,
+            success: true,
+            result,
+          });
+        } catch (error) {
+          // Send error response back to worker
+          this.worker.postMessage({
+            type: "desktop-api-response",
+            requestId,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    });
   }
 }
 
