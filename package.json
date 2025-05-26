@@ -123,6 +123,7 @@
     "@tailwindcss/typography": "^0.5.11",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.5.5",
+    "@types/path-browserify": "^1.0.3",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",

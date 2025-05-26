@@ -1,1 +1,1 @@
-export { VirtualFS, virtualFs } from "../../../../utils/virtual-fs";
+export { VirtualFS, virtualFs } from "@/utils/virtual-fs";

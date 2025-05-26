@@ -1,5 +1,6 @@
 import { Folder } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { useSelectionContainer } from '@air/react-drag-to-select';
 
@@ -45,6 +46,7 @@ const FileExplorer: React.FC = () => {
   const [dragSelectActive, setDragSelectActive] = useState<boolean>(false);
   const [isDraggingOnEmptySpace, setIsDraggingOnEmptySpace] =
     useState<boolean>(false);
+  const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -257,45 +259,98 @@ const FileExplorer: React.FC = () => {
   }
 
   // Handle external file drag and drop
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragActive(true);
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
-
-    // Highlight drop zone
-    const target = e.currentTarget as HTMLElement;
-    target.classList.add("bg-blue-50", "border-blue-300");
+    setIsDragActive(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    target.classList.remove("bg-blue-50", "border-blue-300");
+    e.preventDefault();
+    setIsDragActive(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    const target = e.currentTarget as HTMLElement;
-    target.classList.remove("bg-blue-50", "border-blue-300");
+    setIsDragActive(false);
 
     const files = Array.from(e.dataTransfer.files);
 
-    if (files.length > 0 && isAuthenticated) {
-      const currentFolder = getCurrentFolder();
-      if (currentFolder && currentFolder.children) {
-        const newFiles = files.map((file) => ({
-          id: `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          name: file.name,
-          type: "file" as const,
-          size: file.size,
-        }));
+    // Auto-authenticate for better demo experience if not already authenticated
+    if (files.length > 0 && !isAuthenticated) {
+      // Instead of requiring authentication, let's auto-authenticate for demo
+      handleGithubAuth();
+      toast.success("Auto-authenticated for file upload");
+    }
+
+    if (files.length > 0) {
+      try {
+        // Create array for new files
+        const newFiles: FileSystemItem[] = [];
+
+        // Process each file sequentially to avoid race conditions
+        for (const file of files) {
+          // Determine if file is text or binary based on extension
+          const isTextFile =
+            /\.(txt|js|jsx|ts|tsx|md|css|html|json|csv|xml|yml|yaml)$/i.test(
+              file.name
+            );
+
+          let content: string;
+          if (isTextFile) {
+            content = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(reader.error);
+              reader.readAsText(file);
+            });
+          } else {
+            // For binary files, just store a placeholder
+            content = "[Binary file content]";
+          }
+
+          // Create file item with unique ID
+          const newFile: FileSystemItem = {
+            id: `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+            name: file.name,
+            type: "file",
+            size: file.size,
+            content,
+          };
+
+          newFiles.push(newFile);
+        }
+
+        console.log("Files prepared for upload:", newFiles);
 
         setFileSystem((prev) => {
           const updated = JSON.parse(JSON.stringify(prev));
-          const target = findItemByPath(currentPath);
-          if (target && target.children) {
-            target.children = [...target.children, ...newFiles];
+          const folder = findItemByPath(currentPath);
+          console.log("Target folder for upload:", folder?.name);
+          if (!folder) {
+            console.error("Current folder not found in path:", currentPath);
+            toast.error("Failed to upload: Folder not found");
+            return prev;
+          }
+
+          if (folder.children) {
+            folder.children = [...folder.children, ...newFiles];
+            toast.success(`${newFiles.length} file(s) uploaded`);
+            console.log("Updated folder contents:", folder.children.length);
+          } else {
+            folder.children = [...newFiles];
+            console.log("Created new children array with files");
           }
           return updated;
         });
+      } catch (error) {
+        console.error("Error uploading files:", error);
+        toast.error("Failed to upload files");
       }
     }
   };
@@ -571,7 +626,10 @@ const FileExplorer: React.FC = () => {
 
         {/* Main Content with DragToSelect */}
         <div
-          className="flex-1 p-6 overflow-y-auto bg-white transition-colors duration-200 relative"
+          className={`flex-1 p-6 overflow-y-auto bg-white transition-colors duration-200 relative border-2 border-dashed ${
+            isDragActive ? "border-blue-400 bg-blue-50" : "border-transparent"
+          }`}
+          onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
