@@ -1,20 +1,27 @@
 # Roadmap: Model Context Protocol (MCP) Integration with Pyodide/Python Scripting
 
-## 🚀 Recent Progress Update
+## 🚀 **MAJOR MILESTONE ACHIEVED** - May 2025
 
-### ✅ **Phase 1.1 COMPLETED** *(December 2024)*
-- **Pyodide Worker Plugin**: Successfully implemented and deployed
-  - Fixed ES module compatibility issues with fetch-based Pyodide loading
-  - Removed invalid "json" package dependency (built-in to Python)
-  - All 15 worker plugins built and deployed successfully
-- **Development Environment**: Running at http://localhost:8081/prometheos/
-- **Testing Infrastructure**: Pyodide Test app available for verification
-- **Architecture**: Worker-based Python execution with Comlink integration
+### ✅ **Phase 1 FULLY COMPLETED** *(Phase 1.1 & 1.2)*
+- **🎉 Python-Desktop API Bridge OPERATIONAL** 🎉
+  - ✅ **HybridDesktopApiBridge**: Dual Comlink + MCP protocol support implemented
+  - ✅ **Full Python Integration**: `desktop.api.execute()`, `list_components()`, event system working
+  - ✅ **End-to-End Testing**: All API components (notepad, calculator, launcher) callable from Python
+  - ✅ **Robust Architecture**: Promise-based async/await support with proper error handling
+  - ✅ **Message Channel Communication**: postMessage bridge for MCP protocol compatibility
 
-### 🔶 **Next Priority**: Phase 1.2 - Python-Desktop API Bridge
-- Implement `DesktopAPI` Python module injection
-- Enable Python ↔ EventBus bidirectional communication
-- Connect Python scripts to existing API component system
+### ✅ **Phase 2.1 FOUNDATION COMPLETED** *(MCP Infrastructure)*
+- **🔥 MCP Server Worker**: Production-ready implementation
+  - ✅ **Auto-Registration**: API components automatically become MCP tools
+  - ✅ **JSON-RPC 2.0 Protocol**: Standards-compliant message handling
+  - ✅ **Tool Discovery**: `tools/list` endpoint with full schema generation
+  - ✅ **Tool Execution**: `tools/call` endpoint with parameter validation
+  - ✅ **Component Lifecycle**: Auto-register/unregister as plugins load/unload
+
+### 🔶 **Current Priority**: Phase 2.2 - WebLLM Function Calling Integration
+- Connect MCP tools to WebLLM chat interface for AI-driven desktop automation
+- Implement tool result display and multi-step workflows
+- Add conversational desktop control through natural language
 
 ---
 
@@ -92,69 +99,85 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - ✅ Include `asyncio`, `json`, `urllib` in Pyodide environment
 - ✅ **ES Module Worker Support** - Compatible with modern worker module system
 
-#### **Sprint 1.2: Python-Desktop API Bridge** 🔶 **IN PROGRESS**
 #### **Sprint 1.2: Python-Desktop API Bridge** ✅ **COMPLETED**
-**Duration**: 4-5 days  
+**Duration**: 4-5 days *(Completed May 2025)*
 **Deliverables**:
-- ✅ **Pyodide Test App**: Basic Python REPL component for testing (`src/plugins/apps/pyodide-test/`)
-- ✅ `DesktopAPI` Python module injected into Pyodide context
-- ✅ Python functions to call registered API components
-- ✅ Bidirectional data exchange (Python ↔ EventBus)
+- ✅ **Pyodide Test App**: Full Python REPL with desktop API integration (`src/plugins/apps/pyodide-test/`)
+- ✅ **HybridDesktopApiBridge**: Dual interface supporting both Comlink and MCP protocols
+- ✅ **Python Desktop Module**: `desktop.api.list_components()`, `desktop.api.execute()` fully functional
+- ✅ **Event System Integration**: `desktop.events.subscribe()`, `desktop.events.emit()` working
+- ✅ **Message Channel Architecture**: postMessage bridge for MCP JSON-RPC 2.0 compatibility
+- ✅ **Comprehensive Testing**: All system APIs (launcher, dialog, notepad, calculator) verified from Python
 
-**Current Status**: 
-- ✅ Full Comlink bridge working end-to-end
-- ✅ `desktop.api.list_components()` and `desktop.api.execute()` returning real results
-- ✅ Event emission and subscription working from Python
-- ✅ Calculator, launcher, notepad APIs callable from Python
-- 🔶 MCP JSON-RPC promise-based round-trip support pending
+**Technical Achievements**:
+- ✅ **Promise-based async/await**: Natural Python syntax for desktop API calls
+- ✅ **Error Handling**: Robust exception handling with detailed error messages  
+- ✅ **Data Serialization**: Proper JS↔Python object conversion using `to_js()`
+- ✅ **Worker Isolation**: Full Python runtime in dedicated Web Worker thread
 
-### **Phase 2: MCP Server Infrastructure** *(Sprints 2.1-2.2)* 🔶 **PARTIALLY IMPLEMENTED**
+### **Phase 2: MCP Server Infrastructure** *(Sprints 2.1-2.2)* ✅ **2.1 COMPLETED**, 🔶 **2.2 IN PROGRESS**
 
-#### **Sprint 2.1: MCP Protocol Implementation** 🔶 **FOUNDATION READY**
-#### **Sprint 2.1: MCP Protocol Implementation** 🔶 **IN PROGRESS**
-**Duration**: 5-6 days
+#### **Sprint 2.1: MCP Protocol Implementation** ✅ **COMPLETED**
+**Duration**: 5-6 days *(Completed May 2025)*
 **Deliverables**:
-- ✅ MCP server worker (`src/worker/plugins/mcp-server.ts`) - basic skeleton exists
-- ✅ Tool registration from API components (manual registration)
-- 🔶 JSON-RPC 2.0 protocol handler with promise-based response mapping
-- 🔶 Tool schema generation (OpenAPI → MCP tools)
+- ✅ **MCP Server Worker**: Full production implementation (`src/worker/plugins/mcp-server.ts`)
+- ✅ **Auto-Registration**: API components automatically become MCP tools on registration
+- ✅ **JSON-RPC 2.0 Protocol**: Complete standards-compliant message handler
+- ✅ **Tool Schema Generation**: Automatic OpenAPI → MCP tool conversion
+- ✅ **Tool Discovery**: `tools/list` endpoint returning all available desktop tools
+- ✅ **Tool Execution**: `tools/call` endpoint with parameter validation and real execution
+- ✅ **Resource API**: `resources/list` and `resources/read` for MCP resource protocol
+- ✅ **Component Lifecycle**: Automatic tool registration/unregistration as plugins load/unload
+
+**Technical Achievements**:
+- ✅ **Production-Ready Architecture**: Robust error handling and logging
+- ✅ **Schema Validation**: Full parameter type checking and required field validation
+- ✅ **API Integration**: Seamless connection to existing Desktop API system
+- ✅ **Performance Optimized**: Efficient tool lookup and execution
 
 **Current Status**:
-- ✅ API component infrastructure ready
-- ✅ OpenAPI generation for tools in place
-- 🔶 JSON-RPC promise-mapping implementation in progress
-- 🔶 End-to-end tool list and tool call returning real data pending
+- ✅ **Infrastructure Complete**: All core MCP protocol endpoints implemented
+- ✅ **Tool Registration**: 6+ system tools automatically available (launcher, dialog, notepad, calculator, etc.)
+- ✅ **Real Execution**: Tool calls execute actual desktop actions with real results
+- ✅ **Standards Compliant**: Full JSON-RPC 2.0 and MCP specification adherence
 
-#### **Sprint 2.2: Tool Discovery & Execution**
-**Duration**: 4-5 days
+#### **Sprint 2.2: WebLLM Function Calling Integration** 🔶 **IN PROGRESS**
+**Duration**: 4-5 days *(Current Priority)*
 **Deliverables**:
-- [ ] Dynamic tool registration when plugins load/unload
-- [ ] Tool execution with parameter validation  
-- [ ] Result formatting for LLM consumption
-- [ ] Tool categorization (System, Apps, Automation)
+- 🔶 **WebLLM Tool Support**: Extend WebLLM worker to support function calling
+- 🔶 **MCP Tool Integration**: Pass MCP tools to model context for function calling
+- 🔶 **Tool Call UI**: Display tool executions and results in chat interface
+- 🔶 **Multi-Step Workflows**: Support for complex tool sequences
 
-**MCP Tool Categories**:
-- **System Tools**: `launcher.launchApp`, `dialog.openDialog`, `notify`
-- **App Tools**: `webllm-chat.sendMessage`, `notepad.setText`, `calculator.add`
-- **Automation Tools**: `macro.execute`, `workflow.run`, `python.eval`
+**Current MCP Tool Categories Available**:
+- ✅ **System Tools**: `launcher.launchApp`, `launcher.killApp`, `launcher.notify`, `dialog.openDialog`
+- ✅ **Event Tools**: `event.listEvents`, `onEvent.waitForEvent` 
+- ✅ **App Tools**: `notepad.setValue`, `notepad.getValue`, `notepad.clear`, `notepad.appendText`
+- 🔶 **WebLLM Integration**: Function calling from chat interface **(Next Priority)**
 
-### **Phase 3: WebLLM Function Calling** *(Sprints 3.1-3.2)*
+### **Phase 3: WebLLM Function Calling** *(Sprints 3.1-3.2)* 🔶 **FOUNDATION READY**
 
-#### **Sprint 3.1: Function Calling Integration**
-**Duration**: 6-7 days
+#### **Sprint 3.1: WebLLM-MCP Integration** 🔶 **NEXT PRIORITY**
+**Duration**: 6-7 days *(Current Focus)*
 **Deliverables**:
-- [ ] Extend WebLLM worker with function calling support
-- [ ] MCP tool definitions passed to model context
-- [ ] Tool call parsing and execution pipeline
-- [ ] Parallel tool execution for complex workflows
+- 🔶 **WebLLM Function Calling**: Extend existing WebLLM worker with MCP tool support
+- 🔶 **Tool Context Integration**: Automatic MCP tool discovery and context injection
+- 🔶 **Chat Interface Enhancement**: Display tool calls and results in conversation
+- 🔶 **Tool Call Execution**: Parse LLM tool calls and execute via MCP server
 
-**Architecture**:
+**Foundation Ready**:
+- ✅ **WebLLM Worker**: Production-ready streaming chat implementation
+- ✅ **MCP Server**: Complete tool registry with 6+ desktop tools available
+- ✅ **API Infrastructure**: All components exposed via MCP protocol
+- ✅ **Worker Communication**: Comlink-based inter-worker messaging established
+
+**Architecture Plan**:
 ```typescript
-// WebLLM enhanced with MCP tools
-const tools = await mcpServer.getAvailableTools();
+// WebLLM enhanced with MCP tools (to be implemented)
+const mcpTools = await workerManager.callPlugin('mcp-server', 'listTools');
 const response = await engine.chat.completions.create({
   messages,
-  tools,
+  tools: mcpTools,
   tool_choice: "auto"
 });
 ```
@@ -217,18 +240,104 @@ const response = await engine.chat.completions.create({
 |-------|--------|----------|------|--------|
 | 1 | 1.1 | 3-4 days | Pyodide Worker Setup | ✅ **COMPLETED** |
 | 1 | 1.2 | 4-5 days | Python-Desktop API Bridge | ✅ **COMPLETED** |
-| 2 | 2.1 | 5-6 days | MCP Protocol Implementation | 🔶 **IN PROGRESS** |
-| 2 | 2.2 | 4-5 days | Tool Discovery & Execution | ⏳ **PENDING** |
-| 3 | 3.1 | 6-7 days | Function Calling Integration | ⏳ **PENDING** |
-| 3 | 3.2 | 4-5 days | Advanced Function Patterns | ⏳ **PENDING** |
+| 2 | 2.1 | 5-6 days | MCP Protocol Implementation | ✅ **COMPLETED** |
+| 2 | 2.2 | 4-5 days | WebLLM Function Calling | 🔶 **IN PROGRESS** |
+| 3 | 3.1 | 6-7 days | Advanced Function Patterns | ⏳ **READY** |
+| 3 | 3.2 | 4-5 days | Tool UI & Workflows | ⏳ **PENDING** |
 | 4 | 4.1 | 5-6 days | Python Script Management | ⏳ **PENDING** |
 | 4 | 4.2 | 6-7 days | Advanced Python Capabilities | ⏳ **PENDING** |
 | 5 | 5.1 | 4-5 days | End-to-End Integration | ⏳ **PENDING** |
 | 5 | 5.2 | 3-4 days | Documentation & Testing | ⏳ **PENDING** |
 
 **Total Estimated Duration**: 45-54 days (9-11 weeks)  
-**Completed**: 1/10 sprints (10%) - Phase 1.1 ✅  
-**Next Milestone**: Complete Python-Desktop API Bridge (Phase 1.2)
+**Completed**: 3.5/10 sprints (35%) - **MAJOR PROGRESS** 🚀
+- ✅ **Phase 1 Complete**: Full Python-Desktop API integration  
+- ✅ **Phase 2.1 Complete**: Production MCP server with tool registry
+- 🔶 **Phase 2.2 Active**: WebLLM function calling integration
+
+**Next Critical Milestone**: Complete WebLLM-MCP integration for AI-driven desktop automation
+
+---
+
+## 🎯 **CURRENT IMPLEMENTATION STATUS** - May 2025
+
+### ✅ **COMPLETED ACHIEVEMENTS**
+
+#### **🔥 Python-Desktop API Bridge - PRODUCTION READY**
+- **Full Integration**: Python scripts can call any desktop API with `await desktop.api.execute()`
+- **Event System**: Bidirectional event subscription/emission between Python and desktop
+- **Robust Architecture**: Promise-based async/await with comprehensive error handling
+- **Testing Verified**: All system APIs (launcher, notepad, calculator, dialog) working from Python
+
+#### **🔥 MCP Server Infrastructure - FULLY OPERATIONAL**  
+- **Auto-Registration**: API components automatically become MCP tools on plugin load
+- **Standards Compliant**: Full JSON-RPC 2.0 and MCP protocol implementation
+- **Tool Discovery**: `tools/list` endpoint with complete schema generation
+- **Tool Execution**: `tools/call` endpoint executing real desktop actions
+- **Resource API**: `resources/list` and `resources/read` for MCP resource protocol
+- **6+ Active Tools**: System tools (launcher, dialog, events, notepad) ready for AI consumption
+
+### 🔶 **NEXT CRITICAL MILESTONE**: WebLLM Function Calling
+
+#### **Current Focus - Sprint 2.2**
+**Goal**: Enable WebLLM to discover and call desktop tools through natural language
+
+**Implementation Plan**:
+1. **Tool Context Injection**: Pass MCP tools to WebLLM model context
+2. **Function Call Parsing**: Parse LLM tool calls and route to MCP server  
+3. **Result Integration**: Display tool execution results in chat conversation
+4. **Error Handling**: Graceful handling of tool call failures
+
+**Expected Timeline**: 4-5 days to complete WebLLM-MCP integration
+
+### 🚀 **BREAKTHROUGH ACHIEVED**
+
+The project has reached a **major architectural milestone**:
+- ✅ **Python Runtime**: Full Pyodide integration with desktop APIs
+- ✅ **MCP Protocol**: Standards-compliant tool server with real desktop integration  
+- ✅ **API System**: Comprehensive component registration and action handling
+- ✅ **Worker Architecture**: Isolated compute for Python, WebLLM, and MCP server
+
+**This represents the foundation for AI-native desktop automation.** The next phase will unlock conversational desktop control through natural language.
+
+---
+
+## 🎯 **ARCHITECTURE OVERVIEW** - Current State
+
+### **Completed Infrastructure** ✅
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Python        │    │   MCP Server     │    │  Desktop APIs   │
+│   (Pyodide)     │◄──►│   Worker         │◄──►│   Components    │
+│                 │    │                  │    │                 │
+│ • API Calls     │    │ • Tool Registry  │    │ • Notepad       │
+│ • Event System  │    │ • JSON-RPC 2.0   │    │ • Calculator    │
+│ • Async/Await   │    │ • Auto-Register  │    │ • Launcher      │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         ▲                        ▲                        ▲
+         │                        │                        │
+         ▼                        ▼                        ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    EventBus + API Context                      │
+│               (Central Communication Hub)                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **Next Integration** 🔶
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   WebLLM        │    │   MCP Server     │    │  Desktop APIs   │
+│   Chat Worker   │◄──►│   Worker         │◄──►│   Components    │
+│                 │    │                  │    │                 │
+│ • Function Call │    │ • Tool Discovery │    │ • Real Actions  │
+│ • Tool Context  │    │ • Tool Execution │    │ • Live Results  │
+│ • Natural Lang  │    │ • Result Format  │    │ • State Updates │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+```
+
+**Vision**: User asks WebLLM "Create a note with today's weather" → WebLLM calls `notepad.setValue` tool → Real notepad opens with content
 
 ---
 
