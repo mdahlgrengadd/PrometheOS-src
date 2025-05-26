@@ -25,6 +25,7 @@ export interface PyodideProgress {
 // Pyodide interface (we'll load it dynamically)
 interface PyodideInterface {
   runPython(code: string): unknown;
+  runPythonAsync?(code: string): Promise<unknown>;
   loadPackage(packages: string | string[]): Promise<void>;
   globals: {
     get(name: string): unknown;
@@ -192,9 +193,9 @@ class DesktopAPI:
     async def list_components():
         """List all available API components"""
         try:
-            # Use Comlink proxy to directly call the API
-            api_comlink = js.globalThis.desktop_api_comlink
-            if not api_comlink:
+            # Safely get Comlink bridge from globalThis
+            api_comlink = getattr(js.globalThis, 'desktop_api_comlink', None)
+            if api_comlink is None:
                 raise Exception("Comlink API bridge not available")
                 
             # Direct call to the Comlink proxy
@@ -213,9 +214,9 @@ class DesktopAPI:
             if params is None:
                 params = {}
                 
-            # Use Comlink proxy to directly call the API
-            api_comlink = js.globalThis.desktop_api_comlink
-            if not api_comlink:
+            # Safely get Comlink bridge from globalThis
+            api_comlink = getattr(js.globalThis, 'desktop_api_comlink', None)
+            if api_comlink is None:
                 raise Exception("Comlink API bridge not available")
                 
             # Convert Python dict to JS object with proper conversion
@@ -236,9 +237,9 @@ class DesktopAPI:
         try:
             proxy_callback = create_proxy(callback)
             
-            # Use Comlink proxy
-            api_comlink = js.globalThis.desktop_api_comlink
-            if not api_comlink:
+            # Safely get Comlink bridge from globalThis
+            api_comlink = getattr(js.globalThis, 'desktop_api_comlink', None)
+            if api_comlink is None:
                 raise Exception("Comlink API bridge not available")
             
             # Direct call to subscribe
@@ -371,9 +372,9 @@ class Events:
     async def emit(event_name, data=None):
         """Emit an event to the desktop EventBus"""
         try:
-            # Use Comlink proxy
-            api_comlink = js.globalThis.desktop_api_comlink
-            if not api_comlink:
+            # Safely get Comlink bridge from globalThis
+            api_comlink = getattr(js.globalThis, 'desktop_api_comlink', None)
+            if api_comlink is None:
                 raise Exception("Comlink API bridge not available")
                 
             # Convert data for JS
@@ -585,8 +586,14 @@ sys.stdout = _stdout_capture
 `);
       }
 
-      // Execute the user code
-      const result = await this._pyodide.runPython(code);
+      // Execute the user code, using runPythonAsync if available
+      let result: unknown;
+      const py = this._pyodide as PyodideInterface;
+      if (typeof py.runPythonAsync === "function") {
+        result = await py.runPythonAsync(code);
+      } else {
+        result = await py.runPython(code);
+      }
 
       if (returnStdout) {
         // Get captured stdout

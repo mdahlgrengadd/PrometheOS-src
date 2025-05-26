@@ -20,33 +20,23 @@ export const HybridBridgeTest: React.FC = () => {
     try {
       const pythonCode = `
 import js
-import asyncio
 
 print("Testing direct Comlink API access...")
 
-async def run_test():
-    # 1. Test list_components via Comlink
-    print("1. Testing list_components via Comlink...")
-    components = await desktop.api.list_components()
-    print(f"Components: {components}")
+# Test list_components via Comlink
+components = await desktop.api.list_components()
+print(f"Components: {components}")
 
-    # 2. Test execute via Comlink
-    print("2. Testing execute via Comlink...")
-    calc_result = await desktop.api.execute("calculator", "add", {"a": 42, "b": 58})
-    print(f"Calculator result: {calc_result}")
+# Test execute via Comlink
+calc_result = await desktop.api.execute("calculator", "add", {"a": 42, "b": 58})
+print(f"Calculator result: {calc_result}")
 
-    # 3. Test event emission via Comlink
-    print("3. Testing event emission via Comlink...")
-    event_result = await desktop.events.emit("python_comlink_test", {"source": "comlink", "timestamp": "now"})
-    print(f"Event emission result: {event_result}")
+# Test event emission via Comlink
+event_result = await desktop.events.emit("python_comlink_test", {"source": "comlink", "timestamp": "now"})
+print(f"Event emission result: {event_result}")
 
-    print("Comlink API testing complete!")
-    return "Comlink API test completed successfully"
-
-# Create and run async function
-result = asyncio.run(run_test())
-result
-`;
+"Comlink API test completed successfully"
+          `;
 
       const result = await workerPluginManager.executePython(pythonCode, true);
       setResult(result);
@@ -66,37 +56,27 @@ result
     try {
       const pythonCode = `
 import js
-import asyncio
 
 print("Testing MCP Protocol JSON-RPC 2.0 interface...")
 
-async def run_test():
-    # 1. Test tools/list endpoint
-    print("1. Testing tools/list endpoint...")
-    tools_result = await desktop.mcp.tools_list()
-    print(f"Tools list result: {tools_result}")
+# List available tools
+tools_result = await desktop.mcp.tools_list()
+print(f"Tools list result: {tools_result}")
 
-    # 2. Test tools/call endpoint
-    print("2. Testing tools/call endpoint...")
-    call_result = await desktop.mcp.tools_call("calculator.add", {"a": 100, "b": 250})
-    print(f"Tool call result: {call_result}")
+# Call a tool via MCP protocol
+call_result = await desktop.mcp.tools_call("calculator.add", {"a": 100, "b": 250})
+print(f"Tool call result: {call_result}")
 
-    # 3. Test raw MCP message
-    print("3. Testing raw MCP message...")
-    raw_result = await desktop.mcp.send({
-        "jsonrpc": "2.0",
-        "method": "resources/list",
-        "id": "test-resources"
-    })
-    print(f"Raw MCP message result: {raw_result}")
+# Raw MCP message endpoint
+raw_result = await desktop.mcp.send({
+    "jsonrpc": "2.0",
+    "method": "resources/list",
+    "id": "test-resources"
+})
+print(f"Raw MCP message result: {raw_result}")
 
-    print("MCP protocol testing complete!")
-    return "MCP protocol test completed successfully"
-
-# Create and run async function
-result = asyncio.run(run_test())
-result
-`;
+"MCP protocol test completed successfully"
+          `;
 
       const result = await workerPluginManager.executePython(pythonCode, true);
       setResult(result);
