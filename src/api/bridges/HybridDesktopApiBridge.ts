@@ -61,10 +61,15 @@ export function createDesktopApiBridge(): DesktopApiBridge {
         const apiContext = (globalThis as Record<string, unknown>)
           .desktop_api_context as IApiContextValue | undefined;
         if (apiContext && apiContext.executeAction) {
+          // Normalize parameters: convert Map to plain object if needed
+          let actionParams: Record<string, unknown> | undefined = params;
+          if (params instanceof Map) {
+            actionParams = Object.fromEntries(params as Map<string, unknown>);
+          }
           const result = await apiContext.executeAction(
             componentId,
             action,
-            params
+            actionParams
           );
           return result;
         }

@@ -330,7 +330,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty array - only run on mount, ignore deps to prevent infinite loop
 
-  // Context value - memoized to prevent infinite re-renders
+  // Context value - memoized to prevent unnecessary re-renders
   const contextValue: IApiContextValue = useMemo(
     () => ({
       registerComponent,
@@ -342,6 +342,11 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     }),
     [getComponents, getOpenApiSpec]
   );
+
+  // Update the global API context whenever it changes so Comlink bridge sees latest components
+  useEffect(() => {
+    setGlobalApiContext(contextValue);
+  }, [contextValue]);
 
   return (
     <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>

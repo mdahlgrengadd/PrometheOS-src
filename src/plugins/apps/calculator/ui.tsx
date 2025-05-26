@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
+import { registerApiActionHandler, useApi } from '../../../api/context/ApiContext';
 import { workerPluginManager } from '../../WorkerPluginManagerClient';
 import { manifest } from './manifest';
 
 const CalculatorContent: React.FC = () => {
+  // API integration
+  const { registerComponent, unregisterComponent } = useApi();
+
   const [display, setDisplay] = useState("0");
   const [firstOperand, setFirstOperand] = useState<number | null>(null);
   const [operator, setOperator] = useState<string | null>(null);
@@ -55,10 +59,61 @@ const CalculatorContent: React.FC = () => {
 
     initCalculator();
 
-    // Clean up when component unmounts
+    // Define the calculator API component
+    const componentDoc = {
+      id: manifest.id,
+      type: "Calculator",
+      name: manifest.name,
+      description: manifest.description,
+      path: `/api/${manifest.id}`,
+      state: { enabled: true, visible: true },
+      actions: [
+        {
+          id: "add",
+          name: "Add",
+          description: "Add two numbers",
+          parameters: [
+            {
+              name: "a",
+              type: "number",
+              description: "First operand",
+              required: true,
+            },
+            {
+              name: "b",
+              type: "number",
+              description: "Second operand",
+              required: true,
+            },
+          ],
+          available: true,
+        },
+      ],
+    };
+
+    // Register component and action handler
+    registerComponent(componentDoc);
+    registerApiActionHandler(manifest.id, "add", async (params) => {
+      const a = params?.a as number;
+      const b = params?.b as number;
+      if (typeof a !== "number" || typeof b !== "number") {
+        return { success: false, error: "Invalid parameters for add" };
+      }
+      try {
+        // Use worker to perform addition (operator '+')
+        const result = await workerPluginManager.calculate(a, b, "+");
+        return { success: true, data: result };
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+    });
+
+    // Cleanup on unmount
     return () => {
-      // We don't unregister here since other instances might use it
-      // In a real app, you might want to track reference counts
+      unregisterComponent(manifest.id);
     };
   }, []);
 
