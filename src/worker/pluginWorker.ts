@@ -168,8 +168,13 @@ class WorkerPluginManager {
       const base = import.meta.env.BASE_URL;
       let resolvedUrl = pluginUrl;
       if (!resolvedUrl.startsWith("http")) {
-        // Remove any leading slash to avoid double slashes
-        resolvedUrl = base + resolvedUrl.replace(/^\//, "");
+        // If the pluginUrl already starts with base, don't add it again
+        if (pluginUrl.startsWith(base)) {
+          resolvedUrl = pluginUrl;
+        } else {
+          // Remove any leading slash to avoid double slashes
+          resolvedUrl = base + pluginUrl.replace(/^\//, "");
+        }
       }
       const importUrl = new URL(resolvedUrl, self.location.origin).href;
       console.log(`Resolved import URL: ${importUrl}`);

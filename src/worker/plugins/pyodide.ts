@@ -177,6 +177,12 @@ const PyodideWorker: WorkerPlugin = {
 
     try {
       // Inject the desktop module into Python namespace with both interfaces
+      // First, expose the current plugin instance to Python context
+      this._pyodide.globals.set("_pyodide_plugin_instance", this);
+      
+      // Also expose to globalThis for JavaScript access from Python
+      (globalThis as any)._pyodide_plugin_instance = this;
+      
       const desktopApiCode = `
 import js
 from pyodide.ffi import create_proxy, to_js, JsProxy
@@ -451,15 +457,28 @@ class MCPProtocol:
             if 'id' not in message:
                 message['id'] = str(uuid.uuid4())
                 
-            # Convert to JS object
-            js_message = to_js(message)
+            # Convert to JS object - use JSON serialization to avoid JsProxy issues
+            import json
+            js_message_json = json.dumps(message)
             
-            # Forward to MCP handler in worker
-            result = await js.self.pyodideWorker.handleMCPProtocolMessage(js_message)
+            # Debug: Log the message being sent
+            print(f"Sending MCP message: {message}")
+            print(f"JSON message: {js_message_json}")
+            
+            # Forward to MCP handler in worker via the exposed plugin instance
+            # Access the plugin instance from pyodide globals (use js.globalThis, not Python globals())
+            plugin_instance = js.globalThis._pyodide_plugin_instance
+            if plugin_instance is None:
+                raise Exception("Pyodide plugin instance not available")
+                
+            # Pass the JSON string instead of JsProxy
+            result = await plugin_instance.handleMCPProtocolMessage(js_message_json)
             
             # Extract the actual response from the PythonResult wrapper
-            if hasattr(result, 'result') and result.result is not None:
-                return result.result.to_py()
+            if hasattr(result, 'success') and result.success and hasattr(result, 'result'):
+                return result.result.to_py() if hasattr(result.result, 'to_py') else result.result
+            elif hasattr(result, 'error'):
+                return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': result.error}, 'id': message.get('id')}
             else:
                 return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': 'Internal error'}, 'id': message.get('id')}
                 
@@ -678,14 +697,25 @@ await micropip.install('${packageName}')
    * Handle MCP Protocol JSON-RPC 2.0 messages
    */
   async handleMCPProtocolMessage(
-    message: Record<string, unknown>
+    messageOrJson: Record<string, unknown> | string
   ): Promise<PythonResult> {
     try {
       if (!this._pyodide) {
         throw new Error("Pyodide not initialized");
       }
 
+      // Handle both JSON string (from Python) and object (direct calls)
+      let message: Record<string, unknown>;
+      if (typeof messageOrJson === 'string') {
+        console.log("Parsing JSON message:", messageOrJson);
+        message = JSON.parse(messageOrJson);
+      } else {
+        message = messageOrJson;
+      }
+
       console.log("Handling MCP protocol message:", JSON.stringify(message));
+      console.log("Message type:", typeof message);
+      console.log("Message keys:", Object.keys(message || {}));
 
       // Forward the message to the MCP server plugin
       const response = await this._forwardToMCPServer(message);
@@ -831,7 +861,7 @@ await micropip.install('${packageName}')
         );
 
       case "handleMCPProtocolMessage":
-        if (!params?.message) {
+        if (params?.message === undefined) {
           return {
             success: false,
             error: "handleMCPProtocolMessage requires 'message' parameter",
