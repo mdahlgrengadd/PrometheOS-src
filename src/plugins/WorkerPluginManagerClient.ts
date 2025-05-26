@@ -772,6 +772,45 @@ class WorkerPluginManagerClient {
           });
         }
       }
+      // Handle MCP tool execution requests
+      else if (data && data.type === "mcp-tool-request") {
+        const { requestId, componentId, action, params } = data;
+
+        try {
+          // Get the global API bridge
+          const bridge = (globalThis as Record<string, unknown>)
+            .desktop_api_bridge;
+
+          if (!bridge) {
+            throw new Error("Desktop API bridge not available");
+          }
+
+          // Execute the action on the specified component
+          const result = await (
+            bridge as {
+              execute(
+                componentId: string,
+                action: string,
+                params?: Record<string, unknown>
+              ): Promise<unknown>;
+            }
+          ).execute(componentId, action, params);
+
+          // Send successful response back to worker
+          this.worker.postMessage({
+            type: "mcp-tool-response",
+            requestId,
+            result,
+          });
+        } catch (error) {
+          // Send error response back to worker
+          this.worker.postMessage({
+            type: "mcp-tool-response",
+            requestId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
       // Handle MCP protocol messages
       else if (data && data.type === "mcp-protocol-message") {
         const message = data.message;

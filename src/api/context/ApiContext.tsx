@@ -47,6 +47,62 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Emit event for component registration
     eventBus.emit("api:component:registered", component);
+
+    // Auto-register new component as MCP tool if MCP is available
+    const workerManager = (
+      window as unknown as {
+        workerPluginManager?: {
+          autoRegisterMCPTools?: (
+            components: Array<{
+              id: string;
+              actions: Array<{
+                name: string;
+                description: string;
+                parameters?: Record<
+                  string,
+                  { type: string; description?: string; required?: boolean }
+                >;
+              }>;
+            }>
+          ) => Promise<{
+            status: string;
+            registered: number;
+            errors: string[];
+          }>;
+        };
+      }
+    ).workerPluginManager;
+
+    if (workerManager?.autoRegisterMCPTools) {
+      setTimeout(async () => {
+        try {
+          // Convert component to MCP tool format
+          const mcpComponent = {
+            id: component.id,
+            actions: component.actions.map((action) => ({
+              name: action.id,  // Use action.id for consistency
+              description: action.description,
+              parameters: action.parameters?.reduce(
+                (params, param) => ({
+                  ...params,
+                  [param.name]: {
+                    type: param.type,
+                    description: param.description,
+                    required: param.required,
+                  },
+                }),
+                {}
+              ),
+            })),
+          };
+
+          const registerResult = await workerManager.autoRegisterMCPTools([mcpComponent]);
+          console.log(`Auto-registered MCP tool for ${component.id}:`, registerResult);
+        } catch (error) {
+          console.error(`Failed to auto-register MCP tool for ${component.id}:`, error);
+        }
+      }, 100); // Small delay to ensure component is fully registered
+    }
   };
   /**
    * Unregister a component from the API
