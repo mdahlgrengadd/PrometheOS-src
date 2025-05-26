@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 
+import { useFileSystemStore } from '@/store/fileSystem';
+
 import CommandPalette from '../components/CommandPalette';
 import EditorArea from '../components/EditorArea';
 import SideBar from '../components/SideBar';
@@ -15,6 +17,13 @@ const IdeLayout: React.FC = () => {
     togglePreviewPanel,
     sidebarVisible,
   } = useIdeStore();
+
+  const initFileSystem = useFileSystemStore((state) => state.init);
+
+  // Initialize file system on component mount
+  useEffect(() => {
+    initFileSystem();
+  }, [initFileSystem]);
 
   // Apply theme to document
   useEffect(() => {

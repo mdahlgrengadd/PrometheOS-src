@@ -33,7 +33,6 @@ export interface AppState {
   previewPanelVisible: boolean;
   activeTab: string | null;
   tabs: Tab[];
-  fileSystem: FileSystemItem[];
   theme: "dark" | "light";
   commandPaletteOpen: boolean;
   // Build-related state

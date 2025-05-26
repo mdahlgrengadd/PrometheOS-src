@@ -23,7 +23,6 @@ const EditorArea: React.FC = () => {
     saveFile,
     togglePreviewPanel,
     getTabById,
-    initFileSystem,
     runBuild,
   } = useIdeStore();
   const [editorContent, setEditorContent] = useState<{ [key: string]: string }>(
@@ -37,10 +36,6 @@ const EditorArea: React.FC = () => {
   const [previewTargetTabId, setPreviewTargetTabId] = useState<string | null>(
     null
   );
-  // Load shadow filesystem on mount
-  useEffect(() => {
-    initFileSystem();
-  }, [initFileSystem]);
 
   // Load Monaco editor on component mount
   useEffect(() => {

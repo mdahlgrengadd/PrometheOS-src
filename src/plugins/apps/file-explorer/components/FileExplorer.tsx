@@ -2,11 +2,13 @@ import { Folder } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useFileSystemStore } from '@/store/fileSystem';
 import { useSelectionContainer } from '@air/react-drag-to-select';
 
 import { ideSettings } from '../../../../plugins/apps/builder/utils/esbuild-settings';
-import { loadShadowFolder } from '../../../../utils/virtual-fs';
-import { ContextMenuPosition, FileSystemItem, User } from '../types/fileSystem';
+import {
+    ContextMenuPosition, FileSystemItem, TEXT_FILE_EXTENSIONS, User
+} from '../types/fileSystem';
 import { findFolderPath } from '../utils/fileUtils';
 import ContextMenu from './ContextMenu';
 import { NewItemDialog, RenameDialog } from './Dialogs';
@@ -17,12 +19,6 @@ import TitleBar from './TitleBar';
 import Toolbar from './Toolbar';
 
 const FileExplorer: React.FC = () => {
-  const [fileSystem, setFileSystem] = useState<FileSystemItem>({
-    id: "root",
-    name: "My Computer",
-    type: "folder",
-    children: [],
-  });
   const [currentPath, setCurrentPath] = useState<string[]>(["root"]);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
@@ -49,6 +45,14 @@ const FileExplorer: React.FC = () => {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+
+  // use shared Zustand store for file system
+  const fileSystem = useFileSystemStore((s) => s.fs);
+  const initFs = useFileSystemStore((s) => s.init);
+  const addItems = useFileSystemStore((s) => s.addItems);
+  const renameItemStore = useFileSystemStore((s) => s.renameItem);
+  const deleteItemStore = useFileSystemStore((s) => s.deleteItem);
+  const moveItem = useFileSystemStore((s) => s.moveItem);
 
   // Derive ignore patterns from .vfsignore at root
   const ignoreFile = useMemo(
@@ -104,19 +108,10 @@ const FileExplorer: React.FC = () => {
     });
   }, [visibleChildren]);
 
-  // Load initial file system from shadow on mount
+  // initialize file system from shadow on mount
   useEffect(() => {
-    (async () => {
-      const items = await loadShadowFolder();
-      setFileSystem({
-        id: "root",
-        name: "My Computer",
-        type: "folder",
-        children: items,
-      });
-      setExpandedFolders(new Set(["root"]));
-    })();
-  }, []);
+    initFs().then(() => setExpandedFolders(new Set(["root"])));
+  }, [initFs]);
 
   // Set up drag selection container
   const { DragSelection } = useSelectionContainer({
@@ -283,7 +278,6 @@ const FileExplorer: React.FC = () => {
 
     // Auto-authenticate for better demo experience if not already authenticated
     if (files.length > 0 && !isAuthenticated) {
-      // Instead of requiring authentication, let's auto-authenticate for demo
       handleGithubAuth();
       toast.success("Auto-authenticated for file upload");
     }
@@ -295,11 +289,9 @@ const FileExplorer: React.FC = () => {
 
         // Process each file sequentially to avoid race conditions
         for (const file of files) {
-          // Determine if file is text or binary based on extension
-          const isTextFile =
-            /\.(txt|js|jsx|ts|tsx|md|css|html|json|csv|xml|yml|yaml)$/i.test(
-              file.name
-            );
+          // Determine if file is text or binary based on extension list
+          const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+          const isTextFile = TEXT_FILE_EXTENSIONS.includes(ext);
 
           let content: string;
           if (isTextFile) {
@@ -310,44 +302,22 @@ const FileExplorer: React.FC = () => {
               reader.readAsText(file);
             });
           } else {
-            // For binary files, just store a placeholder
             content = "[Binary file content]";
           }
 
           // Create file item with unique ID
-          const newFile: FileSystemItem = {
+          newFiles.push({
             id: `file_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
             name: file.name,
             type: "file",
             size: file.size,
             content,
-          };
-
-          newFiles.push(newFile);
+          });
         }
 
-        console.log("Files prepared for upload:", newFiles);
-
-        setFileSystem((prev) => {
-          const updated = JSON.parse(JSON.stringify(prev));
-          const folder = findItemByPath(currentPath);
-          console.log("Target folder for upload:", folder?.name);
-          if (!folder) {
-            console.error("Current folder not found in path:", currentPath);
-            toast.error("Failed to upload: Folder not found");
-            return prev;
-          }
-
-          if (folder.children) {
-            folder.children = [...folder.children, ...newFiles];
-            toast.success(`${newFiles.length} file(s) uploaded`);
-            console.log("Updated folder contents:", folder.children.length);
-          } else {
-            folder.children = [...newFiles];
-            console.log("Created new children array with files");
-          }
-          return updated;
-        });
+        // delegate to shared store
+        addItems(currentPath, newFiles);
+        toast.success(`${newFiles.length} file(s) uploaded`);
       } catch (error) {
         console.error("Error uploading files:", error);
         toast.error("Failed to upload files");
@@ -366,14 +336,8 @@ const FileExplorer: React.FC = () => {
       ...(type === "folder" ? { children: [] } : { size: 0 }),
     };
 
-    setFileSystem((prev) => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      const target = findItemByPath(currentPath);
-      if (target && target.children) {
-        target.children.push(newItem);
-      }
-      return updated;
-    });
+    addItems(currentPath, [newItem]);
+    toast.success(`${type === "folder" ? "Folder" : "File"} created`);
 
     setNewItemName("");
     setShowNewItemDialog(false);
@@ -383,17 +347,8 @@ const FileExplorer: React.FC = () => {
   const renameItem = (itemId: string, newName: string) => {
     if (!newName.trim() || !isAuthenticated) return;
 
-    setFileSystem((prev) => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      const target = findItemByPath(currentPath);
-      if (target && target.children) {
-        const item = target.children.find((child) => child.id === itemId);
-        if (item) {
-          item.name = newName.trim();
-        }
-      }
-      return updated;
-    });
+    renameItemStore(currentPath, itemId, newName.trim());
+    toast.success("Item renamed");
 
     setShowRenameDialog(null);
     setNewItemName("");
@@ -403,16 +358,9 @@ const FileExplorer: React.FC = () => {
   const deleteItem = (itemId: string) => {
     if (!isAuthenticated) return;
 
-    setFileSystem((prev) => {
-      const updated = JSON.parse(JSON.stringify(prev));
-      const target = findItemByPath(currentPath);
-      if (target && target.children) {
-        target.children = target.children.filter(
-          (child) => child.id !== itemId
-        );
-      }
-      return updated;
-    });
+    deleteItemStore(currentPath, itemId);
+    toast.success("Item deleted");
+
     setSelectedItems(new Set());
     setShowContextMenu(null);
   };
@@ -497,39 +445,15 @@ const FileExplorer: React.FC = () => {
 
     if (!draggedItem || !isAuthenticated) return;
 
-    // Don't allow dropping a folder into itself
+    // Don't allow dropping into itself
     if (draggedItem === targetFolderId) return;
 
-    // Find the target folder path
+    // Resolve paths
     const targetFolderPath = findFolderPath(fileSystem, targetFolderId);
     if (!targetFolderPath) return;
 
-    // Move all selected items to the target folder
-    const itemsToMove = Array.from(selectedItems);
-
-    setFileSystem((prev) => {
-      const updated = JSON.parse(JSON.stringify(prev));
-
-      // Find source folder and remove items from it
-      const sourceFolder = findItemByPath(currentPath);
-      if (!sourceFolder || !sourceFolder.children) return prev;
-
-      // Get the items to move and remove them from source
-      const movedItems = sourceFolder.children.filter((item) =>
-        itemsToMove.includes(item.id)
-      );
-      sourceFolder.children = sourceFolder.children.filter(
-        (item) => !itemsToMove.includes(item.id)
-      );
-
-      // Find target folder and add items to it
-      const targetFolder = findItemByPath(targetFolderPath);
-      if (!targetFolder || !targetFolder.children) return prev;
-
-      targetFolder.children = [...targetFolder.children, ...movedItems];
-
-      return updated;
-    });
+    // For now only support single-item moves
+    moveItem(currentPath, draggedItem, targetFolderPath);
 
     setDraggedItem(null);
   };
