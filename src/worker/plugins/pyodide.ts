@@ -152,11 +152,11 @@ const PyodideWorker: WorkerPlugin = {
   },
   /**
    * Setup the Desktop API bridge in Python context
-   */  async _setupDesktopApiBridge(): Promise<void> {
+   */ async _setupDesktopApiBridge(): Promise<void> {
     if (!this._pyodide) throw new Error("Pyodide not initialized");
-    
+
     console.log("Setting up Desktop API bridge...");
-    
+
     try {
       // Inject the desktop module into Python namespace
       const desktopApiCode = `
@@ -327,7 +327,6 @@ print("Desktop API Bridge initialized in Python context")
 
       await this._pyodide.runPython(desktopApiCode);
       console.log("Desktop API bridge setup completed successfully");
-      
     } catch (error) {
       console.error("Failed to setup Desktop API bridge:", error);
       throw error;

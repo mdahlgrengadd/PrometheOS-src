@@ -192,7 +192,10 @@ export const PyodideTest: React.FC = () => {
             className="p-3 border rounded-lg text-left hover:bg-gray-50"
           >
             <div className="font-semibold">JSON Processing</div>
-            <div className="text-sm text-gray-600">Test JSON manipulation</div>          </button>
+            <div className="text-sm text-gray-600">
+              Test JSON manipulation
+            </div>{" "}
+          </button>
           <button
             onClick={() =>
               setPythonCode(
