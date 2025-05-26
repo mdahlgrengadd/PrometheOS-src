@@ -3,6 +3,8 @@
  * Follows the established worker plugin pattern from webllm.ts
  */
 
+import * as Comlink from 'comlink';
+
 import { WorkerPlugin } from '../../plugins/types';
 
 // Interface for Python execution results
@@ -137,6 +139,16 @@ const PyodideWorker: WorkerPlugin = {
       this._isLoading = false;
 
       console.log("Pyodide initialized successfully");
+
+      try {
+        await this._enhanceComlinkIntegration();
+      } catch (error) {
+        console.warn(
+          "Failed to enhance Comlink integration, but continuing:",
+          error
+        );
+      }
+
       return { status: "success", message: "Pyodide initialized" };
     } catch (error) {
       this._isLoading = false;
@@ -152,23 +164,107 @@ const PyodideWorker: WorkerPlugin = {
   },
   /**
    * Setup the Desktop API bridge in Python context
-   */ async _setupDesktopApiBridge(): Promise<void> {
+   * Now supports both Comlink (ergonomic) and postMessage (MCP) interfaces
+   */
+  async _setupDesktopApiBridge(): Promise<void> {
     if (!this._pyodide) throw new Error("Pyodide not initialized");
 
-    console.log("Setting up Desktop API bridge...");
+    console.log("Setting up Hybrid Desktop API bridge...");
 
     try {
-      // Inject the desktop module into Python namespace
+      // Inject the desktop module into Python namespace with both interfaces
       const desktopApiCode = `
 import js
-from pyodide.ffi import create_proxy, to_js
+from pyodide.ffi import create_proxy, to_js, JsProxy
 import json
 import uuid
 
-print("Starting Desktop API bridge setup...")
+print("Starting Hybrid Desktop API bridge setup...")
+
+#----------------------------------------------------
+# 1. Desktop API Layer (Comlink - Ergonomic Interface)
+#----------------------------------------------------
 
 class DesktopAPI:
-    """Python interface to Desktop Dreamscape APIs"""
+    """Python interface to Desktop Dreamscape APIs using Comlink"""
+    
+    @staticmethod
+    async def list_components():
+        """List all available API components"""
+        try:
+            # Use Comlink proxy to directly call the API
+            api_comlink = js.globalThis.desktop_api_comlink
+            if not api_comlink:
+                raise Exception("Comlink API bridge not available")
+                
+            # Direct call to the Comlink proxy
+            result = await api_comlink.listComponents()
+            return result
+            
+        except Exception as e:
+            print(f"Error listing components via Comlink: {e}")
+            # Fallback to postMessage
+            return desktop_api_legacy.list_components()
+    
+    @staticmethod 
+    async def execute(component_id, action, params=None):
+        """Execute an action on a component"""
+        try:
+            if params is None:
+                params = {}
+                
+            # Use Comlink proxy to directly call the API
+            api_comlink = js.globalThis.desktop_api_comlink
+            if not api_comlink:
+                raise Exception("Comlink API bridge not available")
+                
+            # Convert Python dict to JS object with proper conversion
+            js_params = to_js(params)
+            
+            # Direct call that returns the actual result
+            result = await api_comlink.execute(component_id, action, js_params)
+            return result
+            
+        except Exception as e:
+            print(f"Error executing {component_id}.{action} via Comlink: {e}")
+            # Fallback to postMessage
+            return desktop_api_legacy.execute(component_id, action, params)
+
+    @staticmethod
+    async def subscribe_event(event_name, callback):
+        """Subscribe to EventBus events"""
+        try:
+            proxy_callback = create_proxy(callback)
+            
+            # Use Comlink proxy
+            api_comlink = js.globalThis.desktop_api_comlink
+            if not api_comlink:
+                raise Exception("Comlink API bridge not available")
+            
+            # Direct call to subscribe
+            unsubscribe = await api_comlink.subscribeEvent(event_name, proxy_callback)
+            
+            # Convert the JS function to a Python callable
+            def python_unsubscribe():
+                try:
+                    unsubscribe()
+                    proxy_callback.destroy()
+                except Exception as e:
+                    print(f"Error unsubscribing: {e}")
+            
+            return python_unsubscribe
+            
+        except Exception as e:
+            print(f"Error subscribing to event {event_name} via Comlink: {e}")
+            # Fallback to postMessage
+            return desktop_api_legacy.subscribe_event(event_name, callback)
+
+#----------------------------------------------------
+# 2. Legacy Desktop API (postMessage - Compatibility)
+#----------------------------------------------------
+
+class DesktopAPILegacy:
+    """Python interface to Desktop Dreamscape APIs using postMessage"""
     
     @staticmethod
     def list_components():
@@ -237,9 +333,11 @@ class DesktopAPI:
             request_id = str(uuid.uuid4())
             
             # Store callback for later use
-            if not hasattr(DesktopAPI, '_event_callbacks'):
-                DesktopAPI._event_callbacks = {}
-            DesktopAPI._event_callbacks[event_name] = proxy_callback            # Send subscription request via postMessage
+            if not hasattr(DesktopAPILegacy, '_event_callbacks'):
+                DesktopAPILegacy._event_callbacks = {}
+            DesktopAPILegacy._event_callbacks[event_name] = proxy_callback            
+            
+            # Send subscription request via postMessage
             message = to_js({
                 'type': 'desktop-api-request',
                 'requestId': request_id,
@@ -251,8 +349,9 @@ class DesktopAPI:
             postMessage(message)
             
             def unsubscribe():
-                if hasattr(DesktopAPI, '_event_callbacks') and event_name in DesktopAPI._event_callbacks:
-                    del DesktopAPI._event_callbacks[event_name]
+                if hasattr(DesktopAPILegacy, '_event_callbacks') and event_name in DesktopAPILegacy._event_callbacks:
+                    del DesktopAPILegacy._event_callbacks[event_name]
+                    proxy_callback.destroy()
                     # Could send unsubscribe message here if needed
             
             return unsubscribe
@@ -261,8 +360,41 @@ class DesktopAPI:
             print(f"Error subscribing to event {event_name}: {e}")
             return lambda: None
 
+#----------------------------------------------------
+# 3. Events System
+#----------------------------------------------------
+
 class Events:
     """EventBus integration"""
+    
+    @staticmethod
+    async def emit(event_name, data=None):
+        """Emit an event to the desktop EventBus"""
+        try:
+            # Use Comlink proxy
+            api_comlink = js.globalThis.desktop_api_comlink
+            if not api_comlink:
+                raise Exception("Comlink API bridge not available")
+                
+            # Convert data for JS
+            js_data = to_js(data) if data is not None else None
+            
+            # Direct call to emit
+            await api_comlink.emitEvent(event_name, js_data)
+            return {'success': True, 'message': f'Event {event_name} emitted'}
+            
+        except Exception as e:
+            print(f"Error emitting event {event_name} via Comlink: {e}")
+            # Fallback to postMessage
+            return events_legacy.emit(event_name, data)
+    
+    @staticmethod
+    async def subscribe(event_name, callback):
+        """Subscribe to desktop events"""
+        return await DesktopAPI.subscribe_event(event_name, callback)
+
+class EventsLegacy:
+    """EventBus integration via postMessage"""
     
     @staticmethod
     def emit(event_name, data=None):
@@ -292,17 +424,105 @@ class Events:
     @staticmethod
     def subscribe(event_name, callback):
         """Subscribe to desktop events"""
-        return DesktopAPI.subscribe_event(event_name, callback)
+        return DesktopAPILegacy.subscribe_event(event_name, callback)
+
+#----------------------------------------------------
+# 4. MCP Protocol Interface (JSON-RPC 2.0)
+#----------------------------------------------------
+
+class MCPProtocol:
+    """Model Context Protocol (MCP) JSON-RPC 2.0 interface"""
+    
+    @staticmethod
+    async def send(message):
+        """Send a raw MCP protocol message (JSON-RPC 2.0)"""
+        try:
+            # Validate the message has required JSON-RPC 2.0 fields
+            if not isinstance(message, dict) or 'jsonrpc' not in message or message['jsonrpc'] != '2.0' or 'method' not in message:
+                return {
+                    'jsonrpc': '2.0',
+                    'error': {
+                        'code': -32600,
+                        'message': 'Invalid Request: Not a valid JSON-RPC 2.0 message'
+                    },
+                    'id': message.get('id')
+                }
+            
+            from js import postMessage
+            import uuid
+            
+            # Generate request ID if not provided
+            if 'id' not in message:
+                message['id'] = str(uuid.uuid4())
+                
+            # Send as MCP protocol message
+            js_message = to_js({
+                'type': 'mcp-protocol-message',
+                'message': to_js(message)
+            })
+            
+            postMessage(js_message)
+            
+            print(f"Sent MCP protocol message: {message['method']}")
+            return {
+                'jsonrpc': '2.0',
+                'result': {'status': 'message_sent'},
+                'id': message['id']
+            }
+            
+        except Exception as e:
+            print(f"Error sending MCP message: {e}")
+            return {
+                'jsonrpc': '2.0',
+                'error': {
+                    'code': -32603,
+                    'message': f'Internal error: {str(e)}'
+                },
+                'id': message.get('id')
+            }
+            
+    @staticmethod
+    async def tools_list():
+        """Get list of available tools"""
+        return await MCPProtocol.send({
+            'jsonrpc': '2.0',
+            'method': 'tools/list',
+            'id': str(uuid.uuid4())
+        })
+        
+    @staticmethod
+    async def tools_call(name, arguments=None):
+        """Call a tool by name with arguments"""
+        if arguments is None:
+            arguments = {}
+            
+        return await MCPProtocol.send({
+            'jsonrpc': '2.0',
+            'method': 'tools/call',
+            'params': {
+                'name': name,
+                'arguments': arguments
+            },
+            'id': str(uuid.uuid4())
+        })
+
+# Create legacy instances
+desktop_api_legacy = DesktopAPILegacy()
+events_legacy = EventsLegacy()
 
 # Create the desktop module structure
 class Desktop:
     api = DesktopAPI()
     events = Events()
+    mcp = MCPProtocol()
+    
+    # Legacy access for backward compatibility
+    api_legacy = desktop_api_legacy
+    events_legacy = events_legacy
 
 # Make it available globally
 desktop = Desktop()
 
-# Set up message handling for responses from main thread
 def handle_desktop_api_response(message):
     """Handle responses from the main thread API"""
     try:
@@ -315,20 +535,25 @@ def handle_desktop_api_response(message):
             event_name = message.get('eventName')
             data = message.get('data')
             
-            if hasattr(DesktopAPI, '_event_callbacks') and event_name in DesktopAPI._event_callbacks:
-                callback = DesktopAPI._event_callbacks[event_name]
+            if hasattr(DesktopAPILegacy, '_event_callbacks') and event_name in DesktopAPILegacy._event_callbacks:
+                callback = DesktopAPILegacy._event_callbacks[event_name]
                 callback(data)
+                
+        elif message.get('type') == 'mcp-protocol-response':
+            # Handle MCP protocol responses
+            print(f"Received MCP protocol response: {message.get('message')}")
+            # Could integrate with a promise system here
                 
     except Exception as e:
         print(f"Error handling API response: {e}")
 
-print("Desktop API Bridge initialized in Python context")
+print("Hybrid Desktop API Bridge initialized in Python context")
 `;
 
       await this._pyodide.runPython(desktopApiCode);
-      console.log("Desktop API bridge setup completed successfully");
+      console.log("Hybrid Desktop API bridge setup completed successfully");
     } catch (error) {
-      console.error("Failed to setup Desktop API bridge:", error);
+      console.error("Failed to setup Hybrid Desktop API bridge:", error);
       throw error;
     }
   },
@@ -446,6 +671,86 @@ await micropip.install('${packageName}')
   },
 
   /**
+   * Handle MCP protocol message from Python
+   */
+  async handleMCPProtocolMessage(
+    message: Record<string, unknown>
+  ): Promise<PythonResult> {
+    try {
+      console.log("Handling MCP protocol message:", message);
+
+      // Forward the message to main thread for processing
+      self.postMessage({
+        type: "mcp-protocol-message",
+        message,
+      });
+
+      return {
+        success: true,
+        result: {
+          jsonrpc: "2.0",
+          result: { status: "message_sent" },
+          id: message.id || null,
+        },
+      };
+    } catch (error) {
+      console.error("Error handling MCP protocol message:", error);
+      return {
+        success: false,
+        error: `Error handling MCP protocol message: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+  },
+
+  /**
+   * Handle Comlink port message from main thread
+   */
+  handleComlinkPort(port: MessagePort): void {
+    try {
+      console.log("Received Comlink port from main thread");
+
+      // Store the port for Python to access
+      (self as unknown as Record<string, MessagePort>).comlinkPort = port;
+
+      // Setup port message handler
+      port.onmessage = (event) => {
+        console.log("Received message via Comlink port:", event.data);
+        // Messages will be handled by Comlink automatically
+      };
+
+      // Initialize the port connection
+      port.start();
+
+      // Set up Comlink on the port
+      Comlink.expose(port);
+
+      // Make sure Python knows about the port
+      if (this._pyodide) {
+        // Expose the port to Python
+        this._pyodide.globals.set("comlinkPort", port);
+
+        // Run Python code to set up Comlink communication
+        this._pyodide.runPython(`
+import js
+from pyodide.ffi import create_proxy, to_js
+
+# Set up Comlink port access
+comlinkPort = js.comlinkPort
+print("Comlink port exposed to Python, ready for communication")
+        `);
+
+        console.log("Comlink port exposed to Python");
+      } else {
+        console.warn("Pyodide not initialized, saving port for later use");
+      }
+    } catch (error) {
+      console.error("Error handling Comlink port:", error);
+    }
+  },
+
+  /**
    * Generic handler function that processes method calls with parameters
    */
   handle(method: string, params?: Record<string, unknown>): unknown {
@@ -495,6 +800,24 @@ await micropip.install('${packageName}')
           params.requestId,
           params.params as Record<string, unknown>
         );
+
+      case "handleMCPProtocolMessage":
+        if (!params?.message) {
+          return {
+            success: false,
+            error: "handleMCPProtocolMessage requires 'message' parameter",
+          };
+        }
+        return this.handleMCPProtocolMessage(params.message);
+
+      case "handleComlinkPort":
+        if (!params?.port || !(params.port instanceof MessagePort)) {
+          return {
+            success: false,
+            error: "handleComlinkPort requires a valid MessagePort parameter",
+          };
+        }
+        return this.handleComlinkPort(params.port as MessagePort);
 
       default:
         return { success: false, error: `Unknown method: ${method}` };
@@ -585,6 +908,65 @@ await micropip.install('${packageName}')
         success: false,
         error: error instanceof Error ? error.message : String(error),
       };
+    }
+  },
+
+  /**
+   * Add Comlink helper methods to Python
+   * This sets up better communication between Python and Comlink
+   */
+  async _enhanceComlinkIntegration(): Promise<void> {
+    if (!this._pyodide) throw new Error("Pyodide not initialized");
+
+    console.log("Enhancing Python-Comlink integration...");
+
+    try {
+      // Add Comlink helper methods to Python
+      await this._pyodide.runPython(`
+import js
+from pyodide.ffi import create_proxy, to_js
+
+class ComlinkHelper:
+    """Improved Comlink communication helper for Python"""
+    
+    @staticmethod
+    def expose(obj, name="pythonExports"):
+        """Expose a Python object to JavaScript via Comlink"""
+        try:
+            js_proxy = create_proxy(obj)
+            # Make it available globally
+            js.globalThis[name] = js_proxy
+            print(f"Exposed Python object as {name} via Comlink")
+            return True
+        except Exception as e:
+            print(f"Error exposing object: {e}")
+            return False
+    
+    @staticmethod
+    def get_proxy(name):
+        """Get a JavaScript object/function via Comlink"""
+        try:
+            if hasattr(js.globalThis, name):
+                return getattr(js.globalThis, name)
+            print(f"Object {name} not found in global scope")
+            return None
+        except Exception as e:
+            print(f"Error getting proxy: {e}")
+            return None
+
+# Add helper to desktop object
+if hasattr(desktop, "comlink"):
+    print("Comlink helper already exists")
+else:
+    desktop.comlink = ComlinkHelper()
+    print("Added Comlink helper to desktop object")
+
+print("Python-Comlink integration enhanced")
+`);
+      console.log("Python-Comlink integration enhanced successfully");
+    } catch (error) {
+      console.error("Failed to enhance Python-Comlink integration:", error);
+      throw error;
     }
   },
 };

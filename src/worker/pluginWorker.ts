@@ -1,5 +1,35 @@
 import * as Comlink from 'comlink';
 
+// Handle Comlink port messages
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "comlink-port") {
+    console.log("Received Comlink port in worker");
+    const port = event.data.port;
+
+    // Forward port to appropriate plugin if registered
+    const workerPluginManager = (
+      self as unknown as {
+        workerPluginManager?: {
+          plugins?: Map<
+            string,
+            { handleComlinkPort?: (port: MessagePort) => void }
+          >;
+        };
+      }
+    ).workerPluginManager;
+    if (workerPluginManager && workerPluginManager.plugins) {
+      const pyodidePlugin = workerPluginManager.plugins.get("pyodide");
+      if (pyodidePlugin && pyodidePlugin.handleComlinkPort) {
+        pyodidePlugin.handleComlinkPort(port);
+      } else {
+        console.warn("Pyodide plugin not found or does not support Comlink");
+      }
+    } else {
+      console.warn("Worker plugin manager not available for Comlink setup");
+    }
+  }
+});
+
 // Define interface for worker plugins
 interface WorkerPlugin {
   id: string;

@@ -1,26 +1,12 @@
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+    createContext, useCallback, useContext, useEffect, useMemo, useRef, useState
+} from 'react';
 
-import { eventBus } from "../../plugins/EventBus";
-import {
-  setGlobalApiContext,
-  setupGlobalDesktopApiBridge,
-} from "../bridges/DesktopApiBridge";
-import {
-  IActionResult,
-  IApiComponent,
-  IApiContextValue,
-  IOpenApiSpec,
-} from "../core/types";
-import { registerLauncherApi } from "../system/registerSystemApi";
-import { generateOpenApiSpec } from "../utils/openapi";
+import { eventBus } from '../../plugins/EventBus';
+import { setGlobalApiContext, setupGlobalHybridApiBridge } from '../bridges/HybridDesktopApiBridge';
+import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
+import { registerLauncherApi } from '../system/registerSystemApi';
+import { generateOpenApiSpec } from '../utils/openapi';
 
 // Create the API context with null default value
 const ApiContext = createContext<IApiContextValue | null>(null);
@@ -291,18 +277,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  // Context value - memoized to prevent infinite re-renders
-  const contextValue: IApiContextValue = useMemo(
-    () => ({
-      registerComponent,
-      unregisterComponent,
-      updateComponentState,
-      executeAction,
-      getComponents,
-      getOpenApiSpec,
-    }),
-    [getComponents, getOpenApiSpec]
-  ); // Register system API components
+  // Register system API components
   useEffect(() => {
     // Only run once on mount, don't use changing functions
     let mounted = true;
@@ -326,8 +301,25 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
       // Store API context globally for Desktop API Bridge
       setGlobalApiContext(apiContext);
 
-      // Initialize the Desktop API Bridge for Pyodide workers
-      setupGlobalDesktopApiBridge();
+      // Initialize the Hybrid Desktop API Bridge for Pyodide workers
+      setupGlobalHybridApiBridge();
+
+      // Tell the WorkerPluginManagerClient to setup Comlink
+      const workerManager = (
+        window as unknown as {
+          workerPluginManager?: {
+            setupComlinkBridge?: () => Promise<void>;
+          };
+        }
+      ).workerPluginManager;
+
+      if (workerManager && workerManager.setupComlinkBridge) {
+        try {
+          await workerManager.setupComlinkBridge();
+        } catch (error) {
+          console.error("Failed to setup Comlink bridge:", error);
+        }
+      }
     };
 
     initApi();
@@ -337,6 +329,19 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty array - only run on mount, ignore deps to prevent infinite loop
+
+  // Context value - memoized to prevent infinite re-renders
+  const contextValue: IApiContextValue = useMemo(
+    () => ({
+      registerComponent,
+      unregisterComponent,
+      updateComponentState,
+      executeAction,
+      getComponents,
+      getOpenApiSpec,
+    }),
+    [getComponents, getOpenApiSpec]
+  );
 
   return (
     <ApiContext.Provider value={contextValue}>{children}</ApiContext.Provider>

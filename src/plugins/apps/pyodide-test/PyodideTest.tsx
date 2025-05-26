@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import { HybridBridgeTest } from './HybridBridgeTest';
 
 export const PyodideTest: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -105,6 +106,9 @@ export const PyodideTest: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Add the Hybrid Bridge Test component if Pyodide is initialized */}
+      {isInitialized && <HybridBridgeTest />}
 
       {/* Python Code Editor */}
       <div className="mb-6">

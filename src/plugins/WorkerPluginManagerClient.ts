@@ -1,8 +1,8 @@
-import * as Comlink from "comlink";
+import * as Comlink from 'comlink';
 
 // Import the manifest for pyodide-test to get the workerEntrypoint
-import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
-import { PluginManifest } from "./types";
+import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
+import { PluginManifest } from './types';
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
@@ -755,9 +755,84 @@ class WorkerPluginManagerClient {
           });
         }
       }
+      // Handle MCP protocol messages
+      else if (data && data.type === "mcp-protocol-message") {
+        const message = data.message;
+
+        try {
+          // Get the MCP protocol handler
+          const mcpHandler = (globalThis as Record<string, unknown>)
+            .desktop_mcp_handler;
+
+          if (!mcpHandler) {
+            throw new Error("MCP protocol handler not available");
+          }
+
+          // Process the message through the MCP handler
+          const response = await (
+            mcpHandler as {
+              processMessage(message: unknown): Promise<unknown>;
+            }
+          ).processMessage(message);
+
+          // Send the response back to the worker
+          this.worker.postMessage({
+            type: "mcp-protocol-response",
+            message: response,
+          });
+        } catch (error) {
+          // Send error response in JSON-RPC 2.0 format
+          this.worker.postMessage({
+            type: "mcp-protocol-response",
+            message: {
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: error instanceof Error ? error.message : String(error),
+              },
+              id: message?.id || null,
+            },
+          });
+        }
+      }
     });
+  }
+
+  /**
+   * Initialize Comlink exposure for the desktop API bridge
+   * This exposes the bridge methods directly to the Pyodide worker via Comlink
+   */
+  async setupComlinkBridge(): Promise<void> {
+    // Get the desktop API bridge
+    const bridge = (globalThis as Record<string, unknown>).desktop_api_bridge;
+
+    if (!bridge) {
+      console.error("Desktop API bridge not available for Comlink exposure");
+      return;
+    }
+
+    try {
+      // Create a message channel for dedicated Comlink communication
+      const { port1, port2 } = new MessageChannel();
+
+      // Send the port to the worker
+      this.worker.postMessage({ type: "comlink-port" }, [port2]);
+
+      // Expose the bridge via Comlink on port1
+      Comlink.expose(bridge, port1);
+
+      console.log("Desktop API bridge exposed via Comlink");
+    } catch (error) {
+      console.error("Failed to expose Desktop API bridge via Comlink:", error);
+    }
   }
 }
 
 // Export a singleton instance
 export const workerPluginManager = new WorkerPluginManagerClient();
+
+// Make it available globally for other modules to access
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).workerPluginManager =
+    workerPluginManager;
+}
