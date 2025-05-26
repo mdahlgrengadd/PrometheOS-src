@@ -3,7 +3,7 @@
  * Converts Desktop API components to MCP tools for WebLLM function calling
  */
 
-import { WorkerPlugin } from "../../plugins/types";
+import { WorkerPlugin } from '../../plugins/types';
 
 // MCP Protocol Types
 export interface MCPTool {
@@ -29,6 +29,24 @@ export interface MCPToolResult {
     resource?: string;
   }>;
   isError?: boolean;
+}
+
+// JSON-RPC 2.0 Types
+export interface MCPRequest {
+  jsonrpc: string;
+  method: string;
+  params?: Record<string, unknown>;
+  id?: string | number;
+}
+
+export interface MCPResponse {
+  jsonrpc: string;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+  };
+  id: string | number | null;
 }
 
 // Internal tool registry
@@ -62,6 +80,127 @@ const MCPServerWorker: WorkerPlugin = {
         message: `Failed to initialize MCP Server: ${
           error instanceof Error ? error.message : String(error)
         }`,
+      };
+    }
+  },
+
+  /**
+   * Process a direct MCP protocol JSON-RPC message
+   */
+  async processMCPMessage(message: MCPRequest): Promise<MCPResponse> {
+    try {
+      // Validate JSON-RPC 2.0 message format
+      if (!message.jsonrpc || message.jsonrpc !== "2.0" || !message.method) {
+        return {
+          jsonrpc: "2.0",
+          error: {
+            code: -32600,
+            message: "Invalid Request",
+          },
+          id: message.id || null,
+        };
+      }
+
+      // Process based on method
+      switch (message.method) {
+        case "tools/list":
+          return this._handleToolsList(message);
+
+        case "tools/call":
+          return this._handleToolsCall(message);
+
+        // Add other MCP methods as needed
+        default:
+          return {
+            jsonrpc: "2.0",
+            error: {
+              code: -32601,
+              message: `Method ${message.method} not found`,
+            },
+            id: message.id || null,
+          };
+      }
+    } catch (error) {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: `Internal error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+        id: message.id || null,
+      };
+    }
+  },
+
+  /**
+   * Handle tools/list MCP method
+   */
+  async _handleToolsList(message: MCPRequest): Promise<MCPResponse> {
+    const tools = await this.getAvailableTools();
+
+    return {
+      jsonrpc: "2.0",
+      result: tools,
+      id: message.id || null,
+    };
+  },
+
+  /**
+   * Handle tools/call MCP method
+   */
+  async _handleToolsCall(message: MCPRequest): Promise<MCPResponse> {
+    const params = message.params;
+    if (!params || typeof params !== "object") {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32602,
+          message: "Invalid params",
+        },
+        id: message.id || null,
+      };
+    }
+
+    const { name, arguments: args } = params as {
+      name?: string;
+      arguments?: Record<string, unknown>;
+    };
+
+    if (!name || typeof name !== "string") {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32602,
+          message: "Missing tool name",
+        },
+        id: message.id || null,
+      };
+    }
+
+    // Execute the tool
+    try {
+      const result = await this.executeTool({
+        name,
+        arguments: args || {},
+      });
+
+      return {
+        jsonrpc: "2.0",
+        result,
+        id: message.id || null,
+      };
+    } catch (error) {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: `Error executing tool: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+        id: message.id || null,
       };
     }
   },
@@ -385,6 +524,19 @@ const MCPServerWorker: WorkerPlugin = {
 
       case "cleanup":
         return this.cleanup();
+
+      case "processMCPMessage":
+        if (!params?.message) {
+          return {
+            jsonrpc: "2.0",
+            error: {
+              code: -32602,
+              message: "Missing message parameter",
+            },
+            id: null,
+          };
+        }
+        return this.processMCPMessage(params.message as MCPRequest);
 
       default:
         return { status: "error", message: `Unknown method: ${method}` };

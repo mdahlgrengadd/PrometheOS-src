@@ -431,56 +431,78 @@ class EventsLegacy:
         return DesktopAPILegacy.subscribe_event(event_name, callback)
 
 #----------------------------------------------------
-# 4. MCP Protocol Interface (JSON-RPC 2.0)
+# 2. MCP Protocol Layer (JSON-RPC 2.0 Interface)
 #----------------------------------------------------
 
 class MCPProtocol:
-    """Model Context Protocol (MCP) JSON-RPC 2.0 interface using Comlink"""
+    """Python interface to MCP protocol (JSON-RPC 2.0)"""
     
     @staticmethod
     async def send(message):
-        """Send a raw MCP protocol message using the Comlink handler"""
-        # Comlink-based MCP round-trip via JSON serialization
-        api_mcp = getattr(js.globalThis, 'desktop_mcp_comlink', None)
-        if api_mcp is None:
-            return {
-                'jsonrpc': '2.0',
-                'error': {
-                    'code': -32603,
-                    'message': 'MCP Comlink handler not available'
-                },
-                'id': message.get('id')
-            }
-        # Serialize Python dict to JSON and parse to a plain JS object
-        json_str = json.dumps(message)
-        js_msg = js.JSON.parse(json_str)
-        # Call the handler and return the native Python result
-        resp = await api_mcp.processMessage(js_msg)
-        return resp.to_py()
-
+        """Send a raw MCP protocol message (JSON-RPC 2.0 format)"""
+        try:
+            # Ensure message is properly formatted as JSON-RPC 2.0
+            if not isinstance(message, dict):
+                raise ValueError("Message must be a dictionary")
+                
+            if not message.get('jsonrpc') == '2.0':
+                message['jsonrpc'] = '2.0'
+                
+            if 'id' not in message:
+                message['id'] = str(uuid.uuid4())
+                
+            # Convert to JS object
+            js_message = to_js(message)
+            
+            # Forward to MCP handler in worker
+            result = await js.self.pyodideWorker.handleMCPProtocolMessage(js_message)
+            
+            # Extract the actual response from the PythonResult wrapper
+            if hasattr(result, 'result') and result.result is not None:
+                return result.result.to_py()
+            else:
+                return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': 'Internal error'}, 'id': message.get('id')}
+                
+        except Exception as e:
+            print(f"Error sending MCP message: {e}")
+            return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': str(e)}, 'id': message.get('id')}
+    
     @staticmethod
     async def tools_list():
-        """Get list of available tools"""
-        return await MCPProtocol.send({
+        """Get list of available tools via MCP protocol"""
+        message = {
             'jsonrpc': '2.0',
             'method': 'tools/list',
             'id': str(uuid.uuid4())
-        })
-        
+        }
+        return await MCPProtocol.send(message)
+    
     @staticmethod
-    async def tools_call(name, arguments=None):
-        """Call a tool by name with arguments"""
+    async def tools_call(tool_name, arguments=None):
+        """Call a tool via MCP protocol"""
         if arguments is None:
             arguments = {}
-        return await MCPProtocol.send({
+            
+        message = {
             'jsonrpc': '2.0',
             'method': 'tools/call',
             'params': {
-                'name': name,
+                'name': tool_name,
                 'arguments': arguments
             },
             'id': str(uuid.uuid4())
-        })
+        }
+        return await MCPProtocol.send(message)
+    
+    @staticmethod
+    async def resources_list():
+        """List available resources via MCP protocol"""
+        message = {
+            'jsonrpc': '2.0',
+            'method': 'resources/list',
+            'id': str(uuid.uuid4())
+        }
+        return await MCPProtocol.send(message)
 
 # Create legacy instances
 desktop_api_legacy = DesktopAPILegacy()
@@ -653,37 +675,78 @@ await micropip.install('${packageName}')
   },
 
   /**
-   * Handle MCP protocol message from Python
+   * Handle MCP Protocol JSON-RPC 2.0 messages
    */
   async handleMCPProtocolMessage(
     message: Record<string, unknown>
   ): Promise<PythonResult> {
     try {
-      console.log("Handling MCP protocol message:", message);
+      if (!this._pyodide) {
+        throw new Error("Pyodide not initialized");
+      }
 
-      // Forward the message to main thread for processing
-      self.postMessage({
-        type: "mcp-protocol-message",
-        message,
-      });
+      console.log("Handling MCP protocol message:", JSON.stringify(message));
+
+      // Forward the message to the MCP server plugin
+      const response = await this._forwardToMCPServer(message);
 
       return {
         success: true,
-        result: {
-          jsonrpc: "2.0",
-          result: { status: "message_sent" },
-          id: message.id || null,
-        },
+        result: response,
       };
     } catch (error) {
-      console.error("Error handling MCP protocol message:", error);
+      console.error("Error handling MCP message:", error);
       return {
         success: false,
-        error: `Error handling MCP protocol message: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
+  },
+
+  /**
+   * Forward a message to the MCP server plugin
+   */
+  async _forwardToMCPServer(
+    message: Record<string, unknown>
+  ): Promise<unknown> {
+    // Get access to the worker plugin manager
+    const workerPluginManagerGlobal = self as unknown as {
+      workerPluginManager?: {
+        callPlugin: (
+          pluginId: string,
+          method: string,
+          params?: Record<string, unknown>
+        ) => Promise<unknown>;
+      };
+    };
+
+    const manager = workerPluginManagerGlobal.workerPluginManager;
+    if (!manager) {
+      throw new Error("Worker plugin manager not available");
+    }
+
+    // Check if MCP server plugin is registered, register it if not
+    try {
+      const isRegistered = await manager.callPlugin(
+        "mcp-server",
+        "isInitialized"
+      );
+
+      if (!isRegistered) {
+        console.log("MCP server not initialized, initializing...");
+        await manager.callPlugin("mcp-server", "initialize");
+      }
+    } catch (error) {
+      console.warn(
+        "Error checking MCP server, will try to call anyway:",
+        error
+      );
+    }
+
+    // Call the MCP server plugin
+    return manager.callPlugin("mcp-server", "processMCPMessage", {
+      message,
+    });
   },
 
   /**

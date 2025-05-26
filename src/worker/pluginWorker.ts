@@ -38,6 +38,65 @@ self.addEventListener("message", (event) => {
       pendingComlinkPort = port;
     }
   }
+  // Handle MCP protocol messages
+  else if (event.data && event.data.type === "mcp-protocol-message") {
+    const workerPluginManagerGlobal = self as unknown as {
+      workerPluginManager?: WorkerPluginManager;
+    };
+    const manager = workerPluginManagerGlobal.workerPluginManager;
+
+    if (manager) {
+      const mcpServerPlugin = manager.getPlugins().get("mcp-server");
+      if (mcpServerPlugin) {
+        // Process the MCP message through the server plugin
+        const message = event.data.message;
+
+        // Call the processMCPMessage method - properly type the plugin
+        (async () => {
+          try {
+            // Explicitly type the plugin with processMCPMessage method
+            const typedPlugin = mcpServerPlugin as unknown as {
+              processMCPMessage: (message: any) => Promise<any>;
+            };
+
+            const response = await typedPlugin.processMCPMessage(message);
+            // Send response back to main thread
+            self.postMessage({
+              type: "mcp-protocol-response",
+              message: response,
+            });
+          } catch (error) {
+            // Send error response
+            self.postMessage({
+              type: "mcp-protocol-response",
+              message: {
+                jsonrpc: "2.0",
+                error: {
+                  code: -32603,
+                  message:
+                    error instanceof Error ? error.message : String(error),
+                },
+                id: message?.id || null,
+              },
+            });
+          }
+        })();
+      } else {
+        // MCP Server plugin not registered yet
+        self.postMessage({
+          type: "mcp-protocol-response",
+          message: {
+            jsonrpc: "2.0",
+            error: {
+              code: -32601,
+              message: "MCP Server plugin not available",
+            },
+            id: event.data.message?.id || null,
+          },
+        });
+      }
+    }
+  }
 });
 
 // Define interface for worker plugins

@@ -271,10 +271,10 @@ class WorkerPluginManagerClient {
   }
 
   /**
-   * Helper method to chat with WebLLM
+   * Helper method to chat with WebLLM with tools enabled
    * Returns a ReadableStream that can be consumed in the UI
    */
-  async chat(
+  async chatWithTools(
     messages: { role: string; content: string }[],
     temperature: number = 0.7
   ): Promise<ReadableStream<string>> {
@@ -288,10 +288,27 @@ class WorkerPluginManagerClient {
       await this.registerPlugin("webllm", workerPath);
     }
 
-    // Call the worker and get the response
+    // Make sure MCP server is registered
+    if (!this.registeredPlugins.has("mcp-server")) {
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/mcp-server.js"
+        : import.meta.env.BASE_URL + "/worker/mcp-server.js";
+
+      await this.registerPlugin("mcp-server", workerPath);
+      await this.initMCPServer();
+    }
+
+    // Check if model supports function calling
+    const supportsFunctionCalling = await this.callPlugin(
+      "webllm",
+      "supportsFunctionCalling"
+    );
+
+    // Call the worker with tools enabled if supported
     const result = await this.callPlugin("webllm", "chat", {
       messages,
       temperature,
+      enableTools: Boolean(supportsFunctionCalling),
     });
 
     // If result is an error object
@@ -832,6 +849,45 @@ class WorkerPluginManagerClient {
     } catch (error) {
       console.error("Failed to expose Desktop API bridge via Comlink:", error);
     }
+  }
+
+  /**
+   * Helper method to chat with WebLLM
+   * Returns a ReadableStream that can be consumed in the UI
+   */
+  async chat(
+    messages: { role: string; content: string }[],
+    temperature: number = 0.7
+  ): Promise<ReadableStream<string>> {
+    // Make sure webllm plugin is registered
+    if (!this.registeredPlugins.has("webllm")) {
+      // Get the correct worker path based on environment
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/webllm.js" // Production path
+        : import.meta.env.BASE_URL + "/worker/webllm.js"; // Development path
+
+      await this.registerPlugin("webllm", workerPath);
+    }
+
+    // Call the worker with tools disabled
+    const result = await this.callPlugin("webllm", "chat", {
+      messages,
+      temperature,
+      enableTools: false,
+    });
+
+    // If result is an error object
+    if (typeof result === "object" && result !== null && "error" in result) {
+      throw new Error(String(result.error));
+    }
+
+    // The worker transfers the ReadableStream, so it should be usable directly
+    if (result instanceof ReadableStream) {
+      return result;
+    }
+
+    // In case it's not a ReadableStream for some reason, throw an error
+    throw new Error("WebLLM chat did not return a ReadableStream");
   }
 }
 

@@ -206,7 +206,23 @@ export class MCPProtocolHandler {
       throw new Error("API context not available");
     }
 
-    const components = this.apiContext.getComponents();
+    const componentsResult = this.apiContext.getComponents();
+
+    // Ensure components is an array
+    const components = Array.isArray(componentsResult)
+      ? componentsResult
+      : Object.values(componentsResult || {});
+
+    if (!components || components.length === 0) {
+      // Return empty tools array if no components found
+      return {
+        jsonrpc: "2.0",
+        result: [],
+        id: message.id || null,
+      };
+    }
+
+    // Now safely use reduce on the array
     const tools = components.reduce(
       (all: MCPToolDefinition[], component: IApiComponent) =>
         all.concat(

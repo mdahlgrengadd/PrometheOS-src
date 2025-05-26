@@ -309,15 +309,70 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
         window as unknown as {
           workerPluginManager?: {
             setupComlinkBridge?: () => Promise<void>;
+            initMCPServer?: () => Promise<{ status: string; message?: string }>;
+            autoRegisterMCPTools?: (
+              components: Array<{
+                id: string;
+                actions: Array<{
+                  name: string;
+                  description: string;
+                  parameters?: Record<
+                    string,
+                    { type: string; description?: string; required?: boolean }
+                  >;
+                }>;
+              }>
+            ) => Promise<{
+              status: string;
+              registered: number;
+              errors: string[];
+            }>;
           };
         }
       ).workerPluginManager;
 
-      if (workerManager && workerManager.setupComlinkBridge) {
+      if (workerManager) {
         try {
+          // Setup Comlink bridge
           await workerManager.setupComlinkBridge();
+
+          // Initialize MCP server
+          const mcpInitResult = await workerManager.initMCPServer?.();
+          console.log("MCP server initialized:", mcpInitResult);
+
+          // Auto-register API components as MCP tools
+          if (
+            mcpInitResult?.status === "success" &&
+            workerManager.autoRegisterMCPTools
+          ) {
+            // Convert API components to the format expected by autoRegisterMCPTools
+            const components = getComponents().map((component) => ({
+              id: component.id,
+              actions: component.actions.map((action) => ({
+                name: action.id,
+                description: action.description,
+                parameters: action.parameters?.reduce(
+                  (acc, param) => ({
+                    ...acc,
+                    [param.name]: {
+                      type: param.type,
+                      description: param.description,
+                      required: param.required,
+                    },
+                  }),
+                  {}
+                ),
+              })),
+            }));
+
+            // Register the tools
+            const registerResult = await workerManager.autoRegisterMCPTools(
+              components
+            );
+            console.log("Auto-registered MCP tools:", registerResult);
+          }
         } catch (error) {
-          console.error("Failed to setup Comlink bridge:", error);
+          console.error("Failed to setup API integration:", error);
         }
       }
     };
