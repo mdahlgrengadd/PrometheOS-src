@@ -93,56 +93,37 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - ✅ **ES Module Worker Support** - Compatible with modern worker module system
 
 #### **Sprint 1.2: Python-Desktop API Bridge** 🔶 **IN PROGRESS**
+#### **Sprint 1.2: Python-Desktop API Bridge** ✅ **COMPLETED**
 **Duration**: 4-5 days  
 **Deliverables**:
 - ✅ **Pyodide Test App**: Basic Python REPL component for testing (`src/plugins/apps/pyodide-test/`)
-- 🔶 `DesktopAPI` Python module injected into Pyodide context *(Needs implementation)*
-- 🔶 Python functions to call registered API components *(Partially available via existing API system)*
-- 🔶 Bidirectional data exchange (Python ↔ EventBus) *(Needs implementation)*
-
-**Implementation**:
-```python
-# Example API bridge usage - Target implementation
-import desktop
-
-# List all available components
-components = desktop.api.list_components()
-
-# Execute actions on components
-result = desktop.api.execute("webllm-chat-input", "sendMessage", {"message": "Hello"})
-
-# Listen for events
-desktop.events.subscribe("webllm:answerCompleted", callback)
-```
+- ✅ `DesktopAPI` Python module injected into Pyodide context
+- ✅ Python functions to call registered API components
+- ✅ Bidirectional data exchange (Python ↔ EventBus)
 
 **Current Status**: 
-- ✅ Pyodide worker is functional and ES module compatible
-- ✅ Basic Python execution environment ready
-- ✅ API bridge module implemented and functional
-- 🔶 EventBus integration for Python implemented, **testing in progress**
-- 🔶 Complete bidirectional communication **testing in progress**
+- ✅ Full Comlink bridge working end-to-end
+- ✅ `desktop.api.list_components()` and `desktop.api.execute()` returning real results
+- ✅ Event emission and subscription working from Python
+- ✅ Calculator, launcher, notepad APIs callable from Python
+- 🔶 MCP JSON-RPC promise-based round-trip support pending
 
 ### **Phase 2: MCP Server Infrastructure** *(Sprints 2.1-2.2)* 🔶 **PARTIALLY IMPLEMENTED**
 
 #### **Sprint 2.1: MCP Protocol Implementation** 🔶 **FOUNDATION READY**
+#### **Sprint 2.1: MCP Protocol Implementation** 🔶 **IN PROGRESS**
 **Duration**: 5-6 days
 **Deliverables**:
-- ✅ MCP server worker (`src/worker/plugins/mcp-server.ts`) - *Basic structure exists*
-- 🔶 Tool registration from API components - *API system exists, needs MCP integration*
-- 🔶 JSON-RPC 2.0 protocol handler - *Needs implementation*
-- 🔶 Tool schema generation (API actions → MCP tools) - *API schema exists, needs MCP format*
-
-**Technical Details**:
-- ✅ API component infrastructure is ready
-- ✅ OpenAPI generation system exists for tool definitions
-- 🔶 MCP-specific protocol implementation needed
-- 🔶 Tool schema transformation (OpenAPI → MCP tools) required
+- ✅ MCP server worker (`src/worker/plugins/mcp-server.ts`) - basic skeleton exists
+- ✅ Tool registration from API components (manual registration)
+- 🔶 JSON-RPC 2.0 protocol handler with promise-based response mapping
+- 🔶 Tool schema generation (OpenAPI → MCP tools)
 
 **Current Status**:
-- ✅ **API System**: Complete with `withApi` HOC, `useApiComponent` hook, action handlers
-- ✅ **Worker Infrastructure**: MCP server worker skeleton exists
-- ✅ **OpenAPI Specs**: Automatic generation from registered components
-- 🔶 **MCP Protocol**: JSON-RPC 2.0 handler and tool registration needs implementation
+- ✅ API component infrastructure ready
+- ✅ OpenAPI generation for tools in place
+- 🔶 JSON-RPC promise-mapping implementation in progress
+- 🔶 End-to-end tool list and tool call returning real data pending
 
 #### **Sprint 2.2: Tool Discovery & Execution**
 **Duration**: 4-5 days
@@ -235,8 +216,8 @@ const response = await engine.chat.completions.create({
 | Phase | Sprint | Duration | Goal | Status |
 |-------|--------|----------|------|--------|
 | 1 | 1.1 | 3-4 days | Pyodide Worker Setup | ✅ **COMPLETED** |
-| 1 | 1.2 | 4-5 days | Python-Desktop API Bridge | 🔶 **IN PROGRESS** |
-| 2 | 2.1 | 5-6 days | MCP Protocol Implementation | 🔶 **FOUNDATION READY** |
+| 1 | 1.2 | 4-5 days | Python-Desktop API Bridge | ✅ **COMPLETED** |
+| 2 | 2.1 | 5-6 days | MCP Protocol Implementation | 🔶 **IN PROGRESS** |
 | 2 | 2.2 | 4-5 days | Tool Discovery & Execution | ⏳ **PENDING** |
 | 3 | 3.1 | 6-7 days | Function Calling Integration | ⏳ **PENDING** |
 | 3 | 3.2 | 4-5 days | Advanced Function Patterns | ⏳ **PENDING** |
