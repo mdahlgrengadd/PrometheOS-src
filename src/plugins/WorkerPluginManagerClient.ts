@@ -624,25 +624,30 @@ class WorkerPluginManagerClient {
   }
 
   /**
-   * Get MCP server statistics
+   * Unregister all MCP tools for a specific component
    */
-  async getMCPStats(): Promise<{ toolCount: number; isInitialized: boolean }> {
+  async unregisterMCPComponent(
+    componentId: string
+  ): Promise<{ status: string; unregistered: number; errors: string[] }> {
     if (!this.registeredPlugins.has("mcp-server")) {
-      return { toolCount: 0, isInitialized: false };
+      return { status: "error", unregistered: 0, errors: ["MCP server not available"] };
     }
 
-    const result = await this.callPlugin("mcp-server", "getStats");
+    const result = await this.callPlugin("mcp-server", "unregisterComponent", {
+      componentId,
+    });
 
     if (
       typeof result === "object" &&
       result !== null &&
-      "toolCount" in result &&
-      "isInitialized" in result
+      "status" in result &&
+      "unregistered" in result &&
+      "errors" in result
     ) {
-      return result as { toolCount: number; isInitialized: boolean };
+      return result as { status: string; unregistered: number; errors: string[] };
     }
 
-    return { toolCount: 0, isInitialized: false };
+    throw new Error("Component unregistration returned invalid result");
   }
 
   /**
@@ -775,6 +780,7 @@ class WorkerPluginManagerClient {
       // Handle MCP tool execution requests
       else if (data && data.type === "mcp-tool-request") {
         const { requestId, componentId, action, params } = data;
+        console.log(`MCP tool request received: ${requestId} for ${componentId}.${action}`, params);
 
         try {
           // Get the global API bridge
@@ -796,6 +802,8 @@ class WorkerPluginManagerClient {
             }
           ).execute(componentId, action, params);
 
+          console.log(`MCP tool execution success: ${requestId}`, result);
+
           // Send successful response back to worker
           this.worker.postMessage({
             type: "mcp-tool-response",
@@ -803,6 +811,8 @@ class WorkerPluginManagerClient {
             result,
           });
         } catch (error) {
+          console.error(`MCP tool execution error: ${requestId}`, error);
+
           // Send error response back to worker
           this.worker.postMessage({
             type: "mcp-tool-response",

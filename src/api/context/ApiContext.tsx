@@ -122,6 +122,28 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
       delete handlers[id];
     }
 
+    // Clean up MCP tools for this component
+    const workerManager = (
+      window as unknown as {
+        workerPluginManager?: {
+          unregisterMCPComponent?: (
+            componentId: string
+          ) => Promise<{ status: string; unregistered: number; errors: string[] }>;
+        };
+      }
+    ).workerPluginManager;
+
+    if (workerManager?.unregisterMCPComponent) {
+      setTimeout(async () => {
+        try {
+          const unregisterResult = await workerManager.unregisterMCPComponent(id);
+          console.log(`Auto-unregistered MCP tools for ${id}:`, unregisterResult);
+        } catch (error) {
+          console.error(`Failed to auto-unregister MCP tools for ${id}:`, error);
+        }
+      }, 100); // Small delay to ensure component is fully unregistered
+    }
+
     // Emit event for component unregistration
     eventBus.emit("api:component:unregistered", id);
   };

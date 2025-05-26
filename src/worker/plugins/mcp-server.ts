@@ -65,6 +65,8 @@ const MCPServerWorker: WorkerPlugin = {
   // Private state
   _tools: new Map<string, ToolDefinition>(),
   _isInitialized: false,
+  // Track registered components to prevent duplicates
+  _registeredComponents: new Set<string>(),
 
   /**
    * Initialize the MCP server
@@ -220,6 +222,14 @@ const MCPServerWorker: WorkerPlugin = {
     try {
       const toolName = `${componentId}.${action}`;
 
+      // Check for duplicate registration
+      if ((this._tools as Map<string, ToolDefinition>).has(toolName)) {
+        return {
+          status: "error",
+          message: `Tool ${toolName} is already registered`,
+        };
+      }
+
       // Build input schema from parameters
       const inputSchema = {
         type: "object" as const,
@@ -242,6 +252,7 @@ const MCPServerWorker: WorkerPlugin = {
       };
 
       this._tools.set(toolName, toolDef);
+      this._registeredComponents.add(componentId); // Track registered component
 
       console.log(`Registered MCP tool: ${toolName}`);
       return { status: "success", message: `Tool ${toolName} registered` };
@@ -266,6 +277,21 @@ const MCPServerWorker: WorkerPlugin = {
     }
 
     this._tools.delete(toolName);
+
+    // Check if component is still registered with other tools
+    const componentId = toolName.split('.')[0];
+    let isComponentRegistered = false;
+    for (const registeredTool of this._tools.keys()) {
+      if (registeredTool.startsWith(componentId + '.')) {
+        isComponentRegistered = true;
+        break;
+      }
+    }
+
+    if (!isComponentRegistered) {
+      this._registeredComponents.delete(componentId); // Cleanup untracked component
+    }
+
     console.log(`Unregistered MCP tool: ${toolName}`);
     return { status: "success", message: `Tool ${toolName} unregistered` };
   },
@@ -274,14 +300,14 @@ const MCPServerWorker: WorkerPlugin = {
    * Get all available tools
    */
   async getAvailableTools(): Promise<MCPTool[]> {
-    return Array.from(this._tools.values()).map((toolDef) => toolDef.tool);
+    return Array.from((this._tools as Map<string, ToolDefinition>).values()).map((toolDef) => toolDef.tool);
   },
 
   /**
    * Execute a tool call
    */
   async executeTool(toolCall: MCPToolCall): Promise<MCPToolResult> {
-    const toolDef = this._tools.get(toolCall.name);
+    const toolDef = (this._tools as Map<string, ToolDefinition>).get(toolCall.name);
 
     if (!toolDef) {
       return {
@@ -333,7 +359,8 @@ const MCPServerWorker: WorkerPlugin = {
     params: Record<string, unknown>
   ): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      const requestId = Math.random().toString(36).substr(2, 9);
+      const requestId = `mcp-tool-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
       // Listen for response
       const messageHandler = (event: MessageEvent) => {
@@ -341,7 +368,13 @@ const MCPServerWorker: WorkerPlugin = {
           event.data.type === "mcp-tool-response" &&
           event.data.requestId === requestId
         ) {
+          console.log(`MCP tool response received for ${requestId}: ${componentId}.${action}`);
           self.removeEventListener("message", messageHandler);
+          
+          // Clear the timeout since we got a response
+          if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+          }
 
           if (event.data.error) {
             reject(new Error(event.data.error));
@@ -354,6 +387,7 @@ const MCPServerWorker: WorkerPlugin = {
       self.addEventListener("message", messageHandler);
 
       // Send request to main thread
+      console.log(`MCP tool request sent: ${requestId} for ${componentId}.${action}`);
       self.postMessage({
         type: "mcp-tool-request",
         requestId,
@@ -363,7 +397,8 @@ const MCPServerWorker: WorkerPlugin = {
       });
 
       // Timeout after 30 seconds
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        console.log(`MCP tool timeout: ${requestId} for ${componentId}.${action}`);
         self.removeEventListener("message", messageHandler);
         reject(new Error("Tool execution timeout"));
       }, 30000);
@@ -371,7 +406,7 @@ const MCPServerWorker: WorkerPlugin = {
   },
 
   /**
-   * Auto-register tools from API components list
+   * Auto-register tools from API components list with duplicate prevention
    */
   async autoRegisterFromApiComponents(
     components: Array<{
@@ -390,6 +425,15 @@ const MCPServerWorker: WorkerPlugin = {
     const errors: string[] = [];
 
     for (const component of components) {
+      // Skip if component is already registered to prevent duplicates
+      if (this._registeredComponents.has(component.id)) {
+        console.log(`MCP: Skipping already registered component: ${component.id}`);
+        continue;
+      }
+
+      // Mark component as registered
+      this._registeredComponents.add(component.id);
+
       for (const action of component.actions) {
         try {
           const result = await this.registerTool(
@@ -422,10 +466,56 @@ const MCPServerWorker: WorkerPlugin = {
   },
 
   /**
+   * Unregister all tools for a specific component
+   */
+  async unregisterComponent(
+    componentId: string
+  ): Promise<{ status: string; unregistered: number; errors: string[] }> {
+    let unregistered = 0;
+    const errors: string[] = [];
+
+    // Find all tools for this component
+    const toolsToRemove: string[] = [];
+    for (const [toolName, toolDef] of this._tools.entries()) {
+      if (toolDef.componentId === componentId) {
+        toolsToRemove.push(toolName);
+      }
+    }
+
+    // Unregister each tool
+    for (const toolName of toolsToRemove) {
+      try {
+        const result = await this.unregisterTool(toolName);
+        if (result.status === "success") {
+          unregistered++;
+        } else {
+          errors.push(`${toolName}: ${result.message}`);
+        }
+      } catch (error) {
+        errors.push(
+          `${toolName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
+    // Remove component from registered set
+    this._registeredComponents.delete(componentId);
+    console.log(`MCP: Unregistered component ${componentId} with ${unregistered} tools`);
+
+    return {
+      status: "success",
+      unregistered,
+      errors,
+    };
+  },
+
+  /**
    * Get tool by name
    */
   async getTool(toolName: string): Promise<MCPTool | null> {
-    const toolDef = this._tools.get(toolName);
+    const toolDef = (this._tools as Map<string, ToolDefinition>).get(toolName);
     return toolDef ? toolDef.tool : null;
   },
 
@@ -451,6 +541,7 @@ const MCPServerWorker: WorkerPlugin = {
    */
   cleanup(): void {
     this._tools.clear();
+    this._registeredComponents.clear();
     this._isInitialized = false;
     console.log("MCP Server cleaned up");
   },
@@ -509,6 +600,15 @@ const MCPServerWorker: WorkerPlugin = {
           };
         }
         return this.autoRegisterFromApiComponents(params.components as any[]);
+
+      case "unregisterComponent":
+        if (!params?.componentId) {
+          return {
+            status: "error",
+            message: "unregisterComponent requires componentId",
+          };
+        }
+        return this.unregisterComponent(params.componentId as string);
 
       case "getTool":
         if (!params?.toolName) {
