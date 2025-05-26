@@ -1,5 +1,7 @@
 import * as Comlink from 'comlink';
 
+// Import the manifest for pyodide-test to get the workerEntrypoint
+import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { PluginManifest } from './types';
 
 // Define interfaces matching the worker's API
@@ -32,7 +34,6 @@ class WorkerPluginManagerClient {
   private workerApi: Comlink.Remote<WorkerPluginManager>;
   private isConnected = false;
   private registeredPlugins: Map<string, PluginWorkerInfo> = new Map();
-
   constructor() {
     // Create the worker with the pluginWorker.ts file
     this.worker = new Worker(
@@ -42,6 +43,9 @@ class WorkerPluginManagerClient {
 
     // Wrap the worker with Comlink
     this.workerApi = Comlink.wrap<WorkerPluginManager>(this.worker);
+
+    // Set up message handler for desktop API bridge requests
+    this.setupDesktopApiBridgeHandler();
   }
 
   /**
@@ -314,6 +318,326 @@ class WorkerPluginManagerClient {
     await this.callPlugin("webllm", "cleanup");
   }
 
+  // Pyodide Helper Methods
+
+  /**
+   * Initialize Pyodide runtime
+   */
+  async initPyodide(): Promise<{ status: string; message?: string }> {
+    // Make sure pyodide plugin is registered
+    if (!this.registeredPlugins.has("pyodide")) {
+      // Use the manifest's workerEntrypoint directly
+      // Import the manifest at the top of the file:
+      // import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "initPyodide");
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("Pyodide initPyodide returned invalid result");
+  }
+
+  /**
+   * Execute Python code
+   */
+  async executePython(
+    code: string,
+    returnStdout: boolean = false
+  ): Promise<{
+    success: boolean;
+    result?: unknown;
+    error?: string;
+    stdout?: string;
+  }> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "executePython", {
+      code,
+      returnStdout,
+    });
+
+    if (typeof result === "object" && result !== null && "success" in result) {
+      return result as {
+        success: boolean;
+        result?: unknown;
+        error?: string;
+        stdout?: string;
+      };
+    }
+
+    throw new Error("Python execution returned invalid result");
+  }
+
+  /**
+   * Install Python package via micropip
+   */
+  async installPythonPackage(
+    packageName: string
+  ): Promise<{ success: boolean; result?: string; error?: string }> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      const workerPath = pyodideTestManifest.workerEntrypoint;
+      await this.registerPlugin("pyodide", workerPath);
+    }
+
+    const result = await this.callPlugin("pyodide", "installPackage", {
+      packageName,
+    });
+
+    if (typeof result === "object" && result !== null && "success" in result) {
+      return result as { success: boolean; result?: string; error?: string };
+    }
+
+    throw new Error("Python package installation returned invalid result");
+  }
+
+  /**
+   * Get Pyodide initialization progress
+   */
+  async getPyodideProgress(): Promise<{
+    phase: string;
+    message: string;
+    progress?: number;
+  } | null> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return null;
+    }
+
+    const result = await this.callPlugin("pyodide", "getProgress");
+
+    if (result === null) {
+      return null;
+    }
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "phase" in result &&
+      "message" in result
+    ) {
+      return result as { phase: string; message: string; progress?: number };
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if Pyodide is ready for execution
+   */
+  async isPyodideReady(): Promise<boolean> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return false;
+    }
+
+    const result = await this.callPlugin("pyodide", "isReady");
+    return Boolean(result);
+  }
+
+  /**
+   * Clean up Pyodide resources
+   */
+  async cleanupPyodide(): Promise<void> {
+    if (!this.registeredPlugins.has("pyodide")) {
+      return;
+    }
+    await this.callPlugin("pyodide", "cleanup");
+  }
+
+  // MCP Server Helper Methods
+
+  /**
+   * Initialize MCP server
+   */
+  async initMCPServer(): Promise<{ status: string; message?: string }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      const workerPath = import.meta.env.PROD
+        ? import.meta.env.BASE_URL + "/worker/mcp-server.js"
+        : import.meta.env.BASE_URL + "/worker/mcp-server.js";
+
+      await this.registerPlugin("mcp-server", workerPath);
+    }
+
+    const result = await this.callPlugin("mcp-server", "initialize");
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("MCP Server initialization returned invalid result");
+  }
+
+  /**
+   * Register an MCP tool from API component
+   */
+  async registerMCPTool(
+    componentId: string,
+    action: string,
+    description: string,
+    parameters?: Record<
+      string,
+      { type: string; description?: string; required?: boolean }
+    >
+  ): Promise<{ status: string; message?: string }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      await this.initMCPServer();
+    }
+
+    const result = await this.callPlugin("mcp-server", "registerTool", {
+      componentId,
+      action,
+      description,
+      parameters,
+    });
+
+    if (typeof result === "object" && result !== null && "status" in result) {
+      return result as { status: string; message?: string };
+    }
+
+    throw new Error("MCP tool registration returned invalid result");
+  }
+  /**
+   * Get all available MCP tools
+   */
+  async getMCPTools(): Promise<
+    Array<{
+      name: string;
+      description: string;
+      inputSchema: Record<string, unknown>;
+    }>
+  > {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return [];
+    }
+
+    const result = await this.callPlugin("mcp-server", "getAvailableTools");
+
+    if (Array.isArray(result)) {
+      return result as Array<{
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }>;
+    }
+
+    return [];
+  }
+  /**
+   * Execute an MCP tool
+   */
+  async executeMCPTool(toolCall: {
+    name: string;
+    arguments: Record<string, unknown>;
+  }): Promise<{
+    content: Array<{ type: string; text?: string }>;
+    isError?: boolean;
+  }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return {
+        content: [{ type: "text", text: "MCP Server not initialized" }],
+        isError: true,
+      };
+    }
+
+    const result = await this.callPlugin("mcp-server", "executeTool", {
+      toolCall,
+    });
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "content" in result &&
+      Array.isArray((result as Record<string, unknown>).content)
+    ) {
+      return result as {
+        content: Array<{ type: string; text?: string }>;
+        isError?: boolean;
+      };
+    }
+
+    return {
+      content: [{ type: "text", text: "Invalid tool execution result" }],
+      isError: true,
+    };
+  }
+
+  /**
+   * Auto-register all API components as MCP tools
+   */
+  async autoRegisterMCPTools(
+    components: Array<{
+      id: string;
+      actions: Array<{
+        name: string;
+        description: string;
+        parameters?: Record<
+          string,
+          { type: string; description?: string; required?: boolean }
+        >;
+      }>;
+    }>
+  ): Promise<{ status: string; registered: number; errors: string[] }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      await this.initMCPServer();
+    }
+
+    const result = await this.callPlugin(
+      "mcp-server",
+      "autoRegisterFromApiComponents",
+      { components }
+    );
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "status" in result &&
+      "registered" in result &&
+      "errors" in result
+    ) {
+      return result as { status: string; registered: number; errors: string[] };
+    }
+
+    throw new Error("Auto-registration returned invalid result");
+  }
+
+  /**
+   * Get MCP server statistics
+   */
+  async getMCPStats(): Promise<{ toolCount: number; isInitialized: boolean }> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return { toolCount: 0, isInitialized: false };
+    }
+
+    const result = await this.callPlugin("mcp-server", "getStats");
+
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "toolCount" in result &&
+      "isInitialized" in result
+    ) {
+      return result as { toolCount: number; isInitialized: boolean };
+    }
+
+    return { toolCount: 0, isInitialized: false };
+  }
+
+  /**
+   * Clean up MCP server resources
+   */
+  async cleanupMCPServer(): Promise<void> {
+    if (!this.registeredPlugins.has("mcp-server")) {
+      return;
+    }
+    await this.callPlugin("mcp-server", "cleanup");
+  }
+
   /**
    * Terminate the worker
    */
@@ -322,7 +646,194 @@ class WorkerPluginManagerClient {
     this.isConnected = false;
     this.registeredPlugins.clear();
   }
+
+  /**
+   * Set up message handler for desktop API bridge requests from Pyodide workers
+   */
+  private setupDesktopApiBridgeHandler(): void {
+    this.worker.addEventListener("message", async (event) => {
+      const { data } = event;
+
+      // Check if this is a desktop API request
+      if (data && data.type === "desktop-api-request") {
+        const { requestId, method, params } = data;
+
+        try {
+          let result: unknown; // Get the global API bridge
+          const bridge = (globalThis as Record<string, unknown>)
+            .desktop_api_bridge;
+
+          if (!bridge) {
+            throw new Error("Desktop API bridge not available");
+          } // Handle different API methods
+          switch (method) {
+            case "list_components": {
+              result = (
+                bridge as { listComponents(): string[] }
+              ).listComponents();
+              break;
+            }
+
+            case "execute_action": {
+              if (!params || !params.componentId || !params.action) {
+                throw new Error(
+                  "Missing required parameters for execute_action"
+                );
+              }
+              result = await (
+                bridge as {
+                  execute(
+                    componentId: string,
+                    action: string,
+                    params?: Record<string, unknown>
+                  ): Promise<unknown>;
+                }
+              ).execute(
+                params.componentId as string,
+                params.action as string,
+                params.params as Record<string, unknown>
+              );
+              break;
+            }
+
+            case "subscribe_event": {
+              if (!params || !params.eventName) {
+                throw new Error("Missing eventName for subscribe_event");
+              }
+              // For event subscription, we need to set up a callback that sends messages back to worker
+              const unsubscribe = (
+                bridge as {
+                  subscribeEvent(
+                    eventName: string,
+                    callback: (data: unknown) => void
+                  ): () => void;
+                }
+              ).subscribeEvent(
+                params.eventName as string,
+                (eventData: unknown) => {
+                  this.worker.postMessage({
+                    type: "desktop-api-event",
+                    requestId,
+                    eventName: params.eventName,
+                    data: eventData,
+                  });
+                }
+              );
+              result = { success: true, unsubscribe: requestId }; // Use requestId as unsubscribe token
+              break;
+            }
+
+            case "emit_event": {
+              if (!params || !params.eventName) {
+                throw new Error("Missing eventName for emit_event");
+              }
+              (
+                bridge as { emitEvent(eventName: string, data?: unknown): void }
+              ).emitEvent(params.eventName as string, params.data);
+              result = { success: true };
+              break;
+            }
+
+            default:
+              throw new Error(`Unknown desktop API method: ${method}`);
+          }
+
+          // Send successful response back to worker
+          this.worker.postMessage({
+            type: "desktop-api-response",
+            requestId,
+            success: true,
+            result,
+          });
+        } catch (error) {
+          // Send error response back to worker
+          this.worker.postMessage({
+            type: "desktop-api-response",
+            requestId,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+      // Handle MCP protocol messages
+      else if (data && data.type === "mcp-protocol-message") {
+        const message = data.message;
+
+        try {
+          // Get the MCP protocol handler
+          const mcpHandler = (globalThis as Record<string, unknown>)
+            .desktop_mcp_handler;
+
+          if (!mcpHandler) {
+            throw new Error("MCP protocol handler not available");
+          }
+
+          // Process the message through the MCP handler
+          const response = await (
+            mcpHandler as {
+              processMessage(message: unknown): Promise<unknown>;
+            }
+          ).processMessage(message);
+
+          // Send the response back to the worker
+          this.worker.postMessage({
+            type: "mcp-protocol-response",
+            message: response,
+          });
+        } catch (error) {
+          // Send error response in JSON-RPC 2.0 format
+          this.worker.postMessage({
+            type: "mcp-protocol-response",
+            message: {
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: error instanceof Error ? error.message : String(error),
+              },
+              id: message?.id || null,
+            },
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Initialize Comlink exposure for the desktop API bridge
+   * This exposes the bridge methods directly to the Pyodide worker via Comlink
+   */
+  async setupComlinkBridge(): Promise<void> {
+    // Get the desktop API bridge
+    const bridge = (globalThis as Record<string, unknown>).desktop_api_bridge;
+
+    if (!bridge) {
+      console.error("Desktop API bridge not available for Comlink exposure");
+      return;
+    }
+
+    try {
+      // Create a message channel for dedicated Comlink communication
+      const { port1, port2 } = new MessageChannel();
+
+      // Send the port to the plugin worker for Comlink bridging
+      console.log("Sending Comlink port to plugin worker");
+      this.worker.postMessage({ type: "comlink-port", port: port2 }, [port2]);
+
+      // Expose the desktop API bridge via Comlink on port1
+      Comlink.expose(bridge, port1);
+
+      console.log("Desktop API bridge exposed via Comlink on message channel");
+    } catch (error) {
+      console.error("Failed to expose Desktop API bridge via Comlink:", error);
+    }
+  }
 }
 
 // Export a singleton instance
 export const workerPluginManager = new WorkerPluginManagerClient();
+
+// Make it available globally for other modules to access
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).workerPluginManager =
+    workerPluginManager;
+}

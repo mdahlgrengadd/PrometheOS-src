@@ -1,9 +1,51 @@
 import * as Comlink from 'comlink';
 
+// Buffer for Comlink port until pyodide plugin is registered
+let pendingComlinkPort: MessagePort | null = null;
+
+// Handle Comlink port messages
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "comlink-port") {
+    console.log("Received Comlink port in worker");
+    // Retrieve the port from data or fallback to transferred ports
+    const port: MessagePort | undefined =
+      (event.data.port as MessagePort) || event.ports?.[0];
+    if (!port) {
+      console.error("Comlink port not found in message");
+      return;
+    }
+
+    // Try to forward to pyodide plugin if registered
+    const workerPluginManagerGlobal = self as unknown as {
+      workerPluginManager?: WorkerPluginManager;
+    };
+    const manager = workerPluginManagerGlobal.workerPluginManager;
+    if (manager) {
+      const pyodidePlugin = manager.getPlugins().get("pyodide");
+      if (
+        pyodidePlugin &&
+        typeof pyodidePlugin.handleComlinkPort === "function"
+      ) {
+        pyodidePlugin.handleComlinkPort(port);
+      } else {
+        console.warn("Pyodide plugin not ready, buffering Comlink port");
+        pendingComlinkPort = port;
+      }
+    } else {
+      console.warn(
+        "Worker plugin manager not available for Comlink setup, buffering port"
+      );
+      pendingComlinkPort = port;
+    }
+  }
+});
+
 // Define interface for worker plugins
 interface WorkerPlugin {
   id: string;
   handle?: (method: string, params?: Record<string, unknown>) => unknown;
+  /** Optional hook for setting up Comlink on a MessagePort */
+  handleComlinkPort?: (port: MessagePort) => void;
   [key: string]: unknown;
 }
 
@@ -34,6 +76,13 @@ class WorkerPluginManager {
 
   constructor() {
     console.log("Worker Plugin Manager initialized");
+  }
+
+  /**
+   * Public accessor for plugins map (needed for Comlink setup)
+   */
+  public getPlugins(): Map<string, WorkerPlugin> {
+    return this.plugins;
   }
 
   /**
@@ -77,7 +126,25 @@ class WorkerPluginManager {
       }
 
       // Register the plugin
+      console.log(`WorkerPluginManager: registering plugin ${pluginId}`);
       this.plugins.set(pluginId, plugin as WorkerPlugin);
+
+      // If we have a buffered Comlink port and this is the pyodide plugin, forward it now
+      if (pluginId === "pyodide") {
+        console.log("WorkerPluginManager: pyodide plugin registered");
+        if (pendingComlinkPort) {
+          const pyodidePlugin = this.getPlugins().get("pyodide");
+          if (pyodidePlugin?.handleComlinkPort) {
+            console.log("Forwarding buffered Comlink port to pyodide plugin");
+            pyodidePlugin.handleComlinkPort(pendingComlinkPort);
+            pendingComlinkPort = null;
+          } else {
+            console.warn(
+              "pyodide plugin missing handleComlinkPort, cannot forward port"
+            );
+          }
+        }
+      }
 
       // Register the handler function
       if (typeof plugin.handle === "function") {
@@ -196,6 +263,11 @@ class WorkerPluginManager {
 
 // Create the worker instance
 const workerManager = new WorkerPluginManager();
+
+// Make the worker manager available globally for port routing
+(
+  self as unknown as { workerPluginManager?: WorkerPluginManager }
+).workerPluginManager = workerManager;
 
 // Expose all public methods via Comlink
 Comlink.expose(workerManager);

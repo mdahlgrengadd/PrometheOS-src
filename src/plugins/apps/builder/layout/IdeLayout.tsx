@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 
-import ActivityBar from '../components/ActivityBar';
+import { useFileSystemStore } from '@/store/fileSystem';
+
 import CommandPalette from '../components/CommandPalette';
 import EditorArea from '../components/EditorArea';
 import SideBar from '../components/SideBar';
@@ -17,10 +18,21 @@ const IdeLayout: React.FC = () => {
     sidebarVisible,
   } = useIdeStore();
 
+  const initFileSystem = useFileSystemStore((state) => state.init);
+
+  // Initialize file system on component mount
+  useEffect(() => {
+    initFileSystem();
+  }, [initFileSystem]);
+
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.classList.toggle("light", theme === "light");
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    // Find the closest ide-builder-app container and apply theme there
+    const ideContainer = document.querySelector(".ide-builder-app");
+    if (ideContainer) {
+      ideContainer.classList.toggle("light", theme === "light");
+      ideContainer.classList.toggle("dark", theme === "dark");
+    }
   }, [theme]);
 
   // Set up keyboard shortcuts
@@ -59,7 +71,7 @@ const IdeLayout: React.FC = () => {
 
   return (
     <div className="ide-container">
-      <ActivityBar />
+      {/* <ActivityBar /> */}
       {sidebarVisible && <SideBar />}
       <EditorArea />
       <StatusBar />

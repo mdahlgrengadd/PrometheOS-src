@@ -1,8 +1,7 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-import { AppState, FileSystemItem, Tab, ViewType } from "../types";
-import { mockFileSystem } from "../utils/mock-data";
-import { loadShadowFolder } from "../vfs/virtual-fs";
+import { useFileSystemStore } from '../../../../store/fileSystem';
+import { AppState, FileSystemItem, Tab, ViewType } from '../types';
 
 interface IdeStore extends AppState {
   toggleSidebar: () => void;
@@ -23,8 +22,6 @@ interface IdeStore extends AppState {
   setBuildCode: (code: string) => void;
   setIsBuilding: (isBuilding: boolean) => void;
   runBuild: (command?: string) => Promise<void>;
-  setFileSystem: (fs: FileSystemItem[]) => void;
-  initFileSystem: (source?: "shadow" | "mock") => Promise<void>;
 }
 
 // Default state
@@ -35,7 +32,6 @@ const initialState: AppState = {
   previewPanelVisible: false,
   activeTab: null,
   tabs: [],
-  fileSystem: mockFileSystem,
   theme: "light",
   commandPaletteOpen: false,
   buildOutput: "",
@@ -47,23 +43,6 @@ const initialState: AppState = {
 
 const useIdeStore = create<IdeStore>((set, get) => ({
   ...initialState,
-
-  setFileSystem: (fs) => set({ fileSystem: fs }),
-
-  // Initialize the file system from shadow or mock
-  initFileSystem: async (source = "shadow") => {
-    let fs: FileSystemItem[] = [];
-    if (source === "shadow") {
-      fs = await loadShadowFolder();
-      if (!fs || fs.length === 0) {
-        // fallback to mock if shadow is empty
-        fs = mockFileSystem;
-      }
-    } else {
-      fs = mockFileSystem;
-    }
-    set({ fileSystem: fs });
-  },
 
   toggleSidebar: () =>
     set((state) => ({ sidebarVisible: !state.sidebarVisible })),
@@ -161,20 +140,21 @@ const useIdeStore = create<IdeStore>((set, get) => ({
     })),
 
   getFileById: (id) => {
-    const findInTree = (
-      items: FileSystemItem[]
-    ): FileSystemItem | undefined => {
-      for (const item of items) {
-        if (item.id === id) return item;
-        if (item.children) {
-          const found = findInTree(item.children);
+    // Use the shared store to find files
+    const findInTree = (item: FileSystemItem): FileSystemItem | undefined => {
+      if (item.id === id) return item;
+      if (item.children) {
+        for (const child of item.children) {
+          const found = findInTree(child);
           if (found) return found;
         }
       }
       return undefined;
     };
 
-    return findInTree(get().fileSystem);
+    // Get the file tree from the shared store
+    const fileSystem = useFileSystemStore.getState().fs;
+    return findInTree(fileSystem);
   },
 
   getTabById: (id) => {
@@ -190,39 +170,42 @@ const useIdeStore = create<IdeStore>((set, get) => ({
   },
 
   saveFile: (fileId, content) => {
-    // Update the file content in the file system
-    set((state) => {
-      // Create a deep copy of the file system
-      const updateFileSystem = (items: FileSystemItem[]): FileSystemItem[] => {
-        return items.map((item) => {
-          if (item.id === fileId && item.type === "file") {
-            return { ...item, content };
-          }
-          if (item.children) {
-            return {
-              ...item,
-              children: updateFileSystem(item.children),
-            };
-          }
-          return item;
-        });
-      };
+    // Find the file path
+    const findFilePath = (
+      item: FileSystemItem,
+      path: string[] = ["root"]
+    ): string[] | null => {
+      if (item.id === fileId) return path;
+      if (!item.children) return null;
 
-      const newFileSystem = updateFileSystem(state.fileSystem);
+      for (const child of item.children) {
+        const childPath = findFilePath(child, [...path, child.id]);
+        if (childPath) return childPath;
+      }
 
-      // Find the tab for this file and mark it as not dirty
-      const newTabs = state.tabs.map((tab) => {
-        if (tab.fileId === fileId) {
-          return { ...tab, isDirty: false };
-        }
-        return tab;
-      });
+      return null;
+    };
 
-      return {
-        fileSystem: newFileSystem,
-        tabs: newTabs,
-      };
-    });
+    // Get file system from shared store
+    const fileSystem = useFileSystemStore.getState().fs;
+    const path = findFilePath(fileSystem);
+
+    if (path) {
+      // Get the folder path (parent path)
+      const parentPath = path.slice(0, -1);
+
+      // Update file content in shared store
+      useFileSystemStore
+        .getState()
+        .updateFileContent(parentPath, fileId, content);
+
+      // Mark tab as not dirty
+      set((state) => ({
+        tabs: state.tabs.map((tab) =>
+          tab.fileId === fileId ? { ...tab, isDirty: false } : tab
+        ),
+      }));
+    }
   },
   setBuildOutput: (output) => set({ buildOutput: output }),
   setBuildError: (error) => set({ buildError: error }),
@@ -274,22 +257,21 @@ const useIdeStore = create<IdeStore>((set, get) => ({
     }
 
     // Add all files to virtual FS
-    const addAllFilesToVirtualFs = (
-      items: FileSystemItem[],
-      parentPath = ""
-    ) => {
-      items.forEach((item) => {
-        const filePath = item.id;
-        if (item.type === "file" && item.content !== undefined) {
-          addToVirtualFs(filePath, item.content);
-        }
-        if (item.type === "folder" && item.children) {
-          addAllFilesToVirtualFs(item.children, filePath);
-        }
-      });
+    const addAllFilesToVirtualFs = (item: FileSystemItem, parentPath = "") => {
+      const filePath = item.id;
+      if (item.type === "file" && item.content !== undefined) {
+        addToVirtualFs(filePath, item.content);
+      }
+      if (item.type === "folder" && item.children) {
+        item.children.forEach((child) => {
+          addAllFilesToVirtualFs(child, filePath);
+        });
+      }
     };
 
-    addAllFilesToVirtualFs(state.fileSystem);
+    // Get the file system from the shared store
+    const fileSystem = useFileSystemStore.getState().fs;
+    addAllFilesToVirtualFs(fileSystem);
 
     let buildOptions;
 

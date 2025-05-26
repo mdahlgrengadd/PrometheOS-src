@@ -23,7 +23,6 @@ const EditorArea: React.FC = () => {
     saveFile,
     togglePreviewPanel,
     getTabById,
-    initFileSystem,
     runBuild,
   } = useIdeStore();
   const [editorContent, setEditorContent] = useState<{ [key: string]: string }>(
@@ -37,10 +36,6 @@ const EditorArea: React.FC = () => {
   const [previewTargetTabId, setPreviewTargetTabId] = useState<string | null>(
     null
   );
-  // Load shadow filesystem on mount
-  useEffect(() => {
-    initFileSystem();
-  }, [initFileSystem]);
 
   // Load Monaco editor on component mount
   useEffect(() => {
@@ -302,7 +297,7 @@ const EditorArea: React.FC = () => {
                       : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                   onClick={handleRunPreview}
-                  title={isPreviewRunning ? "Stop Preview" : "Run Preview"}
+                  title={isPreviewRunning ? "Stop" : "Run"}
                 >
                   {isPreviewRunning ? (
                     <>
@@ -312,7 +307,7 @@ const EditorArea: React.FC = () => {
                   ) : (
                     <>
                       <Play size={14} />
-                      Run Preview
+                      Run
                     </>
                   )}
                 </button>

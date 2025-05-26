@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild-wasm';
-import * as path from 'path-browserify';
+import path from 'path-browserify';
 
 let isInitialized = false;
 

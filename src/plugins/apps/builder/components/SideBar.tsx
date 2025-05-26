@@ -1,11 +1,13 @@
 import { ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useFileSystemStore } from '@/store/fileSystem';
+
 import useIdeStore from '../store/ide-store';
 import { FileSystemItem } from '../types';
 
 const SideBar: React.FC = () => {
-  const { sidebarVisible, toggleSidebar, activeView } = useIdeStore();
+  const { sidebarVisible, previewPanelVisible, activeView } = useIdeStore();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -55,7 +57,8 @@ const SideBar: React.FC = () => {
     e.preventDefault(); // Prevent text selection
   };
 
-  if (!sidebarVisible) {
+  // Hide sidebar if user toggled off or if preview is active
+  if (!sidebarVisible || previewPanelVisible) {
     return null;
   }
 
@@ -87,10 +90,11 @@ const SideBar: React.FC = () => {
 };
 
 const ExplorerView: React.FC = () => {
-  const { fileSystem } = useIdeStore();
+  // Use the shared file system store
+  const fileSystem = useFileSystemStore((state) => state.fs);
 
   // Load ignore patterns from .vfsignore at root
-  const ignoreFile = fileSystem.find(
+  const ignoreFile = fileSystem.children?.find(
     (item) => item.name === ".vfsignore" && item.type === "file"
   );
   const ignorePatterns = useMemo(() => {
@@ -116,12 +120,13 @@ const ExplorerView: React.FC = () => {
       return new RegExp(`^${regexStr}$`);
     });
   }, [ignorePatterns]);
-  // Filter out ignored items and the ignore file itself
-  const rootItems = fileSystem.filter(
-    (item) =>
-      item.name !== ".vfsignore" &&
-      !ignoreMatchers.some((rx) => rx.test(item.id))
-  );
+  // Get the children of the root and filter them
+  const rootItems =
+    fileSystem.children?.filter(
+      (item) =>
+        item.name !== ".vfsignore" &&
+        !ignoreMatchers.some((rx) => rx.test(item.id))
+    ) || [];
   // Sort: folders first, then files, both alphabetically
   const sortedRootItems = [...rootItems].sort((a, b) => {
     if (a.type !== b.type) return a.type === "folder" ? -1 : 1;

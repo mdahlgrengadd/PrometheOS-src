@@ -1,11 +1,35 @@
-
 export interface FileSystemItem {
   id: string;
   name: string;
-  type: 'file' | 'folder';
+  type: "file" | "folder";
   size?: number;
+  content?: string;
+  language?: string;
   children?: FileSystemItem[];
 }
+
+// List of file extensions to treat as text when uploading
+export const TEXT_FILE_EXTENSIONS: string[] = [
+  "txt",
+  "js",
+  "jsx",
+  "ts",
+  "tsx",
+  "md",
+  "css",
+  "html",
+  "json",
+  "csv",
+  "xml",
+  "yml",
+  "yaml",
+  "py",
+  "c",
+  "h",
+  "cpp",
+  "cc",
+  "hpp",
+];
 
 export interface User {
   login: string;

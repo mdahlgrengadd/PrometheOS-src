@@ -12,7 +12,7 @@ import { manifest } from './manifest';
 const BuilderComponent: React.FC = () => {
   return (
     <div
-      className="h-full w-full overflow-hidden"
+      className="ide-builder-app h-full w-full overflow-hidden"
       style={{ height: "100%", width: "100%" }}
     >
       <IdeLayout />

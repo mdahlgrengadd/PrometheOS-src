@@ -1,81 +1,81 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+
 import useIdeStore from '../store/ide-store';
-import { commands } from '../utils/mock-data';
 import { Command } from '../types';
+import { commands } from '../utils/commands';
 
 const CommandPalette: React.FC = () => {
   const { commandPaletteOpen, toggleCommandPalette } = useIdeStore();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [filteredCommands, setFilteredCommands] = useState<Command[]>(commands);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   // Filter commands based on query
   useEffect(() => {
     if (!query) {
       setFilteredCommands(commands);
       return;
     }
-    
+
     const lowerCaseQuery = query.toLowerCase();
-    const filtered = commands.filter(command => 
-      command.title.toLowerCase().includes(lowerCaseQuery) ||
-      (command.category && command.category.toLowerCase().includes(lowerCaseQuery))
+    const filtered = commands.filter(
+      (command) =>
+        command.title.toLowerCase().includes(lowerCaseQuery) ||
+        (command.category &&
+          command.category.toLowerCase().includes(lowerCaseQuery))
     );
-    
+
     setFilteredCommands(filtered);
     setSelectedIndex(0);
   }, [query]);
-  
+
   // Focus input on open
   useEffect(() => {
     if (commandPaletteOpen && inputRef.current) {
       inputRef.current.focus();
     }
   }, [commandPaletteOpen]);
-  
+
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex((prevIndex) => 
+        setSelectedIndex((prevIndex) =>
           prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : prevIndex
         );
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex((prevIndex) => 
+        setSelectedIndex((prevIndex) =>
           prevIndex > 0 ? prevIndex - 1 : prevIndex
         );
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         executeCommand(filteredCommands[selectedIndex]);
         break;
-      case 'Escape':
+      case "Escape":
         e.preventDefault();
         toggleCommandPalette();
         break;
     }
   };
-  
+
   const executeCommand = (command: Command) => {
     toggleCommandPalette();
     command.handler();
   };
-  
+
   if (!commandPaletteOpen) {
     return null;
   }
-  
+
   return (
-    <div 
-      className="command-palette"
-      onClick={() => toggleCommandPalette()}
-    >
-      <div 
+    <div className="command-palette" onClick={() => toggleCommandPalette()}>
+      <div
         className="command-palette-content animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
@@ -91,13 +91,15 @@ const CommandPalette: React.FC = () => {
             onKeyDown={handleKeyDown}
           />
         </div>
-        
+
         <div className="command-palette-results">
           {filteredCommands.length > 0 ? (
             filteredCommands.map((command, index) => (
               <div
                 key={command.id}
-                className={`command-palette-item ${index === selectedIndex ? 'selected' : ''}`}
+                className={`command-palette-item ${
+                  index === selectedIndex ? "selected" : ""
+                }`}
                 onClick={() => executeCommand(command)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
@@ -115,9 +117,7 @@ const CommandPalette: React.FC = () => {
               </div>
             ))
           ) : (
-            <div className="p-3 text-muted-foreground">
-              No commands found
-            </div>
+            <div className="p-3 text-muted-foreground">No commands found</div>
           )}
         </div>
       </div>
