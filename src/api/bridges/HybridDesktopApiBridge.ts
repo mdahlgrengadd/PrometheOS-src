@@ -207,28 +207,32 @@ export class MCPProtocolHandler {
     }
 
     const components = this.apiContext.getComponents();
-    const tools = components.flatMap((component: IApiComponent) => {
-      return component.actions.map((action) => ({
-        name: `${component.id}.${action.id}`,
-        description: action.description,
-        parameters: {
-          type: "object",
-          properties: (action.parameters || []).reduce(
-            (acc: Record<string, unknown>, param) => {
-              acc[param.name] = {
-                type: param.type,
-                description: param.description,
-              };
-              return acc;
+    const tools = components.reduce(
+      (all: MCPToolDefinition[], component: IApiComponent) =>
+        all.concat(
+          component.actions.map((action) => ({
+            name: `${component.id}.${action.id}`,
+            description: action.description,
+            parameters: {
+              type: "object",
+              properties: (action.parameters || []).reduce(
+                (acc: Record<string, unknown>, param) => {
+                  acc[param.name] = {
+                    type: param.type,
+                    description: param.description,
+                  };
+                  return acc;
+                },
+                {}
+              ),
+              required: (action.parameters || [])
+                .filter((param) => param.required)
+                .map((param) => param.name),
             },
-            {}
-          ),
-          required: (action.parameters || [])
-            .filter((param) => param.required)
-            .map((param) => param.name),
-        },
-      }));
-    });
+          }))
+        ),
+      [] as MCPToolDefinition[]
+    );
 
     return {
       jsonrpc: "2.0",
@@ -354,6 +358,10 @@ export function setupGlobalHybridApiBridge(): void {
   // Expose the bridge via Comlink for direct access
   const comlinkBridge = Comlink.proxy(bridge);
   (globalThis as Record<string, unknown>).desktop_api_comlink = comlinkBridge;
+
+  // Expose the MCP protocol handler via Comlink for direct JSON-RPC calls
+  const comlinkMcp = Comlink.proxy(mcpHandler);
+  (globalThis as Record<string, unknown>).desktop_mcp_comlink = comlinkMcp;
 
   console.log("Hybrid Desktop API Bridge initialized (Comlink + MCP)");
 }

@@ -4,6 +4,7 @@
  */
 
 import * as Comlink from 'comlink';
+import json from 'json-stringify-safe';
 
 import { WorkerPlugin } from '../../plugins/types';
 
@@ -434,56 +435,29 @@ class EventsLegacy:
 #----------------------------------------------------
 
 class MCPProtocol:
-    """Model Context Protocol (MCP) JSON-RPC 2.0 interface"""
+    """Model Context Protocol (MCP) JSON-RPC 2.0 interface using Comlink"""
     
     @staticmethod
     async def send(message):
-        """Send a raw MCP protocol message (JSON-RPC 2.0)"""
-        try:
-            # Validate the message has required JSON-RPC 2.0 fields
-            if not isinstance(message, dict) or 'jsonrpc' not in message or message['jsonrpc'] != '2.0' or 'method' not in message:
-                return {
-                    'jsonrpc': '2.0',
-                    'error': {
-                        'code': -32600,
-                        'message': 'Invalid Request: Not a valid JSON-RPC 2.0 message'
-                    },
-                    'id': message.get('id')
-                }
-            
-            from js import postMessage
-            import uuid
-            
-            # Generate request ID if not provided
-            if 'id' not in message:
-                message['id'] = str(uuid.uuid4())
-                
-            # Send as MCP protocol message
-            js_message = to_js({
-                'type': 'mcp-protocol-message',
-                'message': to_js(message)
-            })
-            
-            postMessage(js_message)
-            
-            print(f"Sent MCP protocol message: {message['method']}")
-            return {
-                'jsonrpc': '2.0',
-                'result': {'status': 'message_sent'},
-                'id': message['id']
-            }
-            
-        except Exception as e:
-            print(f"Error sending MCP message: {e}")
+        """Send a raw MCP protocol message using the Comlink handler"""
+        # Comlink-based MCP round-trip via JSON serialization
+        api_mcp = getattr(js.globalThis, 'desktop_mcp_comlink', None)
+        if api_mcp is None:
             return {
                 'jsonrpc': '2.0',
                 'error': {
                     'code': -32603,
-                    'message': f'Internal error: {str(e)}'
+                    'message': 'MCP Comlink handler not available'
                 },
                 'id': message.get('id')
             }
-            
+        # Serialize Python dict to JSON and parse to a plain JS object
+        json_str = json.dumps(message)
+        js_msg = js.JSON.parse(json_str)
+        # Call the handler and return the native Python result
+        resp = await api_mcp.processMessage(js_msg)
+        return resp.to_py()
+
     @staticmethod
     async def tools_list():
         """Get list of available tools"""
@@ -498,7 +472,6 @@ class MCPProtocol:
         """Call a tool by name with arguments"""
         if arguments is None:
             arguments = {}
-            
         return await MCPProtocol.send({
             'jsonrpc': '2.0',
             'method': 'tools/call',
@@ -720,20 +693,24 @@ await micropip.install('${packageName}')
     try {
       console.log("Received Comlink port from main thread");
 
-      // Wrap the port via Comlink and expose as desktop_api_comlink
-      console.log("Wrapping Comlink port for desktop_api_comlink");
-      // Comlink.wrap returns a remote proxy; cast to DesktopApiBridge
-      const comlinkBridge = Comlink.wrap<DesktopApiBridge>(
-        port
-      ) as unknown as DesktopApiBridge;
-      (
-        globalThis as unknown as { desktop_api_comlink?: DesktopApiBridge }
-      ).desktop_api_comlink = comlinkBridge;
-      console.log("desktop_api_comlink proxy set on globalThis");
+      // Wrap the port via Comlink and expose both API and MCP handlers
+      console.log(
+        "Wrapping Comlink port for desktop_api_comlink and desktop_mcp_comlink"
+      );
+      const remote = Comlink.wrap<{
+        api: DesktopApiBridge;
+        mcp: { processMessage(message: unknown): Promise<unknown> };
+      }>(port);
+      // Assign proxies to globals for Python context
+      (globalThis as Record<string, unknown>).desktop_api_comlink = remote.api;
+      (globalThis as Record<string, unknown>).desktop_mcp_comlink = remote.mcp;
+      console.log(
+        "desktop_api_comlink and desktop_mcp_comlink proxies set on globalThis"
+      );
 
       // Start the port for Comlink
       port.start();
-      console.log("Comlink bridge proxy exposed to Python context");
+      console.log("Comlink bridge proxies exposed to Python context");
     } catch (error) {
       console.error("Error handling Comlink port:", error);
     }

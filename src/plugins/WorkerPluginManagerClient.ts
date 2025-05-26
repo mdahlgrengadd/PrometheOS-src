@@ -803,11 +803,15 @@ class WorkerPluginManagerClient {
    * This exposes the bridge methods directly to the Pyodide worker via Comlink
    */
   async setupComlinkBridge(): Promise<void> {
-    // Get the desktop API bridge
+    // Get the desktop API bridge and MCP protocol handler
     const bridge = (globalThis as Record<string, unknown>).desktop_api_bridge;
+    const mcpHandler = (globalThis as Record<string, unknown>)
+      .desktop_mcp_handler;
 
-    if (!bridge) {
-      console.error("Desktop API bridge not available for Comlink exposure");
+    if (!bridge || !mcpHandler) {
+      console.error(
+        "Desktop API bridge or MCP handler not available for Comlink exposure"
+      );
       return;
     }
 
@@ -819,10 +823,12 @@ class WorkerPluginManagerClient {
       console.log("Sending Comlink port to plugin worker");
       this.worker.postMessage({ type: "comlink-port", port: port2 }, [port2]);
 
-      // Expose the desktop API bridge via Comlink on port1
-      Comlink.expose(bridge, port1);
+      // Expose both the desktop API bridge and MCP handler via Comlink on port1
+      Comlink.expose({ api: bridge, mcp: mcpHandler }, port1);
 
-      console.log("Desktop API bridge exposed via Comlink on message channel");
+      console.log(
+        "Desktop API bridge and MCP handler exposed via Comlink on message channel"
+      );
     } catch (error) {
       console.error("Failed to expose Desktop API bridge via Comlink:", error);
     }
