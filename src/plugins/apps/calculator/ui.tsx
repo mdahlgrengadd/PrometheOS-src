@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { registerApiActionHandler, useApi } from '../../../api/context/ApiContext';
-import { workerPluginManager } from '../../WorkerPluginManagerClient';
-import { manifest } from './manifest';
+import {
+  registerApiActionHandler,
+  useApi,
+} from "../../../api/context/ApiContext";
+import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { manifest } from "./manifest";
 
 const CalculatorContent: React.FC = () => {
   // API integration
@@ -204,15 +207,6 @@ const CalculatorContent: React.FC = () => {
 
   return (
     <div className="flex flex-col p-4 calculator-root h-full">
-      <div className="flex-row justify-between items-center mb-2">
-        <div className="text-xs text-muted-foreground">Worker Calculator</div>
-        {isCalculating && (
-          <div className="text-xs text-blue-500">Computing...</div>
-        )}
-        {!isWorkerReady && (
-          <div className="text-xs text-amber-500">Initializing worker...</div>
-        )}
-      </div>
       <div className="flex-row bg-card p-2 mb-2 text-right text-xl h-10 overflow-hidden text-foreground border border-border">
         {display}
       </div>
