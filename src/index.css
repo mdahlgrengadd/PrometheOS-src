@@ -197,10 +197,10 @@ html, body, #root {
 }
 
 /* Button fixes for BeOS theme */
-.theme-beos button,
-.theme-beos [role="button"],
-.theme-beos [type="button"],
-.theme-beos [type="submit"] {
+.theme-beos button:not(.color-picker-button),
+.theme-beos [role="button"]:not(.color-picker-button),
+.theme-beos [type="button"]:not(.color-picker-button),
+.theme-beos [type="submit"]:not(.color-picker-button) {
   background: linear-gradient(to bottom, #f0f0f0, #d0d0d0) !important;
   border: 1px solid #888888 !important;
   color: #000000 !important;
@@ -210,10 +210,10 @@ html, body, #root {
   font-weight: 500 !important;
 }
 
-.theme-beos button:hover,
-.theme-beos [role="button"]:hover,
-.theme-beos [type="button"]:hover,
-.theme-beos [type="submit"]:hover {
+.theme-beos button:hover:not(.color-picker-button),
+.theme-beos [role="button"]:hover:not(.color-picker-button),
+.theme-beos [type="button"]:hover:not(.color-picker-button),
+.theme-beos [type="submit"]:hover:not(.color-picker-button) {
   background: linear-gradient(to bottom, #ffffff, #e8e8e8) !important;
 }
 

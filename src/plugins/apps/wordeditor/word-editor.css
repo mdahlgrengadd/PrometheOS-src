@@ -86,20 +86,35 @@
 }
 
 /* Color picker button overrides to prevent theme interference */
-.color-picker-button {
+.color-picker-button,
+.theme-beos .color-picker-button,
+button.color-picker-button,
+.theme-beos button.color-picker-button {
+  background: var(--color, transparent) !important;
   background-image: none !important;
-  background-color: var(--color) !important;
+  background-color: var(--color, transparent) !important;
   border: 1px solid #d1d5db !important;
+  box-shadow: none !important;
 }
 
-.color-picker-button:hover {
+.color-picker-button:hover,
+.theme-beos .color-picker-button:hover,
+button.color-picker-button:hover,
+.theme-beos button.color-picker-button:hover {
   border-color: #9ca3af !important;
   transform: scale(1.1);
+  background: var(--color, transparent) !important;
+  background-image: none !important;
 }
 
-.color-picker-button:focus {
+.color-picker-button:focus,
+.theme-beos .color-picker-button:focus,
+button.color-picker-button:focus,
+.theme-beos button.color-picker-button:focus {
   outline: 2px solid #3b82f6 !important;
   outline-offset: 2px;
+  background: var(--color, transparent) !important;
+  background-image: none !important;
 }
 
 /* Additional overrides for color picker buttons in popover */

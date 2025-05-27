@@ -1,20 +1,46 @@
 import {
-    AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, CheckSquare, Code as CodeIcon, Heading1,
-    Heading2, Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListOrdered, Redo,
-    RotateCcw, Strikethrough, Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
-    Underline as UnderlineIcon
-} from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  CheckSquare,
+  Code as CodeIcon,
+  Heading1,
+  Heading2,
+  Highlighter,
+  Image as ImageIcon,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+  Redo,
+  RotateCcw,
+  Strikethrough,
+  Subscript as SubscriptIcon,
+  Superscript as SuperscriptIcon,
+  Underline as UnderlineIcon,
+  Undo,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SelectContent, SelectTrigger } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SelectContent, SelectTrigger } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 // Windows-themed components
 import {
-    Button as WindowsButton, SelectGroup, SelectItem, SelectValue, WindowsSelect
-} from '@/components/ui/windows';
-import { cn } from '@/lib/utils';
-import { Editor } from '@tiptap/react';
+  Button as WindowsButton,
+  SelectGroup,
+  SelectItem,
+  SelectValue,
+  WindowsSelect,
+} from "@/components/ui/windows";
+import { cn } from "@/lib/utils";
+import { Editor } from "@tiptap/react";
 
 interface WordEditorToolbarProps {
   editor: Editor | null;
@@ -330,7 +356,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       >
         <CodeIcon className="h-4 w-4" />
       </WindowsButton>{" "}
-      <WindowsButton
+      {/* <WindowsButton
         variant="ghost"
         size="sm"
         className={cn(
@@ -340,7 +366,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().toggleHighlight().run()}
       >
         <Highlighter className="h-4 w-4" />
-      </WindowsButton>
+      </WindowsButton> */}
       <WindowsButton
         variant="ghost"
         size="sm"
@@ -407,11 +433,13 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               <button
                 key={color}
                 className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 color-picker-button"
-                style={{
-                  backgroundColor: color,
-                  // Override any theme background with the actual color
-                  backgroundImage: "none !important",
-                }}
+                style={
+                  {
+                    "--color": color,
+                    backgroundColor: color,
+                    backgroundImage: "none",
+                  } as React.CSSProperties & { "--color": string }
+                }
                 onClick={() => {
                   setCurrentColor(color);
                   editor.chain().focus().setColor(color).run();
@@ -456,10 +484,13 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               <button
                 key={color}
                 className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 color-picker-button"
-                style={{
-                  backgroundColor: color,
-                  backgroundImage: "none !important",
-                }}
+                style={
+                  {
+                    "--color": color,
+                    backgroundColor: color,
+                    backgroundImage: "none",
+                  } as React.CSSProperties & { "--color": string }
+                }
                 onClick={() => {
                   setCurrentHighlightColor(color);
                   if (color === "#FFFFFF") {
@@ -482,7 +513,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().chain().focus().undo().run()}
       >
-        <RotateCcw className="h-4 w-4" />
+        <Undo className="h-4 w-4" />
       </WindowsButton>
       <WindowsButton
         variant="ghost"
@@ -494,7 +525,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         <Redo className="h-4 w-4" />
       </WindowsButton>
       {/* Clear Styling */}
-      <WindowsButton
+      {/*<WindowsButton
         variant="ghost"
         size="sm"
         className="px-2 h-8"
@@ -503,7 +534,7 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
         }
       >
         Clear formatting
-      </WindowsButton>
+      </WindowsButton> */}
     </div>
   );
 };
