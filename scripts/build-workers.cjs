@@ -97,9 +97,9 @@ workerFiles.forEach(({ pluginId, sourcePath }) => {
   console.log(`Building ${pluginId} worker...`);
 
   try {
-    // Use esbuild to bundle the worker file
+    // Use esbuild to bundle and minify the worker file
     execSync(
-      `npx esbuild ${sourcePath} --bundle --format=esm --outfile=${outputPath}`,
+      `npx esbuild ${sourcePath} --bundle --format=esm --minify --outfile=${outputPath}`,
       {
         stdio: "inherit",
       }

@@ -1,26 +1,27 @@
 import React from 'react';
+
 import { Plugin } from '../../types';
 import { manifest } from './manifest';
-import { PyodideTest } from './PyodideTest';
+import { PythonNotebook } from './PythonNotebook';
 
 const PyodideTestPlugin: Plugin = {
   id: manifest.id,
   manifest,
-  
+
   init: async () => {
-    console.log('Pyodide Test plugin initialized');
+    console.log("Python Notebook plugin initialized");
   },
-  
+
   render: () => {
-    return <PyodideTest />;
+    return <PythonNotebook />;
   },
-  
+
   onOpen: () => {
-    console.log('Pyodide Test plugin opened');
+    console.log("Python Notebook plugin opened");
   },
-  
+
   onClose: () => {
-    console.log('Pyodide Test plugin closed');
+    console.log("Python Notebook plugin closed");
   },
 };
 

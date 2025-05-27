@@ -84,3 +84,67 @@
 .document-scroll-container::-webkit-scrollbar-track {
   background-color: rgba(0, 0, 0, 0.05);
 }
+
+/* Color picker button overrides to prevent theme interference */
+.color-picker-button,
+.theme-beos .color-picker-button,
+button.color-picker-button,
+.theme-beos button.color-picker-button {
+  background: var(--color, transparent) !important;
+  background-image: none !important;
+  background-color: var(--color, transparent) !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: none !important;
+}
+
+.color-picker-button:hover,
+.theme-beos .color-picker-button:hover,
+button.color-picker-button:hover,
+.theme-beos button.color-picker-button:hover {
+  border-color: #9ca3af !important;
+  transform: scale(1.1);
+  background: var(--color, transparent) !important;
+  background-image: none !important;
+}
+
+.color-picker-button:focus,
+.theme-beos .color-picker-button:focus,
+button.color-picker-button:focus,
+.theme-beos button.color-picker-button:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px;
+  background: var(--color, transparent) !important;
+  background-image: none !important;
+}
+
+/* Additional overrides for color picker buttons in popover */
+[data-radix-popper-content-wrapper] button[style*="backgroundColor"] {
+  background-image: none !important;
+}
+
+/* Force background color to be respected in color picker */
+.color-picker-grid button {
+  background-image: none !important;
+  background-blend-mode: normal !important;
+}
+
+/* More specific overrides for popover color buttons */
+[data-radix-popper-content-wrapper] [data-radix-popper-content] button {
+  all: revert !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-radius: 0.25rem !important;
+  border: 1px solid #d1d5db !important;
+  cursor: pointer !important;
+  background-image: none !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-popper-content] button:hover {
+  border-color: #9ca3af !important;
+  transform: scale(1.05) !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-popper-content] button:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}

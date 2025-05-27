@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import '../styles/isolated.css';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
 
-import BetterFrontendExplorer from "./BetterFrontendExplorer";
-import SwaggerExplorer from "./SwaggerExplorer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import BetterFrontendExplorer from './BetterFrontendExplorer';
+import SwaggerExplorer from './SwaggerExplorer';
 
 /**
  * API Explorer Switcher component that allows switching between
@@ -13,7 +15,7 @@ const ApiExplorerSwitcher: React.FC = () => {
   const [view, setView] = useState<"swagger" | "frontend">("frontend");
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col api-explorer-isolated">
       <Tabs
         value={view}
         onValueChange={(value) => setView(value as "swagger" | "frontend")}

@@ -66,6 +66,15 @@ export const buildCode = async ({
   // Always ensure ESBuild is initialized before building
   await initializeEsbuild();
 
+  // React is copied during npm run build to the shadow directory
+  // We should not load React modules here, as they are already available in the shadow directory
+  console.warn("We should remove loadReactModules() from here");
+
+  // // Load React modules into virtual filesystem if not already loaded
+  // if (!virtualFs["node_modules/react/index.js"]) {
+  //   await loadReactModules();
+  // }
+
   try {
     // Store the entry file in our virtual filesystem
     virtualFs[entryPoint] = {
@@ -169,17 +178,49 @@ export const buildCode = async ({
           { filter: /^[^./].*/, namespace: "virtual-fs" },
           (args) => {
             const pkgPath = args.path;
+            console.log(`Resolving bare import: ${pkgPath}`);
+
+            // Handle specific React module patterns
+            if (pkgPath === "react") {
+              const reactIndex = "node_modules/react/index.js";
+              if (virtualFs[reactIndex]) {
+                console.log(`Resolved ${pkgPath} to ${reactIndex}`);
+                return { path: reactIndex, namespace: "virtual-fs" };
+              }
+            }
+
+            if (pkgPath === "react-dom/client") {
+              const reactDomClient = "node_modules/react-dom/client.js";
+              if (virtualFs[reactDomClient]) {
+                console.log(`Resolved ${pkgPath} to ${reactDomClient}`);
+                return { path: reactDomClient, namespace: "virtual-fs" };
+              }
+            }
+
+            if (pkgPath === "react-dom") {
+              const reactDomIndex = "node_modules/react-dom/index.js";
+              if (virtualFs[reactDomIndex]) {
+                console.log(`Resolved ${pkgPath} to ${reactDomIndex}`);
+                return { path: reactDomIndex, namespace: "virtual-fs" };
+              }
+            }
+
             // Try direct .js file (e.g. react-dom/client.js)
             const fileJs = `node_modules/${pkgPath}.js`;
             if (virtualFs[fileJs]) {
+              console.log(`Resolved ${pkgPath} to ${fileJs}`);
               return { path: fileJs, namespace: "virtual-fs" };
             }
+
             // Try package folder index.js (e.g. react/index.js or react-dom/client/index.js)
             const folderIndex = `node_modules/${pkgPath}/index.js`;
             if (virtualFs[folderIndex]) {
+              console.log(`Resolved ${pkgPath} to ${folderIndex}`);
               return { path: folderIndex, namespace: "virtual-fs" };
             }
+
             // Fallback to CDN
+            console.log(`Falling back to CDN for ${pkgPath}`);
             return {
               path: `https://unpkg.com/${pkgPath}`,
               namespace: "http-url",
@@ -187,7 +228,48 @@ export const buildCode = async ({
           }
         );
 
-        // 4. Any imports inside HTTP-fetched modules (so nested `require('./cjs/…')`)
+        // 4. Handle require() calls within loaded modules (especially React modules)
+        build.onResolve({ filter: /.*/, namespace: "virtual-fs" }, (args) => {
+          // Skip if this is already handled by other resolvers
+          if (args.path.startsWith(".") || args.namespace !== "virtual-fs") {
+            return undefined;
+          }
+
+          const pkgPath = args.path;
+          console.log(
+            `Resolving internal module: ${pkgPath} from ${args.importer}`
+          );
+
+          // Handle React internal requires
+          if (
+            pkgPath === "react" ||
+            pkgPath === "react-dom" ||
+            pkgPath === "scheduler"
+          ) {
+            const moduleIndex = `node_modules/${pkgPath}/index.js`;
+            if (virtualFs[moduleIndex]) {
+              console.log(`Resolved internal ${pkgPath} to ${moduleIndex}`);
+              return { path: moduleIndex, namespace: "virtual-fs" };
+            }
+          }
+
+          // Handle relative requires within React modules (e.g., './cjs/react.development.js')
+          if (
+            args.path.startsWith("./") &&
+            args.importer.includes("node_modules")
+          ) {
+            const importerDir = args.importer.replace(/\/[^/]+$/, "");
+            const resolvedPath = `${importerDir}/${args.path.substring(2)}`;
+            if (virtualFs[resolvedPath]) {
+              console.log(`Resolved relative ${args.path} to ${resolvedPath}`);
+              return { path: resolvedPath, namespace: "virtual-fs" };
+            }
+          }
+
+          return undefined; // Let other resolvers handle it
+        });
+
+        // 5. Any imports inside HTTP-fetched modules (so nested `require('./cjs/…')`)
         build.onResolve({ filter: /.*/, namespace: "http-url" }, (args) => {
           // Bare import (e.g. "lodash") → fetch fresh from unpkg
           if (!args.path.startsWith(".") && !args.path.startsWith("/")) {
@@ -208,7 +290,7 @@ export const buildCode = async ({
           };
         });
 
-        // 5. Load files from the virtual filesystem
+        // 6. Load files from the virtual filesystem
         build.onLoad(
           { filter: /.*/, namespace: "virtual-fs" },
           async (args) => {
@@ -249,7 +331,7 @@ export const buildCode = async ({
           }
         );
 
-        // 6. Fetch all HTTP modules and set resolveDir for further lookups
+        // 7. Fetch all HTTP modules and set resolveDir for further lookups
         build.onLoad({ filter: /.*/, namespace: "http-url" }, async (args) => {
           const response = await fetch(args.path);
           const text = await response.text();
@@ -308,6 +390,45 @@ export const addToVirtualFs = (filePath: string, contents: string) => {
   else if (filePath.endsWith(".txt")) loader = "text";
 
   virtualFs[filePath] = { contents, loader };
+};
+
+// Load React modules from shadow directory into virtual filesystem
+export const loadReactModules = async () => {
+  try {
+    const baseUrl = `${import.meta.env.BASE_URL}shadow/node_modules/`;
+
+    // Define essential React module files to load
+    const moduleFiles = [
+      "react/index.js",
+      "react/cjs/react.development.js",
+      "react/cjs/react.production.min.js",
+      "react-dom/index.js",
+      "react-dom/client.js",
+      "react-dom/cjs/react-dom.development.js",
+      "react-dom/cjs/react-dom.production.min.js",
+      "react-dom/cjs/react-dom-client.development.js",
+      "react-dom/cjs/react-dom-client.production.min.js",
+      "scheduler/index.js",
+      "scheduler/cjs/scheduler.development.js",
+      "scheduler/cjs/scheduler.production.min.js",
+    ];
+
+    // Load each module file
+    for (const moduleFile of moduleFiles) {
+      try {
+        const response = await fetch(`${baseUrl}${moduleFile}`);
+        if (response.ok) {
+          const content = await response.text();
+          addToVirtualFs(`node_modules/${moduleFile}`, content);
+          console.log(`Loaded ${moduleFile} into virtual filesystem`);
+        }
+      } catch (error) {
+        console.warn(`Failed to load ${moduleFile}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load React modules:", error);
+  }
 };
 
 export const parseEsbuildCommand = (command: string): BuildOptions | null => {
