@@ -1,51 +1,57 @@
 import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  CheckSquare,
-  Code as CodeIcon,
-  Heading1,
-  Heading2,
-  Highlighter,
-  Image as ImageIcon,
-  Italic,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Redo,
-  RotateCcw,
-  Strikethrough,
-  Subscript as SubscriptIcon,
-  Superscript as SuperscriptIcon,
-  Underline as UnderlineIcon,
-} from "lucide-react";
-import React from "react";
+    AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, CheckSquare, Code as CodeIcon, Heading1,
+    Heading2, Highlighter, Image as ImageIcon, Italic, Link as LinkIcon, List, ListOrdered, Redo,
+    RotateCcw, Strikethrough, Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
+    Underline as UnderlineIcon
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { SelectContent, SelectTrigger } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SelectContent, SelectTrigger } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 // Windows-themed components
 import {
-  Button as WindowsButton,
-  SelectGroup,
-  SelectItem,
-  SelectValue,
-  WindowsSelect,
-} from "@/components/ui/windows";
-import { cn } from "@/lib/utils";
-import { Editor } from "@tiptap/react";
+    Button as WindowsButton, SelectGroup, SelectItem, SelectValue, WindowsSelect
+} from '@/components/ui/windows';
+import { cn } from '@/lib/utils';
+import { Editor } from '@tiptap/react';
 
 interface WordEditorToolbarProps {
   editor: Editor | null;
 }
 
 const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
+  const [currentColor, setCurrentColor] = useState("#000000");
+  const [currentHighlightColor, setCurrentHighlightColor] = useState("#FFFF00");
+  const [currentFontFamily, setCurrentFontFamily] = useState("Arial");
+  const [currentFontSize, setCurrentFontSize] = useState("12px");
+
+  // Update current values when editor selection changes
+  useEffect(() => {
+    if (!editor) return;
+
+    const updateCurrentValues = () => {
+      const { textStyle } = editor.getAttributes("textStyle") || {};
+      const { highlight } = editor.getAttributes("highlight") || {};
+      if (textStyle) {
+        setCurrentColor(textStyle.color || "#000000");
+        setCurrentFontFamily(textStyle.fontFamily || "Arial");
+        setCurrentFontSize(textStyle.fontSize || "12px");
+      }
+      if (highlight && highlight.color) {
+        setCurrentHighlightColor(highlight.color);
+      }
+    };
+
+    editor.on("selectionUpdate", updateCurrentValues);
+    editor.on("transaction", updateCurrentValues);
+
+    return () => {
+      editor.off("selectionUpdate", updateCurrentValues);
+      editor.off("transaction", updateCurrentValues);
+    };
+  }, [editor]);
+
   if (!editor) {
     return null;
   }
@@ -79,21 +85,36 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
     <div className="border-b border-border px-3 py-1 flex flex-wrap gap-1 items-center bg-muted/50">
       {/* Font Family & Size */}
       <div className="flex items-center gap-1">
-        <WindowsSelect>
+        <WindowsSelect
+          value={currentFontFamily}
+          onValueChange={(value) => {
+            setCurrentFontFamily(value);
+            editor.chain().focus().setFontFamily(value).run();
+          }}
+        >
           <SelectTrigger className="h-8 w-[100px]">
             <SelectValue placeholder="Arial" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="arial">Arial</SelectItem>
-              <SelectItem value="times">Times New Roman</SelectItem>
-              <SelectItem value="calibri">Calibri</SelectItem>
-              <SelectItem value="courier">Courier New</SelectItem>
+              <SelectItem value="Arial">Arial</SelectItem>
+              <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+              <SelectItem value="Calibri">Calibri</SelectItem>
+              <SelectItem value="Courier New">Courier New</SelectItem>
+              <SelectItem value="Georgia">Georgia</SelectItem>
+              <SelectItem value="Helvetica">Helvetica</SelectItem>
             </SelectGroup>
           </SelectContent>
         </WindowsSelect>
 
-        <WindowsSelect>
+        <WindowsSelect
+          value={currentFontSize.replace("px", "")}
+          onValueChange={(value) => {
+            const fontSize = `${value}px`;
+            setCurrentFontSize(fontSize);
+            editor.chain().focus().setFontSize(fontSize).run();
+          }}
+        >
           <SelectTrigger className="h-8 w-[60px]">
             <SelectValue placeholder="12" />
           </SelectTrigger>
@@ -103,8 +124,12 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="12">12</SelectItem>
               <SelectItem value="14">14</SelectItem>
+              <SelectItem value="16">16</SelectItem>
               <SelectItem value="18">18</SelectItem>
+              <SelectItem value="20">20</SelectItem>
               <SelectItem value="24">24</SelectItem>
+              <SelectItem value="28">28</SelectItem>
+              <SelectItem value="32">32</SelectItem>
             </SelectGroup>
           </SelectContent>
         </WindowsSelect>
@@ -354,11 +379,14 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
       <Popover>
         <PopoverTrigger asChild>
           <WindowsButton variant="ghost" size="sm" className="px-2 h-8">
-            <div className="w-4 h-4 rounded bg-black" />
+            <div
+              className="w-4 h-4 rounded border border-gray-400"
+              style={{ backgroundColor: currentColor }}
+            />
           </WindowsButton>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-2">
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-5 gap-1 color-picker-grid">
             {[
               "#000000",
               "#FF0000",
@@ -370,12 +398,76 @@ const WordEditorToolbar = ({ editor }: WordEditorToolbarProps) => {
               "#FFFFFF",
               "#808080",
               "#FF8000",
+              "#800080",
+              "#008000",
+              "#800000",
+              "#008080",
+              "#000080",
             ].map((color) => (
               <button
                 key={color}
-                className="w-6 h-6 rounded border border-gray-200"
-                style={{ backgroundColor: color }}
-                onClick={() => editor.chain().focus().setColor(color).run()}
+                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 color-picker-button"
+                style={{
+                  backgroundColor: color,
+                  // Override any theme background with the actual color
+                  backgroundImage: "none !important",
+                }}
+                onClick={() => {
+                  setCurrentColor(color);
+                  editor.chain().focus().setColor(color).run();
+                }}
+              />
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      {/* Highlight Color */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <WindowsButton variant="ghost" size="sm" className="px-2 h-8">
+            <div className="relative">
+              <Highlighter className="h-4 w-4" />
+              <div
+                className="absolute -bottom-0.5 left-0 right-0 h-1 rounded"
+                style={{ backgroundColor: currentHighlightColor }}
+              />
+            </div>
+          </WindowsButton>
+        </PopoverTrigger>
+        <PopoverContent className="w-40 p-2">
+          <div className="grid grid-cols-5 gap-1 color-picker-grid">
+            {[
+              "#FFFF00", // Yellow
+              "#00FF00", // Green
+              "#FF00FF", // Magenta
+              "#00FFFF", // Cyan
+              "#FF8000", // Orange
+              "#FF0000", // Red
+              "#0000FF", // Blue
+              "#800080", // Purple
+              "#808080", // Gray
+              "#FFB6C1", // Light Pink
+              "#90EE90", // Light Green
+              "#ADD8E6", // Light Blue
+              "#F0E68C", // Khaki
+              "#DDA0DD", // Plum
+              "#FFFFFF", // White (remove highlight)
+            ].map((color) => (
+              <button
+                key={color}
+                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 color-picker-button"
+                style={{
+                  backgroundColor: color,
+                  backgroundImage: "none !important",
+                }}
+                onClick={() => {
+                  setCurrentHighlightColor(color);
+                  if (color === "#FFFFFF") {
+                    editor.chain().focus().unsetHighlight().run();
+                  } else {
+                    editor.chain().focus().toggleHighlight({ color }).run();
+                  }
+                }}
               />
             ))}
           </div>
