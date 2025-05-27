@@ -2,7 +2,8 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "dev": "node scripts/build-workers.cjs && vite",
     "build": "node scripts/build-workers.cjs && tsc && vite build && node scripts/setup-shadow.mjs && node scripts/fix-symlinks.mjs",
     "build:dev": "vite build --mode development",
