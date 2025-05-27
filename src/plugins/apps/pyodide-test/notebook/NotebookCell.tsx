@@ -1,14 +1,19 @@
-import { Code, MoreVertical, Play, Trash2, Type } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Code, MoreVertical, Play, Trash2, Type } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import { Cell, CellType } from './types';
+import { Cell, CellType } from "./types";
 
 interface NotebookCellProps {
   cell: Cell;
@@ -101,11 +106,9 @@ export const NotebookCell: React.FC<NotebookCellProps> = ({
     return (
       <div className="prose prose-sm max-w-none">
         {cell.content ? (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: cell.content.replace(/\n/g, "<br/>"),
-            }}
-          />
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {cell.content}
+          </ReactMarkdown>
         ) : (
           <span className="text-muted-foreground italic">Click to edit...</span>
         )}

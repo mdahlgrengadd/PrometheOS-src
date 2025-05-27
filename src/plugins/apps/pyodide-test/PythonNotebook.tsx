@@ -1,8 +1,16 @@
-import { BookOpen, ChevronDown, ChevronRight, Code, FileText, Folder, Play } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  Code,
+  FileText,
+  Folder,
+  Play,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-import { workerPluginManager } from '../../WorkerPluginManagerClient';
-import { PyodideNotebook } from './notebook/PyodideNotebook';
+import { workerPluginManager } from "../../WorkerPluginManagerClient";
+import { PyodideNotebook } from "./notebook/PyodideNotebook";
 
 interface TestCase {
   id: string;
@@ -516,7 +524,11 @@ const TreeItem: React.FC<TreeItemProps> = ({
 };
 
 export const PythonNotebook: React.FC = () => {
-  const [categories, setCategories] = useState(testCategories);
+  // Sort categories to place 'Documentation' at the top
+  const sortedCategories = [...testCategories].sort((a, b) =>
+    a.id === "documentation" ? -1 : b.id === "documentation" ? 1 : 0
+  );
+  const [categories, setCategories] = useState(sortedCategories);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
