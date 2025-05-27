@@ -84,58 +84,277 @@ print("=== Verification Complete ===")
 "Desktop API verification completed"`
       },
       {
-        id: 'api-bridge-suite',
-        name: 'API Bridge Test Suite',
-        description: 'Comprehensive API bridge testing',
+        id: 'api-component-listing',
+        name: 'Component Listing Test',
+        description: 'Test listing available desktop components',
         type: 'code',
-        code: `# Comprehensive Desktop API Bridge Test
-print("=== Desktop API Bridge Test Suite ===")
+        code: `# Test 1: List Available Components
+print("=== Component Listing Test ===")
 print()
 
-# Test 1: List available components
+try:
+    components = await desktop.api.list_components()
+    comp_count = len(components) if hasattr(components, '__len__') else "unknown"
+    print(f"✓ Found {comp_count} components")
+    print(f"Components: {components}")
+    print("✓ Component listing test passed")
+except Exception as e:
+    print(f"✗ Component listing failed: {e}")
+
+print("=== Test Complete ===")
+"Component listing test completed"`
+      },
+      {
+        id: 'api-event-emission',
+        name: 'Event Emission Test',
+        description: 'Test desktop event emission functionality',
+        type: 'code',
+        code: `# Test 2: Event Emission
+print("=== Event Emission Test ===")
+print()
+
+try:
+    events_result = await desktop.events.emit("python_test_event", {
+        "message": "Hello from Python!",
+        "timestamp": "2025-05-27", 
+        "test": True,
+        "source": "event_emission_test"
+    })
+    print(f"✓ Event emission successful")
+    print(f"Result: {events_result}")
+    print("✓ Event emission test passed")
+except Exception as e:
+    print(f"✗ Event emission failed: {e}")
+
+print("=== Test Complete ===")
+"Event emission test completed"`
+      },
+      {
+        id: 'api-calculator-test',
+        name: 'Calculator API Test',
+        description: 'Test calculator component execution',
+        type: 'code',
+        code: `# Test 3: Calculator API Execution
+print("=== Calculator API Test ===")
+print()
+
+def check_calculator_response(result, operation, a, b):
+    """Helper function to validate calculator API responses"""
+    if isinstance(result, dict):
+        # Check for success: false (lowercase)
+        if result.get("success") is False:
+            error_msg = result.get("error", "Unknown error")
+            raise Exception(f"Calculator API returned failure: {error_msg}")
+        # Check for Success: False (uppercase - legacy)
+        elif result.get("Success") is False:
+            error_msg = result.get("Error", "Unknown error")
+            raise Exception(f"Calculator API returned failure: {error_msg}")
+        # Extract the actual result value
+        elif "data" in result:
+            return result["data"]
+        elif "Result" in result:
+            return result["Result"]
+        elif "result" in result:
+            return result["result"]
+        else:
+            # If it's a dict but no clear result field, return the whole dict
+            return result
+    else:
+        # If it's not a dict, assume it's the direct result
+        return result
+
+try:
+    # Test addition
+    print("Testing addition: 15 + 27...")
+    add_result = await desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
+    print(f"Raw response: {add_result}")
+    
+    validated_add = check_calculator_response(add_result, "add", 15, 27)
+    print(f"✓ Addition: 15 + 27 = {validated_add}")
+    
+    # Verify the result is correct
+    if validated_add == 42:
+        print("✓ Addition result is mathematically correct")
+    else:
+        print(f"⚠️  Addition result unexpected: got {validated_add}, expected 42")
+    
+    print()
+    print("✓ Calculator API test passed - app is running and responsive")
+    print("ℹ️  Note: Only addition is currently implemented in the calculator")
+    
+except Exception as e:
+    print(f"✗ Calculator API test failed: {e}")
+    print()
+    print("Possible causes:")
+    print("1. Calculator app is not currently running")
+    print("2. Calculator plugin is not available")
+    print("3. API communication error")
+    print("4. Invalid operation or parameters")
+    print()
+    print("To fix: Try opening the Calculator app first, then run this test again")
+
+print("=== Test Complete ===")
+"Calculator API test completed"`
+      },
+      {
+        id: 'api-notification-test',
+        name: 'Notification System Test',
+        description: 'Test system notification functionality',
+        type: 'code',
+        code: `# Test 4: System Notification
+print("=== Notification System Test ===")
+print()
+
+try:
+    system_result = await desktop.api.execute("launcher", "notify", {
+        "message": "Python API test notification from notification test",
+        "type": "sonner"
+    })
+    print(f"✓ Notification sent successfully")
+    print(f"Result: {system_result}")
+    print("✓ Check your screen for the notification!")
+    print("✓ Notification system test passed")
+except Exception as e:
+    print(f"✗ Notification system test failed: {e}")
+
+print("=== Test Complete ===")
+"Notification system test completed"`
+      },
+      {
+        id: 'api-error-handling',
+        name: 'Error Handling Test',
+        description: 'Test API error handling and recovery',
+        type: 'code',
+        code: `# Test 5: Error Handling
+print("=== Error Handling Test ===")
+print()
+
+# Test with non-existent component
+try:
+    error_result = await desktop.api.execute("nonexistent_component", "fakeAction", {})
+    print(f"Unexpected success: {error_result}")
+    print("✗ Error handling test failed - should have thrown an error")
+except Exception as e:
+    print(f"✓ Correctly caught expected error: {e}")
+    print("✓ Error handling working as expected")
+
+# Test with invalid action
+try:
+    error_result = await desktop.api.execute("calculator", "invalid_operation", {"a": 1, "b": 2})
+    print(f"Unexpected success: {error_result}")
+    print("✗ Error handling test failed - should have thrown an error")
+except Exception as e:
+    print(f"✓ Correctly caught invalid action error: {e}")
+    print("✓ Error handling working as expected")
+
+print("=== Test Complete ===")
+"Error handling test completed"`
+      },
+      {
+        id: 'api-comprehensive-suite',
+        name: 'Run All API Tests',
+        description: 'Execute all API tests in sequence',
+        type: 'code',
+        code: `# Comprehensive API Bridge Test Suite
+print("=== Running All Desktop API Tests ===")
+print()
+
+test_results = []
+
+# Test 1: Component Listing
 print("1. Testing component listing...")
-components = await desktop.api.list_components()
-comp_count = len(components) if hasattr(components, '__len__') else "unknown"
-print(f"   Found {comp_count} components")
-print(f"   Result: {components}")
+try:
+    components = await desktop.api.list_components()
+    comp_count = len(components) if hasattr(components, '__len__') else "unknown"
+    print(f"   ✓ Found {comp_count} components")
+    test_results.append("Component Listing: PASS")
+except Exception as e:
+    print(f"   ✗ Failed: {e}")
+    test_results.append("Component Listing: FAIL")
 print()
 
-# Test 2: Test event emission
+# Test 2: Event Emission
 print("2. Testing event emission...")
-events_result = await desktop.events.emit("python_test_event", {
-    "message": "Hello from Python!",
-    "timestamp": "2025-05-27", 
-    "test": True
-})
-print(f"   Event emission result: {events_result}")
+try:
+    events_result = await desktop.events.emit("python_comprehensive_test", {
+        "message": "Comprehensive test event",
+        "timestamp": "2025-05-27",
+        "test_suite": "comprehensive"
+    })
+    print(f"   ✓ Event emission successful")
+    test_results.append("Event Emission: PASS")
+except Exception as e:
+    print(f"   ✗ Failed: {e}")
+    test_results.append("Event Emission: FAIL")
 print()
 
-# Test 3: Test API execution (calculator example)
-print("3. Testing API execution...")
-exec_result = await desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
-print(f"   Calculator execution result: {exec_result}")
+# Test 3: Calculator API
+print("3. Testing calculator API...")
+try:
+    calc_result = await desktop.api.execute("calculator", "add", {"a": 25, "b": 17})
+    print(f"   Raw response: {calc_result}")
+    
+    # Check for Success: False response
+    if isinstance(calc_result, dict) and calc_result.get("Success") is False:
+        error_msg = calc_result.get("Error", "Unknown error")
+        raise Exception(f"Calculator not available: {error_msg}")
+    
+    # Extract the actual result
+    if isinstance(calc_result, dict):
+        actual_result = calc_result.get("Result") or calc_result.get("result") or calc_result
+    else:
+        actual_result = calc_result
+    
+    print(f"   ✓ Calculator: 25 + 17 = {actual_result}")
+    if actual_result == 42:
+        print(f"   ✓ Result is mathematically correct")
+    test_results.append("Calculator API: PASS")
+except Exception as e:
+    print(f"   ✗ Failed: {e}")
+    print(f"   (Calculator app may not be running)")
+    test_results.append("Calculator API: FAIL")
 print()
 
-# Test 4: Test system API call
-print("4. Testing system API call...")
-system_result = await desktop.api.execute("launcher", "notify", {
-    "message": "Python API test notification",
-    "type": "sonner"
-})
-print(f"   System notification result: {system_result}")
+# Test 4: Notification System
+print("4. Testing notification system...")
+try:
+    notif_result = await desktop.api.execute("launcher", "notify", {
+        "message": "Comprehensive API test completed!",
+        "type": "sonner"
+    })
+    print(f"   ✓ Notification sent successfully")
+    test_results.append("Notification System: PASS")
+except Exception as e:
+    print(f"   ✗ Failed: {e}")
+    test_results.append("Notification System: FAIL")
 print()
 
-# Test 5: Test error handling
+# Test 5: Error Handling
 print("5. Testing error handling...")
 try:
-    error_result = await desktop.api.execute("nonexistent", "fakeAction", {})
-    print(f"   Error test result: {error_result}")
+    await desktop.api.execute("nonexistent", "fakeAction", {})
+    print(f"   ✗ Error handling failed - should have thrown error")
+    test_results.append("Error Handling: FAIL")
 except Exception as e:
-    print(f"   Caught exception: {e}")
+    print(f"   ✓ Correctly caught error: {type(e).__name__}")
+    test_results.append("Error Handling: PASS")
 print()
 
-print("=== Desktop API Bridge Test Complete ===")
-"Success: All API bridge tests executed!"`
+# Summary
+print("=== Test Suite Summary ===")
+for result in test_results:
+    print(f"  {result}")
+
+passed = len([r for r in test_results if "PASS" in r])
+total = len(test_results)
+print(f"\\nOverall: {passed}/{total} tests passed")
+
+if passed == total:
+    print("🎉 All tests passed! Desktop API is working correctly.")
+else:
+    print(f"⚠️  {total - passed} test(s) failed. Check individual results above.")
+
+"Comprehensive API test suite completed"`
       },
       {
         id: 'event-subscription',
