@@ -46,7 +46,7 @@ async function setupShadowEnvironment() {
     } catch {
       console.log("✗ dist/shadow directory does not exist");
       return;
-    }    // 2. Install npm dependencies in dist/shadow
+    } // 2. Install npm dependencies in dist/shadow
     console.log("Installing React dependencies in dist/shadow...");
     try {
       execSync("npm install --no-bin-links", {
@@ -58,7 +58,7 @@ async function setupShadowEnvironment() {
     } catch (error) {
       console.error("✗ Failed to install dependencies:", error.message);
       throw error;
-    }    // 2a. Remove any .bin directories that might still exist to prevent symlink issues
+    } // 2a. Remove any .bin directories that might still exist to prevent symlink issues
     const binDirPath = path.join(DIST_SHADOW_DIR, "node_modules", ".bin");
     try {
       await fs.access(binDirPath);
@@ -71,9 +71,13 @@ async function setupShadowEnvironment() {
     // 2b. Clean up any other potential symlink files that could cause tar issues
     try {
       // Remove any cli.js files in loose-envify that might have symlinks
-      const looseEnvifyDir = path.join(DIST_SHADOW_DIR, "node_modules", "loose-envify");
+      const looseEnvifyDir = path.join(
+        DIST_SHADOW_DIR,
+        "node_modules",
+        "loose-envify"
+      );
       const cliJsPath = path.join(looseEnvifyDir, "cli.js");
-      
+
       try {
         await fs.access(cliJsPath);
         await fs.rm(cliJsPath, { force: true });
@@ -86,7 +90,7 @@ async function setupShadowEnvironment() {
     }
 
     // 3. Generate updated shadow-manifest.json with all files including node_modules
-    console.log("Generating shadow-manifest.json with node_modules...");    // Scan all files in dist/shadow including node_modules
+    console.log("Generating shadow-manifest.json with node_modules..."); // Scan all files in dist/shadow including node_modules
     const files = await fg(["**/*"], {
       cwd: DIST_SHADOW_DIR,
       dot: true,
@@ -150,7 +154,7 @@ async function setupShadowEnvironment() {
     // Build manifest items
     const items = essentialFiles.map((file) =>
       fileToFsItem(path.join(DIST_SHADOW_DIR, file), DIST_SHADOW_DIR)
-    );    // Write shadow-manifest.json to dist/
+    ); // Write shadow-manifest.json to dist/
     const manifestPath = path.resolve(
       __dirname,
       "../dist/shadow-manifest.json"
