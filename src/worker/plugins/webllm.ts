@@ -105,6 +105,33 @@ const WorkerWebLLM: WorkerPlugin = {
    */
   getProgress(): ProgressUpdate | null {
     return this._progress;
+  },  /**
+   * Parse Hermes XML tool call format
+   */  _parseHermesToolCall(content: string): { name: string; arguments: Record<string, unknown> } | null {
+    try {
+      console.log("Parsing Hermes tool call from content:", content);
+      
+      // Look for <tool_call>...</tool_call> pattern with improved regex for nested JSON
+      const toolCallMatch = content.match(/<tool_call>\s*(\{.*?\})\s*<\/tool_call>/s);
+      if (toolCallMatch) {
+        console.log("Found tool call match:", toolCallMatch[1]);
+        const toolCallJson = JSON.parse(toolCallMatch[1]);
+        console.log("Parsed tool call JSON:", toolCallJson);
+        
+        if (toolCallJson.name && toolCallJson.arguments) {
+          return {
+            name: toolCallJson.name,
+            arguments: toolCallJson.arguments
+          };
+        }
+      } else {
+        console.log("No tool call pattern found in content");
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing Hermes tool call:", error);
+      return null;
+    }
   },
 
   /**
@@ -112,15 +139,21 @@ const WorkerWebLLM: WorkerPlugin = {
    * Creates the appropriate system prompt for Hermes models function calling
    */
   _formatFunctionCallingSystemPrompt(tools: Tool[]): string {
-    const toolsString = JSON.stringify(tools);
-
-    // For Hermes models, we don't set a custom system prompt
-    // The WebLLM library will handle it internally
+    // For Hermes models, use the specific format they expect
     if (this._currentModel?.includes("Hermes")) {
-      return "";
+      const toolsXml = tools.map(tool => JSON.stringify({
+        type: "function",
+        function: tool.function
+      })).join(" ");
+      
+      return `You are a function calling AI model. You are provided with function signatures within <tools></tools> XML tags. You may call one or more functions to assist with the user query. Don't make assumptions about what values to plug into functions. Here are the available tools: <tools> ${toolsXml} </tools> Use the following pydantic model json schema for each tool call you will make: {"properties": {"arguments": {"title": "Arguments", "type": "object"}, "name": {"title": "Name", "type": "string"}}, "required": ["arguments", "name"], "title": "FunctionCall", "type": "object"} For each function call return a json object with function name and arguments within <tool_call></tool_call> XML tags as follows:
+<tool_call>
+{"arguments": <args-dict>, "name": <function-name>}
+</tool_call>`;
     }
 
     // Default format for other models
+    const toolsString = JSON.stringify(tools);
     return `You are a helpful AI assistant with access to the following tools: ${toolsString}. When you need to use a tool, output the tool call in JSON format.`;
   },
 
@@ -221,33 +254,27 @@ const WorkerWebLLM: WorkerPlugin = {
 
                   console.log(
                     `WebLLM loaded ${tools.length} tools for function calling`
-                  );
-
-                  // For Hermes models, WebLLM requires no system prompt with function calling
-                  // Filter out any system message when using tools with Hermes
+                  );                  // For Hermes models, use the specific format they expect
                   if (self._currentModel?.includes("Hermes")) {
-                    const filteredMessages = apiMessages.filter(
-                      (msg) => msg.role !== "system"
-                    );
-                    // Clear the original array and refill it with filtered messages
-                    apiMessages.length = 0;
-                    filteredMessages.forEach((msg) => apiMessages.push(msg));
-                    console.log(
-                      "Removed system prompt for Hermes model with tools"
-                    );
-
-                    // Debug: make sure we have at least one message
-                    if (apiMessages.length === 0) {
-                      console.warn(
-                        "WARNING: No messages left after filtering! Adding default user message."
-                      );
-                      apiMessages.push({
-                        role: "user",
-                        content: "Please help me with a task.",
+                    // Update or add system prompt for Hermes models
+                    const systemPrompt = self._formatFunctionCallingSystemPrompt(tools);
+                    
+                    if (apiMessages.length > 0 && apiMessages[0].role === "system") {
+                      // Update existing system message
+                      apiMessages[0].content = systemPrompt;
+                    } else {
+                      // Add system message at the beginning
+                      apiMessages.unshift({
+                        role: "system",
+                        content: systemPrompt,
                         name: "",
                         tool_calls: [],
                       });
                     }
+                    
+                    console.log(
+                      "Added Hermes function calling system prompt"
+                    );
 
                     // Log the final messages being sent to the model
                     console.log(
@@ -288,50 +315,48 @@ const WorkerWebLLM: WorkerPlugin = {
             messages: apiMessages,
             temperature,
             stream: true,
-          };
-
-          // Add tools if available
+          };          // Add tools if available
           if (enableTools && tools && tools.length > 0) {
-            options.tools = tools;
-            options.tool_choice = "auto";
-
-            // If Hermes model, ensure we're using the correct format for tool calls
+            // For Hermes models, use manual function calling (no tools parameter)
             if (self._currentModel?.includes("Hermes")) {
-              // Debug: log available calculator tool
-              const calculatorTool = tools.find(
-                (tool) =>
-                  tool.function.name.toLowerCase().includes("calculator") ||
-                  tool.function.name.toLowerCase().includes("calculate")
+              console.log("Using Hermes manual function calling (no tools parameter)");
+              // Don't add tools to options for Hermes models
+              // The system prompt already contains the tool definitions
+            } else {
+              // For non-Hermes models, use the standard tools approach
+              options.tools = tools;
+              options.tool_choice = "auto";
+              console.log("Using standard OpenAI-style function calling");
+            }
+
+            // Debug: log available calculator tool
+            const calculatorTool = tools.find(
+              (tool) =>
+                tool.function.name.toLowerCase().includes("calculator") ||
+                tool.function.name.toLowerCase().includes("calculate")
+            );
+            if (calculatorTool) {
+              console.log(
+                "Calculator tool found:",
+                JSON.stringify(calculatorTool, null, 2)
               );
-              if (calculatorTool) {
+
+              // For the specific calculator request, log it
+              const userMessage = apiMessages.find(
+                (msg) =>
+                  msg.role === "user" &&
+                  msg.content.toLowerCase().includes("calculator") &&
+                  msg.content.toLowerCase().includes("add")
+              );
+
+              if (userMessage) {
                 console.log(
-                  "Calculator tool found:",
-                  JSON.stringify(calculatorTool, null, 2)
+                  "Detected calculator usage in message:",
+                  userMessage.content
                 );
-
-                // For the specific calculator request, force tool choice
-                const userMessage = apiMessages.find(
-                  (msg) =>
-                    msg.role === "user" &&
-                    msg.content.toLowerCase().includes("calculator") &&
-                    msg.content.toLowerCase().includes("add")
-                );
-
-                if (userMessage) {
-                  console.log(
-                    "Detected calculator usage in message:",
-                    userMessage.content
-                  );
-                  // Force the model to use calculator tool with auto parameters
-                  options.tool_choice = {
-                    type: "function",
-                    function: { name: calculatorTool.function.name },
-                  };
-                  console.log("Forcing tool choice to calculator");
-                }
-              } else {
-                console.warn("No calculator tool found in tools list!");
               }
+            } else {
+              console.warn("No calculator tool found in tools list!");
             }
           }
 
@@ -355,13 +380,13 @@ const WorkerWebLLM: WorkerPlugin = {
             );
             controller.close();
             return;
-          }
-
-          // Track if we're currently handling a tool call
+          }          // Track if we're currently handling a tool call
           let isHandlingToolCall = false;
           let toolCallContent = "";
           let toolCallName = "";
           let toolCallId = "";
+          let completeResponse = ""; // Track the complete response for Hermes parsing
+          let hermesToolCallExecuted = false; // Track if we've executed a Hermes tool call
 
           for await (const chunk of chunks) {
             // Debug: log all chunks
@@ -374,10 +399,11 @@ const WorkerWebLLM: WorkerPlugin = {
             const content = chunk.choices[0]?.delta.content || "";
             if (content) {
               controller.enqueue(content);
+              completeResponse += content; // Accumulate for Hermes parsing
               console.log("Content chunk:", content);
             }
 
-            // Handle tool calls
+            // Handle OpenAI-style tool calls (for non-Hermes models)
             const toolCalls = chunk.choices[0]?.delta.tool_calls;
             if (toolCalls && toolCalls.length > 0) {
               console.log(
@@ -407,105 +433,39 @@ const WorkerWebLLM: WorkerPlugin = {
               }
             }
 
-            // If we've received a complete tool call, execute it
+            // Handle finish reason
+            const finishReason = chunk.choices[0]?.finish_reason;
+            
+            // If we've received a complete tool call (OpenAI format), execute it
             if (
               isHandlingToolCall &&
-              chunk.choices[0]?.finish_reason === "tool_calls" &&
+              finishReason === "tool_calls" &&
               toolCallContent
             ) {
+              await self._executeToolCall(controller, toolCallName, toolCallContent, toolCallId, apiMessages, engine, temperature);
               isHandlingToolCall = false;
-
-              try {
-                // Parse the arguments
-                const toolArgs = JSON.parse(toolCallContent);
-
-                if (toolCallName) {
-                  controller.enqueue(`\n[Executing tool: ${toolCallName}]\n`);
-
-                  // Try accessing from globalThis instead of self
-                  const manager = (globalThis as unknown as WorkerGlobalScope)
-                    .workerPluginManager;
-
-                  if (manager) {
-                    const toolResult = await manager.callPlugin(
-                      "mcp-server",
-                      "executeTool",
-                      {
-                        toolCall: {
-                          name: toolCallName,
-                          arguments: toolArgs,
-                        },
-                      }
-                    );
-
-                    // Display the result
-                    const resultText = JSON.stringify(toolResult, null, 2);
-                    controller.enqueue(`\n[Tool Result]:\n${resultText}\n\n`);
-
-                    // Now we need to continue the conversation with the tool result
-                    // Add the assistant message with the tool call
-                    apiMessages.push({
-                      role: "assistant",
-                      content: "",
-                      name: "",
-                      tool_calls: [
-                        {
-                          id: toolCallId,
-                          type: "function",
-                          function: {
-                            name: toolCallName,
-                            arguments: toolCallContent,
-                          },
-                        },
-                      ],
-                    });
-
-                    // Add the tool message with the result
-                    apiMessages.push({
-                      role: "tool",
-                      content: JSON.stringify(toolResult),
-                      name: toolCallName,
-                      tool_calls: [],
-                    });
-
-                    // Continue the conversation
-                    const continueOptions = {
-                      messages: apiMessages,
-                      temperature,
-                      stream: true,
-                    };
-
-                    console.log(
-                      "Continuing conversation with tool result:",
-                      continueOptions
-                    );
-                    const continueChunks = await engine.chat.completions.create(
-                      continueOptions
-                    );
-
-                    // Stream the continued response
-                    controller.enqueue(
-                      "\n\n[Assistant continues after tool use]\n"
-                    );
-                    for await (const chunk of continueChunks) {
-                      const content = chunk.choices[0]?.delta.content || "";
-                      if (content) {
-                        controller.enqueue(content);
-                      }
-                    }
-                  }
+              toolCallContent = "";
+              toolCallName = "";
+              toolCallId = "";
+            }
+              // For Hermes models, check if the response contains XML tool calls
+            if (finishReason === "stop") {
+              console.log("DEBUG: Finish reason is 'stop'");
+              console.log("DEBUG: Current model:", self._currentModel);
+              console.log("DEBUG: Model includes Hermes:", self._currentModel?.includes("Hermes"));
+              console.log("DEBUG: Complete response length:", completeResponse.length);
+              console.log("DEBUG: Complete response preview:", completeResponse.substring(0, 200));
+                if (self._currentModel?.includes("Hermes") && completeResponse) {
+                console.log("DEBUG: Attempting to parse Hermes tool call");
+                const hermesToolCall = self._parseHermesToolCall(completeResponse);
+                if (hermesToolCall) {
+                  console.log("Parsed Hermes tool call:", hermesToolCall);
+                  hermesToolCallExecuted = true;
+                  await self._executeHermesToolCall(controller, hermesToolCall, apiMessages, engine, temperature);
+                  return; // Exit early after tool execution to prevent further processing
+                } else {
+                  console.log("DEBUG: No Hermes tool call found in response");
                 }
-
-                // Reset tool call tracking
-                toolCallContent = "";
-                toolCallName = "";
-                toolCallId = "";
-              } catch (error) {
-                controller.enqueue(
-                  `\n[Tool Error]: ${
-                    error instanceof Error ? error.message : String(error)
-                  }\n\n`
-                );
               }
             }
           }
@@ -629,10 +589,189 @@ const WorkerWebLLM: WorkerPlugin = {
       case "cleanup": {
         this.cleanup();
         return { status: "success" };
-      }
-
-      default:
+      }      default:
         return { error: `Method ${method} not supported for webllm` };
+    }
+  },
+
+  /**
+   * Execute an OpenAI-style tool call
+   */
+  async _executeToolCall(
+    controller: ReadableStreamDefaultController<string>,
+    toolCallName: string,
+    toolCallContent: string,
+    toolCallId: string,
+    apiMessages: Array<{ role: string; content: string; name: string; tool_calls: unknown[] }>,
+    engine: webllm.MLCEngine,
+    temperature: number
+  ): Promise<void> {
+    try {
+      // Parse the arguments
+      const toolArgs = JSON.parse(toolCallContent);
+
+      if (toolCallName) {
+        controller.enqueue(`\n[Executing tool: ${toolCallName}]\n`);
+
+        // Try accessing from globalThis instead of self
+        const manager = (globalThis as unknown as WorkerGlobalScope)
+          .workerPluginManager;
+
+        if (manager) {
+          const toolResult = await manager.callPlugin(
+            "mcp-server",
+            "executeTool",
+            {
+              toolCall: {
+                name: toolCallName,
+                arguments: toolArgs,
+              },
+            }
+          );
+
+          // Display the result
+          const resultText = JSON.stringify(toolResult, null, 2);
+          controller.enqueue(`\n[Tool Result]:\n${resultText}\n\n`);
+
+          // Now we need to continue the conversation with the tool result
+          // Add the assistant message with the tool call
+          apiMessages.push({
+            role: "assistant",
+            content: "",
+            name: "",
+            tool_calls: [
+              {
+                id: toolCallId,
+                type: "function",
+                function: {
+                  name: toolCallName,
+                  arguments: toolCallContent,
+                },
+              },
+            ],
+          });
+
+          // Add the tool message with the result
+          apiMessages.push({
+            role: "tool",
+            content: JSON.stringify(toolResult),
+            name: toolCallName,
+            tool_calls: [],
+          });          // Continue the conversation
+          const continueOptions: Record<string, unknown> = {
+            messages: apiMessages,
+            temperature,
+            stream: true,
+          };
+
+          console.log(
+            "Continuing conversation with tool result:",
+            continueOptions
+          );
+          const continueChunks = await engine.chat.completions.create(
+            continueOptions
+          ) as AsyncIterable<webllm.ChatCompletionChunk>;
+
+          // Stream the continued response
+          controller.enqueue(
+            "\n\n[Assistant continues after tool use]\n"
+          );
+          for await (const chunk of continueChunks) {
+            const content = chunk.choices[0]?.delta.content || "";
+            if (content) {
+              controller.enqueue(content);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      controller.enqueue(
+        `\n[Tool Error]: ${
+          error instanceof Error ? error.message : String(error)
+        }\n\n`
+      );
+    }
+  },
+
+  /**
+   * Execute a Hermes XML-style tool call
+   */
+  async _executeHermesToolCall(
+    controller: ReadableStreamDefaultController<string>,
+    toolCall: { name: string; arguments: Record<string, unknown> },
+    apiMessages: Array<{ role: string; content: string; name: string; tool_calls: unknown[] }>,
+    engine: webllm.MLCEngine,
+    temperature: number
+  ): Promise<void> {
+    try {
+      controller.enqueue(`\n\n[Executing tool: ${toolCall.name}]\n`);
+
+      const manager = (globalThis as unknown as WorkerGlobalScope)
+        .workerPluginManager;
+
+      if (manager) {
+        const toolResult = await manager.callPlugin(
+          "mcp-server",
+          "executeTool",
+          {
+            toolCall: {
+              name: toolCall.name,
+              arguments: toolCall.arguments,
+            },
+          }
+        );
+
+        // Display the result
+        const resultText = JSON.stringify(toolResult, null, 2);
+        controller.enqueue(`\n[Tool Result]:\n${resultText}\n\n`);
+
+        // For Hermes models, add the tool result as a user message
+        apiMessages.push({
+          role: "user",
+          content: `Tool "${toolCall.name}" returned: ${JSON.stringify(toolResult)}. Please provide a natural language response based on this result.`,
+          name: "",
+          tool_calls: [],
+        });        // Continue the conversation
+        const continueOptions: Record<string, unknown> = {
+          messages: apiMessages,
+          temperature,
+          stream: true,
+        };
+
+        console.log(
+          "Continuing Hermes conversation with tool result:",
+          continueOptions
+        );
+        const continueChunks = await engine.chat.completions.create(
+          continueOptions
+        ) as AsyncIterable<webllm.ChatCompletionChunk>;        // Stream the continued response
+        controller.enqueue(
+          "\n\n[Assistant response]:\n"
+        );
+        for await (const chunk of continueChunks) {
+          const content = chunk.choices[0]?.delta.content || "";
+          if (content) {
+            controller.enqueue(content);
+          }
+          
+          // Check if the response is complete
+          const finishReason = chunk.choices[0]?.finish_reason;
+          if (finishReason === "stop") {
+            console.log("Hermes tool call conversation completed");
+            break;
+          }
+        }
+        
+        // Close the controller after tool execution is complete
+        controller.close();
+      }
+    } catch (error) {
+      controller.enqueue(
+        `\n[Tool Error]: ${
+          error instanceof Error ? error.message : String(error)
+        }\n\n`
+      );
+      controller.close(); // Also close on error
     }
   },
 };
