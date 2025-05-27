@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebLLM Function Calling Test Console</title>
+    <style>
+      body {
+        font-family: "Courier New", monospace;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #569cd6;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .instructions {
+        background-color: #252526;
+        border: 1px solid #464647;
+        border-radius: 4px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .instructions h2 {
+        color: #4ec9b0;
+        margin-top: 0;
+      }
+      .instructions ol {
+        color: #ce9178;
+      }
+      .instructions code {
+        background-color: #1e1e1e;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #9cdcfe;
+      }
+      .test-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+      .test-buttons button {
+        background-color: #0e639c;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 14px;
+      }
+      .test-buttons button:hover {
+        background-color: #1177bb;
+      }
+      .test-buttons button:disabled {
+        background-color: #6c6c6c;
+        cursor: not-allowed;
+      }
+      .console-output {
+        background-color: #252526;
+        border: 1px solid #464647;
+        border-radius: 4px;
+        padding: 15px;
+        height: 400px;
+        overflow-y: auto;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .log-entry {
+        margin: 2px 0;
+      }
+      .log-entry.error {
+        color: #f44747;
+      }
+      .log-entry.warning {
+        color: #ffcc02;
+      }
+      .log-entry.success {
+        color: #4ec9b0;
+      }
+      .log-entry.info {
+        color: #9cdcfe;
+      }
+      .iframe-container {
+        margin-top: 20px;
+        border: 1px solid #464647;
+        border-radius: 4px;
+      }
+      .iframe-container iframe {
+        width: 100%;
+        height: 400px;
+        border: none;
+      }
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+      .status-indicator.connected {
+        background-color: #4ec9b0;
+      }
+      .status-indicator.disconnected {
+        background-color: #f44747;
+      }
+      .status-indicator.loading {
+        background-color: #ffcc02;
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🧪 WebLLM Function Calling Test Console</h1>
+
+      <div class="instructions">
+        <h2>Test Instructions</h2>
+        <ol>
+          <li>
+            Open the main application at
+            <code>http://localhost:8082/prometheos/</code>
+          </li>
+          <li>Load a function-calling capable model (Hermes or Llama 3.1)</li>
+          <li>Come back to this page and run the tests below</li>
+          <li>Or click "Open Main App" to open it in an iframe below</li>
+          <li>Check the console output for detailed test results</li>
+        </ol>
+        <p><strong>Function Calling Models:</strong></p>
+        <ul>
+          <li>✅ Hermes-2-Pro-Llama-3-8B-q4f32_1-MLC</li>
+          <li>✅ Hermes-2-Pro-Mistral-7B</li>
+          <li>✅ Llama-3.1-8B-Instruct-q4f32_1-MLC</li>
+          <li>❌ Phi-3-mini-4k-instruct-q4f32_1-MLC (not supported)</li>
+        </ul>
+      </div>
+
+      <div class="test-buttons">
+        <button onclick="openMainApp()">🚀 Open Main App</button>
+        <button onclick="checkStatus()">🔍 Check Status</button>
+        <button onclick="runSimpleTest()">🧮 Simple Test</button>
+        <button onclick="runFullTest()">🧪 Full Test Suite</button>
+        <button onclick="clearConsole()">🗑️ Clear Console</button>
+      </div>
+
+      <div class="console-output" id="console-output">
+        <div class="log-entry info">
+          🔧 WebLLM Function Calling Test Console Ready
+        </div>
+        <div class="log-entry info">
+          📋 Load the main application and a function-calling model to begin
+          testing
+        </div>
+      </div>
+
+      <div class="iframe-container" id="iframe-container" style="display: none">
+        <iframe id="main-app-frame" src="about:blank"></iframe>
+      </div>
+    </div>
+
+    <script>
+      // Console logging wrapper
+      function logToConsole(message, type = "info") {
+        const output = document.getElementById("console-output");
+        const entry = document.createElement("div");
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        output.appendChild(entry);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      // Override console methods to capture output
+      const originalConsole = {
+        log: console.log,
+        error: console.error,
+        warn: console.warn,
+        info: console.info,
+      };
+
+      console.log = function (...args) {
+        originalConsole.log.apply(console, args);
+        logToConsole(args.join(" "), "info");
+      };
+
+      console.error = function (...args) {
+        originalConsole.error.apply(console, args);
+        logToConsole(args.join(" "), "error");
+      };
+
+      console.warn = function (...args) {
+        originalConsole.warn.apply(console, args);
+        logToConsole(args.join(" "), "warning");
+      };
+
+      console.info = function (...args) {
+        originalConsole.info.apply(console, args);
+        logToConsole(args.join(" "), "info");
+      }; // Load test functions
+      function loadTestScript() {
+        const script = document.createElement("script");
+        script.src = "./webllm-system-tools-test.js";
+        script.onload = function () {
+          logToConsole(
+            "✅ System tools test functions loaded successfully",
+            "success"
+          );
+        };
+        script.onerror = function () {
+          logToConsole(
+            "❌ Failed to load system tools test functions",
+            "error"
+          );
+        };
+        document.head.appendChild(script);
+      } // Open main application
+      function openMainApp() {
+        const container = document.getElementById("iframe-container");
+        const iframe = document.getElementById("main-app-frame");
+        iframe.src = "http://localhost:8082/prometheos/";
+        container.style.display = "block";
+        logToConsole("🚀 Opening main application in iframe", "info");
+      } // Check worker status
+      async function checkStatus() {
+        logToConsole("🔍 Checking WebLLM worker status...", "info");
+        try {
+          if (typeof checkSystemStatus === "function") {
+            await checkSystemStatus();
+          } else {
+            // Try to access through iframe if available
+            const iframe = document.getElementById("main-app-frame");
+            if (
+              iframe &&
+              iframe.contentWindow &&
+              iframe.contentWindow.workerPluginManager
+            ) {
+              const workerManager = iframe.contentWindow.workerPluginManager;
+              const isReady = await workerManager.callPlugin(
+                "webllm",
+                "isReady"
+              );
+              const currentModel = await workerManager.callPlugin(
+                "webllm",
+                "getCurrentModel"
+              );
+              const supportsFunctions = await workerManager.callPlugin(
+                "webllm",
+                "supportsFunctionCalling"
+              );
+
+              logToConsole(
+                `Worker Ready: ${isReady}`,
+                isReady ? "success" : "error"
+              );
+              logToConsole(
+                `Current Model: ${currentModel || "None"}`,
+                currentModel ? "success" : "warning"
+              );
+              logToConsole(
+                `Supports Functions: ${supportsFunctions}`,
+                supportsFunctions ? "success" : "warning"
+              );
+            } else {
+              logToConsole(
+                "❌ Cannot access worker manager. Open main app first.",
+                "error"
+              );
+            }
+          }
+        } catch (error) {
+          logToConsole(`❌ Status check failed: ${error.message}`, "error");
+        }
+      }
+
+      // Run simple test
+      async function runSimpleTest() {
+        logToConsole("🔔 Running simple notification test...", "info");
+        try {
+          if (typeof testNotificationTool === "function") {
+            await testNotificationTool();
+          } else {
+            logToConsole(
+              "❌ Test functions not loaded. Load test script first.",
+              "error"
+            );
+          }
+        } catch (error) {
+          logToConsole(`❌ Simple test failed: ${error.message}`, "error");
+        }
+      }
+
+      // Run full test suite
+      async function runFullTest() {
+        logToConsole("🧪 Running full system tools test suite...", "info");
+        try {
+          if (typeof runAllSystemToolTests === "function") {
+            await runAllSystemToolTests();
+          } else {
+            logToConsole(
+              "❌ Test functions not loaded. Load test script first.",
+              "error"
+            );
+          }
+        } catch (error) {
+          logToConsole(`❌ Full test failed: ${error.message}`, "error");
+        }
+      }
+
+      // Clear console
+      function clearConsole() {
+        const output = document.getElementById("console-output");
+        output.innerHTML =
+          '<div class="log-entry info">🗑️ Console cleared</div>';
+      }
+
+      // Initialize
+      window.addEventListener("load", function () {
+        loadTestScript();
+        logToConsole("🔧 Test console initialized", "success");
+      });
+    </script>
+  </body>
+</html>
