@@ -1,20 +1,21 @@
 import React from 'react';
+
+import { usePyodideNotebook } from './hooks/usePyodideNotebook';
 import { NotebookCell } from './NotebookCell';
 import { NotebookToolbar } from './NotebookToolbar';
-import { usePyodideNotebook } from './hooks/usePyodideNotebook';
 
 interface PyodideNotebookProps {
   className?: string;
   initialCells?: Array<{
     id?: string;
-    type: 'code' | 'markdown';
+    type: "code" | "markdown";
     content: string;
   }>;
 }
 
-export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({ 
-  className = '',
-  initialCells
+export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({
+  className = "",
+  initialCells,
 }) => {
   const {
     cells,
@@ -36,7 +37,9 @@ export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({
   } = usePyodideNotebook(initialCells);
 
   return (
-    <div className={`notebook-container h-full flex flex-col bg-gray-50 dark:bg-gray-950 ${className}`}>
+    <div
+      className={`notebook-container h-full flex flex-col bg-gray-50 dark:bg-gray-950 ${className}`}
+    >
       <NotebookToolbar
         onAddCell={addCell}
         onSave={saveNotebook}
@@ -47,7 +50,7 @@ export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({
         kernelStatus={kernelStatus}
         isExecuting={isExecuting}
       />
-      
+
       <div className="notebook-content flex-1 overflow-y-auto max-w-6xl mx-auto p-4 md:p-6 lg:p-8 w-full">
         {!isInitialized && (
           <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -58,7 +61,8 @@ export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({
                   Pyodide Initialization Required
                 </h4>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                  Run a code cell to initialize the Python kernel. This may take a moment on first load.
+                  Run a code cell to initialize the Python kernel. This may take
+                  a moment on first load.
                 </p>
               </div>
             </div>
@@ -79,10 +83,10 @@ export const PyodideNotebook: React.FC<PyodideNotebookProps> = ({
             />
           ))}
         </div>
-        
+
         <div className="notebook-add-cell mt-6 flex justify-center">
           <button
-            onClick={() => addCell('code')}
+            onClick={() => addCell("code")}
             className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
           >
             <span>+ Add cell</span>

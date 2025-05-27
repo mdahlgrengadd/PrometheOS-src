@@ -1,0 +1,178 @@
+/* API Explorer Isolated Styles */
+/* This file creates isolated CSS variables for the API Explorer to prevent interference from IDE Builder themes */
+
+.api-explorer-isolated {
+  /* Isolated CSS variables that won't be affected by IDE Builder theme changes */
+  
+  /* Light theme defaults for API Explorer */
+  --api-explorer-background: 0 0% 100%;
+  --api-explorer-foreground: 222.2 84% 4.9%;
+  --api-explorer-card: 0 0% 100%;
+  --api-explorer-card-foreground: 222.2 84% 4.9%;
+  --api-explorer-popover: 0 0% 100%;
+  --api-explorer-popover-foreground: 222.2 84% 4.9%;
+  --api-explorer-primary: 262.1 83.3% 57.8%;
+  --api-explorer-primary-foreground: 210 20% 98%;
+  --api-explorer-secondary: 220 14.3% 95.9%;
+  --api-explorer-secondary-foreground: 220.9 39.3% 11%;
+  --api-explorer-muted: 220 14.3% 95.9%;
+  --api-explorer-muted-foreground: 220 8.9% 46.1%;
+  --api-explorer-accent: 220 14.3% 95.9%;
+  --api-explorer-accent-foreground: 220.9 39.3% 11%;
+  --api-explorer-destructive: 0 84.2% 60.2%;
+  --api-explorer-destructive-foreground: 210 20% 98%;
+  --api-explorer-border: 220 13% 91%;
+  --api-explorer-input: 220 13% 91%;
+  --api-explorer-ring: 262.1 83.3% 57.8%;
+  --api-explorer-radius: 0.5rem;
+
+  /* Override global CSS variables within this scope */
+  --background: var(--api-explorer-background);
+  --foreground: var(--api-explorer-foreground);
+  --card: var(--api-explorer-card);
+  --card-foreground: var(--api-explorer-card-foreground);
+  --popover: var(--api-explorer-popover);
+  --popover-foreground: var(--api-explorer-popover-foreground);
+  --primary: var(--api-explorer-primary);
+  --primary-foreground: var(--api-explorer-primary-foreground);
+  --secondary: var(--api-explorer-secondary);
+  --secondary-foreground: var(--api-explorer-secondary-foreground);
+  --muted: var(--api-explorer-muted);
+  --muted-foreground: var(--api-explorer-muted-foreground);
+  --accent: var(--api-explorer-accent);
+  --accent-foreground: var(--api-explorer-accent-foreground);
+  --destructive: var(--api-explorer-destructive);
+  --destructive-foreground: var(--api-explorer-destructive-foreground);
+  --border: var(--api-explorer-border);
+  --input: var(--api-explorer-input);
+  --ring: var(--api-explorer-ring);
+  --radius: var(--api-explorer-radius);
+
+  /* Override sidebar-specific variables that might be used by tabs or other components */
+  --sidebar-background: var(--api-explorer-background);
+  --sidebar-foreground: var(--api-explorer-foreground);
+  --sidebar-border: var(--api-explorer-border);
+  --sidebar-accent: var(--api-explorer-accent);
+  --sidebar-accent-foreground: var(--api-explorer-accent-foreground);
+
+  /* Ensure proper styling for all child elements */
+  color: hsl(var(--api-explorer-foreground));
+  background-color: hsl(var(--api-explorer-background));
+}
+
+/* Dark mode support for API Explorer (if needed in the future) */
+.api-explorer-isolated.dark {
+  --api-explorer-background: 222.2 84% 4.9%;
+  --api-explorer-foreground: 210 40% 98%;
+  --api-explorer-card: 222.2 84% 4.9%;
+  --api-explorer-card-foreground: 210 40% 98%;
+  --api-explorer-popover: 222.2 84% 4.9%;
+  --api-explorer-popover-foreground: 210 40% 98%;
+  --api-explorer-primary: 262.1 83.3% 57.8%;
+  --api-explorer-primary-foreground: 210 20% 98%;
+  --api-explorer-secondary: 217.2 32.6% 17.5%;
+  --api-explorer-secondary-foreground: 210 40% 98%;
+  --api-explorer-muted: 217.2 32.6% 17.5%;
+  --api-explorer-muted-foreground: 215 20.2% 65.1%;
+  --api-explorer-accent: 217.2 32.6% 17.5%;
+  --api-explorer-accent-foreground: 210 40% 98%;
+  --api-explorer-destructive: 0 62.8% 30.6%;
+  --api-explorer-destructive-foreground: 210 20% 98%;
+  --api-explorer-border: 217.2 32.6% 17.5%;
+  --api-explorer-input: 217.2 32.6% 17.5%;
+  --api-explorer-ring: 262.1 83.3% 57.8%;
+}
+
+/* Ensure components within the isolated scope use the correct styling */
+.api-explorer-isolated .card {
+  background-color: hsl(var(--api-explorer-card));
+  color: hsl(var(--api-explorer-card-foreground));
+  border: 1px solid hsl(var(--api-explorer-border));
+}
+
+.api-explorer-isolated .tabs-list {
+  background-color: hsl(var(--api-explorer-muted));
+  color: hsl(var(--api-explorer-muted-foreground));
+}
+
+.api-explorer-isolated .tabs-trigger {
+  background-color: transparent;
+  color: hsl(var(--api-explorer-muted-foreground));
+}
+
+.api-explorer-isolated .tabs-trigger[data-state="active"] {
+  background-color: hsl(var(--api-explorer-background));
+  color: hsl(var(--api-explorer-foreground));
+  border-bottom: 2px solid hsl(var(--api-explorer-primary));
+}
+
+/* Override any potentially inherited styles from IDE Builder */
+.api-explorer-isolated * {
+  /* Reset any inherited CSS variables */
+  --sidebar-background: var(--api-explorer-background) !important;
+  --sidebar-foreground: var(--api-explorer-foreground) !important;
+  --sidebar-border: var(--api-explorer-border) !important;
+  --sidebar-accent: var(--api-explorer-accent) !important;
+  --sidebar-accent-foreground: var(--api-explorer-accent-foreground) !important;
+}
+
+/* Higher specificity overrides for shadcn/ui components */
+.api-explorer-isolated .card,
+.api-explorer-isolated [data-radix-card] {
+  background-color: hsl(var(--api-explorer-card)) !important;
+  color: hsl(var(--api-explorer-card-foreground)) !important;
+  border-color: hsl(var(--api-explorer-border)) !important;
+}
+
+.api-explorer-isolated .tabs-list,
+.api-explorer-isolated [role="tablist"] {
+  background-color: hsl(var(--api-explorer-muted)) !important;
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+}
+
+.api-explorer-isolated .tabs-trigger,
+.api-explorer-isolated [role="tab"] {
+  background-color: transparent !important;
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+}
+
+.api-explorer-isolated .tabs-trigger[data-state="active"],
+.api-explorer-isolated [role="tab"][data-state="active"] {
+  background-color: hsl(var(--api-explorer-background)) !important;
+  color: hsl(var(--api-explorer-foreground)) !important;
+  border-bottom-color: hsl(var(--api-explorer-primary)) !important;
+}
+
+/* Make sure text remains readable */
+.api-explorer-isolated,
+.api-explorer-isolated *:not([data-radix-popper-content-wrapper]) {
+  color: hsl(var(--api-explorer-foreground)) !important;
+}
+
+/* Fix for any button or interactive elements */
+.api-explorer-isolated button,
+.api-explorer-isolated [role="button"],
+.api-explorer-isolated [role="tab"],
+.api-explorer-isolated [role="tablist"] {
+  color: inherit !important;
+}
+
+/* Ensure input fields use correct styling */
+.api-explorer-isolated input,
+.api-explorer-isolated textarea,
+.api-explorer-isolated select {
+  background-color: hsl(var(--api-explorer-input)) !important;
+  color: hsl(var(--api-explorer-foreground)) !important;
+  border-color: hsl(var(--api-explorer-border)) !important;
+}
+
+/* Fix for scroll areas and other radix components */
+.api-explorer-isolated [data-radix-scroll-area-viewport] {
+  background-color: inherit !important;
+}
+
+/* Ensure badges use correct colors */
+.api-explorer-isolated .badge {
+  background-color: hsl(var(--api-explorer-secondary)) !important;
+  color: hsl(var(--api-explorer-secondary-foreground)) !important;
+}

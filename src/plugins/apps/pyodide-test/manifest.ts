@@ -1,5 +1,6 @@
-import { PluginManifest } from "../../types";
 import React from 'react';
+
+import { PluginManifest } from '../../types';
 
 export const manifest: PluginManifest = {
   id: "pyodide-test",
@@ -7,7 +8,9 @@ export const manifest: PluginManifest = {
   description: "Jupyter-style Python notebook with Pyodide integration",
   version: "1.0.0",
   author: "Desktop Dreamscape",
-  icon: React.createElement('div', { className: 'w-6 h-6 bg-blue-500 rounded' }),
+  icon: React.createElement("div", {
+    className: "w-6 h-6 bg-blue-500 rounded",
+  }),
   entry: "index.tsx",
   // Use relative path; loader will prepend base path automatically
   workerEntrypoint: "worker/pyodide.js",

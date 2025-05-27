@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, FileText, Folder, Play, Code, BookOpen } from 'lucide-react';
-import { PyodideNotebook } from './notebook/PyodideNotebook';
+import { BookOpen, ChevronDown, ChevronRight, Code, FileText, Folder, Play } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+
 import { workerPluginManager } from '../../WorkerPluginManagerClient';
+import { PyodideNotebook } from './notebook/PyodideNotebook';
 
 interface TestCase {
   id: string;
   name: string;
   description: string;
   code: string;
-  type: 'code' | 'markdown';
+  type: "code" | "markdown";
 }
 
 interface TestCategory {
@@ -21,45 +22,45 @@ interface TestCategory {
 
 const testCategories: TestCategory[] = [
   {
-    id: 'basic',
-    name: 'Basic Tests',
+    id: "basic",
+    name: "Basic Tests",
     icon: Play,
     expanded: true,
     cases: [
       {
-        id: 'hello-world',
-        name: 'Hello World',
-        description: 'Simple arithmetic and output',
-        type: 'code',
-        code: 'print("Hello from Python!")\n2 + 2'
+        id: "hello-world",
+        name: "Hello World",
+        description: "Simple arithmetic and output",
+        type: "code",
+        code: 'print("Hello from Python!")\n2 + 2',
       },
       {
-        id: 'json-processing',
-        name: 'JSON Processing',
-        description: 'Test JSON manipulation',
-        type: 'code',
-        code: 'import json\ndata = {"message": "Hello from Python", "numbers": [1, 2, 3]}\njson.dumps(data, indent=2)'
+        id: "json-processing",
+        name: "JSON Processing",
+        description: "Test JSON manipulation",
+        type: "code",
+        code: 'import json\ndata = {"message": "Hello from Python", "numbers": [1, 2, 3]}\njson.dumps(data, indent=2)',
       },
       {
-        id: 'loops-variables',
-        name: 'Loops & Variables',
-        description: 'Test control flow',
-        type: 'code',
-        code: 'for i in range(5):\n    print(f"Count: {i}")\n\nresult = sum(range(10))\nprint(f"Sum of 0-9: {result}")\nresult'
-      }
-    ]
+        id: "loops-variables",
+        name: "Loops & Variables",
+        description: "Test control flow",
+        type: "code",
+        code: 'for i in range(5):\n    print(f"Count: {i}")\n\nresult = sum(range(10))\nprint(f"Sum of 0-9: {result}")\nresult',
+      },
+    ],
   },
   {
-    id: 'api-tests',
-    name: 'Desktop API Tests',
+    id: "api-tests",
+    name: "Desktop API Tests",
     icon: Code,
     expanded: true,
     cases: [
       {
-        id: 'api-verification',
-        name: 'API Verification',
-        description: 'Check if desktop API is available',
-        type: 'code',
+        id: "api-verification",
+        name: "API Verification",
+        description: "Check if desktop API is available",
+        type: "code",
         code: `# Simple Desktop API Verification Test
 print("=== Desktop API Verification ===")
 
@@ -81,13 +82,13 @@ except:
     print("Could not inspect desktop object methods")
 
 print("=== Verification Complete ===")
-"Desktop API verification completed"`
+"Desktop API verification completed"`,
       },
       {
-        id: 'api-component-listing',
-        name: 'Component Listing Test',
-        description: 'Test listing available desktop components',
-        type: 'code',
+        id: "api-component-listing",
+        name: "Component Listing Test",
+        description: "Test listing available desktop components",
+        type: "code",
         code: `# Test 1: List Available Components
 print("=== Component Listing Test ===")
 print()
@@ -102,13 +103,13 @@ except Exception as e:
     print(f"✗ Component listing failed: {e}")
 
 print("=== Test Complete ===")
-"Component listing test completed"`
+"Component listing test completed"`,
       },
       {
-        id: 'api-event-emission',
-        name: 'Event Emission Test',
-        description: 'Test desktop event emission functionality',
-        type: 'code',
+        id: "api-event-emission",
+        name: "Event Emission Test",
+        description: "Test desktop event emission functionality",
+        type: "code",
         code: `# Test 2: Event Emission
 print("=== Event Emission Test ===")
 print()
@@ -127,13 +128,13 @@ except Exception as e:
     print(f"✗ Event emission failed: {e}")
 
 print("=== Test Complete ===")
-"Event emission test completed"`
+"Event emission test completed"`,
       },
       {
-        id: 'api-calculator-test',
-        name: 'Calculator API Test',
-        description: 'Test calculator component execution',
-        type: 'code',
+        id: "api-calculator-test",
+        name: "Calculator API Test",
+        description: "Test calculator component execution",
+        type: "code",
         code: `# Test 3: Calculator API Execution
 print("=== Calculator API Test ===")
 print()
@@ -194,13 +195,13 @@ except Exception as e:
     print("To fix: Try opening the Calculator app first, then run this test again")
 
 print("=== Test Complete ===")
-"Calculator API test completed"`
+"Calculator API test completed"`,
       },
       {
-        id: 'api-notification-test',
-        name: 'Notification System Test',
-        description: 'Test system notification functionality',
-        type: 'code',
+        id: "api-notification-test",
+        name: "Notification System Test",
+        description: "Test system notification functionality",
+        type: "code",
         code: `# Test 4: System Notification
 print("=== Notification System Test ===")
 print()
@@ -218,13 +219,13 @@ except Exception as e:
     print(f"✗ Notification system test failed: {e}")
 
 print("=== Test Complete ===")
-"Notification system test completed"`
+"Notification system test completed"`,
       },
       {
-        id: 'api-error-handling',
-        name: 'Error Handling Test',
-        description: 'Test API error handling and recovery',
-        type: 'code',
+        id: "api-error-handling",
+        name: "Error Handling Test",
+        description: "Test API error handling and recovery",
+        type: "code",
         code: `# Test 5: Error Handling
 print("=== Error Handling Test ===")
 print()
@@ -248,13 +249,13 @@ except Exception as e:
     print("✓ Error handling working as expected")
 
 print("=== Test Complete ===")
-"Error handling test completed"`
+"Error handling test completed"`,
       },
       {
-        id: 'api-comprehensive-suite',
-        name: 'Run All API Tests',
-        description: 'Execute all API tests in sequence',
-        type: 'code',
+        id: "api-comprehensive-suite",
+        name: "Run All API Tests",
+        description: "Execute all API tests in sequence",
+        type: "code",
         code: `# Comprehensive API Bridge Test Suite
 print("=== Running All Desktop API Tests ===")
 print()
@@ -354,13 +355,13 @@ if passed == total:
 else:
     print(f"⚠️  {total - passed} test(s) failed. Check individual results above.")
 
-"Comprehensive API test suite completed"`
+"Comprehensive API test suite completed"`,
       },
       {
-        id: 'event-subscription',
-        name: 'Event Subscription',
-        description: 'Test Python event handling',
-        type: 'code',
+        id: "event-subscription",
+        name: "Event Subscription",
+        description: "Test Python event handling",
+        type: "code",
         code: `# Test Event Subscription
 print("Testing event subscription...")
 
@@ -375,21 +376,21 @@ print("Subscribed to python_test_event")
 # Emit a test event
 desktop.events.emit("python_test_event", {"timestamp": "2025-05-27", "source": "Python"})
 
-print("Event subscription test completed")`
-      }
-    ]
+print("Event subscription test completed")`,
+      },
+    ],
   },
   {
-    id: 'documentation',
-    name: 'Documentation',
+    id: "documentation",
+    name: "Documentation",
     icon: BookOpen,
     expanded: false,
     cases: [
       {
-        id: 'getting-started',
-        name: 'Getting Started',
-        description: 'Introduction to the Python Notebook',
-        type: 'markdown',
+        id: "getting-started",
+        name: "Getting Started",
+        description: "Introduction to the Python Notebook",
+        type: "markdown",
         code: `# Python Notebook with Pyodide
 
 Welcome to the Python Notebook! This is a Jupyter-style interface for running Python code directly in your browser using Pyodide.
@@ -415,10 +416,10 @@ The desktop API is available through the \`desktop\` object in Python:
 - \`desktop.api\` - Access to desktop functionality
 - \`desktop.events\` - Event subscription and emission
 
-Try the API tests in the sidebar to see what's available!`
-      }
-    ]
-  }
+Try the API tests in the sidebar to see what's available!`,
+      },
+    ],
+  },
 ];
 
 interface TreeItemProps {
@@ -430,13 +431,13 @@ interface TreeItemProps {
   onTestSelect?: (testCase: TestCase) => void;
 }
 
-const TreeItem: React.FC<TreeItemProps> = ({ 
-  category, 
-  testCase, 
-  level, 
+const TreeItem: React.FC<TreeItemProps> = ({
+  category,
+  testCase,
+  level,
   selectedTestId,
-  onCategoryToggle, 
-  onTestSelect 
+  onCategoryToggle,
+  onTestSelect,
 }) => {
   const handleClick = () => {
     if (category && onCategoryToggle) {
@@ -465,7 +466,7 @@ const TreeItem: React.FC<TreeItemProps> = ({
           <Icon size={16} className="mr-2 text-blue-500" />
           <span className="text-sm font-medium">{category.name}</span>
         </div>
-        
+
         {category.expanded && (
           <div>
             {category.cases.map((testCase) => (
@@ -488,17 +489,24 @@ const TreeItem: React.FC<TreeItemProps> = ({
     return (
       <div
         className={`flex items-center py-1 px-2 cursor-pointer rounded transition-colors ${
-          isSelected 
-            ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' 
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+          isSelected
+            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800"
         }`}
         onClick={handleClick}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
       >
-        <FileText size={14} className={`mr-2 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`} />
+        <FileText
+          size={14}
+          className={`mr-2 ${
+            isSelected ? "text-blue-600 dark:text-blue-400" : "text-gray-500"
+          }`}
+        />
         <div className="flex-1 min-w-0">
           <div className="text-sm truncate">{testCase.name}</div>
-          <div className="text-xs text-gray-500 truncate">{testCase.description}</div>
+          <div className="text-xs text-gray-500 truncate">
+            {testCase.description}
+          </div>
         </div>
       </div>
     );
@@ -518,8 +526,8 @@ export const PythonNotebook: React.FC = () => {
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [initialCells, setInitialCells] = useState([
     {
-      id: 'welcome',
-      type: 'markdown' as const,
+      id: "welcome",
+      type: "markdown" as const,
       content: `# Welcome to Python Notebook
 
 This is a Jupyter-style Python notebook powered by Pyodide. You can run Python code directly in your browser!
@@ -529,15 +537,15 @@ This is a Jupyter-style Python notebook powered by Pyodide. You can run Python c
 2. Try running some Python code
 3. Explore the test cases in the sidebar
 
-Use the sidebar to load pre-built test cases and examples.`
+Use the sidebar to load pre-built test cases and examples.`,
     },
     {
-      id: 'init-cell',
-      type: 'code' as const,
+      id: "init-cell",
+      type: "code" as const,
       content: `# Initialize Pyodide
 print("Initializing Pyodide...")
-# This will be handled by the notebook's execution system`
-    }
+# This will be handled by the notebook's execution system`,
+    },
   ]);
 
   // Check Pyodide status on mount and periodically
@@ -552,25 +560,23 @@ print("Initializing Pyodide...")
           setInitProgress("Pyodide not started");
         }
       } catch (error) {
-        console.error('Error checking Pyodide status:', error);
+        console.error("Error checking Pyodide status:", error);
         setInitProgress("Status check failed");
       }
     };
 
     checkStatus();
-    
+
     // Check status periodically (every 2 seconds) to keep it updated
     const interval = setInterval(checkStatus, 2000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   const handleCategoryToggle = (categoryId: string) => {
-    setCategories(prev => 
-      prev.map(cat => 
-        cat.id === categoryId 
-          ? { ...cat, expanded: !cat.expanded }
-          : cat
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.id === categoryId ? { ...cat, expanded: !cat.expanded } : cat
       )
     );
   };
@@ -578,14 +584,14 @@ print("Initializing Pyodide...")
   const handleTestSelect = (testCase: TestCase) => {
     // Set the selected test for visual feedback
     setSelectedTestId(testCase.id);
-    
+
     // Replace the current cells with just the selected test case
     setInitialCells([
       {
         id: `test-${testCase.id}-${Date.now()}`,
         type: testCase.type,
-        content: testCase.code
-      }
+        content: testCase.code,
+      },
     ]);
   };
 
@@ -627,7 +633,7 @@ print("Initializing Pyodide...")
   return (
     <div className="flex h-full bg-white dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
-      <div 
+      <div
         className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col"
         style={{ width: `${sidebarWidth}px` }}
       >
@@ -646,7 +652,7 @@ print("Initializing Pyodide...")
             </span>
           </div>
         </div>
-        
+
         <div className="p-2 overflow-auto flex-1">
           {categories.map((category) => (
             <TreeItem
@@ -669,10 +675,7 @@ print("Initializing Pyodide...")
 
       {/* Main notebook area */}
       <div className="flex-1 overflow-hidden">
-        <PyodideNotebook 
-          className="h-full"
-          initialCells={initialCells}
-        />
+        <PyodideNotebook className="h-full" initialCells={initialCells} />
       </div>
     </div>
   );

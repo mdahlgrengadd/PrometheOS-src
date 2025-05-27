@@ -1,5 +1,4 @@
-
-export type CellType = 'code' | 'markdown';
+export type CellType = "code" | "markdown";
 
 export interface Cell {
   id: string;
@@ -11,7 +10,7 @@ export interface Cell {
   hasError?: boolean;
 }
 
-export type KernelStatus = 'idle' | 'busy' | 'disconnected' | 'restarting';
+export type KernelStatus = "idle" | "busy" | "disconnected" | "restarting";
 
 export interface NotebookState {
   cells: Cell[];
