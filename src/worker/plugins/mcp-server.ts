@@ -3,7 +3,7 @@
  * Converts Desktop API components to MCP tools for WebLLM function calling
  */
 
-import { WorkerPlugin } from "../../plugins/types";
+import { WorkerPlugin } from '../../plugins/types';
 
 // MCP Protocol Types
 export interface MCPTool {
@@ -31,6 +31,24 @@ export interface MCPToolResult {
   isError?: boolean;
 }
 
+// JSON-RPC 2.0 Types
+export interface MCPRequest {
+  jsonrpc: string;
+  method: string;
+  params?: Record<string, unknown>;
+  id?: string | number;
+}
+
+export interface MCPResponse {
+  jsonrpc: string;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+  };
+  id: string | number | null;
+}
+
 // Internal tool registry
 interface ToolDefinition {
   componentId: string;
@@ -47,6 +65,8 @@ const MCPServerWorker: WorkerPlugin = {
   // Private state
   _tools: new Map<string, ToolDefinition>(),
   _isInitialized: false,
+  // Track registered components to prevent duplicates
+  _registeredComponents: new Set<string>(),
 
   /**
    * Initialize the MCP server
@@ -67,6 +87,127 @@ const MCPServerWorker: WorkerPlugin = {
   },
 
   /**
+   * Process a direct MCP protocol JSON-RPC message
+   */
+  async processMCPMessage(message: MCPRequest): Promise<MCPResponse> {
+    try {
+      // Validate JSON-RPC 2.0 message format
+      if (!message.jsonrpc || message.jsonrpc !== "2.0" || !message.method) {
+        return {
+          jsonrpc: "2.0",
+          error: {
+            code: -32600,
+            message: "Invalid Request",
+          },
+          id: message.id || null,
+        };
+      }
+
+      // Process based on method
+      switch (message.method) {
+        case "tools/list":
+          return this._handleToolsList(message);
+
+        case "tools/call":
+          return this._handleToolsCall(message);
+
+        // Add other MCP methods as needed
+        default:
+          return {
+            jsonrpc: "2.0",
+            error: {
+              code: -32601,
+              message: `Method ${message.method} not found`,
+            },
+            id: message.id || null,
+          };
+      }
+    } catch (error) {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: `Internal error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+        id: message.id || null,
+      };
+    }
+  },
+
+  /**
+   * Handle tools/list MCP method
+   */
+  async _handleToolsList(message: MCPRequest): Promise<MCPResponse> {
+    const tools = await this.getAvailableTools();
+
+    return {
+      jsonrpc: "2.0",
+      result: tools,
+      id: message.id || null,
+    };
+  },
+
+  /**
+   * Handle tools/call MCP method
+   */
+  async _handleToolsCall(message: MCPRequest): Promise<MCPResponse> {
+    const params = message.params;
+    if (!params || typeof params !== "object") {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32602,
+          message: "Invalid params",
+        },
+        id: message.id || null,
+      };
+    }
+
+    const { name, arguments: args } = params as {
+      name?: string;
+      arguments?: Record<string, unknown>;
+    };
+
+    if (!name || typeof name !== "string") {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32602,
+          message: "Missing tool name",
+        },
+        id: message.id || null,
+      };
+    }
+
+    // Execute the tool
+    try {
+      const result = await this.executeTool({
+        name,
+        arguments: args || {},
+      });
+
+      return {
+        jsonrpc: "2.0",
+        result,
+        id: message.id || null,
+      };
+    } catch (error) {
+      return {
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: `Error executing tool: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+        id: message.id || null,
+      };
+    }
+  },
+
+  /**
    * Register a tool from an API component
    */
   async registerTool(
@@ -80,6 +221,14 @@ const MCPServerWorker: WorkerPlugin = {
   ): Promise<{ status: string; message?: string }> {
     try {
       const toolName = `${componentId}.${action}`;
+
+      // Check for duplicate registration
+      if ((this._tools as Map<string, ToolDefinition>).has(toolName)) {
+        return {
+          status: "error",
+          message: `Tool ${toolName} is already registered`,
+        };
+      }
 
       // Build input schema from parameters
       const inputSchema = {
@@ -103,6 +252,7 @@ const MCPServerWorker: WorkerPlugin = {
       };
 
       this._tools.set(toolName, toolDef);
+      this._registeredComponents.add(componentId); // Track registered component
 
       console.log(`Registered MCP tool: ${toolName}`);
       return { status: "success", message: `Tool ${toolName} registered` };
@@ -127,6 +277,21 @@ const MCPServerWorker: WorkerPlugin = {
     }
 
     this._tools.delete(toolName);
+
+    // Check if component is still registered with other tools
+    const componentId = toolName.split('.')[0];
+    let isComponentRegistered = false;
+    for (const registeredTool of this._tools.keys()) {
+      if (registeredTool.startsWith(componentId + '.')) {
+        isComponentRegistered = true;
+        break;
+      }
+    }
+
+    if (!isComponentRegistered) {
+      this._registeredComponents.delete(componentId); // Cleanup untracked component
+    }
+
     console.log(`Unregistered MCP tool: ${toolName}`);
     return { status: "success", message: `Tool ${toolName} unregistered` };
   },
@@ -135,14 +300,14 @@ const MCPServerWorker: WorkerPlugin = {
    * Get all available tools
    */
   async getAvailableTools(): Promise<MCPTool[]> {
-    return Array.from(this._tools.values()).map((toolDef) => toolDef.tool);
+    return Array.from((this._tools as Map<string, ToolDefinition>).values()).map((toolDef) => toolDef.tool);
   },
 
   /**
    * Execute a tool call
    */
   async executeTool(toolCall: MCPToolCall): Promise<MCPToolResult> {
-    const toolDef = this._tools.get(toolCall.name);
+    const toolDef = (this._tools as Map<string, ToolDefinition>).get(toolCall.name);
 
     if (!toolDef) {
       return {
@@ -194,7 +359,8 @@ const MCPServerWorker: WorkerPlugin = {
     params: Record<string, unknown>
   ): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      const requestId = Math.random().toString(36).substr(2, 9);
+      const requestId = `mcp-tool-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
       // Listen for response
       const messageHandler = (event: MessageEvent) => {
@@ -202,7 +368,13 @@ const MCPServerWorker: WorkerPlugin = {
           event.data.type === "mcp-tool-response" &&
           event.data.requestId === requestId
         ) {
+          console.log(`MCP tool response received for ${requestId}: ${componentId}.${action}`);
           self.removeEventListener("message", messageHandler);
+          
+          // Clear the timeout since we got a response
+          if (timeoutId !== null) {
+            clearTimeout(timeoutId);
+          }
 
           if (event.data.error) {
             reject(new Error(event.data.error));
@@ -215,6 +387,7 @@ const MCPServerWorker: WorkerPlugin = {
       self.addEventListener("message", messageHandler);
 
       // Send request to main thread
+      console.log(`MCP tool request sent: ${requestId} for ${componentId}.${action}`);
       self.postMessage({
         type: "mcp-tool-request",
         requestId,
@@ -224,7 +397,8 @@ const MCPServerWorker: WorkerPlugin = {
       });
 
       // Timeout after 30 seconds
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        console.log(`MCP tool timeout: ${requestId} for ${componentId}.${action}`);
         self.removeEventListener("message", messageHandler);
         reject(new Error("Tool execution timeout"));
       }, 30000);
@@ -232,7 +406,7 @@ const MCPServerWorker: WorkerPlugin = {
   },
 
   /**
-   * Auto-register tools from API components list
+   * Auto-register tools from API components list with duplicate prevention
    */
   async autoRegisterFromApiComponents(
     components: Array<{
@@ -251,6 +425,15 @@ const MCPServerWorker: WorkerPlugin = {
     const errors: string[] = [];
 
     for (const component of components) {
+      // Skip if component is already registered to prevent duplicates
+      if (this._registeredComponents.has(component.id)) {
+        console.log(`MCP: Skipping already registered component: ${component.id}`);
+        continue;
+      }
+
+      // Mark component as registered
+      this._registeredComponents.add(component.id);
+
       for (const action of component.actions) {
         try {
           const result = await this.registerTool(
@@ -283,10 +466,56 @@ const MCPServerWorker: WorkerPlugin = {
   },
 
   /**
+   * Unregister all tools for a specific component
+   */
+  async unregisterComponent(
+    componentId: string
+  ): Promise<{ status: string; unregistered: number; errors: string[] }> {
+    let unregistered = 0;
+    const errors: string[] = [];
+
+    // Find all tools for this component
+    const toolsToRemove: string[] = [];
+    for (const [toolName, toolDef] of this._tools.entries()) {
+      if (toolDef.componentId === componentId) {
+        toolsToRemove.push(toolName);
+      }
+    }
+
+    // Unregister each tool
+    for (const toolName of toolsToRemove) {
+      try {
+        const result = await this.unregisterTool(toolName);
+        if (result.status === "success") {
+          unregistered++;
+        } else {
+          errors.push(`${toolName}: ${result.message}`);
+        }
+      } catch (error) {
+        errors.push(
+          `${toolName}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
+    // Remove component from registered set
+    this._registeredComponents.delete(componentId);
+    console.log(`MCP: Unregistered component ${componentId} with ${unregistered} tools`);
+
+    return {
+      status: "success",
+      unregistered,
+      errors,
+    };
+  },
+
+  /**
    * Get tool by name
    */
   async getTool(toolName: string): Promise<MCPTool | null> {
-    const toolDef = this._tools.get(toolName);
+    const toolDef = (this._tools as Map<string, ToolDefinition>).get(toolName);
     return toolDef ? toolDef.tool : null;
   },
 
@@ -312,6 +541,7 @@ const MCPServerWorker: WorkerPlugin = {
    */
   cleanup(): void {
     this._tools.clear();
+    this._registeredComponents.clear();
     this._isInitialized = false;
     console.log("MCP Server cleaned up");
   },
@@ -371,6 +601,15 @@ const MCPServerWorker: WorkerPlugin = {
         }
         return this.autoRegisterFromApiComponents(params.components as any[]);
 
+      case "unregisterComponent":
+        if (!params?.componentId) {
+          return {
+            status: "error",
+            message: "unregisterComponent requires componentId",
+          };
+        }
+        return this.unregisterComponent(params.componentId as string);
+
       case "getTool":
         if (!params?.toolName) {
           return null;
@@ -385,6 +624,19 @@ const MCPServerWorker: WorkerPlugin = {
 
       case "cleanup":
         return this.cleanup();
+
+      case "processMCPMessage":
+        if (!params?.message) {
+          return {
+            jsonrpc: "2.0",
+            error: {
+              code: -32602,
+              message: "Missing message parameter",
+            },
+            id: null,
+          };
+        }
+        return this.processMCPMessage(params.message as MCPRequest);
 
       default:
         return { status: "error", message: `Unknown method: ${method}` };

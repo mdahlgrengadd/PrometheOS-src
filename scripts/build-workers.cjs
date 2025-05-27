@@ -25,11 +25,16 @@ const workerFiles = [];
 
 // 1. Look in the dedicated worker plugins directory
 if (fs.existsSync(WORKER_SOURCE_DIR)) {
+  const allowedExtensions = [".js", ".ts", ".jsx", ".tsx", ".mjs", ".cjs"];
   const dedicatedWorkerFiles = fs
     .readdirSync(WORKER_SOURCE_DIR)
-    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
+    .filter(
+      (file) =>
+        allowedExtensions.some((ext) => file.endsWith(ext)) &&
+        !file.endsWith(".d.ts")
+    )
     .map((file) => ({
-      pluginId: path.basename(file, ".ts"),
+      pluginId: path.basename(file, path.extname(file)),
       sourcePath: path.join(WORKER_SOURCE_DIR, file),
     }));
 

@@ -243,7 +243,7 @@ print()
 
 # Test 1: List available components
 print("1. Testing component listing...")
-components = desktop.api.list_components()
+components = await desktop.api.list_components()
 comp_count = len(components) if hasattr(components, '__len__') else "unknown"
 print(f"   Found {comp_count} components")
 print(f"   Result: {components}")
@@ -251,7 +251,7 @@ print()
 
 # Test 2: Test event emission
 print("2. Testing event emission...")
-events_result = desktop.events.emit("python_test_event", {
+events_result = await desktop.events.emit("python_test_event", {
     "message": "Hello from Python!",
     "timestamp": "2025-05-26", 
     "test": True
@@ -261,13 +261,13 @@ print()
 
 # Test 3: Test API execution (calculator example)
 print("3. Testing API execution...")
-exec_result = desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
+exec_result = await desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
 print(f"   Calculator execution result: {exec_result}")
 print()
 
 # Test 4: Test system API call
 print("4. Testing system API call...")
-system_result = desktop.api.execute("launcher", "notify", {
+system_result = await desktop.api.execute("launcher", "notify", {
     "message": "Python API test notification",
     "type": "sonner"
 })
@@ -277,7 +277,7 @@ print()
 # Test 5: Test error handling
 print("5. Testing error handling...")
 try:
-    error_result = desktop.api.execute("nonexistent", "fakeAction", {})
+    error_result = await desktop.api.execute("nonexistent", "fakeAction", {})
     print(f"   Error test result: {error_result}")
 except Exception as e:
     print(f"   Caught exception: {e}")

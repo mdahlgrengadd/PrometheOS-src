@@ -4,6 +4,7 @@
  */
 
 import * as Comlink from 'comlink';
+import json from 'json-stringify-safe';
 
 import { WorkerPlugin } from '../../plugins/types';
 
@@ -176,6 +177,12 @@ const PyodideWorker: WorkerPlugin = {
 
     try {
       // Inject the desktop module into Python namespace with both interfaces
+      // First, expose the current plugin instance to Python context
+      this._pyodide.globals.set("_pyodide_plugin_instance", this);
+      
+      // Also expose to globalThis for JavaScript access from Python
+      (globalThis as any)._pyodide_plugin_instance = this;
+      
       const desktopApiCode = `
 import js
 from pyodide.ffi import create_proxy, to_js, JsProxy
@@ -430,84 +437,91 @@ class EventsLegacy:
         return DesktopAPILegacy.subscribe_event(event_name, callback)
 
 #----------------------------------------------------
-# 4. MCP Protocol Interface (JSON-RPC 2.0)
+# 2. MCP Protocol Layer (JSON-RPC 2.0 Interface)
 #----------------------------------------------------
 
 class MCPProtocol:
-    """Model Context Protocol (MCP) JSON-RPC 2.0 interface"""
+    """Python interface to MCP protocol (JSON-RPC 2.0)"""
     
     @staticmethod
     async def send(message):
-        """Send a raw MCP protocol message (JSON-RPC 2.0)"""
+        """Send a raw MCP protocol message (JSON-RPC 2.0 format)"""
         try:
-            # Validate the message has required JSON-RPC 2.0 fields
-            if not isinstance(message, dict) or 'jsonrpc' not in message or message['jsonrpc'] != '2.0' or 'method' not in message:
-                return {
-                    'jsonrpc': '2.0',
-                    'error': {
-                        'code': -32600,
-                        'message': 'Invalid Request: Not a valid JSON-RPC 2.0 message'
-                    },
-                    'id': message.get('id')
-                }
-            
-            from js import postMessage
-            import uuid
-            
-            # Generate request ID if not provided
+            # Ensure message is properly formatted as JSON-RPC 2.0
+            if not isinstance(message, dict):
+                raise ValueError("Message must be a dictionary")
+                
+            if not message.get('jsonrpc') == '2.0':
+                message['jsonrpc'] = '2.0'
+                
             if 'id' not in message:
                 message['id'] = str(uuid.uuid4())
                 
-            # Send as MCP protocol message
-            js_message = to_js({
-                'type': 'mcp-protocol-message',
-                'message': to_js(message)
-            })
+            # Convert to JS object - use JSON serialization to avoid JsProxy issues
+            import json
+            js_message_json = json.dumps(message)
             
-            postMessage(js_message)
+            # Debug: Log the message being sent
+            print(f"Sending MCP message: {message}")
+            print(f"JSON message: {js_message_json}")
             
-            print(f"Sent MCP protocol message: {message['method']}")
-            return {
-                'jsonrpc': '2.0',
-                'result': {'status': 'message_sent'},
-                'id': message['id']
-            }
+            # Forward to MCP handler in worker via the exposed plugin instance
+            # Access the plugin instance from pyodide globals (use js.globalThis, not Python globals())
+            plugin_instance = js.globalThis._pyodide_plugin_instance
+            if plugin_instance is None:
+                raise Exception("Pyodide plugin instance not available")
+                
+            # Pass the JSON string instead of JsProxy
+            result = await plugin_instance.handleMCPProtocolMessage(js_message_json)
             
+            # Extract the actual response from the PythonResult wrapper
+            if hasattr(result, 'success') and result.success and hasattr(result, 'result'):
+                return result.result.to_py() if hasattr(result.result, 'to_py') else result.result
+            elif hasattr(result, 'error'):
+                return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': result.error}, 'id': message.get('id')}
+            else:
+                return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': 'Internal error'}, 'id': message.get('id')}
+                
         except Exception as e:
             print(f"Error sending MCP message: {e}")
-            return {
-                'jsonrpc': '2.0',
-                'error': {
-                    'code': -32603,
-                    'message': f'Internal error: {str(e)}'
-                },
-                'id': message.get('id')
-            }
-            
+            return {'jsonrpc': '2.0', 'error': {'code': -32603, 'message': str(e)}, 'id': message.get('id')}
+    
     @staticmethod
     async def tools_list():
-        """Get list of available tools"""
-        return await MCPProtocol.send({
+        """Get list of available tools via MCP protocol"""
+        message = {
             'jsonrpc': '2.0',
             'method': 'tools/list',
             'id': str(uuid.uuid4())
-        })
-        
+        }
+        return await MCPProtocol.send(message)
+    
     @staticmethod
-    async def tools_call(name, arguments=None):
-        """Call a tool by name with arguments"""
+    async def tools_call(tool_name, arguments=None):
+        """Call a tool via MCP protocol"""
         if arguments is None:
             arguments = {}
             
-        return await MCPProtocol.send({
+        message = {
             'jsonrpc': '2.0',
             'method': 'tools/call',
             'params': {
-                'name': name,
+                'name': tool_name,
                 'arguments': arguments
             },
             'id': str(uuid.uuid4())
-        })
+        }
+        return await MCPProtocol.send(message)
+    
+    @staticmethod
+    async def resources_list():
+        """List available resources via MCP protocol"""
+        message = {
+            'jsonrpc': '2.0',
+            'method': 'resources/list',
+            'id': str(uuid.uuid4())
+        }
+        return await MCPProtocol.send(message)
 
 # Create legacy instances
 desktop_api_legacy = DesktopAPILegacy()
@@ -680,37 +694,89 @@ await micropip.install('${packageName}')
   },
 
   /**
-   * Handle MCP protocol message from Python
+   * Handle MCP Protocol JSON-RPC 2.0 messages
    */
   async handleMCPProtocolMessage(
-    message: Record<string, unknown>
+    messageOrJson: Record<string, unknown> | string
   ): Promise<PythonResult> {
     try {
-      console.log("Handling MCP protocol message:", message);
+      if (!this._pyodide) {
+        throw new Error("Pyodide not initialized");
+      }
 
-      // Forward the message to main thread for processing
-      self.postMessage({
-        type: "mcp-protocol-message",
-        message,
-      });
+      // Handle both JSON string (from Python) and object (direct calls)
+      let message: Record<string, unknown>;
+      if (typeof messageOrJson === 'string') {
+        console.log("Parsing JSON message:", messageOrJson);
+        message = JSON.parse(messageOrJson);
+      } else {
+        message = messageOrJson;
+      }
+
+      console.log("Handling MCP protocol message:", JSON.stringify(message));
+      console.log("Message type:", typeof message);
+      console.log("Message keys:", Object.keys(message || {}));
+
+      // Forward the message to the MCP server plugin
+      const response = await this._forwardToMCPServer(message);
 
       return {
         success: true,
-        result: {
-          jsonrpc: "2.0",
-          result: { status: "message_sent" },
-          id: message.id || null,
-        },
+        result: response,
       };
     } catch (error) {
-      console.error("Error handling MCP protocol message:", error);
+      console.error("Error handling MCP message:", error);
       return {
         success: false,
-        error: `Error handling MCP protocol message: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
+  },
+
+  /**
+   * Forward a message to the MCP server plugin
+   */
+  async _forwardToMCPServer(
+    message: Record<string, unknown>
+  ): Promise<unknown> {
+    // Get access to the worker plugin manager
+    const workerPluginManagerGlobal = self as unknown as {
+      workerPluginManager?: {
+        callPlugin: (
+          pluginId: string,
+          method: string,
+          params?: Record<string, unknown>
+        ) => Promise<unknown>;
+      };
+    };
+
+    const manager = workerPluginManagerGlobal.workerPluginManager;
+    if (!manager) {
+      throw new Error("Worker plugin manager not available");
+    }
+
+    // Check if MCP server plugin is registered, register it if not
+    try {
+      const isRegistered = await manager.callPlugin(
+        "mcp-server",
+        "isInitialized"
+      );
+
+      if (!isRegistered) {
+        console.log("MCP server not initialized, initializing...");
+        await manager.callPlugin("mcp-server", "initialize");
+      }
+    } catch (error) {
+      console.warn(
+        "Error checking MCP server, will try to call anyway:",
+        error
+      );
+    }
+
+    // Call the MCP server plugin
+    return manager.callPlugin("mcp-server", "processMCPMessage", {
+      message,
+    });
   },
 
   /**
@@ -720,20 +786,24 @@ await micropip.install('${packageName}')
     try {
       console.log("Received Comlink port from main thread");
 
-      // Wrap the port via Comlink and expose as desktop_api_comlink
-      console.log("Wrapping Comlink port for desktop_api_comlink");
-      // Comlink.wrap returns a remote proxy; cast to DesktopApiBridge
-      const comlinkBridge = Comlink.wrap<DesktopApiBridge>(
-        port
-      ) as unknown as DesktopApiBridge;
-      (
-        globalThis as unknown as { desktop_api_comlink?: DesktopApiBridge }
-      ).desktop_api_comlink = comlinkBridge;
-      console.log("desktop_api_comlink proxy set on globalThis");
+      // Wrap the port via Comlink and expose both API and MCP handlers
+      console.log(
+        "Wrapping Comlink port for desktop_api_comlink and desktop_mcp_comlink"
+      );
+      const remote = Comlink.wrap<{
+        api: DesktopApiBridge;
+        mcp: { processMessage(message: unknown): Promise<unknown> };
+      }>(port);
+      // Assign proxies to globals for Python context
+      (globalThis as Record<string, unknown>).desktop_api_comlink = remote.api;
+      (globalThis as Record<string, unknown>).desktop_mcp_comlink = remote.mcp;
+      console.log(
+        "desktop_api_comlink and desktop_mcp_comlink proxies set on globalThis"
+      );
 
       // Start the port for Comlink
       port.start();
-      console.log("Comlink bridge proxy exposed to Python context");
+      console.log("Comlink bridge proxies exposed to Python context");
     } catch (error) {
       console.error("Error handling Comlink port:", error);
     }
@@ -791,7 +861,7 @@ await micropip.install('${packageName}')
         );
 
       case "handleMCPProtocolMessage":
-        if (!params?.message) {
+        if (params?.message === undefined) {
           return {
             success: false,
             error: "handleMCPProtocolMessage requires 'message' parameter",
