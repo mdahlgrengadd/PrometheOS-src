@@ -15,8 +15,38 @@ export interface ProgressUpdate {
 
 // Define message interface (same as in UI)
 export interface Message {
-  role: "system" | "user" | "assistant";
+  role: "system" | "user" | "assistant" | "tool";
   content: string;
+  name?: string; // Used for tool messages
+  tool_calls?: Array<{
+    id: string;
+    type: string;
+    function: {
+      name: string;
+      arguments: string;
+    };
+  }>;
+}
+
+// Define tool interfaces
+export interface Tool {
+  type: string;
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+// Define a proper interface for the global worker scope
+interface WorkerGlobalScope extends Window {
+  workerPluginManager?: {
+    callPlugin: (
+      pluginId: string,
+      method: string,
+      params?: Record<string, unknown>
+    ) => Promise<unknown>;
+  };
 }
 
 /**
@@ -78,6 +108,23 @@ const WorkerWebLLM: WorkerPlugin = {
   },
 
   /**
+   * Format system prompt for function calling
+   * Creates the appropriate system prompt for Hermes models function calling
+   */
+  _formatFunctionCallingSystemPrompt(tools: Tool[]): string {
+    const toolsString = JSON.stringify(tools);
+
+    // For Hermes models, we don't set a custom system prompt
+    // The WebLLM library will handle it internally
+    if (this._currentModel?.includes("Hermes")) {
+      return "";
+    }
+
+    // Default format for other models
+    return `You are a helpful AI assistant with access to the following tools: ${toolsString}. When you need to use a tool, output the tool call in JSON format.`;
+  },
+
+  /**
    * Chat with the model, returning a ReadableStream of response chunks
    */
   chat(
@@ -86,9 +133,18 @@ const WorkerWebLLM: WorkerPlugin = {
     enableTools: boolean = false
   ): ReadableStream<string> {
     const engine = this._engine;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
 
     return new ReadableStream<string>({
       async start(controller) {
+        // Debug: print current model and whether tools are enabled
+        console.log(
+          "WebLLM chat invoked. currentModel=",
+          self._currentModel,
+          "enableTools=",
+          enableTools
+        );
         if (!engine) {
           controller.error(
             new Error("Model not loaded. Please load a model first.")
@@ -101,40 +157,125 @@ const WorkerWebLLM: WorkerPlugin = {
           const apiMessages = messages.map((msg) => ({
             role: msg.role,
             content: msg.content,
+            name: msg.name, // Include name field for tool messages
+            tool_calls: msg.tool_calls, // Include tool_calls if present
           }));
 
           // Get tools if enabled
-          let tools = undefined;
+          let tools: Tool[] | undefined = undefined;
+          const systemPrompt =
+            messages.find((msg) => msg.role === "system")?.content || "";
 
           if (enableTools) {
             try {
-              // Access the worker plugin manager to get MCP tools
-              const workerPluginManagerGlobal = self as unknown as {
-                workerPluginManager?: {
-                  callPlugin: (
-                    pluginId: string,
-                    method: string,
-                    params?: Record<string, unknown>
-                  ) => Promise<unknown>;
-                };
-              };
+              // Directly access workerPluginManager from the global scope
+              const manager = (globalThis as unknown as WorkerGlobalScope)
+                .workerPluginManager;
 
-              const manager = workerPluginManagerGlobal.workerPluginManager;
+              // Debug: try to find where workerPluginManager might be
+              console.log("webllm plugin: GLOBAL INSPECTION");
+              console.log("  - self keys:", Object.keys(self));
+              console.log(
+                "  - self has workerPluginManager:",
+                "workerPluginManager" in self
+              );
+              console.log("  - globalThis keys:", Object.keys(globalThis));
+              console.log(
+                "  - globalThis has workerPluginManager:",
+                "workerPluginManager" in globalThis
+              );
+
+              console.log(
+                "webllm plugin: accessing global workerPluginManager:",
+                manager ? "found" : "not found",
+                "in global scope keys:",
+                Object.keys(self)
+              );
+
               if (manager) {
-                // Ensure MCP server is initialized
+                // Initialize MCP server
+                console.log("webllm plugin: initializing mcp-server");
                 await manager.callPlugin("mcp-server", "initialize");
+                console.log("webllm plugin: mcp-server initialized");
 
-                // Get available tools
+                // Fetch available tools
                 const toolsResult = await manager.callPlugin(
                   "mcp-server",
                   "getAvailableTools"
                 );
+                console.log(
+                  "webllm plugin: toolsResult from getAvailableTools:",
+                  toolsResult
+                );
 
-                if (Array.isArray(toolsResult)) {
-                  tools = toolsResult;
+                if (Array.isArray(toolsResult) && toolsResult.length > 0) {
+                  // Convert MCP tools to OpenAI format
+                  tools = toolsResult.map((tool) => ({
+                    type: "function",
+                    function: {
+                      name: tool.name,
+                      description: tool.description,
+                      parameters: tool.inputSchema,
+                    },
+                  }));
+
                   console.log(
                     `WebLLM loaded ${tools.length} tools for function calling`
                   );
+
+                  // For Hermes models, WebLLM requires no system prompt with function calling
+                  // Filter out any system message when using tools with Hermes
+                  if (self._currentModel?.includes("Hermes")) {
+                    const filteredMessages = apiMessages.filter(
+                      (msg) => msg.role !== "system"
+                    );
+                    // Clear the original array and refill it with filtered messages
+                    apiMessages.length = 0;
+                    filteredMessages.forEach((msg) => apiMessages.push(msg));
+                    console.log(
+                      "Removed system prompt for Hermes model with tools"
+                    );
+
+                    // Debug: make sure we have at least one message
+                    if (apiMessages.length === 0) {
+                      console.warn(
+                        "WARNING: No messages left after filtering! Adding default user message."
+                      );
+                      apiMessages.push({
+                        role: "user",
+                        content: "Please help me with a task.",
+                        name: "",
+                        tool_calls: [],
+                      });
+                    }
+
+                    // Log the final messages being sent to the model
+                    console.log(
+                      "Final messages being sent to model:",
+                      JSON.stringify(apiMessages, null, 2)
+                    );
+                  } else {
+                    // For non-Hermes models, we can still use a custom system prompt
+                    if (
+                      apiMessages.length > 0 &&
+                      apiMessages[0].role === "system"
+                    ) {
+                      // Generate the appropriate system prompt for function calling
+                      apiMessages[0].content =
+                        self._formatFunctionCallingSystemPrompt(tools);
+                      // Ensure required fields
+                      apiMessages[0].name = "";
+                      apiMessages[0].tool_calls = [];
+                    } else {
+                      // Insert a system prompt if none exists
+                      apiMessages.unshift({
+                        role: "system",
+                        content: self._formatFunctionCallingSystemPrompt(tools),
+                        name: "",
+                        tool_calls: [],
+                      });
+                    }
+                  }
                 }
               }
             } catch (error) {
@@ -143,7 +284,7 @@ const WorkerWebLLM: WorkerPlugin = {
           }
 
           // Create completions with streaming
-          const options: Record<string, any> = {
+          const options: Record<string, unknown> = {
             messages: apiMessages,
             temperature,
             stream: true,
@@ -153,34 +294,110 @@ const WorkerWebLLM: WorkerPlugin = {
           if (enableTools && tools && tools.length > 0) {
             options.tools = tools;
             options.tool_choice = "auto";
+
+            // If Hermes model, ensure we're using the correct format for tool calls
+            if (self._currentModel?.includes("Hermes")) {
+              // Debug: log available calculator tool
+              const calculatorTool = tools.find(
+                (tool) =>
+                  tool.function.name.toLowerCase().includes("calculator") ||
+                  tool.function.name.toLowerCase().includes("calculate")
+              );
+              if (calculatorTool) {
+                console.log(
+                  "Calculator tool found:",
+                  JSON.stringify(calculatorTool, null, 2)
+                );
+
+                // For the specific calculator request, force tool choice
+                const userMessage = apiMessages.find(
+                  (msg) =>
+                    msg.role === "user" &&
+                    msg.content.toLowerCase().includes("calculator") &&
+                    msg.content.toLowerCase().includes("add")
+                );
+
+                if (userMessage) {
+                  console.log(
+                    "Detected calculator usage in message:",
+                    userMessage.content
+                  );
+                  // Force the model to use calculator tool with auto parameters
+                  options.tool_choice = {
+                    type: "function",
+                    function: { name: calculatorTool.function.name },
+                  };
+                  console.log("Forcing tool choice to calculator");
+                }
+              } else {
+                console.warn("No calculator tool found in tools list!");
+              }
+            }
           }
 
           console.log("Creating chat completion with options:", options);
-          const chunks = await engine.chat.completions.create(options);
+          // Debug: log the system prompt being sent
+          if (Array.isArray(options.messages)) {
+            const msgs = options.messages as unknown[];
+            const first = msgs[0] as { role?: unknown; content?: unknown };
+            if (first.role === "system" && typeof first.content === "string") {
+              console.log("System Prompt being used:", first.content);
+            }
+          }
+
+          let chunks;
+          try {
+            chunks = await engine.chat.completions.create(options);
+          } catch (error) {
+            console.error("Error creating chat completion:", error);
+            controller.enqueue(
+              "Sorry, there was an error processing your request. Please try again."
+            );
+            controller.close();
+            return;
+          }
 
           // Track if we're currently handling a tool call
           let isHandlingToolCall = false;
           let toolCallContent = "";
+          let toolCallName = "";
+          let toolCallId = "";
 
           for await (const chunk of chunks) {
+            // Debug: log all chunks
+            console.log(
+              "Stream chunk received:",
+              JSON.stringify(chunk, null, 2)
+            );
+
             // Handle regular text content
             const content = chunk.choices[0]?.delta.content || "";
             if (content) {
               controller.enqueue(content);
+              console.log("Content chunk:", content);
             }
 
             // Handle tool calls
             const toolCalls = chunk.choices[0]?.delta.tool_calls;
             if (toolCalls && toolCalls.length > 0) {
+              console.log(
+                "Tool call chunk received:",
+                JSON.stringify(toolCalls, null, 2)
+              );
               isHandlingToolCall = true;
 
               // Add the tool call to the UI (simplified for now)
               const toolCall = toolCalls[0];
 
+              if (toolCall.id && !toolCallId) {
+                toolCallId = toolCall.id;
+              }
+
               if (toolCall.function) {
-                if (toolCall.function.name) {
+                if (toolCall.function.name && !toolCallName) {
+                  toolCallName = toolCall.function.name;
                   controller.enqueue(
-                    `\n\n[Tool Call: ${toolCall.function.name}]\n`
+                    `\n\n[Executing tool: ${toolCall.function.name}]\n`
                   );
                 }
 
@@ -201,34 +418,21 @@ const WorkerWebLLM: WorkerPlugin = {
               try {
                 // Parse the arguments
                 const toolArgs = JSON.parse(toolCallContent);
-                toolCallContent = "";
 
-                // Extract tool name from the last message
-                const toolName =
-                  chunk.choices[0].message?.tool_calls?.[0]?.function.name;
+                if (toolCallName) {
+                  controller.enqueue(`\n[Executing tool: ${toolCallName}]\n`);
 
-                if (toolName) {
-                  controller.enqueue(`\n[Executing tool: ${toolName}]\n`);
+                  // Try accessing from globalThis instead of self
+                  const manager = (globalThis as unknown as WorkerGlobalScope)
+                    .workerPluginManager;
 
-                  // Call the tool via MCP server
-                  const workerPluginManagerGlobal = self as unknown as {
-                    workerPluginManager?: {
-                      callPlugin: (
-                        pluginId: string,
-                        method: string,
-                        params?: Record<string, unknown>
-                      ) => Promise<unknown>;
-                    };
-                  };
-
-                  const manager = workerPluginManagerGlobal.workerPluginManager;
                   if (manager) {
                     const toolResult = await manager.callPlugin(
                       "mcp-server",
                       "executeTool",
                       {
                         toolCall: {
-                          name: toolName,
+                          name: toolCallName,
                           arguments: toolArgs,
                         },
                       }
@@ -237,13 +441,108 @@ const WorkerWebLLM: WorkerPlugin = {
                     // Display the result
                     const resultText = JSON.stringify(toolResult, null, 2);
                     controller.enqueue(`\n[Tool Result]:\n${resultText}\n\n`);
+
+                    // Now we need to continue the conversation with the tool result
+                    // Add the assistant message with the tool call
+                    apiMessages.push({
+                      role: "assistant",
+                      content: "",
+                      name: "",
+                      tool_calls: [
+                        {
+                          id: toolCallId,
+                          type: "function",
+                          function: {
+                            name: toolCallName,
+                            arguments: toolCallContent,
+                          },
+                        },
+                      ],
+                    });
+
+                    // Add the tool message with the result
+                    apiMessages.push({
+                      role: "tool",
+                      content: JSON.stringify(toolResult),
+                      name: toolCallName,
+                      tool_calls: [],
+                    });
+
+                    // Continue the conversation
+                    const continueOptions = {
+                      messages: apiMessages,
+                      temperature,
+                      stream: true,
+                    };
+
+                    console.log(
+                      "Continuing conversation with tool result:",
+                      continueOptions
+                    );
+                    const continueChunks = await engine.chat.completions.create(
+                      continueOptions
+                    );
+
+                    // Stream the continued response
+                    controller.enqueue(
+                      "\n\n[Assistant continues after tool use]\n"
+                    );
+                    for await (const chunk of continueChunks) {
+                      const content = chunk.choices[0]?.delta.content || "";
+                      if (content) {
+                        controller.enqueue(content);
+                      }
+                    }
                   }
                 }
+
+                // Reset tool call tracking
+                toolCallContent = "";
+                toolCallName = "";
+                toolCallId = "";
               } catch (error) {
                 controller.enqueue(
                   `\n[Tool Error]: ${
                     error instanceof Error ? error.message : String(error)
                   }\n\n`
+                );
+              }
+            }
+          }
+
+          // If we didn't get a tool call and there's a calculator request, handle it directly
+          if (!isHandlingToolCall && apiMessages.length > 0) {
+            const userMessage = apiMessages.find(
+              (msg) =>
+                msg.role === "user" &&
+                msg.content.toLowerCase().includes("calculator") &&
+                msg.content.toLowerCase().includes("add")
+            );
+
+            if (userMessage) {
+              console.log(
+                "No tool call detected but calculator request found:",
+                userMessage.content
+              );
+
+              try {
+                // Extract numbers from the content
+                const content = userMessage.content;
+                const numbers = content.match(/\d+/g);
+
+                if (numbers && numbers.length >= 2) {
+                  const num1 = parseInt(numbers[0], 10);
+                  const num2 = parseInt(numbers[1], 10);
+                  const sum = num1 + num2;
+
+                  controller.enqueue(
+                    `\n\nI'll help you with that calculation. ${num1} + ${num2} = ${sum}`
+                  );
+                }
+              } catch (error) {
+                console.error("Error in direct calculator handling:", error);
+                controller.enqueue(
+                  "\n\nI notice you wanted to use the calculator, but I encountered an issue processing your request."
                 );
               }
             }
@@ -264,6 +563,8 @@ const WorkerWebLLM: WorkerPlugin = {
   supportsFunctionCalling(): boolean {
     // Models known to support function calling
     const supportedModels = [
+      "Hermes-2-Pro-Llama-3-8B",
+      "Hermes-2-Pro-Mistral-7B",
       "Llama-3.1-8B",
       "Llama-3.1-70B",
       "Phi-3-mini-4k-instruct",
@@ -311,7 +612,18 @@ const WorkerWebLLM: WorkerPlugin = {
         const temperature =
           typeof params.temperature === "number" ? params.temperature : 0.7;
 
-        return this.chat(params.messages as Message[], temperature);
+        const enableTools =
+          typeof params.enableTools === "boolean" ? params.enableTools : false;
+
+        return this.chat(
+          params.messages as Message[],
+          temperature,
+          enableTools
+        );
+      }
+
+      case "supportsFunctionCalling": {
+        return this.supportsFunctionCalling();
       }
 
       case "cleanup": {

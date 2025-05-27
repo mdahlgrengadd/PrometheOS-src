@@ -1,6 +1,5 @@
 import * as Comlink from 'comlink';
 
-// Import the manifest for pyodide-test to get the workerEntrypoint
 import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { PluginManifest } from './types';
 
@@ -470,24 +469,92 @@ class WorkerPluginManagerClient {
   // MCP Server Helper Methods
 
   /**
-   * Initialize MCP server
+   * Initialize the MCP server
    */
   async initMCPServer(): Promise<{ status: string; message?: string }> {
-    if (!this.registeredPlugins.has("mcp-server")) {
-      const workerPath = import.meta.env.PROD
-        ? import.meta.env.BASE_URL + "/worker/mcp-server.js"
-        : import.meta.env.BASE_URL + "/worker/mcp-server.js";
+    try {
+      if (!this.isConnected) {
+        await this.connect();
+      }
 
-      await this.registerPlugin("mcp-server", workerPath);
+      // Make sure mcp-server plugin is registered
+      if (!this.registeredPlugins.has("mcp-server")) {
+        // Get the correct worker path based on environment
+        const workerPath = import.meta.env.PROD
+          ? import.meta.env.BASE_URL + "/worker/mcp-server.js" // Production path
+          : import.meta.env.BASE_URL + "/worker/mcp-server.js"; // Development path
+
+        await this.registerPlugin("mcp-server", workerPath);
+      }
+
+      // Initialize the MCP server
+      const result = await this.callPlugin("mcp-server", "initialize");
+
+      if (typeof result === "object" && result !== null && "status" in result) {
+        // Auto-register API components as tools
+        try {
+          // Get the global API context
+          const apiContext = (globalThis as Record<string, unknown>)
+            .api_context;
+          if (apiContext && typeof apiContext === "object") {
+            const apiComponents = (
+              apiContext as { getComponents?: () => any[] }
+            ).getComponents?.();
+
+            if (apiComponents && Array.isArray(apiComponents)) {
+              // Convert API components to MCP tools format
+              const components = apiComponents.map((comp) => ({
+                id: comp.id,
+                actions: comp.actions.map((action: any) => ({
+                  name: action.id,
+                  description:
+                    action.description ||
+                    `${action.name} action for ${comp.id}`,
+                  parameters: action.parameters?.reduce(
+                    (params: any, param: any) => {
+                      params[param.name] = {
+                        type: param.type || "string",
+                        description: param.description,
+                        required: !!param.required,
+                      };
+                      return params;
+                    },
+                    {}
+                  ),
+                })),
+              }));
+
+              // Auto-register the components as MCP tools
+              await this.callPlugin(
+                "mcp-server",
+                "autoRegisterFromApiComponents",
+                {
+                  components,
+                }
+              );
+
+              console.log("Auto-registered API components as MCP tools");
+            }
+          }
+        } catch (error) {
+          console.warn("Error auto-registering API components:", error);
+        }
+
+        return result as { status: string; message?: string };
+      }
+
+      return {
+        status: "error",
+        message: "Invalid response from MCP server initialization",
+      };
+    } catch (error) {
+      return {
+        status: "error",
+        message: `Failed to initialize MCP server: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
     }
-
-    const result = await this.callPlugin("mcp-server", "initialize");
-
-    if (typeof result === "object" && result !== null && "status" in result) {
-      return result as { status: string; message?: string };
-    }
-
-    throw new Error("MCP Server initialization returned invalid result");
   }
 
   /**
@@ -630,7 +697,11 @@ class WorkerPluginManagerClient {
     componentId: string
   ): Promise<{ status: string; unregistered: number; errors: string[] }> {
     if (!this.registeredPlugins.has("mcp-server")) {
-      return { status: "error", unregistered: 0, errors: ["MCP server not available"] };
+      return {
+        status: "error",
+        unregistered: 0,
+        errors: ["MCP server not available"],
+      };
     }
 
     const result = await this.callPlugin("mcp-server", "unregisterComponent", {
@@ -644,7 +715,11 @@ class WorkerPluginManagerClient {
       "unregistered" in result &&
       "errors" in result
     ) {
-      return result as { status: string; unregistered: number; errors: string[] };
+      return result as {
+        status: string;
+        unregistered: number;
+        errors: string[];
+      };
     }
 
     throw new Error("Component unregistration returned invalid result");
@@ -780,7 +855,10 @@ class WorkerPluginManagerClient {
       // Handle MCP tool execution requests
       else if (data && data.type === "mcp-tool-request") {
         const { requestId, componentId, action, params } = data;
-        console.log(`MCP tool request received: ${requestId} for ${componentId}.${action}`, params);
+        console.log(
+          `MCP tool request received: ${requestId} for ${componentId}.${action}`,
+          params
+        );
 
         try {
           // Get the global API bridge

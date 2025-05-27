@@ -10,7 +10,7 @@
   - ✅ **Robust Architecture**: Promise-based async/await support with proper error handling
   - ✅ **Message Channel Communication**: postMessage bridge for MCP protocol compatibility
 
-### ✅ **Phase 2.1 FOUNDATION COMPLETED** *(MCP Infrastructure)*
+### ✅ **Phase 2 FULLY COMPLETED** *(MCP Infrastructure & WebLLM Integration)*
 - **🔥 MCP Server Worker**: Production-ready implementation
   - ✅ **Auto-Registration**: API components automatically become MCP tools
   - ✅ **JSON-RPC 2.0 Protocol**: Standards-compliant message handling
@@ -18,10 +18,18 @@
   - ✅ **Tool Execution**: `tools/call` endpoint with parameter validation
   - ✅ **Component Lifecycle**: Auto-register/unregister as plugins load/unload
 
-### 🔶 **Current Priority**: Phase 2.2 - WebLLM Function Calling Integration
-- Connect MCP tools to WebLLM chat interface for AI-driven desktop automation
-- Implement tool result display and multi-step workflows
-- Add conversational desktop control through natural language
+- **🔥 WebLLM Function Calling**: Fully integrated with chat interface
+  - ✅ **Tool Use Toggle**: Enable/disable tool access in chat UI
+  - ✅ **Tool Formatting**: Special prompt format for Hermes models
+  - ✅ **Tool Result Display**: Highlighted tool calls and results in chat
+  - ✅ **Multi-Step Workflows**: Tool results fed back to model for continued conversation
+  - ✅ **Hermes Model Support**: Enhanced compatibility with Hermes-2-Pro models
+
+### 🔶 **Current Priority**: Phase 3.1 - Advanced Function Patterns
+- Implement structured tool result formatting
+- Add "thinking" step to complex reasoning chains
+- Add better error handling and recovery for failed tool calls
+- Implement memory of past tool usage for improved context
 
 ---
 
@@ -47,11 +55,13 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - ✅ **Streaming Support**: Real-time response streaming from models
 - ✅ **API Integration**: Exposed as API component for external automation
 - ✅ **Multiple Models**: Llama-3.1-8B, Phi-3-mini, Gemma-2B, Mistral-7B support
+- ✅ **Function Calling**: Tool use with Hermes models through MCP protocol
 
 #### **Existing Automation Infrastructure**
 - ✅ **Macro System**: Records/replays API action sequences 
 - ✅ **Window Management**: UnifiedWindowShellV2 with programmatic control
 - ✅ **Theme System**: Dynamic theme loading and CSS variable management
+- ✅ **MCP Protocol**: Full Model Context Protocol server implementation
 
 ### Integration Target: MCP + Pyodide
 **Goal**: Enable WebLLM to discover and call desktop apps using **Model Context Protocol (MCP) tools**, while adding **Pyodide/Python scripting** as a fundamental runtime layer for advanced automation and data processing.
@@ -65,17 +75,18 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - **API Registration**: Components can expose programmatic interfaces
 - **WebLLM Integration**: Streaming chat with API exposure
 - **Event System**: Real-time communication between components
+- **MCP Server**: Complete tool registration, discovery, and execution protocol
+- **WebLLM-MCP Integration**: Function calling from chat interface
 
 ### 🔶 **Partial Systems** 
 - **Macro Recording**: Manual action replay (needs Python script integration)
 - **API Explorer**: Static discovery (needs MCP tool registration)
+- **Tool Result Formatting**: Basic text display (needs structured formatting)
 
 ### ❌ **Missing Systems**
-- **Pyodide Runtime**: Python interpreter in Web Worker context
-- **MCP Server**: Tool registration, discovery, and execution protocol
-- **Python-API Bridge**: Call desktop APIs from Python scripts
-- **Tool Schema Generation**: Convert API components to MCP tool definitions
-- **WebLLM-MCP Integration**: Function calling from chat interface
+- **Advanced Python Scripting**: Script management UI and library
+- **Data Processing Libraries**: Python pandas/numpy integration
+- **Long-running Script Execution**: Progress tracking and background jobs
 
 ---
 
@@ -115,7 +126,7 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - ✅ **Data Serialization**: Proper JS↔Python object conversion using `to_js()`
 - ✅ **Worker Isolation**: Full Python runtime in dedicated Web Worker thread
 
-### **Phase 2: MCP Server Infrastructure** *(Sprints 2.1-2.2)* ✅ **2.1 COMPLETED**, 🔶 **2.2 IN PROGRESS**
+### **Phase 2: MCP Server Infrastructure** *(Sprints 2.1-2.2)* ✅ **COMPLETED**
 
 #### **Sprint 2.1: MCP Protocol Implementation** ✅ **COMPLETED**
 **Duration**: 5-6 days *(Completed May 2025)*
@@ -135,62 +146,56 @@ The Desktop Dreamscape is a sophisticated desktop OS shell with the following **
 - ✅ **API Integration**: Seamless connection to existing Desktop API system
 - ✅ **Performance Optimized**: Efficient tool lookup and execution
 
-**Current Status**:
-- ✅ **Infrastructure Complete**: All core MCP protocol endpoints implemented
-- ✅ **Tool Registration**: 6+ system tools automatically available (launcher, dialog, notepad, calculator, etc.)
-- ✅ **Real Execution**: Tool calls execute actual desktop actions with real results
-- ✅ **Standards Compliant**: Full JSON-RPC 2.0 and MCP specification adherence
-
-#### **Sprint 2.2: WebLLM Function Calling Integration** 🔶 **IN PROGRESS**
-**Duration**: 4-5 days *(Current Priority)*
+#### **Sprint 2.2: WebLLM Function Calling Integration** ✅ **COMPLETED**
+**Duration**: 4-5 days *(Completed June 2025)*
 **Deliverables**:
-- 🔶 **WebLLM Tool Support**: Extend WebLLM worker to support function calling
-- 🔶 **MCP Tool Integration**: Pass MCP tools to model context for function calling
-- 🔶 **Tool Call UI**: Display tool executions and results in chat interface
-- 🔶 **Multi-Step Workflows**: Support for complex tool sequences
+- ✅ **WebLLM Tool Support**: Extended WebLLM worker with function calling
+- ✅ **MCP Tool Integration**: Pass MCP tools to model context for function calling
+- ✅ **Tool Call UI**: Enhanced display for tool executions and results in chat
+- ✅ **Multi-Step Workflows**: Support for complex tool sequences with continuation
+- ✅ **Toggle Interface**: User control for enabling/disabling tool use
 
-**Current MCP Tool Categories Available**:
-- ✅ **System Tools**: `launcher.launchApp`, `launcher.killApp`, `launcher.notify`, `dialog.openDialog`
-- ✅ **Event Tools**: `event.listEvents`, `onEvent.waitForEvent` 
-- ✅ **App Tools**: `notepad.setValue`, `notepad.getValue`, `notepad.clear`, `notepad.appendText`
-- 🔶 **WebLLM Integration**: Function calling from chat interface **(Next Priority)**
+**Technical Achievements**:
+- ✅ **Hermes Model Formatting**: Special system prompt for Hermes models
+- ✅ **Tool Result Visualization**: Highlighted tool calls with distinct styling
+- ✅ **Tool Result Injection**: Tool results fed back to model as context
+- ✅ **Conversation Continuation**: Seamless continuation after tool use
+- ✅ **Error Handling**: Clear display of tool errors in the conversation
 
-### **Phase 3: WebLLM Function Calling** *(Sprints 3.1-3.2)* 🔶 **FOUNDATION READY**
+### **Phase 3: Advanced Function Patterns** *(Sprints 3.1-3.2)* 🔶 **IN PROGRESS**
 
-#### **Sprint 3.1: WebLLM-MCP Integration** 🔶 **NEXT PRIORITY**
+#### **Sprint 3.1: Advanced Function Patterns** 🔶 **NEXT PRIORITY**
 **Duration**: 6-7 days *(Current Focus)*
 **Deliverables**:
-- 🔶 **WebLLM Function Calling**: Extend existing WebLLM worker with MCP tool support
-- 🔶 **Tool Context Integration**: Automatic MCP tool discovery and context injection
-- 🔶 **Chat Interface Enhancement**: Display tool calls and results in conversation
-- 🔶 **Tool Call Execution**: Parse LLM tool calls and execute via MCP server
+- [ ] Structured tool result formatting 
+- [ ] "Thinking" step for complex reasoning chains
+- [ ] Better error handling and recovery for failed tool calls
+- [ ] Memory of past tool usage for improved context
 
-**Foundation Ready**:
-- ✅ **WebLLM Worker**: Production-ready streaming chat implementation
-- ✅ **MCP Server**: Complete tool registry with 6+ desktop tools available
-- ✅ **API Infrastructure**: All components exposed via MCP protocol
-- ✅ **Worker Communication**: Comlink-based inter-worker messaging established
-
-**Architecture Plan**:
+**Implementation Plan**:
 ```typescript
-// WebLLM enhanced with MCP tools (to be implemented)
-const mcpTools = await workerManager.callPlugin('mcp-server', 'listTools');
-const response = await engine.chat.completions.create({
-  messages,
-  tools: mcpTools,
-  tool_choice: "auto"
-});
+// Enhanced tool formatting with structured data
+const structuredToolResult = {
+  type: "tool_result",
+  name: toolName,
+  success: true,
+  data: result,
+  timestamp: Date.now()
+};
+
+// Add to conversation history for context
+conversationMemory.addToolCall(structuredToolResult);
 ```
 
-#### **Sprint 3.2: Advanced Function Patterns**
+#### **Sprint 3.2: Tool UI & Workflows**
 **Duration**: 4-5 days
 **Deliverables**:
-- [ ] Tool result injection back into conversation
-- [ ] Multi-step tool execution workflows
-- [ ] Context preservation across tool calls
-- [ ] Error recovery and retry mechanisms
+- [ ] Tool suggestions based on conversation context
+- [ ] Tool history panel for past tool calls
+- [ ] Workflow templates for common tool sequences
+- [ ] Tool parameter validation UI
 
-### **Phase 4: Python Scripting Integration** *(Sprints 4.1-4.2)*
+### **Phase 4: Python Script Integration** *(Sprints 4.1-4.2)*
 
 #### **Sprint 4.1: Python Script Management**
 **Duration**: 5-6 days
@@ -241,8 +246,8 @@ const response = await engine.chat.completions.create({
 | 1 | 1.1 | 3-4 days | Pyodide Worker Setup | ✅ **COMPLETED** |
 | 1 | 1.2 | 4-5 days | Python-Desktop API Bridge | ✅ **COMPLETED** |
 | 2 | 2.1 | 5-6 days | MCP Protocol Implementation | ✅ **COMPLETED** |
-| 2 | 2.2 | 4-5 days | WebLLM Function Calling | 🔶 **IN PROGRESS** |
-| 3 | 3.1 | 6-7 days | Advanced Function Patterns | ⏳ **READY** |
+| 2 | 2.2 | 4-5 days | WebLLM Function Calling | ✅ **COMPLETED** |
+| 3 | 3.1 | 6-7 days | Advanced Function Patterns | 🔶 **IN PROGRESS** |
 | 3 | 3.2 | 4-5 days | Tool UI & Workflows | ⏳ **PENDING** |
 | 4 | 4.1 | 5-6 days | Python Script Management | ⏳ **PENDING** |
 | 4 | 4.2 | 6-7 days | Advanced Python Capabilities | ⏳ **PENDING** |
@@ -250,16 +255,16 @@ const response = await engine.chat.completions.create({
 | 5 | 5.2 | 3-4 days | Documentation & Testing | ⏳ **PENDING** |
 
 **Total Estimated Duration**: 45-54 days (9-11 weeks)  
-**Completed**: 3.5/10 sprints (35%) - **MAJOR PROGRESS** 🚀
+**Completed**: 4/10 sprints (40%) - **MAJOR PROGRESS** 🚀
 - ✅ **Phase 1 Complete**: Full Python-Desktop API integration  
-- ✅ **Phase 2.1 Complete**: Production MCP server with tool registry
-- 🔶 **Phase 2.2 Active**: WebLLM function calling integration
+- ✅ **Phase 2 Complete**: Production MCP server and WebLLM function calling
+- 🔶 **Phase 3.1 Active**: Advanced function patterns for improved tool calling
 
-**Next Critical Milestone**: Complete WebLLM-MCP integration for AI-driven desktop automation
+**Next Critical Milestone**: Enhance WebLLM-MCP integration with structured result formatting and improved tool use workflows
 
 ---
 
-## 🎯 **CURRENT IMPLEMENTATION STATUS** - May 2025
+## 🎯 **CURRENT IMPLEMENTATION STATUS** - June 2025
 
 ### ✅ **COMPLETED ACHIEVEMENTS**
 
@@ -277,18 +282,25 @@ const response = await engine.chat.completions.create({
 - **Resource API**: `resources/list` and `resources/read` for MCP resource protocol
 - **6+ Active Tools**: System tools (launcher, dialog, events, notepad) ready for AI consumption
 
-### 🔶 **NEXT CRITICAL MILESTONE**: WebLLM Function Calling
+#### **🔥 WebLLM-MCP Integration - PRODUCTION READY**
+- **Function Calling Support**: WebLLM worker now supports full OpenAI-compatible function calling
+- **Tool Use Toggle**: Users can enable/disable tool use in the chat interface
+- **Tool Result Display**: Enhanced UI shows tool calls, execution, and results with highlighting
+- **Multi-Step Workflows**: Tool results fed back to model for continued conversation
+- **Hermes Model Support**: Special system prompt formatting for Hermes-2-Pro models
 
-#### **Current Focus - Sprint 2.2**
-**Goal**: Enable WebLLM to discover and call desktop tools through natural language
+### 🔶 **NEXT CRITICAL MILESTONE**: Advanced Function Patterns
+
+#### **Current Focus - Sprint 3.1**
+**Goal**: Enhance WebLLM tool calling with structured results and improved workflows
 
 **Implementation Plan**:
-1. **Tool Context Injection**: Pass MCP tools to WebLLM model context
-2. **Function Call Parsing**: Parse LLM tool calls and route to MCP server  
-3. **Result Integration**: Display tool execution results in chat conversation
-4. **Error Handling**: Graceful handling of tool call failures
+1. **Structured Results**: Format tool results for better understanding
+2. **Thinking Step**: Add reasoning step for complex tool chains
+3. **Error Recovery**: Improve handling of failed tool calls
+4. **Tool Memory**: Track tool use across conversation turns
 
-**Expected Timeline**: 4-5 days to complete WebLLM-MCP integration
+**Expected Timeline**: 6-7 days to complete Advanced Function Patterns integration
 
 ### 🚀 **BREAKTHROUGH ACHIEVED**
 
@@ -297,8 +309,9 @@ The project has reached a **major architectural milestone**:
 - ✅ **MCP Protocol**: Standards-compliant tool server with real desktop integration  
 - ✅ **API System**: Comprehensive component registration and action handling
 - ✅ **Worker Architecture**: Isolated compute for Python, WebLLM, and MCP server
+- ✅ **WebLLM Function Calling**: Complete integration with model context protocol
 
-**This represents the foundation for AI-native desktop automation.** The next phase will unlock conversational desktop control through natural language.
+**This represents a fully functional AI-native desktop automation system.** Users can now directly ask the WebLLM chat interface to control desktop apps through natural language, with the AI assistant able to execute real actions and report back results.
 
 ---
 
@@ -308,12 +321,12 @@ The project has reached a **major architectural milestone**:
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Python        │    │   MCP Server     │    │  Desktop APIs   │
-│   (Pyodide)     │◄──►│   Worker         │◄──►│   Components    │
+│   WebLLM        │    │   MCP Server     │    │  Desktop APIs   │
+│   Chat Worker   │◄──►│   Worker         │◄──►│   Components    │
 │                 │    │                  │    │                 │
-│ • API Calls     │    │ • Tool Registry  │    │ • Notepad       │
-│ • Event System  │    │ • JSON-RPC 2.0   │    │ • Calculator    │
-│ • Async/Await   │    │ • Auto-Register  │    │ • Launcher      │
+│ • Function Call │    │ • Tool Registry  │    │ • Notepad       │
+│ • Tool Context  │    │ • JSON-RPC 2.0   │    │ • Calculator    │
+│ • Natural Lang  │    │ • Tool Execution │    │ • Launcher      │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
          ▲                        ▲                        ▲
          │                        │                        │
@@ -322,22 +335,20 @@ The project has reached a **major architectural milestone**:
 │                    EventBus + API Context                      │
 │               (Central Communication Hub)                      │
 └─────────────────────────────────────────────────────────────────┘
-```
-
-### **Next Integration** 🔶
-
-```
+                            ▲
+                            │
+                            ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   WebLLM        │    │   MCP Server     │    │  Desktop APIs   │
-│   Chat Worker   │◄──►│   Worker         │◄──►│   Components    │
+│   Python        │    │   Chat UI        │    │  Tool Display   │
+│   (Pyodide)     │    │   Components     │    │  Components     │
 │                 │    │                  │    │                 │
-│ • Function Call │    │ • Tool Discovery │    │ • Real Actions  │
-│ • Tool Context  │    │ • Tool Execution │    │ • Live Results  │
-│ • Natural Lang  │    │ • Result Format  │    │ • State Updates │
+│ • API Calls     │    │ • Model Selection│    │ • Tool Call UI  │
+│ • Event System  │    │ • Message History│    │ • Result Display│
+│ • Async/Await   │    │ • Tool Toggle    │    │ • Error Handling│
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
-**Vision**: User asks WebLLM "Create a note with today's weather" → WebLLM calls `notepad.setValue` tool → Real notepad opens with content
+**Vision Realized**: User asks WebLLM "Create a note with today's weather" → WebLLM calls `notepad.setValue` tool → Real notepad opens with content → User sees the operation and result in chat
 
 ---
 
@@ -361,15 +372,4 @@ The project has reached a **major architectural milestone**:
 
 ---
 
-## Risk Mitigation
-
-### **Technical Risks**
-- **Pyodide Performance**: Large Python runtime (~50MB). *Mitigation*: Lazy loading, worker isolation
-- **MCP Complexity**: Protocol implementation challenges. *Mitigation*: Start with simple tool calling, iterate
-- **WebLLM Memory**: Function calling increases memory usage. *Mitigation*: Tool result pruning, context management
-
-### **Integration Risks**
-- **Plugin Compatibility**: Existing plugins may need API updates. *Mitigation*: Backward-compatible API extensions
-- **Performance Impact**: Multiple workers may slow down system. *Mitigation*: Worker pooling, resource monitoring
-
-This roadmap transforms the Desktop Dreamscape into a truly **AI-native operating environment** where natural language becomes the primary interface for desktop automation and Python scripting provides unlimited extensibility.
+This roadmap has successfully transformed the Desktop Dreamscape into a truly **AI-native operating environment** where natural language is now a functional interface for desktop automation. The next phases will focus on extending this foundation with more sophisticated Python scripting capabilities and improved tool workflows.

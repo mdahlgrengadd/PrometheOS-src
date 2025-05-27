@@ -17,10 +17,12 @@ interface ChatUIProps {
 export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
   // Room ID state
   const [roomId, setRoomId] = useState(initialRoomId);
-  const [roomAction, setRoomAction] = useState<'create' | 'join' | null>(null);
+  const [roomAction, setRoomAction] = useState<"create" | "join" | null>(null);
   const [inputRoomId, setInputRoomId] = useState("");
   const fullUrl = `${CHAT_HOST}/${roomId}`;
-  const [name] = useState(() => names[Math.floor(Math.random() * names.length)]);
+  const [name] = useState(
+    () => names[Math.floor(Math.random() * names.length)]
+  );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -106,7 +108,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
                 <input
                   className="w-full p-1 border mb-2"
                   value={inputRoomId}
-                  onChange={e => setInputRoomId(e.target.value)}
+                  onChange={(e) => setInputRoomId(e.target.value)}
                   placeholder="Enter a room name or ID"
                 />
                 <div className="flex gap-2">
@@ -118,7 +120,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
                         return;
                       }
                       setRoomId(inputRoomId.trim());
-                      setRoomAction('join');
+                      setRoomAction("join");
                       setError("");
                     }}
                   >
@@ -132,7 +134,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
                         return;
                       }
                       setRoomId(inputRoomId.trim());
-                      setRoomAction('create');
+                      setRoomAction("create");
                       setError("");
                     }}
                   >
@@ -153,30 +155,34 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
           )}
           {!!roomAction && (
             <form
-              onSubmit={e => {
+              onSubmit={(e) => {
                 e.preventDefault();
-                if (roomAction === 'create') createRoom();
+                if (roomAction === "create") createRoom();
                 else verifyPassword();
               }}
             >
               <div className="mb-2">
-                <label className="block mb-1">Room: <span className="font-mono">{roomId}</span></label>
+                <label className="block mb-1">
+                  Room: <span className="font-mono">{roomId}</span>
+                </label>
               </div>
               <label className="block mb-1">Password</label>
               <input
                 type="password"
                 className="w-full p-1 border mb-2"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              {roomAction === 'create' && (
+              {roomAction === "create" && (
                 <>
-                  <label className="block mb-1">Room Expiration (seconds)</label>
+                  <label className="block mb-1">
+                    Room Expiration (seconds)
+                  </label>
                   <select
                     className="w-full p-1 border mb-2"
                     value={ttl}
-                    onChange={e => setTtl(Number(e.target.value))}
+                    onChange={(e) => setTtl(Number(e.target.value))}
                   >
                     <option value={3600}>1 hour</option>
                     <option value={7200}>2 hours</option>
@@ -190,7 +196,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
                 type="submit"
                 className="w-full bg-blue-500 text-white py-1 rounded"
               >
-                {roomAction === 'create' ? "Create Room" : "Join Room"}
+                {roomAction === "create" ? "Create Room" : "Join Room"}
               </button>
               <button
                 type="button"
@@ -243,7 +249,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
         <div className="flex items-center mb-2">
           <div className="text-sm text-gray-500 flex-1 flex items-center">
             <span className="truncate">Current room: {roomId}</span>
-            <button
+            {/*<button
               onClick={() => {
                 navigator.clipboard
                   .writeText(fullUrl)
@@ -252,7 +258,7 @@ export const ChatUI: React.FC<ChatUIProps> = ({ roomId: initialRoomId }) => {
               className="ml-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
             >
               Copy URL
-            </button>
+            </button>*/}
           </div>
           <button
             onClick={handleRandomRoom}

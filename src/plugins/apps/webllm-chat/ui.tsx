@@ -17,10 +17,12 @@ interface Message {
 
 // Available models
 const AVAILABLE_MODELS = [
+  "Hermes-2-Pro-Llama-3-8B-q4f32_1-MLC",
+  "Hermes-2-Pro-Mistral-7B",
   "Llama-3.1-8B-Instruct-q4f32_1-MLC",
   "Phi-3-mini-4k-instruct-q4f32_1-MLC",
-  "Gemma-2B-it-q4f32_1-MLC",
-  "Mistral-7B-v0.3-q4f32_1-MLC",
+  //"Gemma-2B-it-q4f32_1-MLC",
+  //"Mistral-7B-v0.3-q4f32_1-MLC",
 ];
 
 // Inner component that doesn't have the provider
@@ -103,6 +105,15 @@ const WorkerChatWindow: React.FC = () => {
     useState<NodeJS.Timeout | null>(null);
   const [isWorkerReady, setIsWorkerReady] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [toolsEnabled, setToolsEnabled] = useState(true);
+  // Debug: hold list of available MCP tools
+  const [availableTools, setAvailableTools] = useState<
+    {
+      name: string;
+      description: string;
+      inputSchema: Record<string, unknown>;
+    }[]
+  >([]);
 
   // Register the WebLLM worker plugin
   useEffect(() => {
@@ -132,6 +143,13 @@ const WorkerChatWindow: React.FC = () => {
           if (success) {
             setIsWorkerReady(true);
             console.log("WebLLM worker registered successfully");
+            // Expose desktop API bridge and MCP handler to worker via Comlink
+            try {
+              await workerPluginManager.setupComlinkBridge();
+              console.log("Comlink bridge established for WebLLM worker");
+            } catch (err) {
+              console.error("Failed to setup Comlink bridge:", err);
+            }
           } else {
             console.error("Failed to register WebLLM worker");
           }
@@ -159,6 +177,76 @@ const WorkerChatWindow: React.FC = () => {
       eventBus.unregisterEvent("webllm:answerCompleted");
     };
   }, []);
+
+  // Register the MCP server worker plugin when tools are enabled
+  useEffect(() => {
+    if (!isWorkerReady || !toolsEnabled) return;
+
+    const initMCPServer = async () => {
+      try {
+        // Check if MCP server is already registered
+        const isRegistered = await workerPluginManager.isPluginRegistered(
+          "mcp-server"
+        );
+
+        if (!isRegistered) {
+          // Get the correct worker path based on environment
+          const workerPath = import.meta.env.PROD
+            ? `/worker/mcp-server.js`
+            : `/worker/mcp-server.js`;
+
+          // Register the MCP server plugin with its worker URL
+          const success = await workerPluginManager.registerPlugin(
+            "mcp-server",
+            workerPath
+          );
+
+          if (success) {
+            // Initialize the MCP server
+            try {
+              // Initialize MCP server (this sets up the protocol)
+              await workerPluginManager.initMCPServer();
+
+              // Explicitly setup Comlink bridge to ensure plugin worker can access manager
+              await workerPluginManager.setupComlinkBridge();
+
+              console.log(
+                "MCP server registered, initialized, and bridge established"
+              );
+            } catch (error: unknown) {
+              console.error(
+                "Failed to initialize MCP server or establish bridge:",
+                error
+              );
+            }
+          } else {
+            console.error("Failed to register MCP server worker");
+          }
+        } else {
+          console.log("MCP server already registered");
+          // Still set up Comlink bridge to ensure worker plugin access
+          await workerPluginManager.setupComlinkBridge();
+        }
+      } catch (error: unknown) {
+        console.error("Error initializing MCP server:", error);
+      }
+    };
+
+    initMCPServer();
+  }, [isWorkerReady, toolsEnabled]);
+
+  // Debug: fetch available MCP tools whenever worker is ready and tools are toggled on
+  useEffect(() => {
+    if (isWorkerReady && toolsEnabled) {
+      workerPluginManager
+        .getMCPTools()
+        .then((toolsList) => {
+          console.log("Available MCP tools:", toolsList);
+          setAvailableTools(toolsList);
+        })
+        .catch((err) => console.error("Error fetching MCP tools:", err));
+    }
+  }, [isWorkerReady, toolsEnabled]);
 
   // Initialize model once worker is ready
   useEffect(() => {
@@ -247,6 +335,11 @@ const WorkerChatWindow: React.FC = () => {
     setSelectedModel(model);
   };
 
+  // Toggle tools on/off
+  const toggleTools = () => {
+    setToolsEnabled(!toolsEnabled);
+  };
+
   // Handle sending a new message
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -262,13 +355,21 @@ const WorkerChatWindow: React.FC = () => {
 
       try {
         setIsTyping(true);
+        console.log(
+          "handleSendMessage: toolsEnabled =",
+          toolsEnabled,
+          "messages =",
+          newMessages
+        );
 
         // Create a temporary message for streaming
         const assistantMessage: Message = { role: "assistant", content: "" };
         setMessages([...newMessages, assistantMessage]);
 
-        // Get response stream from worker
-        const stream = await workerPluginManager.chat(newMessages, 0.7);
+        // Get response stream from worker - using chatWithTools if tools are enabled
+        const stream = toolsEnabled
+          ? await workerPluginManager.chatWithTools(newMessages, 0.7)
+          : await workerPluginManager.chat(newMessages, 0.7);
 
         // Set up the stream reader
         const reader = stream.getReader();
@@ -318,7 +419,7 @@ const WorkerChatWindow: React.FC = () => {
         setIsTyping(false);
       }
     },
-    [messages, isModelLoaded, isWorkerReady]
+    [messages, isModelLoaded, isWorkerReady, toolsEnabled]
   );
 
   // Wrap the sendMessage function to handle context-based message sending
@@ -342,17 +443,76 @@ const WorkerChatWindow: React.FC = () => {
       isDisabled={!isModelLoaded || isTyping || !isWorkerReady}
       isTyping={isTyping}
     >
-      <ChatUI
-        messages={messages}
-        isWorkerReady={isWorkerReady}
-        isLoading={isLoading}
-        isTyping={isTyping}
-        isModelLoaded={isModelLoaded}
-        loadingProgress={loadingProgress}
-        selectedModel={selectedModel}
-        onModelChange={handleModelChange}
-        onSendMessage={handleSendMessage}
-      />
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-2 border-b">
+          <h2 className="text-lg font-semibold">WebLLM Chat (Web Worker)</h2>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <span className="mr-2 text-sm">Tools:</span>
+              <button
+                onClick={toggleTools}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 ${
+                  toolsEnabled ? "bg-blue-600" : "bg-gray-200"
+                }`}
+              >
+                <span
+                  className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
+                    toolsEnabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+            <ModelSelector
+              models={AVAILABLE_MODELS}
+              selectedModel={selectedModel}
+              onSelectModel={handleModelChange}
+              disabled={isLoading || isTyping || !isWorkerReady}
+            />
+          </div>
+        </div>
+        {/* Debug panel: show available MCP tools */}
+        <div className="p-2 bg-gray-100 text-xs text-gray-700">
+          <div className="font-semibold">Debug: Available Tools</div>
+          {availableTools.length > 0 ? (
+            <ul>
+              {availableTools.map((tool) => (
+                <li key={tool.name}>
+                  <strong>{tool.name}</strong>: {tool.description}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div>No tools loaded yet.</div>
+          )}
+        </div>
+
+        {!isWorkerReady ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+              <p>Initializing WebLLM worker...</p>
+            </div>
+          </div>
+        ) : isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-4 mx-auto"></div>
+              <p>{loadingProgress}</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <MessageList messages={messages} />
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              disabled={!isModelLoaded || isTyping || !isWorkerReady}
+              isTyping={isTyping}
+              useContext={true}
+              apiId="webllm-chat-input" // Ensure consistent apiId
+            />
+          </>
+        )}
+      </div>
     </WebLLMChatProvider>
   );
 };
