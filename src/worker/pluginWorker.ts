@@ -329,9 +329,21 @@ class WorkerPluginManager {
 const workerManager = new WorkerPluginManager();
 
 // Make the worker manager available globally for port routing
+// Make available on both self and globalThis for broader compatibility
 (
   self as unknown as { workerPluginManager?: WorkerPluginManager }
 ).workerPluginManager = workerManager;
+(
+  globalThis as unknown as { workerPluginManager?: WorkerPluginManager }
+).workerPluginManager = workerManager;
+
+// Debug log to confirm global availability
+console.log("Plugin worker manager initialized and exposed globally");
+console.log("  - self has workerPluginManager:", "workerPluginManager" in self);
+console.log(
+  "  - globalThis has workerPluginManager:",
+  "workerPluginManager" in globalThis
+);
 
 // Expose all public methods via Comlink
 Comlink.expose(workerManager);
