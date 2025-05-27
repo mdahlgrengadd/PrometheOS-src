@@ -24,7 +24,4 @@ export * from "./types";
 // Utilities
 export * from "./utils/esbuild-service";
 export * from "./vfs/virtual-fs";
-
-// Utility exports
-export * from "./utils/esbuild-service";
 export { cn } from "./lib/utils";

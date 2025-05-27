@@ -1,45 +1,42 @@
-import "./TaskList.css";
-import "./word-editor.css"; // Import the CSS file with layout-specific styles
-import "./word-editor.scss"; // Import the SCSS file with theme-specific styles
+import './TaskList.css';
+import './word-editor.css'; // Import the CSS file with layout-specific styles
+import './word-editor.scss'; // Import the SCSS file with theme-specific styles
 
-import React, { useState, useEffect, useRef } from "react";
-import { useApiComponent } from "@/api/hoc/withApi";
-import { registerApiActionHandler } from "@/api/context/ApiContext";
-import { IActionResult } from "@/api/core/types";
-import { Markdown } from "tiptap-markdown";
+import React, { useEffect, useRef, useState } from 'react';
+import { Markdown } from 'tiptap-markdown';
 
+import { registerApiActionHandler } from '@/api/context/ApiContext';
+import { IActionResult } from '@/api/core/types';
+import { useApiComponent } from '@/api/hoc/withApi';
 import {
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarShortcut,
-} from "@/components/ui/menubar";
+    MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut
+} from '@/components/ui/menubar';
 import {
-  WindowsMenubar,
-  WindowsMenubarContent,
-  WindowsMenubarTrigger,
-} from "@/components/ui/windows";
-import CharacterCount from "@tiptap/extension-character-count";
-import Color from "@tiptap/extension-color";
-import Highlight from "@tiptap/extension-highlight";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import Subscript from "@tiptap/extension-subscript";
-import Superscript from "@tiptap/extension-superscript";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
-import TextAlign from "@tiptap/extension-text-align";
-import TextStyle from "@tiptap/extension-text-style";
-import Typography from "@tiptap/extension-typography";
-import Underline from "@tiptap/extension-underline";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+    WindowsMenubar, WindowsMenubarContent, WindowsMenubarTrigger
+} from '@/components/ui/windows';
+import CharacterCount from '@tiptap/extension-character-count';
+import Color from '@tiptap/extension-color';
+import FontFamily from '@tiptap/extension-font-family';
+import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
+import Placeholder from '@tiptap/extension-placeholder';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
+import TextAlign from '@tiptap/extension-text-align';
+import TextStyle from '@tiptap/extension-text-style';
+import Typography from '@tiptap/extension-typography';
+import Underline from '@tiptap/extension-underline';
+import { useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
-import content from "./content.json";
+import content from './content.json';
+import FontSize from './extensions/FontSize';
 // Internal components (toolbar + page view)
-import WordEditorContent from "./ui";
-import WordEditorToolbar from "./WordEditorToolbar";
+import WordEditorContent from './ui';
+import WordEditorToolbar from './WordEditorToolbar';
 
 // API doc for WordEditor
 export const wordEditorApiDoc = {
@@ -54,19 +51,22 @@ export const wordEditorApiDoc = {
     {
       id: "setValue",
       name: "Set Value",
-      description: "Set the content of the word editor. Supports Markdown or Tiptap JSON.",
+      description:
+        "Set the content of the word editor. Supports Markdown or Tiptap JSON.",
       available: true,
       parameters: [
         {
           name: "value",
           type: "text", // Use multiline textbox in API Explorer
-          description: "The content to set in the editor (Markdown or Tiptap JSON).",
+          description:
+            "The content to set in the editor (Markdown or Tiptap JSON).",
           required: true,
         },
         {
           name: "format",
           type: "string",
-          description: "Content format: 'markdown' (default) or 'json' (Tiptap JSON).",
+          description:
+            "Content format: 'markdown' (default) or 'json' (Tiptap JSON).",
           required: false,
           enum: ["markdown", "json"],
         },
@@ -110,6 +110,12 @@ const WordEditor = () => {
         nested: true,
       }),
       TextStyle,
+      FontFamily.configure({
+        types: ["textStyle"],
+      }),
+      FontSize.configure({
+        types: ["textStyle"],
+      }),
       Color,
       Underline,
       Highlight.configure({
@@ -134,22 +140,22 @@ const WordEditor = () => {
     },
     editable: true,
   });
-  
+
   // Register API action handlers for setValue/getValue
   const apiId = "wordeditor";
   const lastTextRef = useRef("");
-  
+
   // Use the API component hook to register and update state
   const staticApiDoc = React.useMemo(() => {
     const { state, ...doc } = wordEditorApiDoc;
     return doc;
   }, []);
-  
+
   const { updateState } = useApiComponent(apiId, staticApiDoc);
-  
+
   // Track whether handlers have been registered
   const handlersRef = React.useRef(false);
-  
+
   useEffect(() => {
     if (!editor) return;
 
@@ -159,16 +165,28 @@ const WordEditor = () => {
 
     if (!handlersRef.current) {
       handlersRef.current = true;
-      
+
       // Handler to set the editor content
-      const setValueHandler = async (params?: Record<string, unknown>): Promise<IActionResult> => {
+      const setValueHandler = async (
+        params?: Record<string, unknown>
+      ): Promise<IActionResult> => {
         if (!params || typeof params.value !== "string") {
-          return { success: false, error: "setValue requires a 'value' parameter of type string" };
+          return {
+            success: false,
+            error: "setValue requires a 'value' parameter of type string",
+          };
         }
         // Support both Markdown and Tiptap JSON
-        if (params.format === "markdown" || (!params.format && typeof params.value === "string")) {
+        if (
+          params.format === "markdown" ||
+          (!params.format && typeof params.value === "string")
+        ) {
           // Set content as Markdown using the Markdown extension's storage
-          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+          if (
+            editor.storage &&
+            editor.storage.markdown &&
+            typeof editor.storage.markdown.setMarkdown === "function"
+          ) {
             editor.storage.markdown.setMarkdown(params.value);
           } else {
             // fallback: set as plain text
@@ -177,14 +195,21 @@ const WordEditor = () => {
         } else if (params.format === "json") {
           // Set content as Tiptap JSON
           try {
-            const json = typeof params.value === "string" ? JSON.parse(params.value) : params.value;
+            const json =
+              typeof params.value === "string"
+                ? JSON.parse(params.value)
+                : params.value;
             editor.commands.setContent(json);
           } catch (e) {
             return { success: false, error: "Invalid JSON for Tiptap content" };
           }
         } else {
           // Default: treat as Markdown
-          if (editor.storage && editor.storage.markdown && typeof editor.storage.markdown.setMarkdown === "function") {
+          if (
+            editor.storage &&
+            editor.storage.markdown &&
+            typeof editor.storage.markdown.setMarkdown === "function"
+          ) {
             editor.storage.markdown.setMarkdown(params.value);
           } else {
             editor.commands.setContent(params.value);
@@ -211,7 +236,7 @@ const WordEditor = () => {
     }
 
     // Setup editor change handler to update state
-    editor.on('update', () => {
+    editor.on("update", () => {
       const value = editor.getText();
       updateState({ value });
     });
@@ -418,6 +443,6 @@ const WordEditor = () => {
       </div>
     </div>
   );
-}
+};
 
 export default WordEditor;

@@ -224,7 +224,7 @@
     {
       "type": "image",
       "attrs": {
-        "src": "/images/placeholder-image.png",
+        "src": "/prometheos/images/placeholder-image.png",
         "alt": "placeholder-image",
         "title": "placeholder-image"
       }
