@@ -46,12 +46,10 @@ async function setupShadowEnvironment() {
     } catch {
       console.log("✗ dist/shadow directory does not exist");
       return;
-    }
-
-    // 2. Install npm dependencies in dist/shadow
+    }    // 2. Install npm dependencies in dist/shadow
     console.log("Installing React dependencies in dist/shadow...");
     try {
-      execSync("npm install", {
+      execSync("npm install --no-bin-links", {
         cwd: DIST_SHADOW_DIR,
         stdio: "inherit",
         timeout: 120000, // 2 minutes timeout
@@ -60,16 +58,40 @@ async function setupShadowEnvironment() {
     } catch (error) {
       console.error("✗ Failed to install dependencies:", error.message);
       throw error;
+    }    // 2a. Remove any .bin directories that might still exist to prevent symlink issues
+    const binDirPath = path.join(DIST_SHADOW_DIR, "node_modules", ".bin");
+    try {
+      await fs.access(binDirPath);
+      await fs.rm(binDirPath, { recursive: true, force: true });
+      console.log("✓ Removed .bin directory to prevent symlink issues");
+    } catch {
+      // .bin directory doesn't exist, which is fine
+    }
+
+    // 2b. Clean up any other potential symlink files that could cause tar issues
+    try {
+      // Remove any cli.js files in loose-envify that might have symlinks
+      const looseEnvifyDir = path.join(DIST_SHADOW_DIR, "node_modules", "loose-envify");
+      const cliJsPath = path.join(looseEnvifyDir, "cli.js");
+      
+      try {
+        await fs.access(cliJsPath);
+        await fs.rm(cliJsPath, { force: true });
+        console.log("✓ Removed loose-envify cli.js to prevent symlink issues");
+      } catch {
+        // File doesn't exist, which is fine
+      }
+    } catch {
+      // Directory doesn't exist, which is fine
     }
 
     // 3. Generate updated shadow-manifest.json with all files including node_modules
-    console.log("Generating shadow-manifest.json with node_modules...");
-
-    // Scan all files in dist/shadow including node_modules
+    console.log("Generating shadow-manifest.json with node_modules...");    // Scan all files in dist/shadow including node_modules
     const files = await fg(["**/*"], {
       cwd: DIST_SHADOW_DIR,
       dot: true,
       onlyFiles: true,
+      followSymbolicLinks: false, // Don't follow symlinks to prevent issues
       ignore: [
         // Ignore large binary files and unnecessary files
         "**/node_modules/**/*.d.ts",
@@ -83,7 +105,13 @@ async function setupShadowEnvironment() {
         "**/node_modules/**/docs/**",
         "**/node_modules/**/examples/**",
         "**/node_modules/**/.bin/**",
+        "**/node_modules/**/.bin",
         "**/node_modules/**/.github/**",
+        // Additional patterns to catch symlinks and problematic files
+        "**/.bin/**",
+        "**/.bin",
+        "**/node_modules/**/bin/**",
+        "**/node_modules/**/bin",
       ],
     });
 
@@ -122,17 +150,20 @@ async function setupShadowEnvironment() {
     // Build manifest items
     const items = essentialFiles.map((file) =>
       fileToFsItem(path.join(DIST_SHADOW_DIR, file), DIST_SHADOW_DIR)
-    );
-
-    // Write shadow-manifest.json to dist/
+    );    // Write shadow-manifest.json to dist/
     const manifestPath = path.resolve(
       __dirname,
       "../dist/shadow-manifest.json"
     );
     await fs.writeFile(manifestPath, JSON.stringify(items, null, 2));
 
+    // Create .nojekyll file to ensure GitHub Pages serves all files
+    const nojekyllPath = path.resolve(__dirname, "../dist/.nojekyll");
+    await fs.writeFile(nojekyllPath, "");
+
     console.log(`✓ Generated shadow-manifest.json with ${items.length} files`);
     console.log(`✓ Manifest saved to: ${manifestPath}`);
+    console.log(`✓ Created .nojekyll file for GitHub Pages`);
 
     // Log some essential files to verify
     const reactFiles = items.filter((item) =>
