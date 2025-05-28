@@ -7,12 +7,16 @@ import { execSync } from "child_process";
  * Generate both TypeScript and Python clients using OpenAPI Generator
  */
 function generateUnifiedClients() {
-  console.log("🔥 Generating unified TypeScript and Python clients with OpenAPI Generator...");
+  console.log(
+    "🔥 Generating unified TypeScript and Python clients with OpenAPI Generator..."
+  );
 
   try {
     // Check if openapi.json exists
     if (!fs.existsSync("./openapi.json")) {
-      console.error("❌ openapi.json not found. Run 'npm run build:openapi' first.");
+      console.error(
+        "❌ openapi.json not found. Run 'npm run build:openapi' first."
+      );
       process.exit(1);
     }
 
@@ -20,7 +24,7 @@ function generateUnifiedClients() {
     console.log("🧹 Cleaning up previous generated files...");
     const tsOutputDir = "./src/prometheos-client-generated";
     const pythonOutputDir = "./src/prometheos-client-python-generated";
-    
+
     if (fs.existsSync(tsOutputDir)) {
       fs.rmSync(tsOutputDir, { recursive: true, force: true });
     }
@@ -30,14 +34,14 @@ function generateUnifiedClients() {
 
     // Create output directories
     fs.mkdirSync(tsOutputDir, { recursive: true });
-    fs.mkdirSync(pythonOutputDir, { recursive: true });    // Generate TypeScript client
+    fs.mkdirSync(pythonOutputDir, { recursive: true }); // Generate TypeScript client
     console.log("📦 Generating TypeScript client...");
     execSync(
       `npx @openapitools/openapi-generator-cli generate ` +
-      `-i ./openapi.json ` +
-      `-g typescript-axios ` +
-      `-o ./src/prometheos-client-generated ` +
-      `--additional-properties=npmName=prometheos-client,npmVersion=1.0.0,withSeparateModelsAndApi=true,modelPackage=models,apiPackage=api,supportsES6=true,enumPropertyNaming=camelCase,useSingleRequestParameter=true,generateSourceCodeOnly=true`,
+        `-i ./openapi.json ` +
+        `-g typescript-axios ` +
+        `-o ./src/prometheos-client-generated ` +
+        `--additional-properties=npmName=prometheos-client,npmVersion=1.0.0,withSeparateModelsAndApi=true,modelPackage=models,apiPackage=api,supportsES6=true,enumPropertyNaming=camelCase,useSingleRequestParameter=true,generateSourceCodeOnly=true`,
       {
         stdio: "inherit",
         cwd: process.cwd(),
@@ -49,10 +53,10 @@ function generateUnifiedClients() {
     console.log("🐍 Generating Python client...");
     execSync(
       `npx @openapitools/openapi-generator-cli generate ` +
-      `-i ./openapi.json ` +
-      `-g python ` +
-      `-o ./src/prometheos-client-python-generated ` +
-      `--additional-properties=packageName=prometheos_client,packageVersion=1.0.0,projectName=prometheos-client,library=asyncio`,
+        `-i ./openapi.json ` +
+        `-g python ` +
+        `-o ./src/prometheos-client-python-generated ` +
+        `--additional-properties=packageName=prometheos_client,packageVersion=1.0.0,projectName=prometheos-client,library=asyncio`,
       {
         stdio: "inherit",
         cwd: process.cwd(),
@@ -190,7 +194,7 @@ export default {
  */
 function createPythonWrapper() {
   console.log("🐍 Creating Python wrapper...");
-  
+
   // Ensure the Python client directory exists
   const pythonClientDir = "./src/prometheos-client-python";
   if (!fs.existsSync(pythonClientDir)) {
@@ -471,7 +475,7 @@ if __name__ == "__main__":
   fs.writeFileSync(`${pythonClientDir}/prometheos_client.py`, wrapperContent);
   fs.writeFileSync(`${pythonClientDir}/__init__.py`, initContent);
   fs.writeFileSync(`${pythonClientDir}/example_usage.py`, exampleContent);
-  
+
   console.log("✅ Python wrapper created successfully!");
 }
 

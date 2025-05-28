@@ -17,7 +17,7 @@ function generateTypeScriptClient() {
     }
 
     // Create output directory
-    fs.mkdirSync(outputDir, { recursive: true });    // Generate using swagger-typescript-api with inline options
+    fs.mkdirSync(outputDir, { recursive: true }); // Generate using swagger-typescript-api with inline options
     execSync(
       `npx swagger-typescript-api generate -p ./openapi.json -o ${outputDir} -n api.ts --extract-enums --sort-types --sort-routes`,
       {

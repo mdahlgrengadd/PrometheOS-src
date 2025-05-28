@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { PluginManifest } from '../../../plugins/types';
+import { PluginManifest } from "../../../plugins/types";
 
 export const manifest: PluginManifest = {
   id: "prometheos-test",

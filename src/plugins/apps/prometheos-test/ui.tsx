@@ -1,148 +1,181 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
+import { Plugin } from "../../../plugins/types";
 // Import the prometheos-client library
-import { launcher, dialog, onEvent, event } from '../../../prometheos-client';
-
-import { Plugin } from '../../../plugins/types';
-import { manifest } from './manifest';
+import { dialog, event, launcher, onEvent } from "../../../prometheos-client";
+import { manifest } from "./manifest";
 
 const PrometheosTestComponent: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
-  const [appId, setAppId] = useState<string>('notepad');
-  const [notificationMessage, setNotificationMessage] = useState<string>('Hello from PrometheOS Test!');
-  const [dialogTitle, setDialogTitle] = useState<string>('Test Dialog');
-  const [dialogDescription, setDialogDescription] = useState<string>('This is a test dialog from PrometheOS Test App');
-  const [eventId, setEventId] = useState<string>('');
+  const [appId, setAppId] = useState<string>("notepad");
+  const [notificationMessage, setNotificationMessage] = useState<string>(
+    "Hello from PrometheOS Test!"
+  );
+  const [dialogTitle, setDialogTitle] = useState<string>("Test Dialog");
+  const [dialogDescription, setDialogDescription] = useState<string>(
+    "This is a test dialog from PrometheOS Test App"
+  );
+  const [eventId, setEventId] = useState<string>("");
   const [timeout, setTimeout] = useState<number>(5000);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    setLogs((prev) => [...prev, `[${timestamp}] ${message}`]);
   };
 
   const setButtonLoading = (buttonId: string, loading: boolean) => {
-    setIsLoading(prev => ({ ...prev, [buttonId]: loading }));
+    setIsLoading((prev) => ({ ...prev, [buttonId]: loading }));
   };
 
   const handleLaunchApp = async () => {
     if (!appId.trim()) {
-      addLog('❌ Error: App ID cannot be empty');
+      addLog("❌ Error: App ID cannot be empty");
       return;
     }
 
-    setButtonLoading('launch', true);
+    setButtonLoading("launch", true);
     try {
       addLog(`🚀 Launching app: ${appId}`);
       const result = await launcher.launchApp({ appId: appId.trim() });
       addLog(`✅ Launch result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ Launch error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ Launch error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('launch', false);
+      setButtonLoading("launch", false);
     }
   };
 
   const handleKillApp = async () => {
     if (!appId.trim()) {
-      addLog('❌ Error: App ID cannot be empty');
+      addLog("❌ Error: App ID cannot be empty");
       return;
     }
 
-    setButtonLoading('kill', true);
+    setButtonLoading("kill", true);
     try {
       addLog(`🔴 Killing app: ${appId}`);
       const result = await launcher.killApp({ appId: appId.trim() });
       addLog(`✅ Kill result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ Kill error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ Kill error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('kill', false);
+      setButtonLoading("kill", false);
     }
   };
 
   const handleSendNotification = async () => {
     if (!notificationMessage.trim()) {
-      addLog('❌ Error: Notification message cannot be empty');
+      addLog("❌ Error: Notification message cannot be empty");
       return;
     }
 
-    setButtonLoading('notify', true);
+    setButtonLoading("notify", true);
     try {
       addLog(`📱 Sending notification: ${notificationMessage}`);
-      const result = await launcher.notify({ 
+      const result = await launcher.notify({
         message: notificationMessage.trim(),
-        type: 'radix' // You can change this to 'sonner' if you prefer
+        type: "radix", // You can change this to 'sonner' if you prefer
       });
       addLog(`✅ Notification result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ Notification error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ Notification error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('notify', false);
+      setButtonLoading("notify", false);
     }
   };
 
   const handleOpenDialog = async () => {
     if (!dialogTitle.trim()) {
-      addLog('❌ Error: Dialog title cannot be empty');
+      addLog("❌ Error: Dialog title cannot be empty");
       return;
     }
 
-    setButtonLoading('dialog', true);
+    setButtonLoading("dialog", true);
     try {
       addLog(`🔔 Opening dialog: ${dialogTitle}`);
       const result = await dialog.openDialog({
         title: dialogTitle.trim(),
         description: dialogDescription.trim() || undefined,
-        confirmLabel: 'Yes',
-        cancelLabel: 'No'
+        confirmLabel: "Yes",
+        cancelLabel: "No",
       });
       addLog(`✅ Dialog result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ Dialog error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ Dialog error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('dialog', false);
+      setButtonLoading("dialog", false);
     }
   };
 
   const handleListEvents = async () => {
-    setButtonLoading('listEvents', true);
+    setButtonLoading("listEvents", true);
     try {
       addLog(`📋 Listing available events...`);
       const result = await event.listEvents();
       addLog(`✅ Events result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ List events error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ List events error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('listEvents', false);
+      setButtonLoading("listEvents", false);
     }
   };
 
   const handleWaitForEvent = async () => {
     if (!eventId.trim()) {
-      addLog('❌ Error: Event ID cannot be empty');
+      addLog("❌ Error: Event ID cannot be empty");
       return;
     }
 
-    setButtonLoading('waitEvent', true);
+    setButtonLoading("waitEvent", true);
     try {
       addLog(`⏳ Waiting for event: ${eventId} (timeout: ${timeout}ms)`);
       const result = await onEvent.waitForEvent({
         eventId: eventId.trim(),
-        timeout: timeout
+        timeout: timeout,
       });
       addLog(`✅ Event wait result: ${JSON.stringify(result)}`);
     } catch (error) {
-      addLog(`❌ Wait for event error: ${error instanceof Error ? error.message : String(error)}`);
+      addLog(
+        `❌ Wait for event error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
-      setButtonLoading('waitEvent', false);
+      setButtonLoading("waitEvent", false);
     }
   };
 
@@ -153,8 +186,12 @@ const PrometheosTestComponent: React.FC = () => {
   return (
     <div className="p-4 h-full flex flex-col gap-4 overflow-hidden">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-purple-600">PrometheOS Test App</h1>
-        <p className="text-sm text-muted-foreground">Test the prometheos-client library functionality</p>
+        <h1 className="text-2xl font-bold text-purple-600">
+          PrometheOS Test App
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Test the prometheos-client library functionality
+        </p>
       </div>
 
       <div className="flex-1 overflow-auto">
@@ -181,7 +218,7 @@ const PrometheosTestComponent: React.FC = () => {
                   disabled={isLoading.launch}
                   className="flex-1"
                 >
-                  {isLoading.launch ? 'Launching...' : 'Launch App'}
+                  {isLoading.launch ? "Launching..." : "Launch App"}
                 </Button>
                 <Button
                   onClick={handleKillApp}
@@ -189,7 +226,7 @@ const PrometheosTestComponent: React.FC = () => {
                   variant="destructive"
                   className="flex-1"
                 >
-                  {isLoading.kill ? 'Killing...' : 'Kill App'}
+                  {isLoading.kill ? "Killing..." : "Kill App"}
                 </Button>
               </div>
             </CardContent>
@@ -216,7 +253,7 @@ const PrometheosTestComponent: React.FC = () => {
                 disabled={isLoading.notify}
                 className="w-full"
               >
-                {isLoading.notify ? 'Sending...' : 'Send Notification'}
+                {isLoading.notify ? "Sending..." : "Send Notification"}
               </Button>
             </CardContent>
           </Card>
@@ -251,7 +288,7 @@ const PrometheosTestComponent: React.FC = () => {
                 disabled={isLoading.dialog}
                 className="w-full"
               >
-                {isLoading.dialog ? 'Opening...' : 'Open Dialog'}
+                {isLoading.dialog ? "Opening..." : "Open Dialog"}
               </Button>
             </CardContent>
           </Card>
@@ -269,11 +306,11 @@ const PrometheosTestComponent: React.FC = () => {
                 className="w-full"
                 variant="outline"
               >
-                {isLoading.listEvents ? 'Loading...' : 'List Available Events'}
+                {isLoading.listEvents ? "Loading..." : "List Available Events"}
               </Button>
-              
+
               <Separator />
-              
+
               <div>
                 <Label htmlFor="eventId">Event ID</Label>
                 <Input
@@ -298,7 +335,7 @@ const PrometheosTestComponent: React.FC = () => {
                 disabled={isLoading.waitEvent}
                 className="w-full"
               >
-                {isLoading.waitEvent ? 'Waiting...' : 'Wait for Event'}
+                {isLoading.waitEvent ? "Waiting..." : "Wait for Event"}
               </Button>
             </CardContent>
           </Card>
@@ -317,7 +354,7 @@ const PrometheosTestComponent: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Textarea
-            value={logs.join('\n')}
+            value={logs.join("\n")}
             readOnly
             className="h-32 font-mono text-sm resize-none"
             placeholder="Activity logs will appear here..."
@@ -333,39 +370,44 @@ const UnifiedAPIDemo: React.FC = () => {
   const [testResults, setTestResults] = useState<string[]>([]);
 
   const addResult = (message: string) => {
-    setTestResults(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+    setTestResults((prev) => [
+      ...prev,
+      `[${new Date().toLocaleTimeString()}] ${message}`,
+    ]);
   };
 
   const runUnifiedAPIDemo = async () => {
-    addResult('🚀 Starting Unified API Demo from TypeScript');
-    
+    addResult("🚀 Starting Unified API Demo from TypeScript");
+
     try {
       // Test launcher API
-      addResult('📱 Testing launcher.notify()...');
-      await launcher.notify({ 
-        message: 'TypeScript Unified Client Test!', 
-        type: 'radix' 
+      addResult("📱 Testing launcher.notify()...");
+      await launcher.notify({
+        message: "TypeScript Unified Client Test!",
+        type: "radix",
       });
-      addResult('✅ Launcher notification sent successfully');
+      addResult("✅ Launcher notification sent successfully");
 
       // Test dialog API
-      addResult('💬 Testing dialog.openDialog()...');
+      addResult("💬 Testing dialog.openDialog()...");
       const dialogResult = await dialog.openDialog({
-        title: 'TypeScript Unified API Test',
-        description: 'This demonstrates the TypeScript side of the unified API',
-        confirmLabel: 'Awesome!',
-        cancelLabel: 'Close'
+        title: "TypeScript Unified API Test",
+        description: "This demonstrates the TypeScript side of the unified API",
+        confirmLabel: "Awesome!",
+        cancelLabel: "Close",
       });
       addResult(`✅ Dialog result: ${JSON.stringify(dialogResult)}`);
 
       // Test event API
-      addResult('📋 Testing event.listEvents()...');
+      addResult("📋 Testing event.listEvents()...");
       const events = await event.listEvents();
       addResult(`✅ Events retrieved: ${JSON.stringify(events)}`);
 
-      addResult('🎉 TypeScript Unified API Demo completed successfully!');
+      addResult("🎉 TypeScript Unified API Demo completed successfully!");
     } catch (error) {
-      addResult(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      addResult(
+        `❌ Error: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   };
 
@@ -382,7 +424,7 @@ const UnifiedAPIDemo: React.FC = () => {
           <Button onClick={runUnifiedAPIDemo} className="w-full">
             🚀 Run TypeScript Unified API Demo
           </Button>
-          
+
           {testResults.length > 0 && (
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Test Results:</h4>
@@ -405,7 +447,7 @@ const PrometheosTestPlugin: Plugin = {
   id: manifest.id,
   manifest,
   init: async () => {
-    console.log('PrometheOS Test plugin initialized');
+    console.log("PrometheOS Test plugin initialized");
   },
   render: () => {
     return (

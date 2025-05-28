@@ -385,14 +385,16 @@ print("Subscribed to python_test_event")
 desktop.events.emit("python_test_event", {"timestamp": "2025-05-27", "source": "Python"})
 
 print("Event subscription test completed")`,
-      },    ],
+      },
+    ],
   },
   {
     id: "prometheos-api",
     name: "PrometheOS API Client",
     icon: Code,
     expanded: true,
-    cases: [      {
+    cases: [
+      {
         id: "real-api-test",
         name: "Real PrometheOS API Test",
         description: "Test the actual prometheos-client-python API",
@@ -722,10 +724,12 @@ except Exception as e:
     print("This is expected in the demo environment")
 
 "PrometheOS API Desktop Integration test completed"`,
-      },      {
+      },
+      {
         id: "api-comprehensive-demo",
         name: "Python Client Demo",
-        description: "Comprehensive demo of the prometheos-client-python module",
+        description:
+          "Comprehensive demo of the prometheos-client-python module",
         type: "code",
         code: `# Comprehensive PrometheOS Python Client Demo
 print("=== Comprehensive PrometheOS Python Client Demo ===")

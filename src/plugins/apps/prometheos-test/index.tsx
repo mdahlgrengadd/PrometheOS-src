@@ -1,2 +1,3 @@
-import PrometheosTestPlugin from './ui.tsx';
+import PrometheosTestPlugin from "./ui.tsx";
+
 export default PrometheosTestPlugin;
