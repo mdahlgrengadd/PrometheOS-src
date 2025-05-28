@@ -6,7 +6,7 @@
 - **Python-Desktop API Bridge**: 🎉 **FULLY FUNCTIONAL** 🎉
   - ✅ Python `desktop` object successfully injected into Pyodide context
   - ✅ `desktop.api.list_components()` - Component discovery working
-  - ✅ `desktop.api.execute()` - API execution working (calculator, launcher, etc.)
+  - ✅ `desktop.api.execute()` - API execution working (calculator, services, etc.)
   - ✅ `desktop.events.emit()` - Event emission working
   - ✅ postMessage communication Python→WorkerPluginManagerClient working
   - ✅ Object serialization with `to_js()` conversion for complex data
@@ -85,7 +85,7 @@ events_result = desktop.events.emit("python_test_event", {
 # Result: {'success': True, 'message': 'Event python_test_event emitted'}
 
 # 4. System Integration
-system_result = desktop.api.execute("launcher", "notify", {
+system_result = desktop.api.execute("services", "notify", {
     "message": "Python API test notification",
     "type": "sonner"
 })

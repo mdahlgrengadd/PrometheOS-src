@@ -5,13 +5,13 @@ import { eventBus } from '../../plugins/EventBus';
 import { registerApiActionHandler } from '../context/ApiContext';
 import { IApiComponent, IApiContextValue } from '../core/types';
 
-// Define the launcher API component
-export const launcherApiComponent: IApiComponent = {
-  id: "launcher",
+// Define the consolidated services API component
+export const servicesApiComponent: IApiComponent = {
+  id: "services",
   type: "System",
   name: "Services",
-  description: "Launches apps by ID or name",
-  path: "/api/launcher",
+  description: "System services for app management, notifications, dialogs, and events",
+  path: "/api/services",
   actions: [
     {
       id: "launchApp",
@@ -62,26 +62,10 @@ export const launcherApiComponent: IApiComponent = {
         },
       ],
     },
-  ],
-  state: {
-    enabled: true,
-    visible: true,
-  },
-};
-
-// Define the dialog API component
-export const dialogApiComponent: IApiComponent = {
-  id: "dialog",
-  type: "System",
-  name: "Dialog",
-  description: "Open a confirmation dialog and return user choice",
-  path: "/api/dialog",
-  actions: [
     {
       id: "openDialog",
       name: "Open Dialog",
-      description:
-        "Opens a confirmation dialog and returns whether the user confirmed",
+      description: "Opens a confirmation dialog and returns whether the user confirmed",
       available: true,
       parameters: [
         {
@@ -110,23 +94,10 @@ export const dialogApiComponent: IApiComponent = {
         },
       ],
     },
-  ],
-  state: { enabled: true, visible: true },
-};
-
-// Define the On Event API component
-export const onEventApiComponent: IApiComponent = {
-  id: "onEvent",
-  type: "System",
-  name: "On Event",
-  description: "Wait for a specific event by ID or until timeout",
-  path: "/api/onEvent",
-  actions: [
     {
       id: "waitForEvent",
       name: "Wait For Event",
-      description:
-        "Waits for the specified event to be emitted or until the timeout is reached",
+      description: "Waits for the specified event to be emitted or until the timeout is reached",
       available: true,
       parameters: [
         {
@@ -138,24 +109,11 @@ export const onEventApiComponent: IApiComponent = {
         {
           name: "timeout",
           type: "number",
-          description:
-            "Timeout in milliseconds (optional, default is infinite)",
+          description: "Timeout in milliseconds (optional, default is infinite)",
           required: false,
         },
       ],
     },
-  ],
-  state: { enabled: true, visible: true },
-};
-
-// Define the Event API component for listing registered event IDs
-export const eventApiComponent: IApiComponent = {
-  id: "event",
-  type: "System",
-  name: "Events",
-  description: "List currently registered event IDs",
-  path: "/api/event",
-  actions: [
     {
       id: "listEvents",
       name: "List Events",
@@ -164,16 +122,32 @@ export const eventApiComponent: IApiComponent = {
       parameters: [],
     },
   ],
-  state: { enabled: true, visible: true },
+  state: {
+    enabled: true,
+    visible: true,
+  },
 };
 
-// Register the component and its action handler at startup
-export function registerLauncherApi(apiContext: IApiContextValue) {
-  // Register the component
-  apiContext.registerComponent(launcherApiComponent);
+// Register the component and its action handlers at startup
+export function registerSystemServicesApi(apiContext: IApiContextValue) {
+  // Populate eventId parameter enum for UI dropdowns
+  const waitForEventAction = servicesApiComponent.actions.find(
+    (action) => action.id === "waitForEvent"
+  );
+  const eventIdParam = waitForEventAction?.parameters.find(
+    (p) => p.name === "eventId"
+  );
+  if (eventIdParam) {
+    eventIdParam.enum = eventBus.getEventNames();
+  }
 
-  // Register the action handler
-  registerApiActionHandler("launcher", "launchApp", async (params) => {
+  // Register the consolidated services component
+  apiContext.registerComponent(servicesApiComponent);
+
+  // Register all action handlers under the "services" namespace
+  
+  // Launch App action handler
+  registerApiActionHandler("services", "launchApp", async (params) => {
     const { appId } = params || {};
 
     if (!appId) {
@@ -197,8 +171,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     }
   });
 
-  // Register killApp action handler
-  registerApiActionHandler("launcher", "killApp", async (params) => {
+  // Kill App action handler
+  registerApiActionHandler("services", "killApp", async (params) => {
     const { appId } = params || {};
 
     if (!appId) {
@@ -220,8 +194,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     }
   });
 
-  // Register notify action handler
-  registerApiActionHandler("launcher", "notify", async (params) => {
+  // Notify action handler
+  registerApiActionHandler("services", "notify", async (params) => {
     const { message, type } = params || {};
     if (!message) {
       return { success: false, error: "Missing message" };
@@ -249,9 +223,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     }
   });
 
-  // Register the dialog component and its handler
-  apiContext.registerComponent(dialogApiComponent);
-  registerApiActionHandler("dialog", "openDialog", async (params) => {
+  // Open Dialog action handler
+  registerApiActionHandler("services", "openDialog", async (params) => {
     const { title, description, confirmLabel, cancelLabel } = params || {};
     return new Promise((resolve) => {
       // Emit an event to open the dialog; listener will invoke callback
@@ -270,15 +243,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     });
   });
 
-  // Populate eventId parameter enum for UI dropdowns
-  const eventIdParam = onEventApiComponent.actions[0].parameters.find(
-    (p) => p.name === "eventId"
-  );
-  if (eventIdParam) {
-    eventIdParam.enum = eventBus.getEventNames();
-  }
-  apiContext.registerComponent(onEventApiComponent);
-  registerApiActionHandler("onEvent", "waitForEvent", async (params) => {
+  // Wait For Event action handler
+  registerApiActionHandler("services", "waitForEvent", async (params) => {
     // Validate parameters
     const eventIdRaw = params?.eventId;
     const timeout = params?.timeout;
@@ -326,9 +292,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     });
   });
 
-  // Register Event listing API component and handler
-  apiContext.registerComponent(eventApiComponent);
-  registerApiActionHandler("event", "listEvents", async () => {
+  // List Events action handler
+  registerApiActionHandler("services", "listEvents", async () => {
     return { success: true, data: eventBus.getEventNames() };
   });
 }

@@ -51,23 +51,23 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*SystemApi* | [**dialogOpenDialog**](docs/SystemApi.md#dialogopendialog) | **POST** /api/dialog/openDialog | Open Dialog
-*SystemApi* | [**eventListEvents**](docs/SystemApi.md#eventlistevents) | **POST** /api/event/listEvents | List Events
-*SystemApi* | [**launcherKillApp**](docs/SystemApi.md#launcherkillapp) | **POST** /api/launcher/killApp | Kill App
-*SystemApi* | [**launcherLaunchApp**](docs/SystemApi.md#launcherlaunchapp) | **POST** /api/launcher/launchApp | Launch App
-*SystemApi* | [**launcherNotify**](docs/SystemApi.md#launchernotify) | **POST** /api/launcher/notify | Notify
-*SystemApi* | [**onEventWaitForEvent**](docs/SystemApi.md#oneventwaitforevent) | **POST** /api/onEvent/waitForEvent | Wait For Event
+*SystemApi* | [**servicesKillApp**](docs/SystemApi.md#serviceskillapp) | **POST** /api/services/killApp | Kill App
+*SystemApi* | [**servicesLaunchApp**](docs/SystemApi.md#serviceslaunchapp) | **POST** /api/services/launchApp | Launch App
+*SystemApi* | [**servicesListEvents**](docs/SystemApi.md#serviceslistevents) | **POST** /api/services/listEvents | List Events
+*SystemApi* | [**servicesNotify**](docs/SystemApi.md#servicesnotify) | **POST** /api/services/notify | Notify
+*SystemApi* | [**servicesOpenDialog**](docs/SystemApi.md#servicesopendialog) | **POST** /api/services/openDialog | Open Dialog
+*SystemApi* | [**servicesWaitForEvent**](docs/SystemApi.md#serviceswaitforevent) | **POST** /api/services/waitForEvent | Wait For Event
 
 
 ### Documentation For Models
 
- - [DialogOpenDialogRequest](docs/DialogOpenDialogRequest.md)
- - [LauncherKillAppRequest](docs/LauncherKillAppRequest.md)
- - [LauncherLaunchApp200Response](docs/LauncherLaunchApp200Response.md)
- - [LauncherLaunchApp400Response](docs/LauncherLaunchApp400Response.md)
- - [LauncherLaunchAppRequest](docs/LauncherLaunchAppRequest.md)
- - [LauncherNotifyRequest](docs/LauncherNotifyRequest.md)
- - [OnEventWaitForEventRequest](docs/OnEventWaitForEventRequest.md)
+ - [ServicesKillAppRequest](docs/ServicesKillAppRequest.md)
+ - [ServicesLaunchApp200Response](docs/ServicesLaunchApp200Response.md)
+ - [ServicesLaunchApp400Response](docs/ServicesLaunchApp400Response.md)
+ - [ServicesLaunchAppRequest](docs/ServicesLaunchAppRequest.md)
+ - [ServicesNotifyRequest](docs/ServicesNotifyRequest.md)
+ - [ServicesOpenDialogRequest](docs/ServicesOpenDialogRequest.md)
+ - [ServicesWaitForEventRequest](docs/ServicesWaitForEventRequest.md)
 
 
 <a id="documentation-for-authorization"></a>

@@ -87,7 +87,7 @@ npm run dev
 import micropip
 await micropip.install("http://localhost:8081/prometheos/wheels/prometheos-1.0.0-py3-none-any.whl")
 import prometheos
-await prometheos.launcher.notify("Hello from enhanced Python client!")
+await prometheos.services.notify("Hello from enhanced Python client!")
 ```
 
 ## 📋 Automation Scripts Added

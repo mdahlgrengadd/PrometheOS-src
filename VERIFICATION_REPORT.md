@@ -16,7 +16,7 @@ This report confirms that the OpenAPI generator successfully creates the Python 
 ```
 
 **Result:** Successfully generates `openapi.json` with complete API specification covering:
-- Launcher API (launchApp, killApp, notify)
+- Services API (launchApp, killApp, notify, openDialog, listEvents, waitForEvent)
 - Dialog API (openDialog)
 - Event API (listEvents, waitForEvent)
 - All request/response schemas
@@ -112,8 +112,8 @@ import prometheos
 prometheos.initialize()  # Automatically detects desktop object
 
 # Simple API usage
-await prometheos.launcher.notify("Hello from Python!")
-await prometheos.dialog.open_dialog("Test", "Dialog from Python!")
+await prometheos.services.notify("Hello from Python!")
+await prometheos.services.open_dialog("Test", "Dialog from Python!")
 ```
 
 ### Enhanced Features Available
@@ -157,7 +157,7 @@ The system requires only standard Node.js dependencies:
 import micropip
 await micropip.install("http://localhost:8080/prometheos/wheels/prometheos-1.0.0-py3-none-any.whl")
 import prometheos
-await prometheos.launcher.notify("Working!")
+await prometheos.services.notify("Working!")
 ```
 
 ---
@@ -239,7 +239,7 @@ npm run dev                 # Start development server
 import micropip
 await micropip.install("http://localhost:8080/prometheos/wheels/prometheos-1.0.0-py3-none-any.whl")
 import prometheos
-await prometheos.launcher.notify("Hello from Python!")
+await prometheos.services.notify("Hello from Python!")
 ```
 
 ### 🔄 Clean Clone Test Commands

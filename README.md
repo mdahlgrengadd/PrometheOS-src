@@ -38,13 +38,13 @@ import prometheos
 prometheos.initialize()
 
 # Send notifications
-await prometheos.launcher.notify("Hello from Python!")
+await prometheos.services.notify("Hello from Python!")
 
 # Launch applications
-await prometheos.launcher.launch_app("calculator")
+await prometheos.services.launch_app("calculator")
 
 # Open dialogs
-result = await prometheos.dialog.open_dialog(
+result = await prometheos.services.open_dialog(
     title="Python App",
     description="Interactive dialog from Python code",
     confirm_label="OK"
@@ -143,7 +143,7 @@ import prometheos
 # Test basic functionality
 if prometheos.initialize():
     print("✓ PrometheOS client initialized successfully!")
-    await prometheos.launcher.notify("Hello from PrometheOS!")
+    await prometheos.services.notify("Hello from PrometheOS!")
 else:
     print("✗ Failed to initialize PrometheOS client")
 ```
@@ -177,27 +177,19 @@ If you see "Desktop API bridge not available":
 
 ## 🎯 API Reference
 
-### Launcher API
+### Services API
 ```python
-await prometheos.launcher.launch_app("app_id")
-await prometheos.launcher.kill_app("app_id") 
-await prometheos.launcher.notify("message", "type")
-```
-
-### Dialog API
-```python
-await prometheos.dialog.open_dialog(
+await prometheos.services.launch_app("app_id")
+await prometheos.services.kill_app("app_id") 
+await prometheos.services.notify("message", "type")
+await prometheos.services.open_dialog(
     title="Title",
     description="Description", 
     confirm_label="OK",
     cancel_label="Cancel"
 )
-```
-
-### Event API
-```python
-await prometheos.on_event.wait_for_event("event_id", timeout=5000)
-await prometheos.event.list_events()
+await prometheos.services.wait_for_event("event_id", timeout=5000)
+await prometheos.services.list_events()
 ```
 
 ### Low-Level API

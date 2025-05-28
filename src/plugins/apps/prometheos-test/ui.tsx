@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Plugin } from "../../../plugins/types";
 // Import the prometheos-client library
-import { dialog, event, launcher, onEvent } from "../../../prometheos-client";
+import { services } from "../../../prometheos-client";
 import { manifest } from "./manifest";
 
 const PrometheosTestComponent: React.FC = () => {
@@ -50,7 +50,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("launch", true);
     try {
       addLog(`🚀 Launching app: ${appId}`);
-      const result = await launcher.launchApp({ appId: appId.trim() });
+      const result = await services.launchApp({ appId: appId.trim() });
       addLog(`✅ Launch result: ${JSON.stringify(result)}`);
     } catch (error) {
       addLog(
@@ -72,7 +72,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("kill", true);
     try {
       addLog(`🔴 Killing app: ${appId}`);
-      const result = await launcher.killApp({ appId: appId.trim() });
+      const result = await services.killApp({ appId: appId.trim() });
       addLog(`✅ Kill result: ${JSON.stringify(result)}`);
     } catch (error) {
       addLog(
@@ -94,7 +94,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("notify", true);
     try {
       addLog(`📱 Sending notification: ${notificationMessage}`);
-      const result = await launcher.notify({
+      const result = await services.notify({
         message: notificationMessage.trim(),
         type: "radix", // You can change this to 'sonner' if you prefer
       });
@@ -119,7 +119,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("dialog", true);
     try {
       addLog(`🔔 Opening dialog: ${dialogTitle}`);
-      const result = await dialog.openDialog({
+      const result = await services.openDialog({
         title: dialogTitle.trim(),
         description: dialogDescription.trim() || undefined,
         confirmLabel: "Yes",
@@ -141,7 +141,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("listEvents", true);
     try {
       addLog(`📋 Listing available events...`);
-      const result = await event.listEvents();
+      const result = await services.listEvents();
       addLog(`✅ Events result: ${JSON.stringify(result)}`);
     } catch (error) {
       addLog(
@@ -163,7 +163,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("waitEvent", true);
     try {
       addLog(`⏳ Waiting for event: ${eventId} (timeout: ${timeout}ms)`);
-      const result = await onEvent.waitForEvent({
+      const result = await services.waitForEvent({
         eventId: eventId.trim(),
         timeout: timeout,
       });
@@ -381,16 +381,16 @@ const UnifiedAPIDemo: React.FC = () => {
 
     try {
       // Test launcher API
-      addResult("📱 Testing launcher.notify()...");
-      await launcher.notify({
+      addResult("📱 Testing services.notify()...");
+      await services.notify({
         message: "TypeScript Unified Client Test!",
         type: "radix",
       });
       addResult("✅ Launcher notification sent successfully");
 
       // Test dialog API
-      addResult("💬 Testing dialog.openDialog()...");
-      const dialogResult = await dialog.openDialog({
+      addResult("💬 Testing services.openDialog()...");
+      const dialogResult = await services.openDialog({
         title: "TypeScript Unified API Test",
         description: "This demonstrates the TypeScript side of the unified API",
         confirmLabel: "Awesome!",
@@ -399,8 +399,8 @@ const UnifiedAPIDemo: React.FC = () => {
       addResult(`✅ Dialog result: ${JSON.stringify(dialogResult)}`);
 
       // Test event API
-      addResult("📋 Testing event.listEvents()...");
-      const events = await event.listEvents();
+      addResult("📋 Testing services.listEvents()...");
+      const events = await services.listEvents();
       addResult(`✅ Events retrieved: ${JSON.stringify(events)}`);
 
       addResult("🎉 TypeScript Unified API Demo completed successfully!");

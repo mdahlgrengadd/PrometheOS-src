@@ -16,12 +16,12 @@ from pydantic import validate_call, Field, StrictFloat, StrictStr, StrictInt
 from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
-from prometheos_client.models.dialog_open_dialog_request import DialogOpenDialogRequest
-from prometheos_client.models.launcher_kill_app_request import LauncherKillAppRequest
-from prometheos_client.models.launcher_launch_app200_response import LauncherLaunchApp200Response
-from prometheos_client.models.launcher_launch_app_request import LauncherLaunchAppRequest
-from prometheos_client.models.launcher_notify_request import LauncherNotifyRequest
-from prometheos_client.models.on_event_wait_for_event_request import OnEventWaitForEventRequest
+from prometheos_client.models.services_kill_app_request import ServicesKillAppRequest
+from prometheos_client.models.services_launch_app200_response import ServicesLaunchApp200Response
+from prometheos_client.models.services_launch_app_request import ServicesLaunchAppRequest
+from prometheos_client.models.services_notify_request import ServicesNotifyRequest
+from prometheos_client.models.services_open_dialog_request import ServicesOpenDialogRequest
+from prometheos_client.models.services_wait_for_event_request import ServicesWaitForEventRequest
 
 from prometheos_client.api_client import ApiClient, RequestSerialized
 from prometheos_client.api_response import ApiResponse
@@ -42,9 +42,9 @@ class SystemApi:
 
 
     @validate_call
-    async def dialog_open_dialog(
+    async def services_kill_app(
         self,
-        dialog_open_dialog_request: DialogOpenDialogRequest,
+        services_kill_app_request: ServicesKillAppRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -57,13 +57,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
-        """Open Dialog
+    ) -> ServicesLaunchApp200Response:
+        """Kill App
 
-        Opens a confirmation dialog and returns whether the user confirmed
+        Closes an app by its ID
 
-        :param dialog_open_dialog_request: (required)
-        :type dialog_open_dialog_request: DialogOpenDialogRequest
+        :param services_kill_app_request: (required)
+        :type services_kill_app_request: ServicesKillAppRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -86,8 +86,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._dialog_open_dialog_serialize(
-            dialog_open_dialog_request=dialog_open_dialog_request,
+        _param = self._services_kill_app_serialize(
+            services_kill_app_request=services_kill_app_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -95,8 +95,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -110,9 +110,9 @@ class SystemApi:
 
 
     @validate_call
-    async def dialog_open_dialog_with_http_info(
+    async def services_kill_app_with_http_info(
         self,
-        dialog_open_dialog_request: DialogOpenDialogRequest,
+        services_kill_app_request: ServicesKillAppRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -125,13 +125,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
-        """Open Dialog
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
+        """Kill App
 
-        Opens a confirmation dialog and returns whether the user confirmed
+        Closes an app by its ID
 
-        :param dialog_open_dialog_request: (required)
-        :type dialog_open_dialog_request: DialogOpenDialogRequest
+        :param services_kill_app_request: (required)
+        :type services_kill_app_request: ServicesKillAppRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -154,8 +154,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._dialog_open_dialog_serialize(
-            dialog_open_dialog_request=dialog_open_dialog_request,
+        _param = self._services_kill_app_serialize(
+            services_kill_app_request=services_kill_app_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -163,8 +163,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -178,9 +178,9 @@ class SystemApi:
 
 
     @validate_call
-    async def dialog_open_dialog_without_preload_content(
+    async def services_kill_app_without_preload_content(
         self,
-        dialog_open_dialog_request: DialogOpenDialogRequest,
+        services_kill_app_request: ServicesKillAppRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -194,12 +194,12 @@ class SystemApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Open Dialog
+        """Kill App
 
-        Opens a confirmation dialog and returns whether the user confirmed
+        Closes an app by its ID
 
-        :param dialog_open_dialog_request: (required)
-        :type dialog_open_dialog_request: DialogOpenDialogRequest
+        :param services_kill_app_request: (required)
+        :type services_kill_app_request: ServicesKillAppRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -222,8 +222,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._dialog_open_dialog_serialize(
-            dialog_open_dialog_request=dialog_open_dialog_request,
+        _param = self._services_kill_app_serialize(
+            services_kill_app_request=services_kill_app_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -231,8 +231,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -241,9 +241,9 @@ class SystemApi:
         return response_data.response
 
 
-    def _dialog_open_dialog_serialize(
+    def _services_kill_app_serialize(
         self,
-        dialog_open_dialog_request,
+        services_kill_app_request,
         _request_auth,
         _content_type,
         _headers,
@@ -269,8 +269,8 @@ class SystemApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if dialog_open_dialog_request is not None:
-            _body_params = dialog_open_dialog_request
+        if services_kill_app_request is not None:
+            _body_params = services_kill_app_request
 
 
         # set the HTTP header `Accept`
@@ -301,7 +301,7 @@ class SystemApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/api/dialog/openDialog',
+            resource_path='/api/services/killApp',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -318,7 +318,283 @@ class SystemApi:
 
 
     @validate_call
-    async def event_list_events(
+    async def services_launch_app(
+        self,
+        services_launch_app_request: ServicesLaunchAppRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ServicesLaunchApp200Response:
+        """Launch App
+
+        Launch an app by its ID
+
+        :param services_launch_app_request: (required)
+        :type services_launch_app_request: ServicesLaunchAppRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_launch_app_serialize(
+            services_launch_app_request=services_launch_app_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    async def services_launch_app_with_http_info(
+        self,
+        services_launch_app_request: ServicesLaunchAppRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
+        """Launch App
+
+        Launch an app by its ID
+
+        :param services_launch_app_request: (required)
+        :type services_launch_app_request: ServicesLaunchAppRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_launch_app_serialize(
+            services_launch_app_request=services_launch_app_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    async def services_launch_app_without_preload_content(
+        self,
+        services_launch_app_request: ServicesLaunchAppRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Launch App
+
+        Launch an app by its ID
+
+        :param services_launch_app_request: (required)
+        :type services_launch_app_request: ServicesLaunchAppRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_launch_app_serialize(
+            services_launch_app_request=services_launch_app_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _services_launch_app_serialize(
+        self,
+        services_launch_app_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[
+            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
+        ] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if services_launch_app_request is not None:
+            _body_params = services_launch_app_request
+
+
+        # set the HTTP header `Accept`
+        if 'Accept' not in _header_params:
+            _header_params['Accept'] = self.api_client.select_header_accept(
+                [
+                    'application/json'
+                ]
+            )
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
+
+        # authentication setting
+        _auth_settings: List[str] = [
+        ]
+
+        return self.api_client.param_serialize(
+            method='POST',
+            resource_path='/api/services/launchApp',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    async def services_list_events(
         self,
         _request_timeout: Union[
             None,
@@ -332,7 +608,7 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
+    ) -> ServicesLaunchApp200Response:
         """List Events
 
         Returns all known event names
@@ -359,7 +635,7 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._event_list_events_serialize(
+        _param = self._services_list_events_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -367,8 +643,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -382,7 +658,7 @@ class SystemApi:
 
 
     @validate_call
-    async def event_list_events_with_http_info(
+    async def services_list_events_with_http_info(
         self,
         _request_timeout: Union[
             None,
@@ -396,7 +672,7 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
         """List Events
 
         Returns all known event names
@@ -423,7 +699,7 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._event_list_events_serialize(
+        _param = self._services_list_events_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -431,8 +707,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -446,7 +722,7 @@ class SystemApi:
 
 
     @validate_call
-    async def event_list_events_without_preload_content(
+    async def services_list_events_without_preload_content(
         self,
         _request_timeout: Union[
             None,
@@ -487,7 +763,7 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._event_list_events_serialize(
+        _param = self._services_list_events_serialize(
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -495,8 +771,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -505,7 +781,7 @@ class SystemApi:
         return response_data.response
 
 
-    def _event_list_events_serialize(
+    def _services_list_events_serialize(
         self,
         _request_auth,
         _content_type,
@@ -549,7 +825,7 @@ class SystemApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/api/event/listEvents',
+            resource_path='/api/services/listEvents',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -566,9 +842,9 @@ class SystemApi:
 
 
     @validate_call
-    async def launcher_kill_app(
+    async def services_notify(
         self,
-        launcher_kill_app_request: LauncherKillAppRequest,
+        services_notify_request: ServicesNotifyRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -581,565 +857,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
-        """Kill App
-
-        Closes an app by its ID
-
-        :param launcher_kill_app_request: (required)
-        :type launcher_kill_app_request: LauncherKillAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_kill_app_serialize(
-            launcher_kill_app_request=launcher_kill_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def launcher_kill_app_with_http_info(
-        self,
-        launcher_kill_app_request: LauncherKillAppRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
-        """Kill App
-
-        Closes an app by its ID
-
-        :param launcher_kill_app_request: (required)
-        :type launcher_kill_app_request: LauncherKillAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_kill_app_serialize(
-            launcher_kill_app_request=launcher_kill_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def launcher_kill_app_without_preload_content(
-        self,
-        launcher_kill_app_request: LauncherKillAppRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Kill App
-
-        Closes an app by its ID
-
-        :param launcher_kill_app_request: (required)
-        :type launcher_kill_app_request: LauncherKillAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_kill_app_serialize(
-            launcher_kill_app_request=launcher_kill_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _launcher_kill_app_serialize(
-        self,
-        launcher_kill_app_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if launcher_kill_app_request is not None:
-            _body_params = launcher_kill_app_request
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='POST',
-            resource_path='/api/launcher/killApp',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
-    async def launcher_launch_app(
-        self,
-        launcher_launch_app_request: LauncherLaunchAppRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
-        """Launch App
-
-        Launch an app by its ID
-
-        :param launcher_launch_app_request: (required)
-        :type launcher_launch_app_request: LauncherLaunchAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_launch_app_serialize(
-            launcher_launch_app_request=launcher_launch_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def launcher_launch_app_with_http_info(
-        self,
-        launcher_launch_app_request: LauncherLaunchAppRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
-        """Launch App
-
-        Launch an app by its ID
-
-        :param launcher_launch_app_request: (required)
-        :type launcher_launch_app_request: LauncherLaunchAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_launch_app_serialize(
-            launcher_launch_app_request=launcher_launch_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def launcher_launch_app_without_preload_content(
-        self,
-        launcher_launch_app_request: LauncherLaunchAppRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Launch App
-
-        Launch an app by its ID
-
-        :param launcher_launch_app_request: (required)
-        :type launcher_launch_app_request: LauncherLaunchAppRequest
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._launcher_launch_app_serialize(
-            launcher_launch_app_request=launcher_launch_app_request,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _launcher_launch_app_serialize(
-        self,
-        launcher_launch_app_request,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if launcher_launch_app_request is not None:
-            _body_params = launcher_launch_app_request
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='POST',
-            resource_path='/api/launcher/launchApp',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
-    async def launcher_notify(
-        self,
-        launcher_notify_request: LauncherNotifyRequest,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
+    ) -> ServicesLaunchApp200Response:
         """Notify
 
         Show a notification on screen
 
-        :param launcher_notify_request: (required)
-        :type launcher_notify_request: LauncherNotifyRequest
+        :param services_notify_request: (required)
+        :type services_notify_request: ServicesNotifyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1162,8 +886,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._launcher_notify_serialize(
-            launcher_notify_request=launcher_notify_request,
+        _param = self._services_notify_serialize(
+            services_notify_request=services_notify_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1171,8 +895,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1186,9 +910,9 @@ class SystemApi:
 
 
     @validate_call
-    async def launcher_notify_with_http_info(
+    async def services_notify_with_http_info(
         self,
-        launcher_notify_request: LauncherNotifyRequest,
+        services_notify_request: ServicesNotifyRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1201,13 +925,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
         """Notify
 
         Show a notification on screen
 
-        :param launcher_notify_request: (required)
-        :type launcher_notify_request: LauncherNotifyRequest
+        :param services_notify_request: (required)
+        :type services_notify_request: ServicesNotifyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1230,8 +954,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._launcher_notify_serialize(
-            launcher_notify_request=launcher_notify_request,
+        _param = self._services_notify_serialize(
+            services_notify_request=services_notify_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1239,8 +963,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1254,9 +978,9 @@ class SystemApi:
 
 
     @validate_call
-    async def launcher_notify_without_preload_content(
+    async def services_notify_without_preload_content(
         self,
-        launcher_notify_request: LauncherNotifyRequest,
+        services_notify_request: ServicesNotifyRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1274,8 +998,8 @@ class SystemApi:
 
         Show a notification on screen
 
-        :param launcher_notify_request: (required)
-        :type launcher_notify_request: LauncherNotifyRequest
+        :param services_notify_request: (required)
+        :type services_notify_request: ServicesNotifyRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1298,8 +1022,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._launcher_notify_serialize(
-            launcher_notify_request=launcher_notify_request,
+        _param = self._services_notify_serialize(
+            services_notify_request=services_notify_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1307,8 +1031,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1317,9 +1041,9 @@ class SystemApi:
         return response_data.response
 
 
-    def _launcher_notify_serialize(
+    def _services_notify_serialize(
         self,
-        launcher_notify_request,
+        services_notify_request,
         _request_auth,
         _content_type,
         _headers,
@@ -1345,8 +1069,8 @@ class SystemApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if launcher_notify_request is not None:
-            _body_params = launcher_notify_request
+        if services_notify_request is not None:
+            _body_params = services_notify_request
 
 
         # set the HTTP header `Accept`
@@ -1377,7 +1101,7 @@ class SystemApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/api/launcher/notify',
+            resource_path='/api/services/notify',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1394,9 +1118,9 @@ class SystemApi:
 
 
     @validate_call
-    async def on_event_wait_for_event(
+    async def services_open_dialog(
         self,
-        on_event_wait_for_event_request: OnEventWaitForEventRequest,
+        services_open_dialog_request: ServicesOpenDialogRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1409,13 +1133,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LauncherLaunchApp200Response:
-        """Wait For Event
+    ) -> ServicesLaunchApp200Response:
+        """Open Dialog
 
-        Waits for the specified event to be emitted or until the timeout is reached
+        Opens a confirmation dialog and returns whether the user confirmed
 
-        :param on_event_wait_for_event_request: (required)
-        :type on_event_wait_for_event_request: OnEventWaitForEventRequest
+        :param services_open_dialog_request: (required)
+        :type services_open_dialog_request: ServicesOpenDialogRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1438,8 +1162,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._on_event_wait_for_event_serialize(
-            on_event_wait_for_event_request=on_event_wait_for_event_request,
+        _param = self._services_open_dialog_serialize(
+            services_open_dialog_request=services_open_dialog_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1447,8 +1171,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1462,9 +1186,9 @@ class SystemApi:
 
 
     @validate_call
-    async def on_event_wait_for_event_with_http_info(
+    async def services_open_dialog_with_http_info(
         self,
-        on_event_wait_for_event_request: OnEventWaitForEventRequest,
+        services_open_dialog_request: ServicesOpenDialogRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1477,13 +1201,13 @@ class SystemApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LauncherLaunchApp200Response]:
-        """Wait For Event
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
+        """Open Dialog
 
-        Waits for the specified event to be emitted or until the timeout is reached
+        Opens a confirmation dialog and returns whether the user confirmed
 
-        :param on_event_wait_for_event_request: (required)
-        :type on_event_wait_for_event_request: OnEventWaitForEventRequest
+        :param services_open_dialog_request: (required)
+        :type services_open_dialog_request: ServicesOpenDialogRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1506,8 +1230,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._on_event_wait_for_event_serialize(
-            on_event_wait_for_event_request=on_event_wait_for_event_request,
+        _param = self._services_open_dialog_serialize(
+            services_open_dialog_request=services_open_dialog_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1515,8 +1239,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1530,9 +1254,285 @@ class SystemApi:
 
 
     @validate_call
-    async def on_event_wait_for_event_without_preload_content(
+    async def services_open_dialog_without_preload_content(
         self,
-        on_event_wait_for_event_request: OnEventWaitForEventRequest,
+        services_open_dialog_request: ServicesOpenDialogRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Open Dialog
+
+        Opens a confirmation dialog and returns whether the user confirmed
+
+        :param services_open_dialog_request: (required)
+        :type services_open_dialog_request: ServicesOpenDialogRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_open_dialog_serialize(
+            services_open_dialog_request=services_open_dialog_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _services_open_dialog_serialize(
+        self,
+        services_open_dialog_request,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[
+            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
+        ] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+        if services_open_dialog_request is not None:
+            _body_params = services_open_dialog_request
+
+
+        # set the HTTP header `Accept`
+        if 'Accept' not in _header_params:
+            _header_params['Accept'] = self.api_client.select_header_accept(
+                [
+                    'application/json'
+                ]
+            )
+
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
+
+        # authentication setting
+        _auth_settings: List[str] = [
+        ]
+
+        return self.api_client.param_serialize(
+            method='POST',
+            resource_path='/api/services/openDialog',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    async def services_wait_for_event(
+        self,
+        services_wait_for_event_request: ServicesWaitForEventRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ServicesLaunchApp200Response:
+        """Wait For Event
+
+        Waits for the specified event to be emitted or until the timeout is reached
+
+        :param services_wait_for_event_request: (required)
+        :type services_wait_for_event_request: ServicesWaitForEventRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_wait_for_event_serialize(
+            services_wait_for_event_request=services_wait_for_event_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    async def services_wait_for_event_with_http_info(
+        self,
+        services_wait_for_event_request: ServicesWaitForEventRequest,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[ServicesLaunchApp200Response]:
+        """Wait For Event
+
+        Waits for the specified event to be emitted or until the timeout is reached
+
+        :param services_wait_for_event_request: (required)
+        :type services_wait_for_event_request: ServicesWaitForEventRequest
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._services_wait_for_event_serialize(
+            services_wait_for_event_request=services_wait_for_event_request,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
+        }
+        response_data = await self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        await response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    async def services_wait_for_event_without_preload_content(
+        self,
+        services_wait_for_event_request: ServicesWaitForEventRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1550,8 +1550,8 @@ class SystemApi:
 
         Waits for the specified event to be emitted or until the timeout is reached
 
-        :param on_event_wait_for_event_request: (required)
-        :type on_event_wait_for_event_request: OnEventWaitForEventRequest
+        :param services_wait_for_event_request: (required)
+        :type services_wait_for_event_request: ServicesWaitForEventRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1574,8 +1574,8 @@ class SystemApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._on_event_wait_for_event_serialize(
-            on_event_wait_for_event_request=on_event_wait_for_event_request,
+        _param = self._services_wait_for_event_serialize(
+            services_wait_for_event_request=services_wait_for_event_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1583,8 +1583,8 @@ class SystemApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LauncherLaunchApp200Response",
-            '400': "LauncherLaunchApp400Response",
+            '200': "ServicesLaunchApp200Response",
+            '400': "ServicesLaunchApp400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1593,9 +1593,9 @@ class SystemApi:
         return response_data.response
 
 
-    def _on_event_wait_for_event_serialize(
+    def _services_wait_for_event_serialize(
         self,
-        on_event_wait_for_event_request,
+        services_wait_for_event_request,
         _request_auth,
         _content_type,
         _headers,
@@ -1621,8 +1621,8 @@ class SystemApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if on_event_wait_for_event_request is not None:
-            _body_params = on_event_wait_for_event_request
+        if services_wait_for_event_request is not None:
+            _body_params = services_wait_for_event_request
 
 
         # set the HTTP header `Accept`
@@ -1653,7 +1653,7 @@ class SystemApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/api/onEvent/waitForEvent',
+            resource_path='/api/services/waitForEvent',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

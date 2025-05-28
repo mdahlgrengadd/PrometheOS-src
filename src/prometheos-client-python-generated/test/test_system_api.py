@@ -26,43 +26,43 @@ class TestSystemApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_dialog_open_dialog(self) -> None:
-        """Test case for dialog_open_dialog
-
-        Open Dialog
-        """
-        pass
-
-    async def test_event_list_events(self) -> None:
-        """Test case for event_list_events
-
-        List Events
-        """
-        pass
-
-    async def test_launcher_kill_app(self) -> None:
-        """Test case for launcher_kill_app
+    async def test_services_kill_app(self) -> None:
+        """Test case for services_kill_app
 
         Kill App
         """
         pass
 
-    async def test_launcher_launch_app(self) -> None:
-        """Test case for launcher_launch_app
+    async def test_services_launch_app(self) -> None:
+        """Test case for services_launch_app
 
         Launch App
         """
         pass
 
-    async def test_launcher_notify(self) -> None:
-        """Test case for launcher_notify
+    async def test_services_list_events(self) -> None:
+        """Test case for services_list_events
+
+        List Events
+        """
+        pass
+
+    async def test_services_notify(self) -> None:
+        """Test case for services_notify
 
         Notify
         """
         pass
 
-    async def test_on_event_wait_for_event(self) -> None:
-        """Test case for on_event_wait_for_event
+    async def test_services_open_dialog(self) -> None:
+        """Test case for services_open_dialog
+
+        Open Dialog
+        """
+        pass
+
+    async def test_services_wait_for_event(self) -> None:
+        """Test case for services_wait_for_event
 
         Wait For Event
         """

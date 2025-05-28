@@ -34,7 +34,9 @@ function generateUnifiedClients() {
 
     // Create output directories
     fs.mkdirSync(tsOutputDir, { recursive: true });
-    fs.mkdirSync(pythonOutputDir, { recursive: true }); // Generate TypeScript client
+    fs.mkdirSync(pythonOutputDir, { recursive: true }); 
+    
+    // Generate TypeScript client
     console.log("📦 Generating TypeScript client...");
     execSync(
       `npx @openapitools/openapi-generator-cli generate ` +
@@ -133,39 +135,30 @@ class DesktopApiClient {
 // Create API instance that uses our desktop bridge
 const desktopClient = new DesktopApiClient();
 
-// Create namespaced API instances that use our bridge
-export const launcher = {
+// Consolidated services API using the unified "/api/services" endpoint
+export const services = {
   async launchApp(params: { appId: string }) {
-    return desktopClient.execute('launcher', 'launchApp', params);
+    return desktopClient.execute('services', 'launchApp', params);
   },
   async killApp(params: { appId: string }) {
-    return desktopClient.execute('launcher', 'killApp', params);
+    return desktopClient.execute('services', 'killApp', params);
   },
   async notify(params: { message: string; type?: 'radix' | 'sonner' }) {
-    return desktopClient.execute('launcher', 'notify', params);
-  }
-};
-
-export const dialog = {
+    return desktopClient.execute('services', 'notify', params);
+  },
   async openDialog(params: { 
     title: string; 
     description?: string; 
     confirmLabel?: string; 
     cancelLabel?: string; 
   }) {
-    return desktopClient.execute('dialog', 'openDialog', params);
-  }
-};
-
-export const onEvent = {
+    return desktopClient.execute('services', 'openDialog', params);
+  },
   async waitForEvent(params: { eventId: string; timeout?: number }) {
-    return desktopClient.execute('onEvent', 'waitForEvent', params);
-  }
-};
-
-export const event = {
+    return desktopClient.execute('services', 'waitForEvent', params);
+  },
   async listEvents(params: Record<string, never> = {}) {
-    return desktopClient.execute('event', 'listEvents', params);
+    return desktopClient.execute('services', 'listEvents', params);
   }
 };
 
@@ -176,10 +169,7 @@ export const api = {
 
 // Default export
 export default {
-  launcher,
-  dialog,
-  onEvent,
-  event,
+  services,
   api
 };
 `;
@@ -267,30 +257,26 @@ class DesktopBridge:
 _desktop_client = DesktopBridge()
 
 
-class Launcher:
-    """Launcher API for managing applications"""
+class Services:
+    """Consolidated services API for app management, notifications, dialogs, and events"""
     
     @staticmethod
     async def launch_app(app_id: str) -> Any:
         """Launch an application by ID"""
-        return await _desktop_client.execute('launcher', 'launchApp', {'appId': app_id})
+        return await _desktop_client.execute('services', 'launchApp', {'appId': app_id})
     
     @staticmethod
     async def kill_app(app_id: str) -> Any:
         """Kill an application by ID"""
-        return await _desktop_client.execute('launcher', 'killApp', {'appId': app_id})
+        return await _desktop_client.execute('services', 'killApp', {'appId': app_id})
     
     @staticmethod
     async def notify(message: str, notification_type: str = 'radix') -> Any:
         """Show a notification"""
-        return await _desktop_client.execute('launcher', 'notify', {
+        return await _desktop_client.execute('services', 'notify', {
             'message': message,
             'type': notification_type
         })
-
-
-class Dialog:
-    """Dialog API for user interactions"""
     
     @staticmethod
     async def open_dialog(
@@ -308,11 +294,7 @@ class Dialog:
         if cancel_label:
             params['cancelLabel'] = cancel_label
         
-        return await _desktop_client.execute('dialog', 'openDialog', params)
-
-
-class OnEvent:
-    """Event waiting API"""
+        return await _desktop_client.execute('services', 'openDialog', params)
     
     @staticmethod
     async def wait_for_event(event_id: str, timeout: Optional[int] = None) -> Any:
@@ -321,16 +303,12 @@ class OnEvent:
         if timeout:
             params['timeout'] = timeout
         
-        return await _desktop_client.execute('onEvent', 'waitForEvent', params)
-
-
-class Event:
-    """Event management API"""
+        return await _desktop_client.execute('services', 'waitForEvent', params)
     
     @staticmethod
     async def list_events() -> Any:
         """List all available events"""
-        return await _desktop_client.execute('event', 'listEvents', {})
+        return await _desktop_client.execute('services', 'listEvents', {})
 
 
 class Api:
@@ -343,24 +321,16 @@ class Api:
 
 
 # Create instances for convenience
-launcher = Launcher()
-dialog = Dialog()
-on_event = OnEvent()
-event = Event()
+services = Services()
 api = Api()
 
 # Export everything
 __all__ = [
     'DesktopBridge',
-    'Launcher',
-    'Dialog', 
-    'OnEvent',
-    'Event',
+    'Services',
     'Api',
-    'launcher',
-    'dialog',
-    'on_event',
-    'event',
+    # Instances
+    'services',
     'api'
 ]
 `;
@@ -385,28 +355,28 @@ This demonstrates how to use the Python client in both import styles:
 """
 
 import asyncio
-from prometheos_client import launcher, dialog, on_event, event, api
+from prometheos_client import services, api
 
 async def example_basic_usage():
     """Basic usage examples"""
     
-    # Launch an application
+    # Launch an application (recommended: use services)
     try:
-        result = await launcher.launch_app("audioplayer")
+        result = await services.launch_app("audioplayer")
         print(f"Launched app: {result}")
     except Exception as e:
         print(f"Failed to launch app: {e}")
     
-    # Show a notification
+    # Show a notification (recommended: use services)
     try:
-        await launcher.notify("Hello from Python!", "radix")
+        await services.notify("Hello from Python!", "radix")
         print("Notification sent successfully")
     except Exception as e:
         print(f"Failed to send notification: {e}")
     
-    # Open a dialog
+    # Open a dialog (recommended: use services)
     try:
-        result = await dialog.open_dialog(
+        result = await services.open_dialog(
             title="Python Dialog",
             description="This dialog was opened from Python!",
             confirm_label="OK",
@@ -419,16 +389,16 @@ async def example_basic_usage():
 async def example_event_handling():
     """Event handling examples"""
     
-    # List available events
+    # List available events (recommended: use services)
     try:
-        events = await event.list_events()
+        events = await services.list_events()
         print(f"Available events: {events}")
     except Exception as e:
         print(f"Failed to list events: {e}")
     
-    # Wait for a specific event (with timeout)
+    # Wait for a specific event (recommended: use services)
     try:
-        result = await on_event.wait_for_event("app-launched", timeout=5000)
+        result = await services.wait_for_event("app-launched", timeout=5000)
         print(f"Event received: {result}")
     except Exception as e:
         print(f"Failed to wait for event: {e}")
@@ -439,7 +409,7 @@ async def example_low_level_api():
     # Direct API calls
     try:
         # Kill an app using low-level API
-        result = await api.execute("launcher", "killApp", {"appId": "audioplayer"})
+        result = await api.execute("services", "killApp", {"appId": "audioplayer"})
         print(f"Kill app result: {result}")
     except Exception as e:
         print(f"Failed to execute API call: {e}")
@@ -449,7 +419,7 @@ async def main():
     print("🐍 PrometheOS Python Client Examples")
     print("=" * 40)
     
-    print("\\n1. Basic Usage:")
+    print("\\n1. Basic Usage (Recommended):")
     await example_basic_usage()
     
     print("\\n2. Event Handling:")

@@ -49,7 +49,7 @@ npm run build:wheel      # Build wheel only
 
 1. **OpenAPI Specification** (`openapi.json`)
    - Generated from component definitions
-   - 8 endpoints covering launcher, dialog, and event APIs
+   - 6 endpoints for the unified services API
 
 2. **Generated Clients**
    - TypeScript client: `src/prometheos-client-generated/`
@@ -116,7 +116,7 @@ await micropip.install("http://localhost:8081/prometheos/wheels/prometheos-1.0.0
 import prometheos
 
 # Test the enhanced client
-await prometheos.launcher.notify("Hello from enhanced Python client!")
+await prometheos.services.notify("Hello from enhanced Python client!")
 ```
 
 ### 3. Verify Build Output
@@ -179,13 +179,13 @@ Development server automatically finds next available port if 8080 is busy.
 import prometheos
 
 # Simple notification
-await prometheos.launcher.notify("Hello World!")
+await prometheos.services.notify("Hello World!")
 
 # Launch application
-result = await prometheos.launcher.launch_app("calculator")
+result = await prometheos.services.launch_app("calculator")
 
 # Open dialog
-response = await prometheos.dialog.open_dialog(
+response = await prometheos.services.open_dialog(
     title="Python App",
     description="Dialog from Python",
     confirm_label="OK"
@@ -200,7 +200,7 @@ await prometheos.on_event.wait_for_event("app_launched")
 
 # Error handling with enhanced client
 try:
-    await prometheos.launcher.launch_app("nonexistent")
+    await prometheos.services.launch_app("nonexistent")
 except Exception as e:
     print(f"Launch failed: {e}")
 ```

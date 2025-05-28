@@ -36,39 +36,30 @@ class DesktopApiClient {
 // Create API instance that uses our desktop bridge
 const desktopClient = new DesktopApiClient();
 
-// Create namespaced API instances that use our bridge
-export const launcher = {
+// Consolidated services API using the unified "/api/services" endpoint
+export const services = {
   async launchApp(params: { appId: string }) {
-    return desktopClient.execute('launcher', 'launchApp', params);
+    return desktopClient.execute('services', 'launchApp', params);
   },
   async killApp(params: { appId: string }) {
-    return desktopClient.execute('launcher', 'killApp', params);
+    return desktopClient.execute('services', 'killApp', params);
   },
   async notify(params: { message: string; type?: 'radix' | 'sonner' }) {
-    return desktopClient.execute('launcher', 'notify', params);
-  }
-};
-
-export const dialog = {
+    return desktopClient.execute('services', 'notify', params);
+  },
   async openDialog(params: { 
     title: string; 
     description?: string; 
     confirmLabel?: string; 
     cancelLabel?: string; 
   }) {
-    return desktopClient.execute('dialog', 'openDialog', params);
-  }
-};
-
-export const onEvent = {
+    return desktopClient.execute('services', 'openDialog', params);
+  },
   async waitForEvent(params: { eventId: string; timeout?: number }) {
-    return desktopClient.execute('onEvent', 'waitForEvent', params);
-  }
-};
-
-export const event = {
+    return desktopClient.execute('services', 'waitForEvent', params);
+  },
   async listEvents(params: Record<string, never> = {}) {
-    return desktopClient.execute('event', 'listEvents', params);
+    return desktopClient.execute('services', 'listEvents', params);
   }
 };
 
@@ -79,9 +70,6 @@ export const api = {
 
 // Default export
 export default {
-  launcher,
-  dialog,
-  onEvent,
-  event,
+  services,
   api
 };

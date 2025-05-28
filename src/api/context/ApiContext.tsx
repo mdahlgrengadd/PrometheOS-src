@@ -5,7 +5,7 @@ import React, {
 import { eventBus } from '../../plugins/EventBus';
 import { setGlobalApiContext, setupGlobalHybridApiBridge } from '../bridges/HybridDesktopApiBridge';
 import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
-import { registerLauncherApi } from '../system/registerSystemApi';
+import { registerSystemServicesApi } from '../system/registerSystemApi';
 import { generateOpenApiSpec } from '../utils/openapi';
 
 // Create the API context with null default value
@@ -373,8 +373,8 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
         getOpenApiSpec,
       };
 
-      // Register the launcher API component and handler
-      registerLauncherApi(apiContext);
+      // Register the system services API component and handlers
+      registerSystemServicesApi(apiContext);
 
       // Store API context globally for Desktop API Bridge
       setGlobalApiContext(apiContext);

@@ -6,11 +6,11 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/launcher/launchApp": {
+    "/api/services/launchApp": {
       "post": {
         "summary": "Launch App",
         "description": "Launch an app by its ID",
-        "operationId": "launcher_launchApp",
+        "operationId": "services_launchApp",
         "requestBody": {
           "required": true,
           "content": {
@@ -78,11 +78,11 @@
         ]
       }
     },
-    "/api/launcher/killApp": {
+    "/api/services/killApp": {
       "post": {
         "summary": "Kill App",
         "description": "Closes an app by its ID",
-        "operationId": "launcher_killApp",
+        "operationId": "services_killApp",
         "requestBody": {
           "required": true,
           "content": {
@@ -150,11 +150,11 @@
         ]
       }
     },
-    "/api/launcher/notify": {
+    "/api/services/notify": {
       "post": {
         "summary": "Notify",
         "description": "Show a notification on screen",
-        "operationId": "launcher_notify",
+        "operationId": "services_notify",
         "requestBody": {
           "required": true,
           "content": {
@@ -230,11 +230,11 @@
         ]
       }
     },
-    "/api/dialog/openDialog": {
+    "/api/services/openDialog": {
       "post": {
         "summary": "Open Dialog",
         "description": "Opens a confirmation dialog and returns whether the user confirmed",
-        "operationId": "dialog_openDialog",
+        "operationId": "services_openDialog",
         "requestBody": {
           "required": true,
           "content": {
@@ -314,11 +314,11 @@
         ]
       }
     },
-    "/api/onEvent/waitForEvent": {
+    "/api/services/waitForEvent": {
       "post": {
         "summary": "Wait For Event",
         "description": "Waits for the specified event to be emitted or until the timeout is reached",
-        "operationId": "onEvent_waitForEvent",
+        "operationId": "services_waitForEvent",
         "requestBody": {
           "required": true,
           "content": {
@@ -390,11 +390,11 @@
         ]
       }
     },
-    "/api/event/listEvents": {
+    "/api/services/listEvents": {
       "post": {
         "summary": "List Events",
         "description": "Returns all known event names",
-        "operationId": "event_listEvents",
+        "operationId": "services_listEvents",
         "responses": {
           "200": {
             "description": "Successful operation",

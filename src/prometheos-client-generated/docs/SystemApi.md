@@ -4,17 +4,17 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**dialogOpenDialog**](#dialogopendialog) | **POST** /api/dialog/openDialog | Open Dialog|
-|[**eventListEvents**](#eventlistevents) | **POST** /api/event/listEvents | List Events|
-|[**launcherKillApp**](#launcherkillapp) | **POST** /api/launcher/killApp | Kill App|
-|[**launcherLaunchApp**](#launcherlaunchapp) | **POST** /api/launcher/launchApp | Launch App|
-|[**launcherNotify**](#launchernotify) | **POST** /api/launcher/notify | Notify|
-|[**onEventWaitForEvent**](#oneventwaitforevent) | **POST** /api/onEvent/waitForEvent | Wait For Event|
+|[**servicesKillApp**](#serviceskillapp) | **POST** /api/services/killApp | Kill App|
+|[**servicesLaunchApp**](#serviceslaunchapp) | **POST** /api/services/launchApp | Launch App|
+|[**servicesListEvents**](#serviceslistevents) | **POST** /api/services/listEvents | List Events|
+|[**servicesNotify**](#servicesnotify) | **POST** /api/services/notify | Notify|
+|[**servicesOpenDialog**](#servicesopendialog) | **POST** /api/services/openDialog | Open Dialog|
+|[**servicesWaitForEvent**](#serviceswaitforevent) | **POST** /api/services/waitForEvent | Wait For Event|
 
-# **dialogOpenDialog**
-> LauncherLaunchApp200Response dialogOpenDialog(dialogOpenDialogRequest)
+# **servicesKillApp**
+> ServicesLaunchApp200Response servicesKillApp(servicesKillAppRequest)
 
-Opens a confirmation dialog and returns whether the user confirmed
+Closes an app by its ID
 
 ### Example
 
@@ -22,16 +22,16 @@ Opens a confirmation dialog and returns whether the user confirmed
 import {
     SystemApi,
     Configuration,
-    DialogOpenDialogRequest
+    ServicesKillAppRequest
 } from 'prometheos-client';
 
 const configuration = new Configuration();
 const apiInstance = new SystemApi(configuration);
 
-let dialogOpenDialogRequest: DialogOpenDialogRequest; //
+let servicesKillAppRequest: ServicesKillAppRequest; //
 
-const { status, data } = await apiInstance.dialogOpenDialog(
-    dialogOpenDialogRequest
+const { status, data } = await apiInstance.servicesKillApp(
+    servicesKillAppRequest
 );
 ```
 
@@ -39,12 +39,12 @@ const { status, data } = await apiInstance.dialogOpenDialog(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **dialogOpenDialogRequest** | **DialogOpenDialogRequest**|  | |
+| **servicesKillAppRequest** | **ServicesKillAppRequest**|  | |
 
 
 ### Return type
 
-**LauncherLaunchApp200Response**
+**ServicesLaunchApp200Response**
 
 ### Authorization
 
@@ -64,8 +64,61 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **eventListEvents**
-> LauncherLaunchApp200Response eventListEvents()
+# **servicesLaunchApp**
+> ServicesLaunchApp200Response servicesLaunchApp(servicesLaunchAppRequest)
+
+Launch an app by its ID
+
+### Example
+
+```typescript
+import {
+    SystemApi,
+    Configuration,
+    ServicesLaunchAppRequest
+} from 'prometheos-client';
+
+const configuration = new Configuration();
+const apiInstance = new SystemApi(configuration);
+
+let servicesLaunchAppRequest: ServicesLaunchAppRequest; //
+
+const { status, data } = await apiInstance.servicesLaunchApp(
+    servicesLaunchAppRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **servicesLaunchAppRequest** | **ServicesLaunchAppRequest**|  | |
+
+
+### Return type
+
+**ServicesLaunchApp200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Successful operation |  -  |
+|**400** | Error response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **servicesListEvents**
+> ServicesLaunchApp200Response servicesListEvents()
 
 Returns all known event names
 
@@ -80,7 +133,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new SystemApi(configuration);
 
-const { status, data } = await apiInstance.eventListEvents();
+const { status, data } = await apiInstance.servicesListEvents();
 ```
 
 ### Parameters
@@ -89,7 +142,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**LauncherLaunchApp200Response**
+**ServicesLaunchApp200Response**
 
 ### Authorization
 
@@ -109,114 +162,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **launcherKillApp**
-> LauncherLaunchApp200Response launcherKillApp(launcherKillAppRequest)
-
-Closes an app by its ID
-
-### Example
-
-```typescript
-import {
-    SystemApi,
-    Configuration,
-    LauncherKillAppRequest
-} from 'prometheos-client';
-
-const configuration = new Configuration();
-const apiInstance = new SystemApi(configuration);
-
-let launcherKillAppRequest: LauncherKillAppRequest; //
-
-const { status, data } = await apiInstance.launcherKillApp(
-    launcherKillAppRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **launcherKillAppRequest** | **LauncherKillAppRequest**|  | |
-
-
-### Return type
-
-**LauncherLaunchApp200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Successful operation |  -  |
-|**400** | Error response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **launcherLaunchApp**
-> LauncherLaunchApp200Response launcherLaunchApp(launcherLaunchAppRequest)
-
-Launch an app by its ID
-
-### Example
-
-```typescript
-import {
-    SystemApi,
-    Configuration,
-    LauncherLaunchAppRequest
-} from 'prometheos-client';
-
-const configuration = new Configuration();
-const apiInstance = new SystemApi(configuration);
-
-let launcherLaunchAppRequest: LauncherLaunchAppRequest; //
-
-const { status, data } = await apiInstance.launcherLaunchApp(
-    launcherLaunchAppRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **launcherLaunchAppRequest** | **LauncherLaunchAppRequest**|  | |
-
-
-### Return type
-
-**LauncherLaunchApp200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Successful operation |  -  |
-|**400** | Error response |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **launcherNotify**
-> LauncherLaunchApp200Response launcherNotify(launcherNotifyRequest)
+# **servicesNotify**
+> ServicesLaunchApp200Response servicesNotify(servicesNotifyRequest)
 
 Show a notification on screen
 
@@ -226,16 +173,16 @@ Show a notification on screen
 import {
     SystemApi,
     Configuration,
-    LauncherNotifyRequest
+    ServicesNotifyRequest
 } from 'prometheos-client';
 
 const configuration = new Configuration();
 const apiInstance = new SystemApi(configuration);
 
-let launcherNotifyRequest: LauncherNotifyRequest; //
+let servicesNotifyRequest: ServicesNotifyRequest; //
 
-const { status, data } = await apiInstance.launcherNotify(
-    launcherNotifyRequest
+const { status, data } = await apiInstance.servicesNotify(
+    servicesNotifyRequest
 );
 ```
 
@@ -243,12 +190,12 @@ const { status, data } = await apiInstance.launcherNotify(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **launcherNotifyRequest** | **LauncherNotifyRequest**|  | |
+| **servicesNotifyRequest** | **ServicesNotifyRequest**|  | |
 
 
 ### Return type
 
-**LauncherLaunchApp200Response**
+**ServicesLaunchApp200Response**
 
 ### Authorization
 
@@ -268,8 +215,61 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **onEventWaitForEvent**
-> LauncherLaunchApp200Response onEventWaitForEvent(onEventWaitForEventRequest)
+# **servicesOpenDialog**
+> ServicesLaunchApp200Response servicesOpenDialog(servicesOpenDialogRequest)
+
+Opens a confirmation dialog and returns whether the user confirmed
+
+### Example
+
+```typescript
+import {
+    SystemApi,
+    Configuration,
+    ServicesOpenDialogRequest
+} from 'prometheos-client';
+
+const configuration = new Configuration();
+const apiInstance = new SystemApi(configuration);
+
+let servicesOpenDialogRequest: ServicesOpenDialogRequest; //
+
+const { status, data } = await apiInstance.servicesOpenDialog(
+    servicesOpenDialogRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **servicesOpenDialogRequest** | **ServicesOpenDialogRequest**|  | |
+
+
+### Return type
+
+**ServicesLaunchApp200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Successful operation |  -  |
+|**400** | Error response |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **servicesWaitForEvent**
+> ServicesLaunchApp200Response servicesWaitForEvent(servicesWaitForEventRequest)
 
 Waits for the specified event to be emitted or until the timeout is reached
 
@@ -279,16 +279,16 @@ Waits for the specified event to be emitted or until the timeout is reached
 import {
     SystemApi,
     Configuration,
-    OnEventWaitForEventRequest
+    ServicesWaitForEventRequest
 } from 'prometheos-client';
 
 const configuration = new Configuration();
 const apiInstance = new SystemApi(configuration);
 
-let onEventWaitForEventRequest: OnEventWaitForEventRequest; //
+let servicesWaitForEventRequest: ServicesWaitForEventRequest; //
 
-const { status, data } = await apiInstance.onEventWaitForEvent(
-    onEventWaitForEventRequest
+const { status, data } = await apiInstance.servicesWaitForEvent(
+    servicesWaitForEventRequest
 );
 ```
 
@@ -296,12 +296,12 @@ const { status, data } = await apiInstance.onEventWaitForEvent(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **onEventWaitForEventRequest** | **OnEventWaitForEventRequest**|  | |
+| **servicesWaitForEventRequest** | **ServicesWaitForEventRequest**|  | |
 
 
 ### Return type
 
-**LauncherLaunchApp200Response**
+**ServicesLaunchApp200Response**
 
 ### Authorization
 

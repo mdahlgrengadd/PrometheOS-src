@@ -67,15 +67,15 @@ configuration = prometheos_client.Configuration(
 async with prometheos_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = prometheos_client.SystemApi(api_client)
-    dialog_open_dialog_request = prometheos_client.DialogOpenDialogRequest() # DialogOpenDialogRequest | 
+    services_kill_app_request = prometheos_client.ServicesKillAppRequest() # ServicesKillAppRequest | 
 
     try:
-        # Open Dialog
-        api_response = await api_instance.dialog_open_dialog(dialog_open_dialog_request)
-        print("The response of SystemApi->dialog_open_dialog:\n")
+        # Kill App
+        api_response = await api_instance.services_kill_app(services_kill_app_request)
+        print("The response of SystemApi->services_kill_app:\n")
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling SystemApi->dialog_open_dialog: %s\n" % e)
+        print("Exception when calling SystemApi->services_kill_app: %s\n" % e)
 
 ```
 
@@ -85,23 +85,23 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*SystemApi* | [**dialog_open_dialog**](docs/SystemApi.md#dialog_open_dialog) | **POST** /api/dialog/openDialog | Open Dialog
-*SystemApi* | [**event_list_events**](docs/SystemApi.md#event_list_events) | **POST** /api/event/listEvents | List Events
-*SystemApi* | [**launcher_kill_app**](docs/SystemApi.md#launcher_kill_app) | **POST** /api/launcher/killApp | Kill App
-*SystemApi* | [**launcher_launch_app**](docs/SystemApi.md#launcher_launch_app) | **POST** /api/launcher/launchApp | Launch App
-*SystemApi* | [**launcher_notify**](docs/SystemApi.md#launcher_notify) | **POST** /api/launcher/notify | Notify
-*SystemApi* | [**on_event_wait_for_event**](docs/SystemApi.md#on_event_wait_for_event) | **POST** /api/onEvent/waitForEvent | Wait For Event
+*SystemApi* | [**services_kill_app**](docs/SystemApi.md#services_kill_app) | **POST** /api/services/killApp | Kill App
+*SystemApi* | [**services_launch_app**](docs/SystemApi.md#services_launch_app) | **POST** /api/services/launchApp | Launch App
+*SystemApi* | [**services_list_events**](docs/SystemApi.md#services_list_events) | **POST** /api/services/listEvents | List Events
+*SystemApi* | [**services_notify**](docs/SystemApi.md#services_notify) | **POST** /api/services/notify | Notify
+*SystemApi* | [**services_open_dialog**](docs/SystemApi.md#services_open_dialog) | **POST** /api/services/openDialog | Open Dialog
+*SystemApi* | [**services_wait_for_event**](docs/SystemApi.md#services_wait_for_event) | **POST** /api/services/waitForEvent | Wait For Event
 
 
 ## Documentation For Models
 
- - [DialogOpenDialogRequest](docs/DialogOpenDialogRequest.md)
- - [LauncherKillAppRequest](docs/LauncherKillAppRequest.md)
- - [LauncherLaunchApp200Response](docs/LauncherLaunchApp200Response.md)
- - [LauncherLaunchApp400Response](docs/LauncherLaunchApp400Response.md)
- - [LauncherLaunchAppRequest](docs/LauncherLaunchAppRequest.md)
- - [LauncherNotifyRequest](docs/LauncherNotifyRequest.md)
- - [OnEventWaitForEventRequest](docs/OnEventWaitForEventRequest.md)
+ - [ServicesKillAppRequest](docs/ServicesKillAppRequest.md)
+ - [ServicesLaunchApp200Response](docs/ServicesLaunchApp200Response.md)
+ - [ServicesLaunchApp400Response](docs/ServicesLaunchApp400Response.md)
+ - [ServicesLaunchAppRequest](docs/ServicesLaunchAppRequest.md)
+ - [ServicesNotifyRequest](docs/ServicesNotifyRequest.md)
+ - [ServicesOpenDialogRequest](docs/ServicesOpenDialogRequest.md)
+ - [ServicesWaitForEventRequest](docs/ServicesWaitForEventRequest.md)
 
 
 <a id="documentation-for-authorization"></a>

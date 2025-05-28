@@ -35,7 +35,7 @@
    Calculator execution result: {'success': True, 'message': 'Request sent to main thread'}
 
 4. Testing system API call...
-   Sent API request: launcher.notify
+   Sent API request: services.notify
    System notification result: {'success': True, 'message': 'Request sent to main thread'}
 
 5. Testing error handling...
@@ -51,7 +51,7 @@ Success: All API bridge tests executed!
 Python requested component list
 Python emitting event: python_test_event Object { message: "Hello from Python!", timestamp: "2025-05-26", test: true }
 Python requested action: calculator.add Object { a: 15, b: 27 }
-Python requested action: launcher.notify Object { message: "Python API test notification", type: "sonner" }
+Python requested action: services.notify Object { message: "Python API test notification", type: "sonner" }
 Python requested action: nonexistent.fakeAction Object { }
 ```
 
@@ -76,7 +76,7 @@ Actual API Components
 - [x] Bridge handles different API methods (list_components, execute_action, etc.)
 - [ ] **TESTING NEEDED**: Verify real API component calls work
 - [ ] **TESTING NEEDED**: Verify EventBus integration works
-- [ ] **TESTING NEEDED**: Test with actual calculator, launcher APIs
+- [ ] **TESTING NEEDED**: Test with actual calculator, services APIs
 
 ### Next Phase (Phase 2):
 

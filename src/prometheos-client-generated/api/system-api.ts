@@ -22,19 +22,19 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { DialogOpenDialogRequest } from '../models';
+import type { ServicesKillAppRequest } from '../models';
 // @ts-ignore
-import type { LauncherKillAppRequest } from '../models';
+import type { ServicesLaunchApp200Response } from '../models';
 // @ts-ignore
-import type { LauncherLaunchApp200Response } from '../models';
+import type { ServicesLaunchApp400Response } from '../models';
 // @ts-ignore
-import type { LauncherLaunchApp400Response } from '../models';
+import type { ServicesLaunchAppRequest } from '../models';
 // @ts-ignore
-import type { LauncherLaunchAppRequest } from '../models';
+import type { ServicesNotifyRequest } from '../models';
 // @ts-ignore
-import type { LauncherNotifyRequest } from '../models';
+import type { ServicesOpenDialogRequest } from '../models';
 // @ts-ignore
-import type { OnEventWaitForEventRequest } from '../models';
+import type { ServicesWaitForEventRequest } from '../models';
 /**
  * SystemApi - axios parameter creator
  * @export
@@ -42,16 +42,16 @@ import type { OnEventWaitForEventRequest } from '../models';
 export const SystemApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
-         * Opens a confirmation dialog and returns whether the user confirmed
-         * @summary Open Dialog
-         * @param {DialogOpenDialogRequest} dialogOpenDialogRequest 
+         * Closes an app by its ID
+         * @summary Kill App
+         * @param {ServicesKillAppRequest} servicesKillAppRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dialogOpenDialog: async (dialogOpenDialogRequest: DialogOpenDialogRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'dialogOpenDialogRequest' is not null or undefined
-            assertParamExists('dialogOpenDialog', 'dialogOpenDialogRequest', dialogOpenDialogRequest)
-            const localVarPath = `/api/dialog/openDialog`;
+        servicesKillApp: async (servicesKillAppRequest: ServicesKillAppRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'servicesKillAppRequest' is not null or undefined
+            assertParamExists('servicesKillApp', 'servicesKillAppRequest', servicesKillAppRequest)
+            const localVarPath = `/api/services/killApp`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -70,7 +70,43 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(dialogOpenDialogRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(servicesKillAppRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Launch an app by its ID
+         * @summary Launch App
+         * @param {ServicesLaunchAppRequest} servicesLaunchAppRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        servicesLaunchApp: async (servicesLaunchAppRequest: ServicesLaunchAppRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'servicesLaunchAppRequest' is not null or undefined
+            assertParamExists('servicesLaunchApp', 'servicesLaunchAppRequest', servicesLaunchAppRequest)
+            const localVarPath = `/api/services/launchApp`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(servicesLaunchAppRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -83,8 +119,8 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        eventListEvents: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/event/listEvents`;
+        servicesListEvents: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/services/listEvents`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -101,78 +137,6 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Closes an app by its ID
-         * @summary Kill App
-         * @param {LauncherKillAppRequest} launcherKillAppRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        launcherKillApp: async (launcherKillAppRequest: LauncherKillAppRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'launcherKillAppRequest' is not null or undefined
-            assertParamExists('launcherKillApp', 'launcherKillAppRequest', launcherKillAppRequest)
-            const localVarPath = `/api/launcher/killApp`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(launcherKillAppRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Launch an app by its ID
-         * @summary Launch App
-         * @param {LauncherLaunchAppRequest} launcherLaunchAppRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        launcherLaunchApp: async (launcherLaunchAppRequest: LauncherLaunchAppRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'launcherLaunchAppRequest' is not null or undefined
-            assertParamExists('launcherLaunchApp', 'launcherLaunchAppRequest', launcherLaunchAppRequest)
-            const localVarPath = `/api/launcher/launchApp`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(launcherLaunchAppRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -182,14 +146,14 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Show a notification on screen
          * @summary Notify
-         * @param {LauncherNotifyRequest} launcherNotifyRequest 
+         * @param {ServicesNotifyRequest} servicesNotifyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        launcherNotify: async (launcherNotifyRequest: LauncherNotifyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'launcherNotifyRequest' is not null or undefined
-            assertParamExists('launcherNotify', 'launcherNotifyRequest', launcherNotifyRequest)
-            const localVarPath = `/api/launcher/notify`;
+        servicesNotify: async (servicesNotifyRequest: ServicesNotifyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'servicesNotifyRequest' is not null or undefined
+            assertParamExists('servicesNotify', 'servicesNotifyRequest', servicesNotifyRequest)
+            const localVarPath = `/api/services/notify`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -208,7 +172,43 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(launcherNotifyRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(servicesNotifyRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Opens a confirmation dialog and returns whether the user confirmed
+         * @summary Open Dialog
+         * @param {ServicesOpenDialogRequest} servicesOpenDialogRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        servicesOpenDialog: async (servicesOpenDialogRequest: ServicesOpenDialogRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'servicesOpenDialogRequest' is not null or undefined
+            assertParamExists('servicesOpenDialog', 'servicesOpenDialogRequest', servicesOpenDialogRequest)
+            const localVarPath = `/api/services/openDialog`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(servicesOpenDialogRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -218,14 +218,14 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
         /**
          * Waits for the specified event to be emitted or until the timeout is reached
          * @summary Wait For Event
-         * @param {OnEventWaitForEventRequest} onEventWaitForEventRequest 
+         * @param {ServicesWaitForEventRequest} servicesWaitForEventRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        onEventWaitForEvent: async (onEventWaitForEventRequest: OnEventWaitForEventRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'onEventWaitForEventRequest' is not null or undefined
-            assertParamExists('onEventWaitForEvent', 'onEventWaitForEventRequest', onEventWaitForEventRequest)
-            const localVarPath = `/api/onEvent/waitForEvent`;
+        servicesWaitForEvent: async (servicesWaitForEventRequest: ServicesWaitForEventRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'servicesWaitForEventRequest' is not null or undefined
+            assertParamExists('servicesWaitForEvent', 'servicesWaitForEventRequest', servicesWaitForEventRequest)
+            const localVarPath = `/api/services/waitForEvent`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -244,7 +244,7 @@ export const SystemApiAxiosParamCreator = function (configuration?: Configuratio
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(onEventWaitForEventRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(servicesWaitForEventRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -262,16 +262,29 @@ export const SystemApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = SystemApiAxiosParamCreator(configuration)
     return {
         /**
-         * Opens a confirmation dialog and returns whether the user confirmed
-         * @summary Open Dialog
-         * @param {DialogOpenDialogRequest} dialogOpenDialogRequest 
+         * Closes an app by its ID
+         * @summary Kill App
+         * @param {ServicesKillAppRequest} servicesKillAppRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dialogOpenDialog(dialogOpenDialogRequest: DialogOpenDialogRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.dialogOpenDialog(dialogOpenDialogRequest, options);
+        async servicesKillApp(servicesKillAppRequest: ServicesKillAppRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesKillApp(servicesKillAppRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.dialogOpenDialog']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesKillApp']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Launch an app by its ID
+         * @summary Launch App
+         * @param {ServicesLaunchAppRequest} servicesLaunchAppRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async servicesLaunchApp(servicesLaunchAppRequest: ServicesLaunchAppRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesLaunchApp(servicesLaunchAppRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesLaunchApp']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -280,62 +293,49 @@ export const SystemApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async eventListEvents(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.eventListEvents(options);
+        async servicesListEvents(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesListEvents(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.eventListEvents']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Closes an app by its ID
-         * @summary Kill App
-         * @param {LauncherKillAppRequest} launcherKillAppRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async launcherKillApp(launcherKillAppRequest: LauncherKillAppRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.launcherKillApp(launcherKillAppRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.launcherKillApp']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Launch an app by its ID
-         * @summary Launch App
-         * @param {LauncherLaunchAppRequest} launcherLaunchAppRequest 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async launcherLaunchApp(launcherLaunchAppRequest: LauncherLaunchAppRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.launcherLaunchApp(launcherLaunchAppRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.launcherLaunchApp']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesListEvents']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Show a notification on screen
          * @summary Notify
-         * @param {LauncherNotifyRequest} launcherNotifyRequest 
+         * @param {ServicesNotifyRequest} servicesNotifyRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async launcherNotify(launcherNotifyRequest: LauncherNotifyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.launcherNotify(launcherNotifyRequest, options);
+        async servicesNotify(servicesNotifyRequest: ServicesNotifyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesNotify(servicesNotifyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.launcherNotify']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesNotify']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Opens a confirmation dialog and returns whether the user confirmed
+         * @summary Open Dialog
+         * @param {ServicesOpenDialogRequest} servicesOpenDialogRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async servicesOpenDialog(servicesOpenDialogRequest: ServicesOpenDialogRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesOpenDialog(servicesOpenDialogRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesOpenDialog']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * Waits for the specified event to be emitted or until the timeout is reached
          * @summary Wait For Event
-         * @param {OnEventWaitForEventRequest} onEventWaitForEventRequest 
+         * @param {ServicesWaitForEventRequest} servicesWaitForEventRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async onEventWaitForEvent(onEventWaitForEventRequest: OnEventWaitForEventRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LauncherLaunchApp200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.onEventWaitForEvent(onEventWaitForEventRequest, options);
+        async servicesWaitForEvent(servicesWaitForEventRequest: ServicesWaitForEventRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ServicesLaunchApp200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.servicesWaitForEvent(servicesWaitForEventRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SystemApi.onEventWaitForEvent']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SystemApi.servicesWaitForEvent']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -349,14 +349,24 @@ export const SystemApiFactory = function (configuration?: Configuration, basePat
     const localVarFp = SystemApiFp(configuration)
     return {
         /**
-         * Opens a confirmation dialog and returns whether the user confirmed
-         * @summary Open Dialog
-         * @param {SystemApiDialogOpenDialogRequest} requestParameters Request parameters.
+         * Closes an app by its ID
+         * @summary Kill App
+         * @param {SystemApiServicesKillAppRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dialogOpenDialog(requestParameters: SystemApiDialogOpenDialogRequest, options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.dialogOpenDialog(requestParameters.dialogOpenDialogRequest, options).then((request) => request(axios, basePath));
+        servicesKillApp(requestParameters: SystemApiServicesKillAppRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesKillApp(requestParameters.servicesKillAppRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Launch an app by its ID
+         * @summary Launch App
+         * @param {SystemApiServicesLaunchAppRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        servicesLaunchApp(requestParameters: SystemApiServicesLaunchAppRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesLaunchApp(requestParameters.servicesLaunchAppRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Returns all known event names
@@ -364,120 +374,110 @@ export const SystemApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        eventListEvents(options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.eventListEvents(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Closes an app by its ID
-         * @summary Kill App
-         * @param {SystemApiLauncherKillAppRequest} requestParameters Request parameters.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        launcherKillApp(requestParameters: SystemApiLauncherKillAppRequest, options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.launcherKillApp(requestParameters.launcherKillAppRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Launch an app by its ID
-         * @summary Launch App
-         * @param {SystemApiLauncherLaunchAppRequest} requestParameters Request parameters.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        launcherLaunchApp(requestParameters: SystemApiLauncherLaunchAppRequest, options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.launcherLaunchApp(requestParameters.launcherLaunchAppRequest, options).then((request) => request(axios, basePath));
+        servicesListEvents(options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesListEvents(options).then((request) => request(axios, basePath));
         },
         /**
          * Show a notification on screen
          * @summary Notify
-         * @param {SystemApiLauncherNotifyRequest} requestParameters Request parameters.
+         * @param {SystemApiServicesNotifyRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        launcherNotify(requestParameters: SystemApiLauncherNotifyRequest, options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.launcherNotify(requestParameters.launcherNotifyRequest, options).then((request) => request(axios, basePath));
+        servicesNotify(requestParameters: SystemApiServicesNotifyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesNotify(requestParameters.servicesNotifyRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Opens a confirmation dialog and returns whether the user confirmed
+         * @summary Open Dialog
+         * @param {SystemApiServicesOpenDialogRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        servicesOpenDialog(requestParameters: SystemApiServicesOpenDialogRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesOpenDialog(requestParameters.servicesOpenDialogRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Waits for the specified event to be emitted or until the timeout is reached
          * @summary Wait For Event
-         * @param {SystemApiOnEventWaitForEventRequest} requestParameters Request parameters.
+         * @param {SystemApiServicesWaitForEventRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        onEventWaitForEvent(requestParameters: SystemApiOnEventWaitForEventRequest, options?: RawAxiosRequestConfig): AxiosPromise<LauncherLaunchApp200Response> {
-            return localVarFp.onEventWaitForEvent(requestParameters.onEventWaitForEventRequest, options).then((request) => request(axios, basePath));
+        servicesWaitForEvent(requestParameters: SystemApiServicesWaitForEventRequest, options?: RawAxiosRequestConfig): AxiosPromise<ServicesLaunchApp200Response> {
+            return localVarFp.servicesWaitForEvent(requestParameters.servicesWaitForEventRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
 
 /**
- * Request parameters for dialogOpenDialog operation in SystemApi.
+ * Request parameters for servicesKillApp operation in SystemApi.
  * @export
- * @interface SystemApiDialogOpenDialogRequest
+ * @interface SystemApiServicesKillAppRequest
  */
-export interface SystemApiDialogOpenDialogRequest {
+export interface SystemApiServicesKillAppRequest {
     /**
      * 
-     * @type {DialogOpenDialogRequest}
-     * @memberof SystemApiDialogOpenDialog
+     * @type {ServicesKillAppRequest}
+     * @memberof SystemApiServicesKillApp
      */
-    readonly dialogOpenDialogRequest: DialogOpenDialogRequest
+    readonly servicesKillAppRequest: ServicesKillAppRequest
 }
 
 /**
- * Request parameters for launcherKillApp operation in SystemApi.
+ * Request parameters for servicesLaunchApp operation in SystemApi.
  * @export
- * @interface SystemApiLauncherKillAppRequest
+ * @interface SystemApiServicesLaunchAppRequest
  */
-export interface SystemApiLauncherKillAppRequest {
+export interface SystemApiServicesLaunchAppRequest {
     /**
      * 
-     * @type {LauncherKillAppRequest}
-     * @memberof SystemApiLauncherKillApp
+     * @type {ServicesLaunchAppRequest}
+     * @memberof SystemApiServicesLaunchApp
      */
-    readonly launcherKillAppRequest: LauncherKillAppRequest
+    readonly servicesLaunchAppRequest: ServicesLaunchAppRequest
 }
 
 /**
- * Request parameters for launcherLaunchApp operation in SystemApi.
+ * Request parameters for servicesNotify operation in SystemApi.
  * @export
- * @interface SystemApiLauncherLaunchAppRequest
+ * @interface SystemApiServicesNotifyRequest
  */
-export interface SystemApiLauncherLaunchAppRequest {
+export interface SystemApiServicesNotifyRequest {
     /**
      * 
-     * @type {LauncherLaunchAppRequest}
-     * @memberof SystemApiLauncherLaunchApp
+     * @type {ServicesNotifyRequest}
+     * @memberof SystemApiServicesNotify
      */
-    readonly launcherLaunchAppRequest: LauncherLaunchAppRequest
+    readonly servicesNotifyRequest: ServicesNotifyRequest
 }
 
 /**
- * Request parameters for launcherNotify operation in SystemApi.
+ * Request parameters for servicesOpenDialog operation in SystemApi.
  * @export
- * @interface SystemApiLauncherNotifyRequest
+ * @interface SystemApiServicesOpenDialogRequest
  */
-export interface SystemApiLauncherNotifyRequest {
+export interface SystemApiServicesOpenDialogRequest {
     /**
      * 
-     * @type {LauncherNotifyRequest}
-     * @memberof SystemApiLauncherNotify
+     * @type {ServicesOpenDialogRequest}
+     * @memberof SystemApiServicesOpenDialog
      */
-    readonly launcherNotifyRequest: LauncherNotifyRequest
+    readonly servicesOpenDialogRequest: ServicesOpenDialogRequest
 }
 
 /**
- * Request parameters for onEventWaitForEvent operation in SystemApi.
+ * Request parameters for servicesWaitForEvent operation in SystemApi.
  * @export
- * @interface SystemApiOnEventWaitForEventRequest
+ * @interface SystemApiServicesWaitForEventRequest
  */
-export interface SystemApiOnEventWaitForEventRequest {
+export interface SystemApiServicesWaitForEventRequest {
     /**
      * 
-     * @type {OnEventWaitForEventRequest}
-     * @memberof SystemApiOnEventWaitForEvent
+     * @type {ServicesWaitForEventRequest}
+     * @memberof SystemApiServicesWaitForEvent
      */
-    readonly onEventWaitForEventRequest: OnEventWaitForEventRequest
+    readonly servicesWaitForEventRequest: ServicesWaitForEventRequest
 }
 
 /**
@@ -488,15 +488,27 @@ export interface SystemApiOnEventWaitForEventRequest {
  */
 export class SystemApi extends BaseAPI {
     /**
-     * Opens a confirmation dialog and returns whether the user confirmed
-     * @summary Open Dialog
-     * @param {SystemApiDialogOpenDialogRequest} requestParameters Request parameters.
+     * Closes an app by its ID
+     * @summary Kill App
+     * @param {SystemApiServicesKillAppRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SystemApi
      */
-    public dialogOpenDialog(requestParameters: SystemApiDialogOpenDialogRequest, options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).dialogOpenDialog(requestParameters.dialogOpenDialogRequest, options).then((request) => request(this.axios, this.basePath));
+    public servicesKillApp(requestParameters: SystemApiServicesKillAppRequest, options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesKillApp(requestParameters.servicesKillAppRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Launch an app by its ID
+     * @summary Launch App
+     * @param {SystemApiServicesLaunchAppRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SystemApi
+     */
+    public servicesLaunchApp(requestParameters: SystemApiServicesLaunchAppRequest, options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesLaunchApp(requestParameters.servicesLaunchAppRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -506,56 +518,44 @@ export class SystemApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SystemApi
      */
-    public eventListEvents(options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).eventListEvents(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Closes an app by its ID
-     * @summary Kill App
-     * @param {SystemApiLauncherKillAppRequest} requestParameters Request parameters.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SystemApi
-     */
-    public launcherKillApp(requestParameters: SystemApiLauncherKillAppRequest, options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).launcherKillApp(requestParameters.launcherKillAppRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Launch an app by its ID
-     * @summary Launch App
-     * @param {SystemApiLauncherLaunchAppRequest} requestParameters Request parameters.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SystemApi
-     */
-    public launcherLaunchApp(requestParameters: SystemApiLauncherLaunchAppRequest, options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).launcherLaunchApp(requestParameters.launcherLaunchAppRequest, options).then((request) => request(this.axios, this.basePath));
+    public servicesListEvents(options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesListEvents(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Show a notification on screen
      * @summary Notify
-     * @param {SystemApiLauncherNotifyRequest} requestParameters Request parameters.
+     * @param {SystemApiServicesNotifyRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SystemApi
      */
-    public launcherNotify(requestParameters: SystemApiLauncherNotifyRequest, options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).launcherNotify(requestParameters.launcherNotifyRequest, options).then((request) => request(this.axios, this.basePath));
+    public servicesNotify(requestParameters: SystemApiServicesNotifyRequest, options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesNotify(requestParameters.servicesNotifyRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Opens a confirmation dialog and returns whether the user confirmed
+     * @summary Open Dialog
+     * @param {SystemApiServicesOpenDialogRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SystemApi
+     */
+    public servicesOpenDialog(requestParameters: SystemApiServicesOpenDialogRequest, options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesOpenDialog(requestParameters.servicesOpenDialogRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Waits for the specified event to be emitted or until the timeout is reached
      * @summary Wait For Event
-     * @param {SystemApiOnEventWaitForEventRequest} requestParameters Request parameters.
+     * @param {SystemApiServicesWaitForEventRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof SystemApi
      */
-    public onEventWaitForEvent(requestParameters: SystemApiOnEventWaitForEventRequest, options?: RawAxiosRequestConfig) {
-        return SystemApiFp(this.configuration).onEventWaitForEvent(requestParameters.onEventWaitForEventRequest, options).then((request) => request(this.axios, this.basePath));
+    public servicesWaitForEvent(requestParameters: SystemApiServicesWaitForEventRequest, options?: RawAxiosRequestConfig) {
+        return SystemApiFp(this.configuration).servicesWaitForEvent(requestParameters.servicesWaitForEventRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
