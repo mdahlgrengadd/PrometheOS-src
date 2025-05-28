@@ -5,9 +5,9 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
+    "baseUrl": ".",    "paths": {
+      "@/*": ["./src/*"],
+      "prometheos-client": ["./src/prometheos-client"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

@@ -379,7 +379,13 @@ export function setupGlobalHybridApiBridge(): void {
   const comlinkMcp = Comlink.proxy(mcpHandler);
   (globalThis as Record<string, unknown>).desktop_mcp_comlink = comlinkMcp;
 
+  // IMPORTANT: Set up the desktop global that prometheos-client expects
+  (globalThis as Record<string, unknown>).desktop = {
+    api: bridge
+  };
+
   console.log("Hybrid Desktop API Bridge initialized (Comlink + MCP)");
+  console.log("Desktop global object created for prometheos-client");
 }
 
 /**
