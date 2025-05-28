@@ -12,10 +12,16 @@ import js
 
 # Re-export generated client components
 try:
+    # Try relative import first (development environment)
     from ..prometheos_client_python_generated import *
 except ImportError:
-    # Handle case where generated client is not available
-    pass
+    try:
+        # Try absolute import (Pyodide environment)
+        from prometheos_client_python_generated.prometheos_client import *
+    except ImportError:
+        # Handle case where generated client is not available
+        print("Warning: Generated client components not available")
+        pass
 
 
 class DesktopBridge:
