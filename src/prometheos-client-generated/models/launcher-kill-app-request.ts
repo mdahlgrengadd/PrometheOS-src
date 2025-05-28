@@ -14,5 +14,17 @@
 
 
 
-export * from './api/system-api';
+/**
+ * 
+ * @export
+ * @interface LauncherKillAppRequest
+ */
+export interface LauncherKillAppRequest {
+    /**
+     * The ID of the app to close
+     * @type {string}
+     * @memberof LauncherKillAppRequest
+     */
+    'appId': string;
+}
 

@@ -328,6 +328,79 @@ const PrometheosTestComponent: React.FC = () => {
   );
 };
 
+// Add a new test component that demonstrates the unified API
+const UnifiedAPIDemo: React.FC = () => {
+  const [testResults, setTestResults] = useState<string[]>([]);
+
+  const addResult = (message: string) => {
+    setTestResults(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`]);
+  };
+
+  const runUnifiedAPIDemo = async () => {
+    addResult('🚀 Starting Unified API Demo from TypeScript');
+    
+    try {
+      // Test launcher API
+      addResult('📱 Testing launcher.notify()...');
+      await launcher.notify({ 
+        message: 'TypeScript Unified Client Test!', 
+        type: 'radix' 
+      });
+      addResult('✅ Launcher notification sent successfully');
+
+      // Test dialog API
+      addResult('💬 Testing dialog.openDialog()...');
+      const dialogResult = await dialog.openDialog({
+        title: 'TypeScript Unified API Test',
+        description: 'This demonstrates the TypeScript side of the unified API',
+        confirmLabel: 'Awesome!',
+        cancelLabel: 'Close'
+      });
+      addResult(`✅ Dialog result: ${JSON.stringify(dialogResult)}`);
+
+      // Test event API
+      addResult('📋 Testing event.listEvents()...');
+      const events = await event.listEvents();
+      addResult(`✅ Events retrieved: ${JSON.stringify(events)}`);
+
+      addResult('🎉 TypeScript Unified API Demo completed successfully!');
+    } catch (error) {
+      addResult(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle>🔗 Unified API Demo</CardTitle>
+        <CardDescription>
+          Demonstrates the unified PrometheOS client working in TypeScript
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <Button onClick={runUnifiedAPIDemo} className="w-full">
+            🚀 Run TypeScript Unified API Demo
+          </Button>
+          
+          {testResults.length > 0 && (
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Test Results:</h4>
+              <div className="space-y-1 text-sm font-mono">
+                {testResults.map((result, index) => (
+                  <div key={index} className="text-xs">
+                    {result}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const PrometheosTestPlugin: Plugin = {
   id: manifest.id,
   manifest,
@@ -335,7 +408,12 @@ const PrometheosTestPlugin: Plugin = {
     console.log('PrometheOS Test plugin initialized');
   },
   render: () => {
-    return <PrometheosTestComponent />;
+    return (
+      <div>
+        <PrometheosTestComponent />
+        <UnifiedAPIDemo />
+      </div>
+    );
   },
 };
 

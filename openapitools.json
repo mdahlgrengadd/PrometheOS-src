@@ -4,7 +4,7 @@
   "generator-cli": {
     "version": "7.13.0",
     "generators": {
-      "prometheos-client": {
+      "prometheos-client-typescript": {
         "generatorName": "typescript-axios",
         "inputSpec": "./openapi.json",
         "output": "./src/prometheos-client-generated",
@@ -16,7 +16,22 @@
           "apiPackage": "api",
           "supportsES6": "true",
           "enumPropertyNaming": "camelCase",
-          "useSingleRequestParameter": "true"
+          "useSingleRequestParameter": "true",
+          "generateSourceCodeOnly": "true"
+        }
+      },
+      "prometheos-client-python": {
+        "generatorName": "python",
+        "inputSpec": "./openapi.json",
+        "output": "./src/prometheos-client-python-generated",
+        "additionalProperties": {
+          "packageName": "prometheos_client",
+          "packageVersion": "1.0.0",
+          "projectName": "prometheos-client",
+          "packageUrl": "https://github.com/mdahlgrengadd/prometheos",
+          "library": "asyncio",
+          "generateSourceCodeOnly": "true",
+          "disallowAdditionalPropertiesIfNotPresent": "false"
         }
       }
     }

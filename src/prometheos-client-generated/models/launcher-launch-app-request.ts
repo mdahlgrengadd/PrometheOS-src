@@ -14,5 +14,17 @@
 
 
 
-export * from './api/system-api';
+/**
+ * 
+ * @export
+ * @interface LauncherLaunchAppRequest
+ */
+export interface LauncherLaunchAppRequest {
+    /**
+     * The ID of the app to launch
+     * @type {string}
+     * @memberof LauncherLaunchAppRequest
+     */
+    'appId': string;
+}
 
