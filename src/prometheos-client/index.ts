@@ -2,19 +2,15 @@
 // This file wraps the OpenAPI Generator TypeScript client with our desktop bridge
 
 // Re-export all generated types and APIs
-export * from "../prometheos-client-generated";
+export * from '../prometheos-client-generated';
 
 // Import the generated APIs and types
-import { Configuration, SystemApi } from "../prometheos-client-generated";
+import { Configuration, DefaultApi } from '../prometheos-client-generated';
 
 // Desktop API interface for type safety
 interface DesktopBridge {
   api: {
-    execute(
-      componentId: string,
-      actionId: string,
-      params?: Record<string, unknown>
-    ): Promise<unknown>;
+    execute(componentId: string, actionId: string, params?: Record<string, unknown>): Promise<unknown>;
   };
 }
 
@@ -25,25 +21,15 @@ declare global {
 
 // Create a custom API client that uses our desktop bridge
 class DesktopApiClient {
-  async execute(
-    componentId: string,
-    actionId: string,
-    params?: Record<string, unknown>
-  ): Promise<unknown> {
+  async execute(componentId: string, actionId: string, params?: Record<string, unknown>): Promise<unknown> {
     // Use proper type checking without any
-    if (typeof globalThis !== "undefined" && "desktop" in globalThis) {
-      const globalWithDesktop = globalThis as typeof globalThis & {
-        desktop?: DesktopBridge;
-      };
+    if (typeof globalThis !== 'undefined' && 'desktop' in globalThis) {
+      const globalWithDesktop = globalThis as typeof globalThis & { desktop?: DesktopBridge };
       if (globalWithDesktop.desktop?.api?.execute) {
-        return globalWithDesktop.desktop.api.execute(
-          componentId,
-          actionId,
-          params
-        );
+        return globalWithDesktop.desktop.api.execute(componentId, actionId, params);
       }
     }
-    throw new Error("Desktop API bridge not available");
+    throw new Error('Desktop API bridge not available');
   }
 }
 
@@ -53,42 +39,42 @@ const desktopClient = new DesktopApiClient();
 // Create namespaced API instances that use our bridge
 export const launcher = {
   async launchApp(params: { appId: string }) {
-    return desktopClient.execute("launcher", "launchApp", params);
+    return desktopClient.execute('launcher', 'launchApp', params);
   },
   async killApp(params: { appId: string }) {
-    return desktopClient.execute("launcher", "killApp", params);
+    return desktopClient.execute('launcher', 'killApp', params);
   },
-  async notify(params: { message: string; type?: "radix" | "sonner" }) {
-    return desktopClient.execute("launcher", "notify", params);
-  },
+  async notify(params: { message: string; type?: 'radix' | 'sonner' }) {
+    return desktopClient.execute('launcher', 'notify', params);
+  }
 };
 
 export const dialog = {
-  async openDialog(params: {
-    title: string;
-    description?: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
+  async openDialog(params: { 
+    title: string; 
+    description?: string; 
+    confirmLabel?: string; 
+    cancelLabel?: string; 
   }) {
-    return desktopClient.execute("dialog", "openDialog", params);
-  },
+    return desktopClient.execute('dialog', 'openDialog', params);
+  }
 };
 
 export const onEvent = {
   async waitForEvent(params: { eventId: string; timeout?: number }) {
-    return desktopClient.execute("onEvent", "waitForEvent", params);
-  },
+    return desktopClient.execute('onEvent', 'waitForEvent', params);
+  }
 };
 
 export const event = {
   async listEvents(params: Record<string, never> = {}) {
-    return desktopClient.execute("event", "listEvents", params);
-  },
+    return desktopClient.execute('event', 'listEvents', params);
+  }
 };
 
 // Export low-level API access
 export const api = {
-  execute: desktopClient.execute.bind(desktopClient),
+  execute: desktopClient.execute.bind(desktopClient)
 };
 
 // Default export
@@ -97,5 +83,5 @@ export default {
   dialog,
   onEvent,
   event,
-  api,
+  api
 };
