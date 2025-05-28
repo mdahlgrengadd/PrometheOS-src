@@ -68,53 +68,38 @@ class Services:
     """Consolidated services API for app management, notifications, dialogs, and events"""
     
     @staticmethod
-    async def launch_app(app_id: str) -> Any:
-        """Launch an application by ID"""
-        return await _desktop_client.execute('services', 'launchApp', {'appId': app_id})
-    
+    async def open(app_id: str) -> Any:
+        """Launch an app by its ID"""
+        return await _desktop_client.execute('services', 'open', {'appId': app_id})
+
     @staticmethod
-    async def kill_app(app_id: str) -> Any:
-        """Kill an application by ID"""
-        return await _desktop_client.execute('services', 'killApp', {'appId': app_id})
-    
+    async def kill(app_id: str) -> Any:
+        """Closes an app by its ID"""
+        return await _desktop_client.execute('services', 'kill', {'appId': app_id})
+
     @staticmethod
-    async def notify(message: str, notification_type: str = 'radix') -> Any:
-        """Show a notification"""
-        return await _desktop_client.execute('services', 'notify', {
-            'message': message,
-            'type': notification_type
-        })
-    
+    async def restart(app_id: str) -> Any:
+        """Restarts an app by closing and reopening it"""
+        return await _desktop_client.execute('services', 'restart', {'appId': app_id})
+
     @staticmethod
-    async def open_dialog(
-        title: str,
-        description: Optional[str] = None,
-        confirm_label: Optional[str] = None,
-        cancel_label: Optional[str] = None
-    ) -> Any:
-        """Open a dialog box"""
-        params = {'title': title}
-        if description:
-            params['description'] = description
-        if confirm_label:
-            params['confirmLabel'] = confirm_label
-        if cancel_label:
-            params['cancelLabel'] = cancel_label
-        
-        return await _desktop_client.execute('services', 'openDialog', params)
-    
+    async def notify(message: str, type: str) -> Any:
+        """Show a notification on screen"""
+        return await _desktop_client.execute('services', 'notify', {'message': message, 'type': type})
+
     @staticmethod
-    async def wait_for_event(event_id: str, timeout: Optional[int] = None) -> Any:
-        """Wait for a specific event"""
-        params = {'eventId': event_id}
-        if timeout:
-            params['timeout'] = timeout
-        
-        return await _desktop_client.execute('services', 'waitForEvent', params)
-    
+    async def open_dialog(title: str, description: str, confirm_label: str, cancel_label: str) -> Any:
+        """Opens a confirmation dialog and returns whether the user confirmed"""
+        return await _desktop_client.execute('services', 'openDialog', {'title': title, 'description': description, 'confirmLabel': confirm_label, 'cancelLabel': cancel_label})
+
+    @staticmethod
+    async def wait_for_event(event_id: str, timeout: int) -> Any:
+        """Waits for the specified event to be emitted or until the timeout is reached"""
+        return await _desktop_client.execute('services', 'waitForEvent', {'eventId': event_id, 'timeout': timeout})
+
     @staticmethod
     async def list_events() -> Any:
-        """List all available events"""
+        """Returns all known event names"""
         return await _desktop_client.execute('services', 'listEvents', {})
 
 

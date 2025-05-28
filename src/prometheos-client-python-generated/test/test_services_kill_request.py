@@ -14,10 +14,10 @@
 
 import unittest
 
-from prometheos_client.models.services_kill_app_request import ServicesKillAppRequest
+from prometheos_client.models.services_kill_request import ServicesKillRequest
 
-class TestServicesKillAppRequest(unittest.TestCase):
-    """ServicesKillAppRequest unit test stubs"""
+class TestServicesKillRequest(unittest.TestCase):
+    """ServicesKillRequest unit test stubs"""
 
     def setUp(self):
         pass
@@ -25,26 +25,26 @@ class TestServicesKillAppRequest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> ServicesKillAppRequest:
-        """Test ServicesKillAppRequest
+    def make_instance(self, include_optional) -> ServicesKillRequest:
+        """Test ServicesKillRequest
             include_optional is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        # uncomment below to create an instance of `ServicesKillAppRequest`
+        # uncomment below to create an instance of `ServicesKillRequest`
         """
-        model = ServicesKillAppRequest()
+        model = ServicesKillRequest()
         if include_optional:
-            return ServicesKillAppRequest(
+            return ServicesKillRequest(
                 app_id = ''
             )
         else:
-            return ServicesKillAppRequest(
+            return ServicesKillRequest(
                 app_id = '',
         )
         """
 
-    def testServicesKillAppRequest(self):
-        """Test ServicesKillAppRequest"""
+    def testServicesKillRequest(self):
+        """Test ServicesKillRequest"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

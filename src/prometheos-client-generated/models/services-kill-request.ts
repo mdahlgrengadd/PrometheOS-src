@@ -17,13 +17,13 @@
 /**
  * 
  * @export
- * @interface ServicesKillAppRequest
+ * @interface ServicesKillRequest
  */
-export interface ServicesKillAppRequest {
+export interface ServicesKillRequest {
     /**
      * The ID of the app to close
      * @type {string}
-     * @memberof ServicesKillAppRequest
+     * @memberof ServicesKillRequest
      */
     'appId': string;
 }

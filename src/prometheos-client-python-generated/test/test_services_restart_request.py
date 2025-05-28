@@ -14,10 +14,10 @@
 
 import unittest
 
-from prometheos_client.models.services_launch_app200_response import ServicesLaunchApp200Response
+from prometheos_client.models.services_restart_request import ServicesRestartRequest
 
-class TestServicesLaunchApp200Response(unittest.TestCase):
-    """ServicesLaunchApp200Response unit test stubs"""
+class TestServicesRestartRequest(unittest.TestCase):
+    """ServicesRestartRequest unit test stubs"""
 
     def setUp(self):
         pass
@@ -25,26 +25,26 @@ class TestServicesLaunchApp200Response(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def make_instance(self, include_optional) -> ServicesLaunchApp200Response:
-        """Test ServicesLaunchApp200Response
+    def make_instance(self, include_optional) -> ServicesRestartRequest:
+        """Test ServicesRestartRequest
             include_optional is a boolean, when False only required
             params are included, when True both required and
             optional params are included """
-        # uncomment below to create an instance of `ServicesLaunchApp200Response`
+        # uncomment below to create an instance of `ServicesRestartRequest`
         """
-        model = ServicesLaunchApp200Response()
+        model = ServicesRestartRequest()
         if include_optional:
-            return ServicesLaunchApp200Response(
-                success = True,
-                data = None
+            return ServicesRestartRequest(
+                app_id = ''
             )
         else:
-            return ServicesLaunchApp200Response(
+            return ServicesRestartRequest(
+                app_id = '',
         )
         """
 
-    def testServicesLaunchApp200Response(self):
-        """Test ServicesLaunchApp200Response"""
+    def testServicesRestartRequest(self):
+        """Test ServicesRestartRequest"""
         # inst_req_only = self.make_instance(include_optional=False)
         # inst_req_and_optional = self.make_instance(include_optional=True)
 

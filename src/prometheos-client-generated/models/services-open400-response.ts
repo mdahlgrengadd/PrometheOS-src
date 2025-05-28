@@ -17,20 +17,20 @@
 /**
  * 
  * @export
- * @interface ServicesLaunchApp200Response
+ * @interface ServicesOpen400Response
  */
-export interface ServicesLaunchApp200Response {
+export interface ServicesOpen400Response {
     /**
-     * Whether the operation was successful
+     * Operation failed
      * @type {boolean}
-     * @memberof ServicesLaunchApp200Response
+     * @memberof ServicesOpen400Response
      */
     'success'?: boolean;
     /**
-     * Result data from the operation
-     * @type {object}
-     * @memberof ServicesLaunchApp200Response
+     * Error message
+     * @type {string}
+     * @memberof ServicesOpen400Response
      */
-    'data'?: object;
+    'error'?: string;
 }
 

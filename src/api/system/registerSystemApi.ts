@@ -14,8 +14,8 @@ export const servicesApiComponent: IApiComponent = {
   path: "/api/services",
   actions: [
     {
-      id: "launchApp",
-      name: "Launch App",
+      id: "open",
+      name: "Open App",
       description: "Launch an app by its ID",
       available: true,
       parameters: [
@@ -28,7 +28,7 @@ export const servicesApiComponent: IApiComponent = {
       ],
     },
     {
-      id: "killApp",
+      id: "kill",
       name: "Kill App",
       description: "Closes an app by its ID",
       available: true,
@@ -37,6 +37,20 @@ export const servicesApiComponent: IApiComponent = {
           name: "appId",
           type: "string",
           description: "The ID of the app to close",
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "restart",
+      name: "Restart App",
+      description: "Restarts an app by closing and reopening it",
+      available: true,
+      parameters: [
+        {
+          name: "appId",
+          type: "string",
+          description: "The ID of the app to restart",
           required: true,
         },
       ],
@@ -147,7 +161,7 @@ export function registerSystemServicesApi(apiContext: IApiContextValue) {
   // Register all action handlers under the "services" namespace
   
   // Launch App action handler
-  registerApiActionHandler("services", "launchApp", async (params) => {
+  registerApiActionHandler("services", "open", async (params) => {
     const { appId } = params || {};
 
     if (!appId) {
@@ -172,7 +186,7 @@ export function registerSystemServicesApi(apiContext: IApiContextValue) {
   });
 
   // Kill App action handler
-  registerApiActionHandler("services", "killApp", async (params) => {
+  registerApiActionHandler("services", "kill", async (params) => {
     const { appId } = params || {};
 
     if (!appId) {
@@ -190,6 +204,36 @@ export function registerSystemServicesApi(apiContext: IApiContextValue) {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to close app",
+      };
+    }
+  });
+
+  // Restart action handler
+  registerApiActionHandler("services", "restart", async (params) => {
+    const { appId } = params || {};
+
+    if (!appId) {
+      return { success: false, error: "Missing appId" };
+    }
+
+    try {
+      // First close the app
+      eventBus.emit("plugin:closeWindow", appId);
+      
+      // Wait a bit for cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Then reopen it
+      eventBus.emit("plugin:openWindow", appId);
+
+      return {
+        success: true,
+        data: { message: `App ${appId} restarted successfully` },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to restart app",
       };
     }
   });

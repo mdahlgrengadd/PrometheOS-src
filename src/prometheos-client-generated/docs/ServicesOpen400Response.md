@@ -1,4 +1,4 @@
-# ServicesLaunchApp400Response
+# ServicesOpen400Response
 
 
 ## Properties
@@ -11,9 +11,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ServicesLaunchApp400Response } from 'prometheos-client';
+import { ServicesOpen400Response } from 'prometheos-client';
 
-const instance: ServicesLaunchApp400Response = {
+const instance: ServicesOpen400Response = {
     success,
     error,
 };

@@ -1,4 +1,4 @@
-# ServicesKillAppRequest
+# ServicesKillRequest
 
 
 ## Properties
@@ -10,9 +10,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { ServicesKillAppRequest } from 'prometheos-client';
+import { ServicesKillRequest } from 'prometheos-client';
 
-const instance: ServicesKillAppRequest = {
+const instance: ServicesKillRequest = {
     appId,
 };
 ```

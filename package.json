@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/build-workers.cjs && npm run build:python && vite",
+    "dev": "npm run codegen:all && node scripts/build-workers.cjs && vite",
     "build": "node scripts/build-workers.cjs && npm run build:python && tsc && vite build && node scripts/setup-shadow.mjs && node scripts/fix-symlinks.mjs",
     "build:dev": "vite build --mode development",
     "build:workers": "node scripts/build-workers.cjs",
@@ -18,6 +18,7 @@
     "build:clients:python": "npx @openapitools/openapi-generator-cli generate --generator-name python -i ./openapi.json -o ./src/prometheos-client-python-generated --additional-properties=packageName=prometheos_client,packageVersion=1.0.0,projectName=prometheos-client,library=asyncio,generateSourceCodeOnly=true",
     "codegen": "node scripts/generate-unified-client.js",
     "codegen:all": "npm run codegen && npm run build:python",
+    "codegen:api": "npm run build:openapi && npm run codegen && npm run build:python",
     "codegen:ts": "npm run build:openapi && npx @openapitools/openapi-generator-cli generate -g prometheos-client-typescript -i ./openapi.json -o ./src/prometheos-client-generated",
     "codegen:python": "npm run build:openapi && npx @openapitools/openapi-generator-cli generate -g prometheos-client-python -i ./openapi.json -o ./src/prometheos-client-python-generated",
     "copy-python": "node scripts/copy-python-modules.js",

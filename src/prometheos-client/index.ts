@@ -38,24 +38,22 @@ const desktopClient = new DesktopApiClient();
 
 // Consolidated services API using the unified "/api/services" endpoint
 export const services = {
-  async launchApp(params: { appId: string }) {
-    return desktopClient.execute('services', 'launchApp', params);
+  async open(params: { appId: string }) {
+    return desktopClient.execute('services', 'open', params);
   },
-  async killApp(params: { appId: string }) {
-    return desktopClient.execute('services', 'killApp', params);
+  async kill(params: { appId: string }) {
+    return desktopClient.execute('services', 'kill', params);
   },
-  async notify(params: { message: string; type?: 'radix' | 'sonner' }) {
+  async restart(params: { appId: string }) {
+    return desktopClient.execute('services', 'restart', params);
+  },
+  async notify(params: { message: string; type: 'radix' | 'sonner' }) {
     return desktopClient.execute('services', 'notify', params);
   },
-  async openDialog(params: { 
-    title: string; 
-    description?: string; 
-    confirmLabel?: string; 
-    cancelLabel?: string; 
-  }) {
+  async openDialog(params: { title: string; description: string; confirmLabel: string; cancelLabel: string }) {
     return desktopClient.execute('services', 'openDialog', params);
   },
-  async waitForEvent(params: { eventId: string; timeout?: number }) {
+  async waitForEvent(params: { eventId: string; timeout: number }) {
     return desktopClient.execute('services', 'waitForEvent', params);
   },
   async listEvents(params: Record<string, never> = {}) {

@@ -1,18 +1,18 @@
-# ServicesLaunchAppRequest
+# ServicesRestartRequest
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**appId** | **string** | The ID of the app to launch | [default to undefined]
+**appId** | **string** | The ID of the app to restart | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ServicesLaunchAppRequest } from 'prometheos-client';
+import { ServicesRestartRequest } from 'prometheos-client';
 
-const instance: ServicesLaunchAppRequest = {
+const instance: ServicesRestartRequest = {
     appId,
 };
 ```

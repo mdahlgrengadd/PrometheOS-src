@@ -6,11 +6,11 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/api/services/launchApp": {
+    "/api/services/open": {
       "post": {
-        "summary": "Launch App",
+        "summary": "Open App",
         "description": "Launch an app by its ID",
-        "operationId": "services_launchApp",
+        "operationId": "services_open",
         "requestBody": {
           "required": true,
           "content": {
@@ -78,11 +78,11 @@
         ]
       }
     },
-    "/api/services/killApp": {
+    "/api/services/kill": {
       "post": {
         "summary": "Kill App",
         "description": "Closes an app by its ID",
-        "operationId": "services_killApp",
+        "operationId": "services_kill",
         "requestBody": {
           "required": true,
           "content": {
@@ -93,6 +93,78 @@
                   "appId": {
                     "type": "string",
                     "description": "The ID of the app to close"
+                  }
+                },
+                "required": [
+                  "appId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the operation was successful"
+                    },
+                    "data": {
+                      "type": "object",
+                      "description": "Result data from the operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Operation failed"
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/api/services/restart": {
+      "post": {
+        "summary": "Restart App",
+        "description": "Restarts an app by closing and reopening it",
+        "operationId": "services_restart",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "appId": {
+                    "type": "string",
+                    "description": "The ID of the app to restart"
                   }
                 },
                 "required": [

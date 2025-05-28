@@ -17,13 +17,13 @@
 /**
  * 
  * @export
- * @interface ServicesLaunchAppRequest
+ * @interface ServicesRestartRequest
  */
-export interface ServicesLaunchAppRequest {
+export interface ServicesRestartRequest {
     /**
-     * The ID of the app to launch
+     * The ID of the app to restart
      * @type {string}
-     * @memberof ServicesLaunchAppRequest
+     * @memberof ServicesRestartRequest
      */
     'appId': string;
 }

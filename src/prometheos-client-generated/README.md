@@ -51,22 +51,24 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*SystemApi* | [**servicesKillApp**](docs/SystemApi.md#serviceskillapp) | **POST** /api/services/killApp | Kill App
-*SystemApi* | [**servicesLaunchApp**](docs/SystemApi.md#serviceslaunchapp) | **POST** /api/services/launchApp | Launch App
+*SystemApi* | [**servicesKill**](docs/SystemApi.md#serviceskill) | **POST** /api/services/kill | Kill App
 *SystemApi* | [**servicesListEvents**](docs/SystemApi.md#serviceslistevents) | **POST** /api/services/listEvents | List Events
 *SystemApi* | [**servicesNotify**](docs/SystemApi.md#servicesnotify) | **POST** /api/services/notify | Notify
+*SystemApi* | [**servicesOpen**](docs/SystemApi.md#servicesopen) | **POST** /api/services/open | Open App
 *SystemApi* | [**servicesOpenDialog**](docs/SystemApi.md#servicesopendialog) | **POST** /api/services/openDialog | Open Dialog
+*SystemApi* | [**servicesRestart**](docs/SystemApi.md#servicesrestart) | **POST** /api/services/restart | Restart App
 *SystemApi* | [**servicesWaitForEvent**](docs/SystemApi.md#serviceswaitforevent) | **POST** /api/services/waitForEvent | Wait For Event
 
 
 ### Documentation For Models
 
- - [ServicesKillAppRequest](docs/ServicesKillAppRequest.md)
- - [ServicesLaunchApp200Response](docs/ServicesLaunchApp200Response.md)
- - [ServicesLaunchApp400Response](docs/ServicesLaunchApp400Response.md)
- - [ServicesLaunchAppRequest](docs/ServicesLaunchAppRequest.md)
+ - [ServicesKillRequest](docs/ServicesKillRequest.md)
  - [ServicesNotifyRequest](docs/ServicesNotifyRequest.md)
+ - [ServicesOpen200Response](docs/ServicesOpen200Response.md)
+ - [ServicesOpen400Response](docs/ServicesOpen400Response.md)
  - [ServicesOpenDialogRequest](docs/ServicesOpenDialogRequest.md)
+ - [ServicesOpenRequest](docs/ServicesOpenRequest.md)
+ - [ServicesRestartRequest](docs/ServicesRestartRequest.md)
  - [ServicesWaitForEventRequest](docs/ServicesWaitForEventRequest.md)
 
 

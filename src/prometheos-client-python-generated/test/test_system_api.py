@@ -26,17 +26,10 @@ class TestSystemApi(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.api.api_client.close()
 
-    async def test_services_kill_app(self) -> None:
-        """Test case for services_kill_app
+    async def test_services_kill(self) -> None:
+        """Test case for services_kill
 
         Kill App
-        """
-        pass
-
-    async def test_services_launch_app(self) -> None:
-        """Test case for services_launch_app
-
-        Launch App
         """
         pass
 
@@ -54,10 +47,24 @@ class TestSystemApi(unittest.IsolatedAsyncioTestCase):
         """
         pass
 
+    async def test_services_open(self) -> None:
+        """Test case for services_open
+
+        Open App
+        """
+        pass
+
     async def test_services_open_dialog(self) -> None:
         """Test case for services_open_dialog
 
         Open Dialog
+        """
+        pass
+
+    async def test_services_restart(self) -> None:
+        """Test case for services_restart
+
+        Restart App
         """
         pass
 

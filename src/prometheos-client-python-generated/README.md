@@ -67,15 +67,15 @@ configuration = prometheos_client.Configuration(
 async with prometheos_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = prometheos_client.SystemApi(api_client)
-    services_kill_app_request = prometheos_client.ServicesKillAppRequest() # ServicesKillAppRequest | 
+    services_kill_request = prometheos_client.ServicesKillRequest() # ServicesKillRequest | 
 
     try:
         # Kill App
-        api_response = await api_instance.services_kill_app(services_kill_app_request)
-        print("The response of SystemApi->services_kill_app:\n")
+        api_response = await api_instance.services_kill(services_kill_request)
+        print("The response of SystemApi->services_kill:\n")
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling SystemApi->services_kill_app: %s\n" % e)
+        print("Exception when calling SystemApi->services_kill: %s\n" % e)
 
 ```
 
@@ -85,22 +85,24 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*SystemApi* | [**services_kill_app**](docs/SystemApi.md#services_kill_app) | **POST** /api/services/killApp | Kill App
-*SystemApi* | [**services_launch_app**](docs/SystemApi.md#services_launch_app) | **POST** /api/services/launchApp | Launch App
+*SystemApi* | [**services_kill**](docs/SystemApi.md#services_kill) | **POST** /api/services/kill | Kill App
 *SystemApi* | [**services_list_events**](docs/SystemApi.md#services_list_events) | **POST** /api/services/listEvents | List Events
 *SystemApi* | [**services_notify**](docs/SystemApi.md#services_notify) | **POST** /api/services/notify | Notify
+*SystemApi* | [**services_open**](docs/SystemApi.md#services_open) | **POST** /api/services/open | Open App
 *SystemApi* | [**services_open_dialog**](docs/SystemApi.md#services_open_dialog) | **POST** /api/services/openDialog | Open Dialog
+*SystemApi* | [**services_restart**](docs/SystemApi.md#services_restart) | **POST** /api/services/restart | Restart App
 *SystemApi* | [**services_wait_for_event**](docs/SystemApi.md#services_wait_for_event) | **POST** /api/services/waitForEvent | Wait For Event
 
 
 ## Documentation For Models
 
- - [ServicesKillAppRequest](docs/ServicesKillAppRequest.md)
- - [ServicesLaunchApp200Response](docs/ServicesLaunchApp200Response.md)
- - [ServicesLaunchApp400Response](docs/ServicesLaunchApp400Response.md)
- - [ServicesLaunchAppRequest](docs/ServicesLaunchAppRequest.md)
+ - [ServicesKillRequest](docs/ServicesKillRequest.md)
  - [ServicesNotifyRequest](docs/ServicesNotifyRequest.md)
+ - [ServicesOpen200Response](docs/ServicesOpen200Response.md)
+ - [ServicesOpen400Response](docs/ServicesOpen400Response.md)
  - [ServicesOpenDialogRequest](docs/ServicesOpenDialogRequest.md)
+ - [ServicesOpenRequest](docs/ServicesOpenRequest.md)
+ - [ServicesRestartRequest](docs/ServicesRestartRequest.md)
  - [ServicesWaitForEventRequest](docs/ServicesWaitForEventRequest.md)
 
 

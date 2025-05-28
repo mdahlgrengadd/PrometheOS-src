@@ -85,6 +85,28 @@ const PrometheosTestComponent: React.FC = () => {
     }
   };
 
+  const handleRestartApp = async () => {
+    if (!appId.trim()) {
+      addLog("❌ Error: App ID cannot be empty");
+      return;
+    }
+
+    setButtonLoading("restart", true);
+    try {
+      addLog(`🔄 Restarting app: ${appId}`);
+      const result = await services.restart({ appId: appId.trim() });
+      addLog(`✅ Restart result: ${JSON.stringify(result)}`);
+    } catch (error) {
+      addLog(
+        `❌ Restart error: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    } finally {
+      setButtonLoading("restart", false);
+    }
+  };
+
   const handleSendNotification = async () => {
     if (!notificationMessage.trim()) {
       addLog("❌ Error: Notification message cannot be empty");
@@ -227,6 +249,14 @@ const PrometheosTestComponent: React.FC = () => {
                   className="flex-1"
                 >
                   {isLoading.kill ? "Killing..." : "Kill App"}
+                </Button>
+                <Button
+                  onClick={handleRestartApp}
+                  disabled={isLoading.restart}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {isLoading.restart ? "Restarting..." : "Restart App"}
                 </Button>
               </div>
             </CardContent>
