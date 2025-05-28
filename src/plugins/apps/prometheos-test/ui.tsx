@@ -50,7 +50,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("launch", true);
     try {
       addLog(`🚀 Launching app: ${appId}`);
-      const result = await services.launchApp({ appId: appId.trim() });
+      const result = await services.open({ appId: appId.trim() });
       addLog(`✅ Launch result: ${JSON.stringify(result)}`);
     } catch (error) {
       addLog(
@@ -72,7 +72,7 @@ const PrometheosTestComponent: React.FC = () => {
     setButtonLoading("kill", true);
     try {
       addLog(`🔴 Killing app: ${appId}`);
-      const result = await services.killApp({ appId: appId.trim() });
+      const result = await services.kill({ appId: appId.trim() });
       addLog(`✅ Kill result: ${JSON.stringify(result)}`);
     } catch (error) {
       addLog(

@@ -4,9 +4,6 @@
 // Re-export all generated types and APIs
 export * from '../prometheos-client-generated';
 
-// Import the generated APIs and types
-import { Configuration, DefaultApi } from '../prometheos-client-generated';
-
 // Desktop API interface for type safety
 interface DesktopBridge {
   api: {
