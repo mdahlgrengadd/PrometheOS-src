@@ -3,10 +3,10 @@
  * Follows the established worker plugin pattern from webllm.ts
  */
 
-import * as Comlink from 'comlink';
-import json from 'json-stringify-safe';
+import * as Comlink from "comlink";
+import json from "json-stringify-safe";
 
-import { WorkerPlugin } from '../../plugins/types';
+import { WorkerPlugin } from "../../plugins/types";
 
 import type { DesktopApiBridge } from "../../api/bridges/HybridDesktopApiBridge";
 
@@ -179,10 +179,9 @@ const PyodideWorker: WorkerPlugin = {
       // Inject the desktop module into Python namespace with both interfaces
       // First, expose the current plugin instance to Python context
       this._pyodide.globals.set("_pyodide_plugin_instance", this);
-      
       // Also expose to globalThis for JavaScript access from Python
-      (globalThis as any)._pyodide_plugin_instance = this;
-      
+      (globalThis as Record<string, unknown>)._pyodide_plugin_instance = this;
+
       const desktopApiCode = `
 import js
 from pyodide.ffi import create_proxy, to_js, JsProxy
@@ -540,6 +539,9 @@ class Desktop:
 # Make it available globally
 desktop = Desktop()
 
+# IMPORTANT: Expose desktop object to JavaScript namespace for prometheos-client compatibility
+js.desktop = desktop
+
 def handle_desktop_api_response(message):
     """Handle responses from the main thread API"""
     try:
@@ -565,6 +567,7 @@ def handle_desktop_api_response(message):
         print(f"Error handling API response: {e}")
 
 print("Hybrid Desktop API Bridge initialized in Python context")
+print("Desktop object exposed to JavaScript namespace for prometheos-client compatibility")
 `;
 
       await this._pyodide.runPython(desktopApiCode);
@@ -706,7 +709,7 @@ await micropip.install('${packageName}')
 
       // Handle both JSON string (from Python) and object (direct calls)
       let message: Record<string, unknown>;
-      if (typeof messageOrJson === 'string') {
+      if (typeof messageOrJson === "string") {
         console.log("Parsing JSON message:", messageOrJson);
         message = JSON.parse(messageOrJson);
       } else {

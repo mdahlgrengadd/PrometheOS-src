@@ -52,6 +52,8 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "api-flow-editor": () =>
     import("./apps/api-flow-editor").then((m) => m.default),
   notepad: () => import("./apps/notepad").then((m) => m.default),
+  "prometheos-test": () =>
+    import("./apps/prometheos-test").then((m) => m.default),
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
   builder: () => import("./apps/builder").then((m) => m.default),

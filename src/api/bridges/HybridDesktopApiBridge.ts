@@ -3,10 +3,10 @@
  * Supports both Comlink (ergonomic) and postMessage (MCP protocol) interfaces
  */
 
-import * as Comlink from 'comlink';
+import * as Comlink from "comlink";
 
-import { eventBus } from '../../plugins/EventBus';
-import { IApiComponent, IApiContextValue } from '../core/types';
+import { eventBus } from "../../plugins/EventBus";
+import { IApiComponent, IApiContextValue } from "../core/types";
 
 export interface DesktopApiBridge {
   // Core API methods (all promise-based to support Comlink remote)
@@ -379,7 +379,13 @@ export function setupGlobalHybridApiBridge(): void {
   const comlinkMcp = Comlink.proxy(mcpHandler);
   (globalThis as Record<string, unknown>).desktop_mcp_comlink = comlinkMcp;
 
+  // IMPORTANT: Set up the desktop global that prometheos-client expects
+  (globalThis as Record<string, unknown>).desktop = {
+    api: bridge,
+  };
+
   console.log("Hybrid Desktop API Bridge initialized (Comlink + MCP)");
+  console.log("Desktop global object created for prometheos-client");
 }
 
 /**

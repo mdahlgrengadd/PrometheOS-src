@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Python Import</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  </head>
+  <body>
+    <h1>Testing Python Module Import</h1>
+    <div id="output"></div>
+
+    <script>
+      async function main() {
+        const output = document.getElementById("output");
+
+        function log(message) {
+          output.innerHTML += `<p>${message}</p>`;
+          console.log(message);
+        }
+
+        try {
+          log("Loading Pyodide...");
+          let pyodide = await loadPyodide();
+
+          log("Pyodide loaded successfully!");
+
+          // Test fetch from the python-modules directory
+          const baseUrl = `${window.location.origin}/prometheos/python-modules/`;
+          log(`Testing fetch from: ${baseUrl}`);
+
+          const response = await fetch(baseUrl + "prometheos_client.py");
+          if (response.ok) {
+            const code = await response.text();
+            log(
+              `✅ Successfully fetched prometheos_client.py (${code.length} chars)`
+            );
+
+            // Test the generated client too
+            const generatedResponse = await fetch(
+              baseUrl + "prometheos_client_python_generated/__init__.py"
+            );
+            if (generatedResponse.ok) {
+              log(`✅ Generated client accessible`);
+            } else {
+              log(
+                `❌ Generated client not accessible: ${generatedResponse.status}`
+              );
+            }
+          } else {
+            log(`❌ Failed to fetch prometheos_client.py: ${response.status}`);
+          }
+        } catch (error) {
+          log(`❌ Error: ${error.message}`);
+        }
+      }
+
+      main();
+    </script>
+  </body>
+</html>

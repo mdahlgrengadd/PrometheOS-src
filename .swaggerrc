@@ -1,0 +1,27 @@
+{
+  "templates": {
+    "httpClient": {
+      "strictMode": true,
+      "noImplicitAny": true
+    }
+  },
+  "typePrefix": "",
+  "typeSuffix": "",
+  "enumNamePrefix": "",
+  "enumNameSuffix": "",
+  "addReadonly": false,
+  "sortTypes": true,
+  "sortRoutes": true,
+  "extractRequestParams": true,
+  "extractRequestBody": true,
+  "extractResponseBody": true,
+  "generateUnionEnums": true,
+  "modular": false,
+  "extractEnums": true,
+  "unwrapResponseData": true,
+  "singleHttpClient": true,
+  "httpClientType": "axios",
+  "defaultResponseAsSuccess": false,
+  "generateRouteTypes": true,
+  "extractResponses": true
+}

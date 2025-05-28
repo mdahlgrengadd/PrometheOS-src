@@ -38,7 +38,7 @@ const testCategories: TestCategory[] = [
       {
         id: "hello-world",
         name: "Hello World",
-        description: "Simple arithmetic and output",
+        description: "Simple Python execution",
         type: "code",
         code: 'print("Hello from Python!")\n2 + 2',
       },
@@ -49,13 +49,6 @@ const testCategories: TestCategory[] = [
         type: "code",
         code: 'import json\ndata = {"message": "Hello from Python", "numbers": [1, 2, 3]}\njson.dumps(data, indent=2)',
       },
-      {
-        id: "loops-variables",
-        name: "Loops & Variables",
-        description: "Test control flow",
-        type: "code",
-        code: 'for i in range(5):\n    print(f"Count: {i}")\n\nresult = sum(range(10))\nprint(f"Sum of 0-9: {result}")\nresult',
-      },
     ],
   },
   {
@@ -65,326 +58,326 @@ const testCategories: TestCategory[] = [
     expanded: true,
     cases: [
       {
+        id: "enhanced-prometheos-client",
+        name: "Enhanced PrometheOS Client",
+        description: "Test enhanced initialization and features",
+        type: "code",
+        code: `# Enhanced PrometheOS Client Test
+print("=== Enhanced PrometheOS Client Test ===")
+
+try:
+    # Install via micropip
+    import micropip
+    await micropip.install("http://localhost:8080/prometheos/wheels/prometheos-1.0.0-py3-none-any.whl")
+    
+    # Import the enhanced client
+    import prometheos
+    print("✓ Enhanced PrometheOS client imported")
+    
+    # Test initialization patterns
+    print("\\n🔧 Testing initialization patterns...")
+    
+    # Method 1: Auto-initialization
+    init_success = prometheos.initialize()
+    print(f"Auto-init result: {init_success}")
+    
+    # Check availability
+    available = prometheos.is_available()
+    print(f"Client available: {available}")
+    
+    if available:
+        # Test enhanced error handling
+        try:
+            result = await prometheos.launcher.notify("Enhanced client working!")
+            print(f"✓ Notification: {result}")
+        except Exception as e:
+            print(f"Notification error: {e}")
+        
+        # Test dialog with enhanced error handling
+        try:
+            result = await prometheos.dialog.open_dialog(
+                "Enhanced Test",
+                "Enhanced PrometheOS client is working with improved initialization!"
+            )
+            print(f"✓ Dialog: {result}")
+        except Exception as e:
+            print(f"Dialog error: {e}")
+    else:
+        print("⚠️ Client not available - checking debugging info...")
+        print(f"Available functions: {[x for x in dir(prometheos) if not x.startswith('_')]}")
+        
+        # Try manual initialization
+        if 'desktop' in globals():
+            manual_init = prometheos.initialize(desktop)
+            print(f"Manual init with desktop: {manual_init}")
+    
+    print("\\n🎉 Enhanced client test complete!")
+    
+except Exception as e:
+    print(f"✗ Enhanced test failed: {e}")
+    import traceback
+    traceback.print_exc()`,
+      },
+      {
         id: "api-verification",
         name: "API Verification",
         description: "Check if desktop API is available",
         type: "code",
-        code: `# Simple Desktop API Verification Test
+        code: `# Desktop API Verification
 print("=== Desktop API Verification ===")
 
-# Check if desktop object exists
 try:
-    print(f"Desktop object type: {type(desktop)}")
-    print(f"Desktop API type: {type(desktop.api)}")
-    print(f"Desktop Events type: {type(desktop.events)}")
+    print(f"Desktop object: {type(desktop)}")
+    print(f"Desktop API: {type(desktop.api)}")
+    print(f"Desktop Events: {type(desktop.events)}")
     print("✓ Desktop object is available")
 except NameError as e:
     print(f"✗ Desktop object not found: {e}")
-    print("This indicates the Desktop API bridge setup failed")
 
-# Check available methods
-try:
-    print(f"Desktop API methods: {dir(desktop.api)}")
-    print(f"Desktop Events methods: {dir(desktop.events)}")
-except:
-    print("Could not inspect desktop object methods")
-
-print("=== Verification Complete ===")
-"Desktop API verification completed"`,
-      },
-      {
-        id: "api-component-listing",
-        name: "Component Listing Test",
-        description: "Test listing available desktop components",
-        type: "code",
-        code: `# Test 1: List Available Components
-print("=== Component Listing Test ===")
-print()
-
-try:
-    components = await desktop.api.list_components()
-    comp_count = len(components) if hasattr(components, '__len__') else "unknown"
-    print(f"✓ Found {comp_count} components")
-    print(f"Components: {components}")
-    print("✓ Component listing test passed")
-except Exception as e:
-    print(f"✗ Component listing failed: {e}")
-
-print("=== Test Complete ===")
-"Component listing test completed"`,
-      },
-      {
-        id: "api-event-emission",
-        name: "Event Emission Test",
-        description: "Test desktop event emission functionality",
-        type: "code",
-        code: `# Test 2: Event Emission
-print("=== Event Emission Test ===")
-print()
-
-try:
-    events_result = await desktop.events.emit("python_test_event", {
-        "message": "Hello from Python!",
-        "timestamp": "2025-05-27", 
-        "test": True,
-        "source": "event_emission_test"
-    })
-    print(f"✓ Event emission successful")
-    print(f"Result: {events_result}")
-    print("✓ Event emission test passed")
-except Exception as e:
-    print(f"✗ Event emission failed: {e}")
-
-print("=== Test Complete ===")
-"Event emission test completed"`,
-      },
-      {
-        id: "api-calculator-test",
-        name: "Calculator API Test",
-        description: "Test calculator component execution",
-        type: "code",
-        code: `# Test 3: Calculator API Execution
-print("=== Calculator API Test ===")
-print()
-
-def check_calculator_response(result, operation, a, b):
-    """Helper function to validate calculator API responses"""
-    if isinstance(result, dict):
-        # Check for success: false (lowercase)
-        if result.get("success") is False:
-            error_msg = result.get("error", "Unknown error")
-            raise Exception(f"Calculator API returned failure: {error_msg}")
-        # Check for Success: False (uppercase - legacy)
-        elif result.get("Success") is False:
-            error_msg = result.get("Error", "Unknown error")
-            raise Exception(f"Calculator API returned failure: {error_msg}")
-        # Extract the actual result value
-        elif "data" in result:
-            return result["data"]
-        elif "Result" in result:
-            return result["Result"]
-        elif "result" in result:
-            return result["result"]
-        else:
-            # If it's a dict but no clear result field, return the whole dict
-            return result
-    else:
-        # If it's not a dict, assume it's the direct result
-        return result
-
-try:
-    # Test addition
-    print("Testing addition: 15 + 27...")
-    add_result = await desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
-    print(f"Raw response: {add_result}")
-    
-    validated_add = check_calculator_response(add_result, "add", 15, 27)
-    print(f"✓ Addition: 15 + 27 = {validated_add}")
-    
-    # Verify the result is correct
-    if validated_add == 42:
-        print("✓ Addition result is mathematically correct")
-    else:
-        print(f"⚠️  Addition result unexpected: got {validated_add}, expected 42")
-    
-    print()
-    print("✓ Calculator API test passed - app is running and responsive")
-    print("ℹ️  Note: Only addition is currently implemented in the calculator")
-    
-except Exception as e:
-    print(f"✗ Calculator API test failed: {e}")
-    print()
-    print("Possible causes:")
-    print("1. Calculator app is not currently running")
-    print("2. Calculator plugin is not available")
-    print("3. API communication error")
-    print("4. Invalid operation or parameters")
-    print()
-    print("To fix: Try opening the Calculator app first, then run this test again")
-
-print("=== Test Complete ===")
-"Calculator API test completed"`,
+print("=== Verification Complete ===")`,
       },
       {
         id: "api-notification-test",
-        name: "Notification System Test",
-        description: "Test system notification functionality",
+        name: "Notification Test",
+        description: "Send a test notification",
         type: "code",
-        code: `# Test 4: System Notification
-print("=== Notification System Test ===")
-print()
+        code: `# Notification Test
+print("=== Notification Test ===")
 
 try:
-    system_result = await desktop.api.execute("launcher", "notify", {
-        "message": "Python API test notification from notification test",
+    result = await desktop.api.execute("launcher", "notify", {
+        "message": "Hello from Python!",
         "type": "sonner"
     })
-    print(f"✓ Notification sent successfully")
-    print(f"Result: {system_result}")
-    print("✓ Check your screen for the notification!")
-    print("✓ Notification system test passed")
+    print(f"✓ Notification sent: {result}")
 except Exception as e:
-    print(f"✗ Notification system test failed: {e}")
-
-print("=== Test Complete ===")
-"Notification system test completed"`,
+    print(f"✗ Failed: {e}")`,
       },
       {
-        id: "api-error-handling",
-        name: "Error Handling Test",
-        description: "Test API error handling and recovery",
+        id: "api-calculator-test",
+        name: "Calculator Test",
+        description: "Test calculator API",
         type: "code",
-        code: `# Test 5: Error Handling
-print("=== Error Handling Test ===")
-print()
+        code: `# Calculator Test
+print("=== Calculator Test ===")
 
-# Test with non-existent component
 try:
-    error_result = await desktop.api.execute("nonexistent_component", "fakeAction", {})
-    print(f"Unexpected success: {error_result}")
-    print("✗ Error handling test failed - should have thrown an error")
-except Exception as e:
-    print(f"✓ Correctly caught expected error: {e}")
-    print("✓ Error handling working as expected")
-
-# Test with invalid action
-try:
-    error_result = await desktop.api.execute("calculator", "invalid_operation", {"a": 1, "b": 2})
-    print(f"Unexpected success: {error_result}")
-    print("✗ Error handling test failed - should have thrown an error")
-except Exception as e:
-    print(f"✓ Correctly caught invalid action error: {e}")
-    print("✓ Error handling working as expected")
-
-print("=== Test Complete ===")
-"Error handling test completed"`,
-      },
-      {
-        id: "api-comprehensive-suite",
-        name: "Run All API Tests",
-        description: "Execute all API tests in sequence",
-        type: "code",
-        code: `# Comprehensive API Bridge Test Suite
-print("=== Running All Desktop API Tests ===")
-print()
-
-test_results = []
-
-# Test 1: Component Listing
-print("1. Testing component listing...")
-try:
-    components = await desktop.api.list_components()
-    comp_count = len(components) if hasattr(components, '__len__') else "unknown"
-    print(f"   ✓ Found {comp_count} components")
-    test_results.append("Component Listing: PASS")
-except Exception as e:
-    print(f"   ✗ Failed: {e}")
-    test_results.append("Component Listing: FAIL")
-print()
-
-# Test 2: Event Emission
-print("2. Testing event emission...")
-try:
-    events_result = await desktop.events.emit("python_comprehensive_test", {
-        "message": "Comprehensive test event",
-        "timestamp": "2025-05-27",
-        "test_suite": "comprehensive"
-    })
-    print(f"   ✓ Event emission successful")
-    test_results.append("Event Emission: PASS")
-except Exception as e:
-    print(f"   ✗ Failed: {e}")
-    test_results.append("Event Emission: FAIL")
-print()
-
-# Test 3: Calculator API
-print("3. Testing calculator API...")
-try:
-    calc_result = await desktop.api.execute("calculator", "add", {"a": 25, "b": 17})
-    print(f"   Raw response: {calc_result}")
+    result = await desktop.api.execute("calculator", "add", {"a": 15, "b": 27})
+    print(f"Raw response: {result}")
     
-    # Check for Success: False response
-    if isinstance(calc_result, dict) and calc_result.get("Success") is False:
-        error_msg = calc_result.get("Error", "Unknown error")
-        raise Exception(f"Calculator not available: {error_msg}")
-    
-    # Extract the actual result
-    if isinstance(calc_result, dict):
-        actual_result = calc_result.get("Result") or calc_result.get("result") or calc_result
+    # Extract result value
+    if isinstance(result, dict):
+        if result.get("Success") is False:
+            raise Exception(f"Calculator error: {result.get('Error', 'Unknown')}")
+        actual_result = result.get("Result", result.get("result", result))
     else:
-        actual_result = calc_result
+        actual_result = result
     
-    print(f"   ✓ Calculator: 25 + 17 = {actual_result}")
+    print(f"✓ 15 + 27 = {actual_result}")
     if actual_result == 42:
-        print(f"   ✓ Result is mathematically correct")
-    test_results.append("Calculator API: PASS")
+        print("✓ Result is correct")
 except Exception as e:
-    print(f"   ✗ Failed: {e}")
-    print(f"   (Calculator app may not be running)")
-    test_results.append("Calculator API: FAIL")
-print()
+    print(f"✗ Failed: {e}")
+    print("(Calculator app may need to be opened first)")`,
+      },
+    ],
+  },
+  {
+    id: "prometheos-client",
+    name: "PrometheOS Python Client",
+    icon: Code,
+    expanded: true,
+    cases: [
+      {
+        id: "micropip-install",
+        name: "Micropip Install",
+        description: "Install PrometheOS client using micropip with wheel",
+        type: "code",
+        code: `# PrometheOS Client Installation with Micropip
+print("=== PrometheOS Client Installation ===")
 
-# Test 4: Notification System
-print("4. Testing notification system...")
 try:
-    notif_result = await desktop.api.execute("launcher", "notify", {
-        "message": "Comprehensive API test completed!",
-        "type": "sonner"
-    })
-    print(f"   ✓ Notification sent successfully")
-    test_results.append("Notification System: PASS")
+    import micropip
+    import js
+    
+    # Get the wheel URL from the current server
+    window = js.globalThis
+    base_url = str(window.location.origin)
+    wheel_url = f"{base_url}/prometheos/wheels/prometheos-1.0.0-py3-none-any.whl"
+    
+    print(f"📦 Installing from wheel: {wheel_url}")
+    
+    # Install the package using micropip
+    await micropip.install(wheel_url)
+    
+    print("✓ PrometheOS package installed successfully!")
+    
+    # Now import the package
+    import prometheos
+    print("✓ PrometheOS client imported successfully!")
+      # Initialize the client - using enhanced initialization
+    print("\\n🔧 Initializing PrometheOS client...")
+    
+    # Method 1: Auto-initialization (enhanced detection)
+    try:
+        if prometheos.initialize():
+            print("✓ Auto-initialization successful")
+        else:
+            print("⚠️ Auto-initialization failed, trying manual...")
+            
+            # Method 2: Manual initialization with desktop object
+            if 'desktop' in globals():
+                prometheos.initialize(desktop)
+                print("✓ Manual initialization with desktop object successful")
+            else:
+                print("✗ No desktop object found")
+    except Exception as e:
+        print(f"⚠️ Initialization error: {e}")
+    
+    # Test basic functionality
+    print("\\n🧪 Testing client functionality...")
+    
+    # Check if client is available
+    if prometheos.is_available():
+        print("✓ PrometheOS client is available and ready")
+        
+        # Test notification
+        result = await prometheos.launcher.notify("Hello from enhanced PrometheOS client!")
+        print(f"✓ Notification test: {result}")
+        
+        # Test dialog
+        result = await prometheos.dialog.open_dialog(
+            "Enhanced Success", 
+            "PrometheOS client with enhanced initialization working!"
+        )
+        print(f"✓ Dialog test: {result}")
+        
+        print("\\n🎉 Enhanced micropip installation successful!")
+    else:
+        print("✗ PrometheOS client not properly initialized")
+        print("Available functions:", dir(prometheos))
+        raise Exception("Client initialization failed")
+    
 except Exception as e:
-    print(f"   ✗ Failed: {e}")
-    test_results.append("Notification System: FAIL")
-print()
-
-# Test 5: Error Handling
-print("5. Testing error handling...")
-try:
-    await desktop.api.execute("nonexistent", "fakeAction", {})
-    print(f"   ✗ Error handling failed - should have thrown error")
-    test_results.append("Error Handling: FAIL")
-except Exception as e:
-    print(f"   ✓ Correctly caught error: {type(e).__name__}")
-    test_results.append("Error Handling: PASS")
-print()
-
-# Summary
-print("=== Test Suite Summary ===")
-for result in test_results:
-    print(f"  {result}")
-
-passed = len([r for r in test_results if "PASS" in r])
-total = len(test_results)
-print(f"\\nOverall: {passed}/{total} tests passed")
-
-if passed == total:
-    print("🎉 All tests passed! Desktop API is working correctly.")
-else:
-    print(f"⚠️  {total - passed} test(s) failed. Check individual results above.")
-
-"Comprehensive API test suite completed"`,
+    print(f"✗ Micropip installation failed: {e}")
+    print("\\nFalling back to direct import...")
+    
+    # Fallback to direct import
+    try:
+        window = js.globalThis
+        base_url = str(window.location.origin) + '/prometheos/python-modules/'
+        
+        response = await js.fetch(base_url + 'prometheos/__init__.py')
+        if response.ok:
+            module_code = await response.text()
+            exec(module_code, globals())
+            print("✓ Fallback: Direct import successful!")
+            
+            # Test the imported module
+            if 'launcher' in globals():
+                result = await launcher.notify("Fallback import successful!")
+                print(f"✓ Fallback test: {result}")
+                
+        else:
+            print(f"✗ Fallback failed: {response.status}")
+    except Exception as fallback_error:
+        print(f"✗ Fallback error: {fallback_error}")`,
       },
       {
-        id: "event-subscription",
-        name: "Event Subscription",
-        description: "Test Python event handling",
+        id: "direct-import",
+        name: "Direct Import (Backup)",
+        description: "Import PrometheOS client via direct module loading",
         type: "code",
-        code: `# Test Event Subscription
-print("Testing event subscription...")
+        code: `# PrometheOS Client Direct Import (Backup Method)
+print("=== PrometheOS Client Direct Import ===")
 
-# Define event handler
-def handle_test_event(data):
-    print(f"Received event: {data}")
+try:
+    import js
+    
+    # Get base URL for the Python modules
+    window = js.globalThis
+    base_url = str(window.location.origin) + '/prometheos/python-modules/'
+    print(f"🌐 Loading from: {base_url}")
+    
+    # Fetch and load the PrometheOS module directly
+    response = await js.fetch(base_url + 'prometheos/__init__.py')
+    if response.ok:
+        module_code = await response.text()
+        exec(module_code, globals())
+        print("✓ PrometheOS client loaded successfully!")
+        
+        # Test basic functionality
+        print("\\n🧪 Testing client functionality...")
+        
+        # Test notification
+        if 'launcher' in globals():
+            result = await launcher.notify("PrometheOS Python client is working!")
+            print(f"✓ Notification test: {result}")
+        
+        # Test dialog
+        if 'dialog' in globals():
+            result = await dialog.open_dialog("Direct Import Success", "PrometheOS Python client loaded successfully!")
+            print(f"✓ Dialog test: {result}")
+        
+        print("\\n🎉 PrometheOS Python client is ready!")
+        
+    else:
+        print(f"✗ Failed to fetch module: {response.status}")
+        
+except Exception as e:
+    print(f"✗ Import failed: {e}")`,
+      },
+      {
+        id: "client-api-demo",
+        name: "API Demo",
+        description: "Demonstrate PrometheOS client APIs",
+        type: "code",
+        code: `# PrometheOS Client API Demo
+print("=== PrometheOS Client API Demo ===")
 
-# Subscribe to events
-unsubscribe = desktop.events.subscribe("python_test_event", handle_test_event)
-print("Subscribed to python_test_event")
-
-# Emit a test event
-desktop.events.emit("python_test_event", {"timestamp": "2025-05-27", "source": "Python"})
-
-print("Event subscription test completed")`,
+try:
+    import js
+    
+    # Load the PrometheOS client
+    window = js.globalThis
+    base_url = str(window.location.origin) + '/prometheos/python-modules/'
+    
+    response = await js.fetch(base_url + 'prometheos/__init__.py')
+    if response.ok:
+        module_code = await response.text()
+        exec(module_code, globals())
+        print("✓ PrometheOS client loaded")
+    else:
+        raise Exception(f"Failed to load client: {response.status}")
+    
+    # Demo 1: Launcher API
+    print("\\n🚀 Launcher API Demo:")
+    try:
+        result = await launcher.notify("Demo notification from Python!", "sonner")
+        print(f"  ✓ Notification: {result}")
+        
+        result = await launcher.launch_app("calculator")
+        print(f"  ✓ Launch calculator: {result}")
+    except Exception as e:
+        print(f"  ✗ Launcher error: {e}")
+    
+    # Demo 2: Dialog API
+    print("\\n💬 Dialog API Demo:")
+    try:
+        result = await dialog.open_dialog(
+            title="Python API Demo",
+            description="This demonstrates the PrometheOS Python client in action!",
+            confirm_label="Awesome!",
+            cancel_label="Close"
+        )
+        print(f"  ✓ Dialog result: {result}")
+    except Exception as e:
+        print(f"  ✗ Dialog error: {e}")
+    
+    print("\\n🎉 API Demo Complete!")
+    
+except Exception as e:
+    print(f"✗ Demo failed: {e}")`,
       },
     ],
   },
