@@ -3,10 +3,10 @@
  * Follows the established worker plugin pattern from webllm.ts
  */
 
-import * as Comlink from 'comlink';
-import json from 'json-stringify-safe';
+import * as Comlink from "comlink";
+import json from "json-stringify-safe";
 
-import { WorkerPlugin } from '../../plugins/types';
+import { WorkerPlugin } from "../../plugins/types";
 
 import type { DesktopApiBridge } from "../../api/bridges/HybridDesktopApiBridge";
 
@@ -179,9 +179,9 @@ const PyodideWorker: WorkerPlugin = {
       // Inject the desktop module into Python namespace with both interfaces
       // First, expose the current plugin instance to Python context
       this._pyodide.globals.set("_pyodide_plugin_instance", this);
-        // Also expose to globalThis for JavaScript access from Python
+      // Also expose to globalThis for JavaScript access from Python
       (globalThis as Record<string, unknown>)._pyodide_plugin_instance = this;
-      
+
       const desktopApiCode = `
 import js
 from pyodide.ffi import create_proxy, to_js, JsProxy
@@ -709,7 +709,7 @@ await micropip.install('${packageName}')
 
       // Handle both JSON string (from Python) and object (direct calls)
       let message: Record<string, unknown>;
-      if (typeof messageOrJson === 'string') {
+      if (typeof messageOrJson === "string") {
         console.log("Parsing JSON message:", messageOrJson);
         message = JSON.parse(messageOrJson);
       } else {

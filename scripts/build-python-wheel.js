@@ -21,7 +21,9 @@ console.log("🔨 Building PrometheOS Python wheel package...");
 
 // Check if Python package exists
 if (!fs.existsSync(packageDir)) {
-  console.error("❌ Python package not found. Run 'npm run create-python-package' first.");
+  console.error(
+    "❌ Python package not found. Run 'npm run create-python-package' first."
+  );
   process.exit(1);
 }
 
@@ -47,19 +49,20 @@ if (fs.existsSync(distDir)) {
 try {
   // Build the wheel
   console.log("🏗️  Building wheel package...");
-  const buildCommand = process.platform === "win32" 
-    ? "python setup.py bdist_wheel"
-    : "python3 setup.py bdist_wheel";
-  
+  const buildCommand =
+    process.platform === "win32"
+      ? "python setup.py bdist_wheel"
+      : "python3 setup.py bdist_wheel";
+
   execSync(buildCommand, {
     cwd: packageDir,
-    stdio: "inherit"
+    stdio: "inherit",
   });
 
   // Find the generated wheel file
   const distFiles = fs.readdirSync(distDir);
-  const wheelFile = distFiles.find(file => file.endsWith(".whl"));
-  
+  const wheelFile = distFiles.find((file) => file.endsWith(".whl"));
+
   if (!wheelFile) {
     console.error("❌ No wheel file generated");
     process.exit(1);
@@ -68,14 +71,14 @@ try {
   // Copy wheel to public/wheels directory
   const sourcePath = path.join(distDir, wheelFile);
   const targetPath = path.join(wheelsDir, wheelFile);
-  
+
   fs.copyFileSync(sourcePath, targetPath);
   console.log(`✅ Copied ${wheelFile} to public/wheels/`);
 
   // Clean up build artifacts (optional)
   const buildDir = path.join(packageDir, "build");
   const eggInfoDir = path.join(packageDir, "prometheos.egg-info");
-  
+
   if (fs.existsSync(buildDir)) {
     fs.rmSync(buildDir, { recursive: true, force: true });
   }
@@ -85,7 +88,7 @@ try {
   if (fs.existsSync(distDir)) {
     fs.rmSync(distDir, { recursive: true, force: true });
   }
-  
+
   console.log("✅ Cleaned build artifacts");
   console.log("");
   console.log("🎉 Python wheel built successfully!");
@@ -94,10 +97,11 @@ try {
   console.log("");
   console.log("💡 Test installation in Pyodide:");
   console.log("   import micropip");
-  console.log(`   await micropip.install("http://localhost:8080/prometheos/wheels/${wheelFile}")`);
+  console.log(
+    `   await micropip.install("http://localhost:8080/prometheos/wheels/${wheelFile}")`
+  );
   console.log("   import prometheos");
   console.log('   await prometheos.launcher.notify("Hello from Python!")');
-
 } catch (error) {
   console.error("❌ Failed to build wheel:", error.message);
   console.log("");
