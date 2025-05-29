@@ -1,41 +1,32 @@
 import React, {
-  createContext,
-  lazy,
-  Suspense,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+    createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState
+} from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
+import { useWindowStore } from '@/store/windowStore';
 
 // Import manifests instead of full plugin implementations
-import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
-import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor/manifest";
-import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
-import { manifest as browserManifest } from "./apps/browser/manifest";
-import { manifest as builderManifest } from "./apps/builder/manifest";
-import { manifest as calculatorManifest } from "./apps/calculator/manifest";
-import { manifest as chatManifest } from "./apps/chat/manifest";
-import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
-import { manifest as notepadManifest } from "./apps/notepad/manifest";
-import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
-import { manifest as sessionManifest } from "./apps/session/manifest";
-import { manifest as settingsManifest } from "./apps/settings/manifest";
-import { manifest as webampManifest } from "./apps/webamp/manifest";
-import { manifest as webllmChatManifest } from "./apps/webllm-chat/manifest";
-import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
-import { eventBus } from "./EventBus";
-import { PluginManager } from "./PluginManager";
+import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
+import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
+import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
+import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
+import { manifest as calculatorManifest } from './apps/calculator/manifest';
+import { manifest as chatManifest } from './apps/chat/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
+import { manifest as notepadManifest } from './apps/notepad/manifest';
+import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
+import { manifest as sessionManifest } from './apps/session/manifest';
+import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as webampManifest } from './apps/webamp/manifest';
+import { manifest as webllmChatManifest } from './apps/webllm-chat/manifest';
+import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { eventBus } from './EventBus';
+import { PluginManager } from './PluginManager';
 import {
-  getAllManifests,
-  installPlugin,
-  uninstallPlugin as removePluginFromRegistry,
-} from "./registry";
-import { Plugin, PluginManifest } from "./types";
-import { workerPluginManager } from "./WorkerPluginManagerClient";
+    getAllManifests, installPlugin, uninstallPlugin as removePluginFromRegistry
+} from './registry';
+import { Plugin, PluginManifest } from './types';
+import { workerPluginManager } from './WorkerPluginManagerClient';
 
 // Lazy loading factory for plugins
 const createLazyPlugin = (pluginId: string) => {
@@ -50,8 +41,8 @@ const createLazyPlugin = (pluginId: string) => {
 const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "api-explorer": () => import("./apps/api-explorer").then((m) => m.default),
   "api-flow-editor": () =>
-    import("./apps/api-flow-editor").then((m) => m.default),  notepad: () => import("./apps/notepad").then((m) => m.default),
-  "prometheos-test": () => import("./apps/prometheos-test").then((m) => m.default),
+    import("./apps/api-flow-editor").then((m) => m.default),
+  notepad: () => import("./apps/notepad").then((m) => m.default),
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
   builder: () => import("./apps/builder").then((m) => m.default),

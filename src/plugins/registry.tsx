@@ -1,26 +1,21 @@
-import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
-import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor/manifest";
-import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
-import { manifest as browserManifest } from "./apps/browser/manifest";
-import { manifest as builderManifest } from "./apps/builder/manifest";
-import { manifest as calculatorManifest } from "./apps/calculator/manifest";
-import { manifest as chatManifest } from "./apps/chat/manifest";
-import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
+import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
+import { manifest as apiFlowEditorManifest } from './apps/api-flow-editor/manifest';
+import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
+import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
+import { manifest as calculatorManifest } from './apps/calculator/manifest';
+import { manifest as chatManifest } from './apps/chat/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
 // Import all plugin manifests
-import { manifest as notepadManifest } from "./apps/notepad/manifest";
-import { manifest as prometheosTestManifest } from "./apps/prometheos-test/manifest";
-import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
-import { manifest as sessionManifest } from "./apps/session/manifest";
-import { manifest as settingsManifest } from "./apps/settings/manifest";
-import { manifest as webampManifest } from "./apps/webamp/manifest";
-import { manifest as webllmChatManifest } from "./apps/webllm-chat/manifest";
-import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
-import {
-  addDynamicManifest,
-  loadDynamicManifests,
-  removeDynamicManifest,
-} from "./dynamicRegistry";
-import { PluginManifest } from "./types";
+import { manifest as notepadManifest } from './apps/notepad/manifest';
+import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
+import { manifest as sessionManifest } from './apps/session/manifest';
+import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as webampManifest } from './apps/webamp/manifest';
+import { manifest as webllmChatManifest } from './apps/webllm-chat/manifest';
+import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { addDynamicManifest, loadDynamicManifests, removeDynamicManifest } from './dynamicRegistry';
+import { PluginManifest } from './types';
 
 // Static plugins list - keep this unchanged
 export const staticPlugins: PluginManifest[] = [
@@ -39,7 +34,6 @@ export const staticPlugins: PluginManifest[] = [
   chatManifest,
   fileExplorerManifest,
   pyodideTestManifest,
-  prometheosTestManifest,
 ];
 
 // For backward compatibility
