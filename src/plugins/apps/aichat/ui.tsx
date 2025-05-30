@@ -2,6 +2,7 @@ import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
 import React, { useEffect, useRef, useState } from "react";
 
 import { useApi } from "../../../api/context/ApiContext";
+import { workerPluginManager } from "../../WorkerPluginManagerClient";
 import { manifest } from "./manifest";
 // Import model configuration
 import { createAppConfig, defaultModelId } from "./modelConfig";
@@ -73,6 +74,12 @@ interface ToolFunction {
   arguments: Record<string, unknown>;
 }
 
+interface MCPTool {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+}
+
 interface Message {
   role: "user" | "assistant" | "system" | "tool";
   content: string;
@@ -96,6 +103,8 @@ const AIChatContent: React.FC = () => {
   const [downloadStatus, setDownloadStatus] = useState("");
   const [selectedModel, setSelectedModel] = useState(defaultModelId);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [mcpTools, setMcpTools] = useState<MCPTool[]>([]);
+  const [mcpToolsLoaded, setMcpToolsLoaded] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<WebLLMEngine | null>(null);
   const toolHandlerRef = useRef<ToolHandler | null>(null);
@@ -106,7 +115,6 @@ const AIChatContent: React.FC = () => {
   // Get available models from config
   const appConfig = createAppConfig();
   const availableModels = appConfig.model_list;
-
   useEffect(() => {
     // Register the AI Chat component
     const componentDoc = {
@@ -134,6 +142,65 @@ const AIChatContent: React.FC = () => {
       ],
     };
     registerComponent(componentDoc);
+  }, []);
+
+  // Initialize MCP tools on component mount
+  useEffect(() => {
+    const initializeMCPTools = async () => {
+      try {
+        console.log("Initializing MCP server for AI Chat...");
+
+        // Initialize MCP server (this will auto-register existing API components)
+        await workerPluginManager.initMCPServer();
+
+        // Load available tools
+        const tools = await workerPluginManager.getMCPTools();
+        console.log("Loaded MCP tools:", tools);
+
+        setMcpTools(tools);
+        setMcpToolsLoaded(true);
+      } catch (error) {
+        console.error("Error initializing MCP tools:", error);
+        setMcpToolsLoaded(true); // Set to true even on error to prevent infinite loading
+      }
+    };
+
+    initializeMCPTools();
+  }, []);
+
+  // Function to refresh MCP tools (can be called when new components are registered)
+  const refreshMCPTools = async () => {
+    try {
+      console.log("Refreshing MCP tools...");
+      const tools = await workerPluginManager.getMCPTools();
+      console.log("Refreshed MCP tools:", tools);
+      setMcpTools(tools);
+    } catch (error) {
+      console.error("Error refreshing MCP tools:", error);
+    }
+  };
+
+  // Listen for new API component registrations to refresh tools
+  useEffect(() => {
+    const handleComponentRegistration = () => {
+      // Small delay to ensure component is fully registered
+      setTimeout(refreshMCPTools, 100);
+    };
+
+    // You can emit this event when components are registered
+    window.addEventListener("mcp-tools-refresh", refreshMCPTools);
+    window.addEventListener(
+      "api-component-registered",
+      handleComponentRegistration
+    );
+
+    return () => {
+      window.removeEventListener("mcp-tools-refresh", refreshMCPTools);
+      window.removeEventListener(
+        "api-component-registered",
+        handleComponentRegistration
+      );
+    };
   }, []);
 
   const downloadModel = async () => {
@@ -164,16 +231,19 @@ const AIChatContent: React.FC = () => {
         attention_sink_size: 4096,
       };
 
-      await engineRef.current.reload(selectedModel, config);
-
-      // Initialize tool handler
+      await engineRef.current.reload(selectedModel, config); // Initialize tool handler
       toolHandlerRef.current = new ToolHandler(selectedModel);
 
       setIsModelLoaded(true);
       setDownloadStatus("Model loaded successfully!");
 
+      // Create combined tools list (static tools + MCP tools)
+      const combinedTools = [...tools, ...mcpTools];
+      console.log("Combined tools for AI:", combinedTools);
+
       // Add system message with tool support
-      const systemPrompt = toolHandlerRef.current.createSystemPrompt(tools);
+      const systemPrompt =
+        toolHandlerRef.current.createSystemPrompt(combinedTools);
       messagesRef.current = [
         {
           role: "system" as const,
@@ -442,6 +512,50 @@ const AIChatContent: React.FC = () => {
                   JSON.stringify(ret)
                 );
                 console.log("=== Generated tool response:", toolResp);
+              } else if (
+                func &&
+                mcpTools.some((tool) => tool.name === func.name)
+              ) {
+                // This is an MCP tool - execute via workerPluginManager
+                console.log(
+                  "=== Calling MCP tool:",
+                  func.name,
+                  "with args:",
+                  func.arguments
+                );
+
+                const mcpResult = await workerPluginManager.executeMCPTool({
+                  name: func.name,
+                  arguments: func.arguments,
+                });
+
+                console.log("=== MCP tool returned:", mcpResult);
+
+                if (!toolHandlerRef.current) {
+                  throw new Error(
+                    "ToolHandler is null after MCP tool execution"
+                  );
+                }
+
+                // Extract text content from MCP result
+                let resultText = "No result";
+                if (
+                  mcpResult &&
+                  mcpResult.content &&
+                  Array.isArray(mcpResult.content)
+                ) {
+                  const textContent = mcpResult.content
+                    .filter((item) => item.type === "text" && item.text)
+                    .map((item) => item.text)
+                    .join("\n");
+                  resultText = textContent || "No text content";
+                }
+
+                toolResp = toolHandlerRef.current.genToolResponse(
+                  func,
+                  resultText
+                );
+                console.log("=== Generated MCP tool response:", toolResp);
               } else {
                 const content = "Error: Unknown function " + func?.name;
                 console.error("=== Unknown function:", func?.name);
@@ -580,12 +694,39 @@ const AIChatContent: React.FC = () => {
           >
             {isLoading ? "Loading..." : "Download"}
           </button>
-        </div>
+        </div>{" "}
         {downloadStatus && (
           <p className="p-2 border border-black text-sm bg-gray-50">
             {downloadStatus}
           </p>
         )}
+        {/* MCP Tools Status */}
+        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-medium">
+              🔧 MCP Tools:{" "}
+              {mcpToolsLoaded ? (
+                <span className="text-green-600">
+                  {mcpTools.length} available
+                </span>
+              ) : (
+                <span className="text-orange-500">Loading...</span>
+              )}
+            </span>
+            <button
+              onClick={refreshMCPTools}
+              disabled={!mcpToolsLoaded}
+              className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+            >
+              Refresh
+            </button>
+          </div>
+          {mcpToolsLoaded && mcpTools.length > 0 && (
+            <div className="mt-1 text-xs text-gray-600">
+              Available tools: {mcpTools.map((tool) => tool.name).join(", ")}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chat Interface */}
