@@ -123,7 +123,8 @@ export const useDynamicApiRegistration = ({
    */
   const registerActionHandlers = useCallback((
     componentId: string,
-    functions: PythonFunction[]
+    functions: PythonFunction[],
+    spec: OpenAPISpec
   ) => {
     functions.forEach(func => {
       registerApiActionHandler(componentId, func.name, async (params = {}) => {
@@ -135,10 +136,17 @@ export const useDynamicApiRegistration = ({
         }
 
         try {
-          // Set parameters in Pyodide globals
+          // Get parameter type information from OpenAPI spec
+          const pathKey = `/${func.name}`;
+          const pathSpec = spec.paths?.[pathKey]?.post;
+          const paramSchemas = pathSpec?.requestBody?.content?.['application/json']?.schema?.properties || {};
+
+          // Set parameters in Pyodide globals with proper type conversion
           for (const [paramName, value] of Object.entries(params)) {
             if (func.parameters.includes(paramName)) {
-              pyodideRef.current.globals.set(paramName, value);
+              const paramSchema = paramSchemas[paramName];
+              const convertedValue = convertParameterValue(value, paramSchema?.type || 'string');
+              pyodideRef.current.globals.set(paramName, convertedValue);
             }
           }
 
@@ -177,7 +185,54 @@ export const useDynamicApiRegistration = ({
         }
       });
     });
-  }, []);  /**
+  }, []);
+
+  /**
+   * Convert parameter values to appropriate types based on OpenAPI schema
+   */
+  const convertParameterValue = (value: any, type: string): any => {
+    if (value === undefined || value === null || value === '') {
+      return value;
+    }
+
+    switch (type) {
+      case 'integer':
+        const intValue = parseInt(String(value), 10);
+        return isNaN(intValue) ? value : intValue;
+      
+      case 'number':
+        const numValue = parseFloat(String(value));
+        return isNaN(numValue) ? value : numValue;
+      
+      case 'boolean':
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'string') {
+          const lower = value.toLowerCase();
+          if (lower === 'true') return true;
+          if (lower === 'false') return false;
+        }
+        return Boolean(value);
+      
+      case 'array':
+        if (Array.isArray(value)) return value;
+        try {
+          return JSON.parse(String(value));
+        } catch {
+          return value;
+        }
+      
+      case 'object':
+        if (typeof value === 'object') return value;
+        try {
+          return JSON.parse(String(value));
+        } catch {
+          return value;
+        }
+      
+      default: // 'string' or unknown types
+        return String(value);
+    }
+  };  /**
    * Register Python functions as API components
    */
   const registerPythonFunctions = useCallback((
@@ -213,19 +268,15 @@ export const useDynamicApiRegistration = ({
     try {
       const apiComponent = convertToApiComponent(spec, functions, fileName);
 
-      // Unregister previous component if exists
-      if (registeredComponentsRef.current.has(apiComponent.id)) {
-        console.log(`🔄 Updating existing component: ${apiComponent.id}`);
-        unregisterComponent(apiComponent.id);
-        registeredComponentsRef.current.delete(apiComponent.id);
-      }
+      // Unregister all previous components for this file (handles file updates/edits)
+      unregisterByFileName(fileName);
 
       // Register the new component
       registerComponent(apiComponent);
       registeredComponentsRef.current.add(apiComponent.id);
 
-      // Register action handlers
-      registerActionHandlers(apiComponent.id, functions);
+      // Register action handlers with OpenAPI spec for type conversion
+      registerActionHandlers(apiComponent.id, functions, spec);
 
       console.log(`✅ Registered Python API component: ${apiComponent.id}`, {
         functions: functions.map(f => f.name),
@@ -257,6 +308,26 @@ export const useDynamicApiRegistration = ({
     registeredComponentsRef.current.clear();
   }, [unregisterComponent]);
 
+  /**
+   * Unregister all components for a specific file
+   */
+  const unregisterByFileName = useCallback((fileName: string) => {
+    const fileComponentId = `${instanceId}-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    const componentsToRemove = Array.from(registeredComponentsRef.current).filter(id => 
+      id === fileComponentId || id.startsWith(`${instanceId}-${fileName.replace(/[^a-zA-Z0-9]/g, '-')}-`)
+    );
+    
+    for (const componentId of componentsToRemove) {
+      try {
+        unregisterComponent(componentId);
+        registeredComponentsRef.current.delete(componentId);
+        console.log(`🗑️  Unregistered Python API component for file update: ${componentId}`);
+      } catch (error) {
+        console.error(`Failed to unregister component ${componentId}:`, error);
+      }
+    }
+  }, [instanceId, unregisterComponent]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -276,6 +347,7 @@ export const useDynamicApiRegistration = ({
   return {
     registerPythonFunctions,
     unregisterAll,
+    unregisterByFileName,
     setPyodideInstance,
     registeredComponents: Array.from(registeredComponentsRef.current),
   };

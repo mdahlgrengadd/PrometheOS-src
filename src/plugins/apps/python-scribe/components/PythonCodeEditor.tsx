@@ -41,7 +41,7 @@ const PythonCodeEditor = () => {
     unregisterAll, 
     registeredComponents 
   } = useDynamicApiRegistration({
-    instanceId: `python-scribe-${Date.now()}`,
+    instanceId: 'python-scribe-main', // Stable ID for this python-scribe instance
     enabled: true
   });
 
