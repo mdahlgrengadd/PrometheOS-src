@@ -1,7 +1,7 @@
-import * as Comlink from 'comlink';
+import * as Comlink from "comlink";
 
-import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
-import { PluginManifest } from './types';
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+import { PluginManifest } from "./types";
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
@@ -332,6 +332,17 @@ class WorkerPluginManagerClient {
       return; // No need to clean up if not registered
     }
     await this.callPlugin("webllm", "cleanup");
+  }
+
+  /**
+   * Get WebLLM MCP initialization state for debugging
+   */
+  async getWebLLMMCPInitializationState(): Promise<boolean> {
+    if (!this.registeredPlugins.has("webllm")) {
+      return false;
+    }
+    const result = await this.callPlugin("webllm", "getMCPInitializationState");
+    return Boolean(result);
   }
 
   // Pyodide Helper Methods
