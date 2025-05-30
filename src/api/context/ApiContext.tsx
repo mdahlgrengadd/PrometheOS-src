@@ -157,7 +157,8 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     id: string,
     state: Partial<IApiComponent["state"]>
   ) => {
-    console.log(`Updating component state: ${id}`, state);
+    // Remove excessive logging - only log in development for debugging
+    // console.log(`Updating component state: ${id}`, state);
     setComponents((prev) => {
       if (!prev[id]) return prev;
 

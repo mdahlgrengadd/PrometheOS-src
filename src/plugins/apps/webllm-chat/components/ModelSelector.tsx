@@ -13,6 +13,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   onSelectModel,
   disabled = false,
 }) => {
+  // Helper function to get display name for models
+  const getModelDisplayName = (model: string): string => {
+    if (model === "mockup-echo-llm") {
+      return "🔄 Mockup Echo LLM (Test Model)";
+    }
+    return model;
+  };
+
   return (
     <div className="flex items-center">
       <label htmlFor="model-select" className="mr-2 text-sm font-medium">
@@ -27,7 +35,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       >
         {models.map((model) => (
           <option key={model} value={model}>
-            {model}
+            {getModelDisplayName(model)}
           </option>
         ))}
       </select>

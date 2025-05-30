@@ -593,7 +593,7 @@ class WorkerPluginManagerClient {
     Array<{
       name: string;
       description: string;
-      inputSchema: Record<string, unknown>;
+      parameters: Record<string, unknown>;
     }>
   > {
     if (!this.registeredPlugins.has("mcp-server")) {
@@ -606,7 +606,7 @@ class WorkerPluginManagerClient {
       return result as Array<{
         name: string;
         description: string;
-        inputSchema: Record<string, unknown>;
+        parameters: Record<string, unknown>;
       }>;
     }
 

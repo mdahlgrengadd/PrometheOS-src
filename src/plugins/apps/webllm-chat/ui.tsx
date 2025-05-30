@@ -17,6 +17,7 @@ interface Message {
 
 // Available models
 const AVAILABLE_MODELS = [
+  "mockup-echo-llm", // Mockup model that echoes user input
   "Hermes-2-Pro-Llama-3-8B-q4f32_1-MLC",
   "Hermes-2-Pro-Mistral-7B",
   "Llama-3.1-8B-Instruct-q4f32_1-MLC",
@@ -111,7 +112,7 @@ const WorkerChatWindow: React.FC = () => {
     {
       name: string;
       description: string;
-      inputSchema: Record<string, unknown>;
+      parameters: Record<string, unknown>;
     }[]
   >([]);
 
@@ -355,12 +356,8 @@ const WorkerChatWindow: React.FC = () => {
 
       try {
         setIsTyping(true);
-        console.log(
-          "handleSendMessage: toolsEnabled =",
-          toolsEnabled,
-          "messages =",
-          newMessages
-        );
+        // Remove excessive logging
+        // console.log("handleSendMessage: toolsEnabled =", toolsEnabled, "messages =", newMessages);
 
         // Create a temporary message for streaming
         const assistantMessage: Message = { role: "assistant", content: "" };

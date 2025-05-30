@@ -9,7 +9,7 @@ import { WorkerPlugin } from '../../plugins/types';
 export interface MCPTool {
   name: string;
   description: string;
-  inputSchema: {
+  parameters: {
     type: "object";
     properties: Record<string, unknown>;
     required?: string[];
@@ -140,7 +140,11 @@ const MCPServerWorker: WorkerPlugin = {
    * Handle tools/list MCP method
    */
   async _handleToolsList(message: MCPRequest): Promise<MCPResponse> {
-    const tools = await this.getAvailableTools();
+    // Allow provider format override via params ("openai" or "anthropic")
+    const format = (message.params && typeof message.params === 'object' && typeof message.params['format'] === 'string')
+      ? (message.params['format'] as 'openai' | 'anthropic')
+      : 'openai';
+    const tools = await this.getAvailableTools(format);
 
     return {
       jsonrpc: "2.0",
@@ -242,7 +246,7 @@ const MCPServerWorker: WorkerPlugin = {
       const tool: MCPTool = {
         name: toolName,
         description,
-        inputSchema,
+        parameters: inputSchema,
       };
 
       const toolDef: ToolDefinition = {
@@ -299,7 +303,13 @@ const MCPServerWorker: WorkerPlugin = {
   /**
    * Get all available tools
    */
-  async getAvailableTools(): Promise<MCPTool[]> {
+  /**
+   * Get all available tools, with optional format for OpenAI or Anthropic
+   * @param format 'openai' | 'anthropic' (default: 'openai')
+   */
+  async getAvailableTools(format: 'openai' | 'anthropic' = 'openai'): Promise<MCPTool[]> {
+    // Both OpenAI and Anthropic expect an array of tool objects with 'parameters' field
+    // This method is future-proofed for further provider-specific tweaks
     return Array.from((this._tools as Map<string, ToolDefinition>).values()).map((toolDef) => toolDef.tool);
   },
 
@@ -579,7 +589,8 @@ const MCPServerWorker: WorkerPlugin = {
         return this.unregisterTool(params.toolName as string);
 
       case "getAvailableTools":
-        return this.getAvailableTools();
+        // Allow provider format override via params ("openai" or "anthropic")
+        return this.getAvailableTools(params && typeof params.format === 'string' ? params.format as 'openai' | 'anthropic' : 'openai');
 
       case "executeTool":
         if (!params?.toolCall) {

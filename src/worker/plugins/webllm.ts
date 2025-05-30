@@ -67,6 +67,18 @@ const WorkerWebLLM: WorkerPlugin = {
     modelName: string
   ): Promise<{ status: string; message?: string }> {
     try {
+      // Handle mockup model specially
+      if (modelName === "mockup-echo-llm") {
+        // console.log("Loading mockup echo LLM"); // Remove excessive logging
+        this._currentModel = modelName;
+        this._engine = null; // No real engine needed for mockup
+        this._progress = {
+          text: "Mockup model loaded instantly",
+          progress: 100,
+        };
+        return { status: "success", message: "Mockup echo LLM loaded" };
+      }
+
       // Clean up existing engine if needed
       if (this._engine) {
         // Clean up old engine resources if any
@@ -127,6 +139,10 @@ const WorkerWebLLM: WorkerPlugin = {
    * Check if model is loaded
    */
   isModelLoaded(): boolean {
+    // Mockup model is always considered "loaded" when selected
+    if (this._currentModel === "mockup-echo-llm") {
+      return true;
+    }
     return this._engine !== null;
   },
 
@@ -249,12 +265,21 @@ You are a helpful Assistant.`;
 
     return new ReadableStream<string>({
       async start(controller) {
-        console.log(
-          "WebLLM chat invoked. currentModel=",
-          self._currentModel,
-          "enableTools=",
-          enableTools
-        );
+        // Remove excessive logging - only log for debugging
+        // console.log("WebLLM chat invoked. currentModel=", self._currentModel, "enableTools=", enableTools);
+
+        // Handle mockup echo model specially
+        if (self._currentModel === "mockup-echo-llm") {
+          const lastUserMessage = messages.filter(msg => msg.role === "user").pop();
+          const echoContent = lastUserMessage?.content || "Hello! I'm the echo model.";
+          const echoResponse = `Echo: ${echoContent}`;
+          
+          // Send the complete echo response at once (no artificial streaming for mockup)
+          controller.enqueue(echoResponse);
+          controller.close();
+          return;
+        }
+
         if (!engine) {
           controller.error(
             new Error("Model not loaded. Please load a model first.")
