@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useApi } from "../../../api/context/ApiContext";
 import { manifest } from "./manifest";
+// Import model configuration
+import { createAppConfig, defaultModelId } from "./modelConfig";
 // Import tool handling infrastructure
 import { ToolHandler } from "./toolHandler";
 import { fetch_wikipedia_content, sparql_exec } from "./toolImplementations";
@@ -92,9 +94,7 @@ const AIChatContent: React.FC = () => {
   const [currentInput, setCurrentInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState("");
-  const [selectedModel, setSelectedModel] = useState(
-    "Qwen2.5-7B-Instruct-q4f16_1-MLC"
-  );
+  const [selectedModel, setSelectedModel] = useState(defaultModelId);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<WebLLMEngine | null>(null);
@@ -102,6 +102,10 @@ const AIChatContent: React.FC = () => {
 
   // Global messages array like in index.js - this is the source of truth for conversation
   const messagesRef = useRef<Message[]>([]);
+
+  // Get available models from config
+  const appConfig = createAppConfig();
+  const availableModels = appConfig.model_list;
 
   useEffect(() => {
     // Register the AI Chat component
@@ -129,19 +133,14 @@ const AIChatContent: React.FC = () => {
         },
       ],
     };
-
     registerComponent(componentDoc);
   }, []);
 
   const downloadModel = async () => {
     setIsLoading(true);
     setDownloadStatus("Initializing...");
-
     try {
-      const appConfig = {
-        model_list: webllm.prebuiltAppConfig.model_list,
-      };
-
+      // Use the custom app config with all available models
       engineRef.current = new webllm.MLCEngine({ appConfig });
 
       engineRef.current.setInitProgressCallback(
@@ -194,7 +193,11 @@ const AIChatContent: React.FC = () => {
   const streamingGenerating = async (
     messages: Message[],
     onUpdate: (content: string) => void,
-    onFinish: (displayMessage: string, usage: Usage | undefined, conversationMessage?: string) => void,
+    onFinish: (
+      displayMessage: string,
+      usage: Usage | undefined,
+      conversationMessage?: string
+    ) => void,
     onError: (error: unknown) => void
   ): Promise<{ done: boolean; func?: ToolFunction; error?: string }> => {
     if (!engineRef.current) {
@@ -244,7 +247,11 @@ const AIChatContent: React.FC = () => {
             onFinish("**func call:** " + rc.tool_call, usage, finalMessage);
             return { done: false, func: rc.func };
           } else {
-            onFinish(finalMessage + "\n" + "Error: " + rc.error, usage, finalMessage);
+            onFinish(
+              finalMessage + "\n" + "Error: " + rc.error,
+              usage,
+              finalMessage
+            );
             return { done: false, func: rc.func, error: rc.error };
           }
         }
@@ -318,20 +325,36 @@ const AIChatContent: React.FC = () => {
           updateLastMessage(content);
         };
 
-        const onFinish = (displayMessage: string, usage: Usage | undefined, conversationMessage?: string) => {
-          console.log(`=== onFinish called with display: ${displayMessage.substring(0, 100)}...`);
+        const onFinish = (
+          displayMessage: string,
+          usage: Usage | undefined,
+          conversationMessage?: string
+        ) => {
+          console.log(
+            `=== onFinish called with display: ${displayMessage.substring(
+              0,
+              100
+            )}...`
+          );
           updateLastMessage(displayMessage);
-          
+
           // Add the conversation message (or display message if no conversation message) to global messages array
           const messageToAdd = conversationMessage || displayMessage;
           messagesRef.current.push({
             role: "assistant",
             content: messageToAdd,
           });
-          console.log(`=== Added assistant message to global array: ${messageToAdd.substring(0, 50)}..., total: ${messagesRef.current.length}`);
+          console.log(
+            `=== Added assistant message to global array: ${messageToAdd.substring(
+              0,
+              50
+            )}..., total: ${messagesRef.current.length}`
+          );
         };
 
-        console.log(`=== Calling streamingGenerating with ${messagesRef.current.length} messages`);
+        console.log(
+          `=== Calling streamingGenerating with ${messagesRef.current.length} messages`
+        );
         const rc = await streamingGenerating(
           messagesRef.current, // Use global messages array
           onUpdate,
@@ -343,9 +366,16 @@ const AIChatContent: React.FC = () => {
         done = rc.done;
 
         if (!done && toolHandlerRef.current) {
-          console.log("=== Tool calling iteration:", iter, "done:", done, "func:", rc.func);
+          console.log(
+            "=== Tool calling iteration:",
+            iter,
+            "done:",
+            done,
+            "func:",
+            rc.func
+          );
           console.log("Current messages count:", messagesRef.current.length);
-          
+
           if (rc.error) {
             console.error("Tool calling error:", rc.error);
             messagesRef.current.push({
@@ -367,83 +397,132 @@ const AIChatContent: React.FC = () => {
             let toolResp = null;
 
             try {
-              console.log("=== Starting tool execution:", func?.name, "args:", func?.arguments);
-              
+              console.log(
+                "=== Starting tool execution:",
+                func?.name,
+                "args:",
+                func?.arguments
+              );
+
               if (func && func.name === "fetch_wikipedia_content") {
-                console.log("=== Calling fetch_wikipedia_content with:", func.arguments.search_query);
-                const ret = await fetch_wikipedia_content(func.arguments.search_query);
+                console.log(
+                  "=== Calling fetch_wikipedia_content with:",
+                  func.arguments.search_query
+                );
+                const ret = await fetch_wikipedia_content(
+                  func.arguments.search_query
+                );
                 console.log("=== Wikipedia API returned:", ret);
-                
+
                 if (!toolHandlerRef.current) {
-                  throw new Error("ToolHandler is null after fetch_wikipedia_content");
+                  throw new Error(
+                    "ToolHandler is null after fetch_wikipedia_content"
+                  );
                 }
-                
-                toolResp = toolHandlerRef.current.genToolResponse(func, JSON.stringify(ret));
+
+                toolResp = toolHandlerRef.current.genToolResponse(
+                  func,
+                  JSON.stringify(ret)
+                );
                 console.log("=== Generated tool response:", toolResp);
-                
               } else if (func && func.name === "sparql_exec") {
-                console.log("=== Calling sparql_exec with:", func.arguments.query);
+                console.log(
+                  "=== Calling sparql_exec with:",
+                  func.arguments.query
+                );
                 const ret = await sparql_exec(func.arguments.query);
                 console.log("=== SPARQL API returned:", ret);
-                
+
                 if (!toolHandlerRef.current) {
                   throw new Error("ToolHandler is null after sparql_exec");
                 }
-                
-                toolResp = toolHandlerRef.current.genToolResponse(func, JSON.stringify(ret));
+
+                toolResp = toolHandlerRef.current.genToolResponse(
+                  func,
+                  JSON.stringify(ret)
+                );
                 console.log("=== Generated tool response:", toolResp);
-                
               } else {
                 const content = "Error: Unknown function " + func?.name;
                 console.error("=== Unknown function:", func?.name);
-                
+
                 if (!toolHandlerRef.current) {
                   throw new Error("ToolHandler is null for unknown function");
                 }
-                
-                toolResp = toolHandlerRef.current.genToolResponse(func, JSON.stringify(content));
+
+                toolResp = toolHandlerRef.current.genToolResponse(
+                  func,
+                  JSON.stringify(content)
+                );
               }
             } catch (e) {
               console.error("=== Tool execution error:", e);
               console.error("=== Error stack:", e.stack);
               const content = "Error: " + e.toString();
-              
+
               try {
                 if (toolHandlerRef.current) {
-                  toolResp = toolHandlerRef.current.genToolResponse(func, JSON.stringify(content));
+                  toolResp = toolHandlerRef.current.genToolResponse(
+                    func,
+                    JSON.stringify(content)
+                  );
                 } else {
-                  console.error("=== ToolHandler is null, cannot generate error response");
+                  console.error(
+                    "=== ToolHandler is null, cannot generate error response"
+                  );
                   updateLastMessage("**Error:** ToolHandler is null");
                   continue; // Skip this iteration
                 }
               } catch (innerError) {
-                console.error("=== Failed to generate error response:", innerError);
-                updateLastMessage("**Error:** Failed to generate error response");
+                console.error(
+                  "=== Failed to generate error response:",
+                  innerError
+                );
+                updateLastMessage(
+                  "**Error:** Failed to generate error response"
+                );
                 continue; // Skip this iteration
               }
             }
 
             // Only proceed if we have a valid tool response
             if (toolResp) {
-              console.log("=== Successfully generated tool response:", toolResp);
+              console.log(
+                "=== Successfully generated tool response:",
+                toolResp
+              );
               try {
                 // Add tool response to global messages array
                 messagesRef.current.push({
                   content: toolResp.content,
                   tool_call_id: toolResp.tool_call_id,
-                  role: toolResp.role as "user" | "assistant" | "system" | "tool",
+                  role: toolResp.role as
+                    | "user"
+                    | "assistant"
+                    | "system"
+                    | "tool",
                 });
 
                 // Update the "working..." message with the tool result
                 updateLastMessage("**func result:** " + toolResp.content);
-                console.log("=== Tool response added to messages, total messages:", messagesRef.current.length);
+                console.log(
+                  "=== Tool response added to messages, total messages:",
+                  messagesRef.current.length
+                );
               } catch (e) {
-                console.error("=== Error updating messages with tool response:", e);
-                updateLastMessage("**Error:** Failed to update with tool response");
+                console.error(
+                  "=== Error updating messages with tool response:",
+                  e
+                );
+                updateLastMessage(
+                  "**Error:** Failed to update with tool response"
+                );
               }
             } else {
               // Handle case where toolResp is null
-              console.error("=== Failed to generate tool response - toolResp is null");
+              console.error(
+                "=== Failed to generate tool response - toolResp is null"
+              );
               updateLastMessage("**Error:** Failed to generate tool response");
             }
           }
@@ -481,18 +560,18 @@ const AIChatContent: React.FC = () => {
           Step 1: Initialize WebLLM and Download Model
         </p>
         <div className="flex gap-2 mb-4">
+          {" "}
           <select
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
             className="flex-1 p-2 border border-gray-300 rounded"
             disabled={isLoading}
           >
-            <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC">
-              Qwen2.5-7B-Instruct-q4f16_1-MLC
-            </option>
-            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">
-              Llama-3.1-8B-Instruct-q4f16_1-MLC
-            </option>
+            {availableModels.map((model) => (
+              <option key={model.model_id} value={model.model_id}>
+                {model.model_id}
+              </option>
+            ))}
           </select>
           <button
             onClick={downloadModel}
