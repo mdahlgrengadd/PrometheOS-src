@@ -59,6 +59,7 @@ const WorkerWebLLM: WorkerPlugin = {
   _engine: null as webllm.MLCEngine | null,
   _currentModel: null as string | null,
   _progress: null as ProgressUpdate | null,
+  _mcpInitialized: false, // Track MCP server initialization state
 
   /**
    * Load a model with progress updates
@@ -125,7 +126,6 @@ const WorkerWebLLM: WorkerPlugin = {
   getCurrentModel(): string | null {
     return this._currentModel;
   },
-
   /**
    * Clean up resources
    */
@@ -133,6 +133,8 @@ const WorkerWebLLM: WorkerPlugin = {
     this._engine = null;
     this._currentModel = null;
     this._progress = null;
+    // Reset MCP initialization state on cleanup
+    this._mcpInitialized = false;
   },
 
   /**
@@ -296,9 +298,7 @@ You are a helpful Assistant.`;
             tool_calls: msg.tool_calls,
           })); // Get tools if enabled
           let tools: Tool[] | undefined = undefined;
-          const modifiedMessages = [...apiMessages];
-
-          if (enableTools) {
+          const modifiedMessages = [...apiMessages];          if (enableTools) {
             try {
               const manager = (globalThis as unknown as WorkerGlobalScope)
                 .workerPluginManager;
@@ -309,10 +309,15 @@ You are a helpful Assistant.`;
               );
 
               if (manager) {
-                // Initialize MCP server
-                console.log("webllm plugin: initializing mcp-server");
-                await manager.callPlugin("mcp-server", "initialize");
-                console.log("webllm plugin: mcp-server initialized");
+                // Only initialize MCP server once per session
+                if (!this._mcpInitialized) {
+                  console.log("webllm plugin: initializing mcp-server (first time)");
+                  await manager.callPlugin("mcp-server", "initialize");
+                  this._mcpInitialized = true;
+                  console.log("webllm plugin: mcp-server initialized");
+                } else {
+                  console.log("webllm plugin: mcp-server already initialized, skipping");
+                }
 
                 // Fetch available tools
                 const toolsResult = await manager.callPlugin(
