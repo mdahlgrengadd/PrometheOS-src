@@ -1,6 +1,26 @@
 import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
 import React, { useEffect, useRef, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
+// Import shadcn components
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { useApi } from "../../../api/context/ApiContext";
 import { workerPluginManager } from "../../WorkerPluginManagerClient";
 import { manifest } from "./manifest";
@@ -105,7 +125,6 @@ const AIChatContent: React.FC = () => {
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [mcpTools, setMcpTools] = useState<MCPTool[]>([]);
   const [mcpToolsLoaded, setMcpToolsLoaded] = useState(false);
-  const chatBoxRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<WebLLMEngine | null>(null);
   const toolHandlerRef = useRef<ToolHandler | null>(null);
 
@@ -659,132 +678,184 @@ const AIChatContent: React.FC = () => {
       sendMessage();
     }
   };
+  // Scroll to bottom when messages change
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    // For ScrollArea, we need to find the viewport and scroll it
+    const scrollArea = scrollAreaRef.current;
+    if (scrollArea) {
+      const viewport = scrollArea.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
   }, [displayMessages]);
-
   return (
-    <div className="flex flex-col h-full bg-white p-4 font-sans">
+    <div className="flex flex-col h-full bg-background p-4 font-sans">
       {/* Model Selection and Download */}
-      <div className="mb-4">
-        <p className="mb-2 font-medium">
-          Step 1: Initialize WebLLM and Download Model
-        </p>
-        <div className="flex gap-2 mb-4">
-          {" "}
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded"
-            disabled={isLoading}
-          >
-            {availableModels.map((model) => (
-              <option key={model.model_id} value={model.model_id}>
-                {model.model_id}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={downloadModel}
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            {isLoading ? "Loading..." : "Download"}
-          </button>
-        </div>{" "}
-        {downloadStatus && (
-          <p className="p-2 border border-black text-sm bg-gray-50">
-            {downloadStatus}
-          </p>
-        )}
-        {/* MCP Tools Status */}
-        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-          <div className="flex justify-between items-center">
-            <span className="font-medium">
-              🔧 MCP Tools:{" "}
-              {mcpToolsLoaded ? (
-                <span className="text-green-600">
-                  {mcpTools.length} available
-                </span>
-              ) : (
-                <span className="text-orange-500">Loading...</span>
-              )}
-            </span>
-            <button
-              onClick={refreshMCPTools}
-              disabled={!mcpToolsLoaded}
-              className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+      <Card className="mb-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">
+            Initialize WebLLM and Download Model
+          </CardTitle>
+          <CardDescription>
+            Step 1: Select and download an AI model to start chatting
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Select
+              value={selectedModel}
+              onValueChange={setSelectedModel}
+              disabled={isLoading}
             >
-              Refresh
-            </button>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select a model..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableModels.map((model) => (
+                  <SelectItem key={model.model_id} value={model.model_id}>
+                    {model.model_id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={downloadModel}
+              disabled={isLoading}
+              className="px-6"
+            >
+              {isLoading ? "Loading..." : "Download"}
+            </Button>
           </div>
-          {mcpToolsLoaded && mcpTools.length > 0 && (
-            <div className="mt-1 text-xs text-gray-600">
-              Available tools: {mcpTools.map((tool) => tool.name).join(", ")}
+
+          {downloadStatus && (
+            <div className="p-3 border rounded-md bg-muted text-sm">
+              {downloadStatus}
             </div>
           )}
-        </div>
-      </div>
+
+          {/* MCP Tools Status */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div className="flex justify-between items-center">
+              <span className="font-medium flex items-center gap-2">
+                🔧 MCP Tools:
+                {mcpToolsLoaded ? (
+                  <Badge
+                    variant="secondary"
+                    className="bg-green-100 text-green-700"
+                  >
+                    {mcpTools.length} available
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="secondary"
+                    className="bg-orange-100 text-orange-700"
+                  >
+                    Loading...
+                  </Badge>
+                )}
+              </span>
+              <Button
+                onClick={refreshMCPTools}
+                disabled={!mcpToolsLoaded}
+                variant="outline"
+                size="sm"
+              >
+                Refresh
+              </Button>
+            </div>
+            {mcpToolsLoaded && mcpTools.length > 0 && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                Available tools: {mcpTools.map((tool) => tool.name).join(", ")}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Chat Interface */}
-      <div className="flex-1 flex flex-col">
-        <p className="mb-2 font-medium">Step 2: Chat</p>
-        {/* Chat messages */}
-        <div
-          ref={chatBoxRef}
-          className="flex-1 overflow-y-auto bg-gray-300 border-2 border-black p-2 mb-2"
-        >
-          {displayMessages
-            .filter((m) => m.role !== "system")
-            .map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                } mb-2`}
-              >
-                <div
-                  className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                    message.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-          {isLoading && (
-            <div className="flex justify-start mb-2">
-              <div className="bg-gray-100 text-gray-800 px-3 py-2 rounded-lg">
-                Thinking...
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Input area */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={currentInput}
-            onChange={(e) => setCurrentInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
-            className="flex-1 p-2 border-2 border-black rounded-none"
-            disabled={!isModelLoaded || isLoading}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!isModelLoaded || isLoading || !currentInput.trim()}
-            className="w-24 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
+      <Card className="flex-1 flex flex-col min-h-0">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Chat</CardTitle>
+          <CardDescription>
+            Step 2: Start a conversation with the AI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col min-h-0 gap-4">
+          {/* Chat messages - Fixed height scrollable area */}
+          <ScrollArea
+            ref={scrollAreaRef}
+            className="flex-1 min-h-0 border rounded-md"
           >
-            Send
-          </button>
-        </div>{" "}
-      </div>
+            <div className="p-4 space-y-3">
+              {displayMessages
+                .filter((m) => m.role !== "system")
+                .map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap break-words">
+                        {message.content}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-pulse"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-current rounded-full animate-pulse"
+                        style={{ animationDelay: "0.4s" }}
+                      ></div>
+                      <span className="ml-2">Thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Input area - Fixed at bottom */}
+          <div className="flex gap-2 pt-2 border-t">
+            <Input
+              type="text"
+              value={currentInput}
+              onChange={(e) => setCurrentInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              className="flex-1"
+              disabled={!isModelLoaded || isLoading}
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!isModelLoaded || isLoading || !currentInput.trim()}
+              className="px-6"
+            >
+              Send
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
