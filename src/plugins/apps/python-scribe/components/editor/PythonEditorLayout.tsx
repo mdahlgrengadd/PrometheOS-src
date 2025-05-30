@@ -19,6 +19,7 @@ interface PythonEditorLayoutProps {
   isProcessing: boolean;
   pyodide: any;
   tsFullscreen?: boolean;
+  registeredComponents?: string[];
   onDrop: (e: React.DragEvent) => void;
   onPythonCodeChange: (code: string) => void;
   onTypeScriptChange: (code: string) => void;
@@ -36,6 +37,7 @@ const PythonEditorLayout: React.FC<PythonEditorLayoutProps> = ({
   isProcessing,
   pyodide,
   tsFullscreen = false,
+  registeredComponents = [],
   onDrop,
   onPythonCodeChange,
   onTypeScriptChange,
