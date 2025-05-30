@@ -228,11 +228,20 @@ export class ToolHandler {
         }
       }
       console.log(tool_call)
-    }
-
-    if (tool_call) {
+    }    if (tool_call) {
       try {
-        const func = JSON.parse(tool_call);
+        // Clean up the tool_call string to handle control characters
+        let cleanedToolCall = tool_call.trim();
+        
+        // If it's not already valid JSON, try to fix common issues
+        try {
+          JSON.parse(cleanedToolCall);
+        } catch (firstError) {
+          // Try to escape control characters in string values
+          cleanedToolCall = this.fixJSONControlCharacters(cleanedToolCall);
+        }
+        
+        const func = JSON.parse(cleanedToolCall);
 
         if (func.tool_name)
           func["name"] = func.tool_name;
@@ -242,9 +251,10 @@ export class ToolHandler {
         if (func.parameters)
           func["arguments"] = func.parameters;
 
-        return {func, tool_call, end: is_end};
+        return {func, tool_call: cleanedToolCall, end: is_end};
       } catch(e) {
-        console.log(e);
+        console.log("Tool call parsing error:", e);
+        console.log("Original tool_call:", tool_call);
         return {error: e.toString()}
       }
     }
@@ -269,6 +279,34 @@ export class ToolHandler {
     }
     this.tool_call_id++;
     return rc;
+  }
+
+  fixJSONControlCharacters(jsonString) {
+    // This method attempts to fix JSON strings that contain unescaped control characters
+    try {
+      // Find string values in the JSON and escape control characters within them
+      return jsonString.replace(/"([^"]*(?:\\.[^"]*)*)"/g, (match, content) => {
+        // If this is already a properly escaped string, return as-is
+        if (content.includes('\\n') || content.includes('\\t') || content.includes('\\r')) {
+          return match;
+        }
+        
+        // Escape control characters
+        const escaped = content
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\t/g, '\\t')
+          .replace(/\f/g, '\\f')
+          .replace(/\b/g, '\\b')
+          .replace(/\v/g, '\\v')
+          .replace(/\0/g, '\\0');
+        
+        return `"${escaped}"`;
+      });
+    } catch (error) {
+      console.log("Error fixing JSON control characters:", error);
+      return jsonString;
+    }
   }
 
   convertToJSON(input) {
