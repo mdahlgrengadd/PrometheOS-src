@@ -4,7 +4,7 @@ import { PluginManifest } from '../../../plugins/types';
 
 export const manifest: PluginManifest = {
   id: "python-scribe",
-  name: "Python Scribe",
+  name: "PyServe",
   version: "1.0.0",
   description: "Python script processor with AST analysis and TypeScript generation",
   author: "Desktop System",
@@ -15,7 +15,7 @@ export const manifest: PluginManifest = {
         "/icons/34690_apple_beos_terminal_beos_terminal_apple.png"
       }
       className="h-8 w-8"
-      alt="Python Scribe"
+      alt="PyServe"
     />
   ),
   entry: "apps/python-scribe",

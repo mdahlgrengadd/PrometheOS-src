@@ -238,19 +238,18 @@ const PythonCodeEditor = () => {
         clearTimeout(registrationTimeoutRef.current);
       }
     };
-  }, [pyodide, openApiSpec, availableFunctions, fileName, registerPythonFunctions]);
-
-  // Store unregisterAll function in a ref to avoid dependency issues
+  }, [pyodide, openApiSpec, availableFunctions, fileName, registerPythonFunctions]);  // Store unregisterAll in a ref to capture the latest version
   const unregisterAllRef = useRef(unregisterAll);
   unregisterAllRef.current = unregisterAll;
 
-  // Cleanup registered components on unmount
+  // Cleanup registered components on unmount only
   useEffect(() => {
+    // Return cleanup function - this runs on unmount
     return () => {
       console.log('🧹 Cleaning up Python API components...');
       unregisterAllRef.current();
     };
-  }, []); // Empty dependency array - only run on unmount
+  }, []); // Empty deps - only cleanup on unmount
 
   if (isLoading) {
     return <LoadingScreen />;

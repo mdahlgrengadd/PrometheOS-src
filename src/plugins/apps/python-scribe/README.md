@@ -1,4 +1,4 @@
-# Python Scribe - Portable Module
+# PyServe - Portable Module
 
 This is a self-contained, portable module for Python code editing, execution, and TypeScript generation using Pyodide. It can be easily integrated into any Vite/Tailwind/shadcn project.
 

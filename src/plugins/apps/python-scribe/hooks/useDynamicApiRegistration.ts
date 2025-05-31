@@ -378,27 +378,7 @@ export const useDynamicApiRegistration = ({
         console.error(`Failed to unregister component ${componentId}:`, error);
       }
     }
-    registeredComponentsRef.current.clear();
-  }, [unregisterComponent]);
-  // Cleanup on unmount
-  useEffect(() => {
-    const currentComponents = registeredComponentsRef.current;
-    return () => {
-      // Use the captured ref value to avoid dependency issues
-      for (const componentId of currentComponents) {
-        try {
-          unregisterComponent(componentId);
-          console.log(`🗑️  Unregistered Python API component: ${componentId}`);
-        } catch (error) {
-          console.error(
-            `Failed to unregister component ${componentId}:`,
-            error
-          );
-        }
-      }
-      currentComponents.clear();
-    };
-  }, [unregisterComponent]);
+    registeredComponentsRef.current.clear();  }, [unregisterComponent]);
 
   return {
     registerPythonFunctions,

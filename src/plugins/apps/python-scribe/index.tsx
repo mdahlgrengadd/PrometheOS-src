@@ -5,13 +5,13 @@ import { manifest } from './manifest';
 import PythonCodeEditor from './components/PythonCodeEditor';
 
 /**
- * Python Scribe plugin
+ * PyServe plugin
  */
 const PythonScribePlugin: Plugin = {
   id: manifest.id,
   manifest,
   init: async () => {
-    console.log("Python Scribe plugin initialized");
+    console.log("PyServe plugin initialized");
   },
   render: () => {
     return <PythonCodeEditor />;
