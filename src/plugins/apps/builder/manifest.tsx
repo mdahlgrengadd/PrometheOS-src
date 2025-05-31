@@ -3,7 +3,7 @@ import React from "react";
 import { PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
-  id: "builder",
+  id: "hybride",
   name: "HybrIDE Code Editor",
   version: "1.0.0",
   description:
@@ -18,7 +18,7 @@ export const manifest: PluginManifest = {
       alt="HybrIDE Editor"
     />
   ),
-  entry: "apps/builder",
+  entry: "apps/hybride",
   preferredSize: {
     width: 800,
     height: 500,

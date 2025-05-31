@@ -1,6 +1,6 @@
-import { FcStart } from 'react-icons/fc';
+import { FcStart } from "react-icons/fc";
 
-import { useTheme } from '@/lib/ThemeProvider';
+import { useTheme } from "@/lib/ThemeProvider";
 
 interface StartButtonProps {
   isActive: boolean;
@@ -10,6 +10,7 @@ interface StartButtonProps {
 const StartButton = ({ isActive, onClick }: StartButtonProps) => {
   const { theme } = useTheme();
   const isWin7 = theme === "win7";
+  const isBeOS = theme === "beos";
   // Use CSS variables for background and shadow
   const background = isActive
     ? "var(--start-btn-active-bg)"
@@ -17,15 +18,20 @@ const StartButton = ({ isActive, onClick }: StartButtonProps) => {
   const boxShadow = isActive
     ? "var(--start-btn-active-shadow)"
     : "var(--start-btn-shadow)";
+
+  // Conditional text color and shadow for BeOS theme
+  const textColor = isBeOS ? "text-black" : "text-white";
+  const textShadow = isBeOS ? "none" : "1px 1px 1px rgba(0,0,0,0.3)";
+
   return (
     <button
-      className={`relative inline-flex items-center font-italic text-white text-lg px-6 ${
+      className={`relative inline-flex items-center font-italic ${textColor} text-lg px-6 ${
         isWin7 ? "h-full" : "py-1"
       } rounded-r-lg -ml-1 transform -skew-x-3`}
       style={{
         background,
         boxShadow,
-        textShadow: "1px 1px 1px rgba(0,0,0,0.3)",
+        textShadow,
       }}
       onClick={onClick}
     >
