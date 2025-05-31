@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useApi } from '@/api/hooks/useApi';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,41 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import GettingStarted from './GettingStarted';
 import { eventBus } from '@/plugins/EventBus';
+
+/**
+ * Component to render markdown descriptions with proper styling
+ */
+const MarkdownDescription = ({ content, className = "" }) => {
+  if (!content) return null;
+  
+  return (
+    <div className={`prose prose-sm max-w-none break-words overflow-hidden ${className}`}>
+      <ReactMarkdown
+        components={{
+          // Custom styling for markdown elements
+          h1: ({ children }) => <h1 className="text-lg font-bold mb-2 break-words">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-base font-semibold mb-2 break-words">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-sm font-medium mb-1 break-words">{children}</h3>,
+          p: ({ children }) => <p className="text-sm mb-2 leading-relaxed break-words overflow-wrap-anywhere">{children}</p>,
+          code: ({ children, inline }) => 
+            inline ? (
+              <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono break-all">{children}</code>
+            ) : (
+              <pre className="bg-gray-100 p-2 rounded text-xs font-mono overflow-auto whitespace-pre-wrap break-words max-w-full">{children}</pre>
+            ),
+          ul: ({ children }) => <ul className="list-disc list-inside text-sm mb-2 space-y-1 break-words">{children}</ul>,
+          ol: ({ children }) => <ol className="list-decimal list-inside text-sm mb-2 space-y-1 break-words">{children}</ol>,
+          li: ({ children }) => <li className="text-sm break-words">{children}</li>,
+          blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-sm break-words">{children}</blockquote>,
+          strong: ({ children }) => <strong className="font-semibold break-words">{children}</strong>,
+          em: ({ children }) => <em className="italic break-words">{children}</em>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+};
 
 /**
  * Helper to provide default placeholder values based on parameter type
@@ -69,12 +105,16 @@ const ActionParameterInput = ({ parameter, value, onChange }) => {
   };
 
   return (
-    <div className="mb-4">
-      <Label htmlFor={parameter.name} className="flex items-center gap-2">
+    <div className="mb-4">      <Label htmlFor={parameter.name} className="flex items-center gap-2">
         {parameter.name}
         {parameter.required && <Badge variant="outline" className="text-xs">Required</Badge>}
       </Label>
-      <div className="text-xs text-gray-500 mb-1">{parameter.description || ''}</div>
+      {parameter.description && (
+        <MarkdownDescription 
+          content={parameter.description} 
+          className="mb-1 text-gray-500"
+        />
+      )}
 
       {parameter.enum ? (
         <select
@@ -215,11 +255,10 @@ const BetterFrontendExplorer = () => {
       .filter(Boolean)
       .some((f) => f.toLowerCase().includes(term));
   });
-
   return (
-    <div className="h-full flex bg-background text-foreground">
+    <div className="h-full flex bg-background text-foreground overflow-hidden">
       {/* Left pane: Search + list */}
-      <div className="w-1/3 border-r p-4 flex flex-col">
+      <div className="w-1/3 border-r p-4 flex flex-col min-w-0">
         <Input
           placeholder="Search components..."
           value={searchTerm}
@@ -264,28 +303,25 @@ const BetterFrontendExplorer = () => {
             </div>
           )}
         </ScrollArea>
-      </div>
-
-      {/* Right pane: Component details */}
-      <div className="flex-1 p-4 flex flex-col">
+      </div>      {/* Right pane: Component details */}
+      <div className="flex-1 p-4 flex flex-col min-w-0 overflow-hidden">
         {!selectedComponent && <GettingStarted />}
         {selectedComponent && (
           <>  
-            <div className="mb-4">
-              <h2 className="text-xl font-bold">
+            <div className="mb-4 min-w-0">
+              <h2 className="text-xl font-bold break-words">
                 {selectedComponent.name || selectedComponent.id}
               </h2>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 flex-wrap">
                 <Badge>{selectedComponent.type}</Badge>
-                <Badge variant="outline">{selectedComponent.path}</Badge>
-              </div>
-              {selectedComponent.description && (
-                <p className="mt-2 text-sm text-gray-500">
-                  {selectedComponent.description}
-                </p>
-              )}
-            </div>
-            <ScrollArea className="flex-1">
+                <Badge variant="outline" className="break-all">{selectedComponent.path}</Badge>
+              </div>              {selectedComponent.description && (
+                <MarkdownDescription
+                  content={selectedComponent.description}
+                  className="mt-2 text-gray-500"
+                />
+              )}            </div>
+            <ScrollArea className="flex-1 min-w-0">
               <Accordion type="multiple" className="space-y-2">
                 {selectedComponent.actions.map((action) => {
                   // dynamic params for code snippet: use entered values or placeholder defaults
@@ -340,10 +376,14 @@ function MyComponent() {
 }`}</code>
                               </pre>
                             </TabsContent>
-                          </Tabs>
-                        </div>
+                          </Tabs>                        </div>
                         {/* Action description */}
-                        <p className="text-sm text-gray-500 mb-4">{action.description}</p>
+                        {action.description && (
+                          <MarkdownDescription 
+                            content={action.description}
+                            className="mb-4 text-gray-500"
+                          />
+                        )}
 
                         {action.parameters && action.parameters.length > 0 && (
                           <div className="mb-4">
