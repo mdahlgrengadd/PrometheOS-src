@@ -346,7 +346,6 @@ class WorkerPluginManagerClient {
   }
 
   // Pyodide Helper Methods
-
   /**
    * Initialize Pyodide runtime
    */
@@ -360,7 +359,10 @@ class WorkerPluginManagerClient {
       await this.registerPlugin("pyodide", workerPath);
     }
 
-    const result = await this.callPlugin("pyodide", "initPyodide");
+    // Pass the base URL from the main thread to the worker
+    const result = await this.callPlugin("pyodide", "initPyodide", {
+      baseUrl: import.meta.env.BASE_URL || '/'
+    });
 
     if (typeof result === "object" && result !== null && "status" in result) {
       return result as { status: string; message?: string };

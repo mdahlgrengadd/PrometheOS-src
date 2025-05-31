@@ -25,14 +25,49 @@ function isHtmlContent(content: string): boolean {
 }
 
 /**
+ * Global base URL set from main thread during initialization
+ */
+let globalBaseUrl: string | null = null;
+
+/**
+ * Set the base URL for loading Python files
+ * This should be called from the main thread during worker initialization
+ */
+export function setBaseUrl(baseUrl: string): void {
+  globalBaseUrl = baseUrl;
+  console.log(`Python loader base URL set to: ${baseUrl}`);
+  console.log(`globalBaseUrl is now: ${globalBaseUrl}`);
+}
+
+/**
+ * Get the base URL for loading Python files
+ */
+function getBaseUrl(): string {
+  console.log(`getBaseUrl called, globalBaseUrl is: ${globalBaseUrl}`);
+  
+  // Use the global base URL if available (passed from main thread)
+  if (globalBaseUrl !== null) {
+    console.log(`Using globalBaseUrl: ${globalBaseUrl}`);
+    return globalBaseUrl;
+  }
+  
+  // Final fallback
+  console.log(`Using fallback base URL: /`);
+  return '/';
+}
+
+/**
  * Load Python code from a file path with bundle fallback
  */
 export async function loadPythonCode(filename: string): Promise<string> {
   try {
+    // Get the base URL from the configured source
+    const baseUrl = getBaseUrl();
+    
     // Try multiple possible paths, starting with the most likely to work
     const possiblePaths = [
       // Production path (files copied to public/worker/)
-      `/prometheos/worker/pyodide/python/${filename}`,
+      `${baseUrl}worker/pyodide/python/${filename}`,
     ];
 
     let lastError: Error | null = null;
@@ -82,9 +117,12 @@ export async function loadPythonCode(filename: string): Promise<string> {
  */
 async function loadFromBundle(filename: string): Promise<string> {
   try {
+    // Get the base URL from the configured source
+    const baseUrl = getBaseUrl();
+    
     // Try multiple bundle paths
     const bundlePaths = [
-      "/worker/pyodide-python-bundle.json",
+      `${baseUrl}worker/pyodide-python-bundle.json`,
       "/public/worker/pyodide-python-bundle.json",
       "./worker/pyodide-python-bundle.json",
     ];
