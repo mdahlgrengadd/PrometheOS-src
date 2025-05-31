@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import { Plugin } from '../../types';
-import { manifest } from './manifest';
-import PythonCodeEditor from './components/PythonCodeEditor';
+import { Plugin } from "../../types";
+import PythonCodeEditor from "./components/PythonCodeEditor";
+import { manifest } from "./manifest";
 
 /**
  * PyServe plugin

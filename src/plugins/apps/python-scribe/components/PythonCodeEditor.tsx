@@ -1,12 +1,14 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
 import { useToast } from "@/hooks/use-toast";
-import { usePyodide } from '../hooks/usePyodide';
-import { useScriptProcessor } from '../hooks/useScriptProcessor';
-import { useDynamicApiRegistration } from '../hooks/useDynamicApiRegistration';
-import { generateTypeScript } from '../utils/typeScriptGenerator';
-import PythonEditorLayout from './editor/PythonEditorLayout';
-import LoadingScreen from './editor/LoadingScreen';
-import MissingFilesDialog from './editor/MissingFilesDialog';
+
+import { useDynamicApiRegistration } from "../hooks/useDynamicApiRegistration";
+import { usePyodide } from "../hooks/usePyodide";
+import { useScriptProcessor } from "../hooks/useScriptProcessor";
+import { generateTypeScript } from "../utils/typeScriptGenerator";
+import LoadingScreen from "./editor/LoadingScreen";
+import MissingFilesDialog from "./editor/MissingFilesDialog";
+import PythonEditorLayout from "./editor/PythonEditorLayout";
 
 interface PythonFunction {
   name: string;
@@ -15,15 +17,15 @@ interface PythonFunction {
 }
 
 const PythonCodeEditor = () => {
-  const [pythonCode, setPythonCode] = useState('');
-  const [generatedTS, setGeneratedTS] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [pythonCode, setPythonCode] = useState("");
+  const [generatedTS, setGeneratedTS] = useState("");
+  const [fileName, setFileName] = useState("");
   const [showMissingFilesDialog, setShowMissingFilesDialog] = useState(false);
   const [tsFullscreen, setTsFullscreen] = useState(false);
   const { toast } = useToast();
 
   const { pyodide, isLoading } = usePyodide();
-  const { 
+  const {
     isProcessing,
     openApiSpec,
     availableFunctions,
@@ -31,48 +33,69 @@ const PythonCodeEditor = () => {
     processUserScript,
     confirmProcessing,
     handleDrop: handleScriptDrop,
-    setIsProcessing
+    setIsProcessing,
   } = useScriptProcessor(pyodide);
 
   // Dynamic API registration for converting Python functions to MCP tools
-  const { 
-    registerPythonFunctions, 
-    setPyodideInstance, 
-    unregisterAll, 
-    registeredComponents 
+  const {
+    registerPythonFunctions,
+    setPyodideInstance,
+    unregisterAll,
+    registeredComponents,
   } = useDynamicApiRegistration({
-    instanceId: 'python-scribe-main', // Stable ID for this python-scribe instance
-    enabled: true
+    instanceId: "python-scribe-main", // Stable ID for this python-scribe instance
+    enabled: true,
   });
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    try {
-      const result = await handleScriptDrop(e);
-      if (result) {
-        setPythonCode(result.code);
-        setFileName(result.fileName);
-        
-        if (result.requiresConfirmation) {
-          setShowMissingFilesDialog(true);
-        } else if (result.result && !result.result.requiresConfirmation && 'spec' in result.result && 'functions' in result.result) {
-          const tsCode = await generateTypeScript(result.result.spec, result.result.functions, result.fileName);
-          setGeneratedTS(tsCode);
-          
-          // Note: Registration will be handled by the main useEffect to prevent duplicates
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      try {
+        const result = await handleScriptDrop(e);
+        if (result) {
+          setPythonCode(result.code);
+          setFileName(result.fileName);
+
+          if (result.requiresConfirmation) {
+            setShowMissingFilesDialog(true);
+          } else if (
+            result.result &&
+            !result.result.requiresConfirmation &&
+            "spec" in result.result &&
+            "functions" in result.result
+          ) {
+            const tsCode = await generateTypeScript(
+              result.result.spec,
+              result.result.functions,
+              result.fileName
+            );
+            setGeneratedTS(tsCode);
+
+            // Note: Registration will be handled by the main useEffect to prevent duplicates
+          }
         }
+      } catch (err) {
+        // Error handling is done in useScriptProcessor
       }
-    } catch (err) {
-      // Error handling is done in useScriptProcessor
-    }
-  }, [handleScriptDrop]);
+    },
+    [handleScriptDrop]
+  );
 
   const handleMissingFilesContinue = useCallback(async () => {
     try {
       const result = await confirmProcessing(true);
-      if (result && !result.requiresConfirmation && 'spec' in result && 'functions' in result) {
-        const tsCode = await generateTypeScript(result.spec, result.functions, fileName);
+      if (
+        result &&
+        !result.requiresConfirmation &&
+        "spec" in result &&
+        "functions" in result
+      ) {
+        const tsCode = await generateTypeScript(
+          result.spec,
+          result.functions,
+          fileName
+        );
         setGeneratedTS(tsCode);
-        
+
         // Note: Registration will be handled by the main useEffect to prevent duplicates
       }
     } catch (err) {
@@ -84,101 +107,121 @@ const PythonCodeEditor = () => {
 
   const handleMissingFilesAbort = useCallback(() => {
     setShowMissingFilesDialog(false);
-    setPythonCode('');
-    setFileName('');
+    setPythonCode("");
+    setFileName("");
     toast({
       title: "Processing Aborted",
       description: "Please upload the required files and try again",
     });
   }, [toast]);
 
-  const handlePythonCodeChange = useCallback(async (code: string) => {
-    setPythonCode(code);
-    if (code.trim() && pyodide) {
-      try {
-        setIsProcessing(true);
-        const result = await processUserScript(code);
-        
-        if (result.requiresConfirmation) {
-          setShowMissingFilesDialog(true);
-          return;
-        }
-        
-        if ('spec' in result && 'functions' in result) {
-          const tsCode = await generateTypeScript(result.spec, result.functions, fileName);
-          setGeneratedTS(tsCode);
-          
-          // Note: Registration will be handled by the main useEffect to prevent duplicates
-          
+  const handlePythonCodeChange = useCallback(
+    async (code: string) => {
+      setPythonCode(code);
+      if (code.trim() && pyodide) {
+        try {
+          setIsProcessing(true);
+          const result = await processUserScript(code);
+
+          if (result.requiresConfirmation) {
+            setShowMissingFilesDialog(true);
+            return;
+          }
+
+          if ("spec" in result && "functions" in result) {
+            const tsCode = await generateTypeScript(
+              result.spec,
+              result.functions,
+              fileName
+            );
+            setGeneratedTS(tsCode);
+
+            // Note: Registration will be handled by the main useEffect to prevent duplicates
+
+            toast({
+              title: "Code Updated",
+              description: `Python code processed with AST analysis. ${result.functions.length} functions will be registered as API tools.`,
+            });
+          }
+        } catch (err: any) {
+          console.error("Code processing error:", err);
           toast({
-            title: "Code Updated",
-            description: `Python code processed with AST analysis. ${result.functions.length} functions will be registered as API tools.`,
+            title: "Processing Error",
+            description: `Error processing code: ${err.message}`,
+            variant: "destructive",
           });
+        } finally {
+          setIsProcessing(false);
         }
-      } catch (err: any) {
-        console.error('Code processing error:', err);
-        toast({
-          title: "Processing Error",
-          description: `Error processing code: ${err.message}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessing(false);
       }
-    }
-  }, [pyodide, toast, processUserScript, fileName, setIsProcessing]);
+    },
+    [pyodide, toast, processUserScript, fileName, setIsProcessing]
+  );
 
-  const handleTypeScriptChange = useCallback((code: string) => {
-    setGeneratedTS(code);
-    toast({
-      title: "TypeScript Updated",
-      description: "TypeScript code has been modified",
-    });
-  }, [toast]);
+  const handleTypeScriptChange = useCallback(
+    (code: string) => {
+      setGeneratedTS(code);
+      toast({
+        title: "TypeScript Updated",
+        description: "TypeScript code has been modified",
+      });
+    },
+    [toast]
+  );
 
-  const handlePythonSave = useCallback(async (code: string) => {
-    setPythonCode(code);
-    if (code.trim() && pyodide) {
-      try {
-        setIsProcessing(true);
-        const result = await processUserScript(code);
-        
-        if (result.requiresConfirmation) {
-          setShowMissingFilesDialog(true);
-          return;
-        }
-        
-        if ('spec' in result && 'functions' in result) {
-          const tsCode = await generateTypeScript(result.spec, result.functions, fileName);
-          setGeneratedTS(tsCode);
-          
-          // Note: Registration will be handled by the main useEffect to prevent duplicates
-          
+  const handlePythonSave = useCallback(
+    async (code: string) => {
+      setPythonCode(code);
+      if (code.trim() && pyodide) {
+        try {
+          setIsProcessing(true);
+          const result = await processUserScript(code);
+
+          if (result.requiresConfirmation) {
+            setShowMissingFilesDialog(true);
+            return;
+          }
+
+          if ("spec" in result && "functions" in result) {
+            const tsCode = await generateTypeScript(
+              result.spec,
+              result.functions,
+              fileName
+            );
+            setGeneratedTS(tsCode);
+
+            // Note: Registration will be handled by the main useEffect to prevent duplicates
+
+            toast({
+              title: "Python Code Saved",
+              description: `TypeScript bindings regenerated with FFI support. ${result.functions.length} functions available as API tools.`,
+            });
+          }
+        } catch (err: any) {
+          console.error("Code processing error:", err);
           toast({
-            title: "Python Code Saved",
-            description: `TypeScript bindings regenerated with FFI support. ${result.functions.length} functions available as API tools.`,
+            title: "Processing Error",
+            description: `Error processing code: ${err.message}`,
+            variant: "destructive",
           });
+        } finally {
+          setIsProcessing(false);
         }
-      } catch (err: any) {
-        console.error('Code processing error:', err);
-        toast({
-          title: "Processing Error",
-          description: `Error processing code: ${err.message}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessing(false);
       }
-    }
-  }, [pyodide, toast, processUserScript, fileName, setIsProcessing]);
+    },
+    [pyodide, toast, processUserScript, fileName, setIsProcessing]
+  );
 
-  const handleTypeScriptSave = useCallback((code: string) => {
-    setGeneratedTS(code);
-    toast({
-      title: "TypeScript Saved",
-      description: "Your custom TypeScript code has been saved",
-    });
-  }, [toast]);
+  const handleTypeScriptSave = useCallback(
+    (code: string) => {
+      setGeneratedTS(code);
+      toast({
+        title: "TypeScript Saved",
+        description: "Your custom TypeScript code has been saved",
+      });
+    },
+    [toast]
+  );
 
   // Set Pyodide instance when available
   useEffect(() => {
@@ -189,7 +232,7 @@ const PythonCodeEditor = () => {
 
   // Debounced registration to prevent infinite loops
   const registrationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastRegisteredStateRef = useRef<string>('');
+  const lastRegisteredStateRef = useRef<string>("");
 
   useEffect(() => {
     // Clear any existing timeout
@@ -201,33 +244,40 @@ const PythonCodeEditor = () => {
     const currentState = JSON.stringify({
       hasOpenApiSpec: !!openApiSpec,
       functionsCount: availableFunctions.length,
-      functionNames: availableFunctions.map(f => f.name).sort(),
+      functionNames: availableFunctions.map((f) => f.name).sort(),
       fileName,
       hasPyodide: !!pyodide,
     });
 
     // Only register if state actually changed
     if (
-      pyodide && 
-      openApiSpec && 
-      availableFunctions.length > 0 && 
+      pyodide &&
+      openApiSpec &&
+      availableFunctions.length > 0 &&
       fileName &&
       currentState !== lastRegisteredStateRef.current
     ) {
       registrationTimeoutRef.current = setTimeout(() => {
-        console.log('🔧 Registering Python functions as API components (debounced):', {
-          fileName,
-          functionsCount: availableFunctions.length,
-          functions: availableFunctions.map(f => f.name)
-        });
-        
-        const functionsToRegister = availableFunctions.filter(fn => fn.name && fn.parameters);
-        
+        console.log(
+          "🔧 Registering Python functions as API components (debounced):",
+          {
+            fileName,
+            functionsCount: availableFunctions.length,
+            functions: availableFunctions.map((f) => f.name),
+          }
+        );
+
+        const functionsToRegister = availableFunctions.filter(
+          (fn) => fn.name && fn.parameters
+        );
+
         if (functionsToRegister.length > 0) {
           registerPythonFunctions(openApiSpec, functionsToRegister, fileName);
           lastRegisteredStateRef.current = currentState;
-          
-          console.log(`✅ Successfully registered ${functionsToRegister.length} Python functions as API components`);
+
+          console.log(
+            `✅ Successfully registered ${functionsToRegister.length} Python functions as API components`
+          );
         }
       }, 500); // 500ms debounce
     }
@@ -238,7 +288,13 @@ const PythonCodeEditor = () => {
         clearTimeout(registrationTimeoutRef.current);
       }
     };
-  }, [pyodide, openApiSpec, availableFunctions, fileName, registerPythonFunctions]);  // Store unregisterAll in a ref to capture the latest version
+  }, [
+    pyodide,
+    openApiSpec,
+    availableFunctions,
+    fileName,
+    registerPythonFunctions,
+  ]); // Store unregisterAll in a ref to capture the latest version
   const unregisterAllRef = useRef(unregisterAll);
   unregisterAllRef.current = unregisterAll;
 
@@ -246,7 +302,7 @@ const PythonCodeEditor = () => {
   useEffect(() => {
     // Return cleanup function - this runs on unmount
     return () => {
-      console.log('🧹 Cleaning up Python API components...');
+      console.log("🧹 Cleaning up Python API components...");
       unregisterAllRef.current();
     };
   }, []); // Empty deps - only cleanup on unmount
@@ -274,7 +330,7 @@ const PythonCodeEditor = () => {
         onTypeScriptSave={handleTypeScriptSave}
         onTsFullscreenToggle={() => setTsFullscreen(!tsFullscreen)}
       />
-      
+
       <MissingFilesDialog
         open={showMissingFilesDialog}
         missingFiles={missingFiles}

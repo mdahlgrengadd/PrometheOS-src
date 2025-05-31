@@ -1,4 +1,3 @@
-import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+//import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
+import * as webllm from "@mlc-ai/web-llm";
 
 import { useApi } from "../../../api/context/ApiContext";
 import { workerPluginManager } from "../../WorkerPluginManagerClient";
@@ -123,6 +124,7 @@ const AIChatContent: React.FC = () => {
   const [downloadStatus, setDownloadStatus] = useState("");
   const [selectedModel, setSelectedModel] = useState(defaultModelId);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [chatStarted, setChatStarted] = useState(false);
   const [mcpTools, setMcpTools] = useState<MCPTool[]>([]);
   const [mcpToolsLoaded, setMcpToolsLoaded] = useState(false);
   const engineRef = useRef<WebLLMEngine | null>(null);
@@ -161,6 +163,7 @@ const AIChatContent: React.FC = () => {
       ],
     };
     registerComponent(componentDoc);
+    // eslint-disable-next-line
   }, []);
 
   // Initialize MCP tools on component mount
@@ -694,104 +697,137 @@ const AIChatContent: React.FC = () => {
     }
   }, [displayMessages]);
   return (
-    <div className="flex flex-col h-full bg-background p-4 font-sans">
-      {/* Model Selection and Download */}
-      <Card className="mb-4">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">
-            Initialize WebLLM and Download Model
-          </CardTitle>
-          <CardDescription>
-            Step 1: Select and download an AI model to start chatting
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Select
-              value={selectedModel}
-              onValueChange={setSelectedModel}
-              disabled={isLoading}
-            >
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select a model..." />
-              </SelectTrigger>
-              <SelectContent>
-                {availableModels.map((model) => (
-                  <SelectItem key={model.model_id} value={model.model_id}>
-                    {model.model_id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={downloadModel}
-              disabled={isLoading}
-              className="px-6"
-            >
-              {isLoading ? "Loading..." : "Download"}
-            </Button>
-          </div>
+    <div className="flex flex-col h-full bg-background font-sans">
+      {!chatStarted ? (
+        // Initial Setup Screen
+        <div className="flex items-center justify-center h-full p-8">
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">AI Chat Setup</CardTitle>
+              <CardDescription>
+                Select and download an AI model to start chatting
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex gap-2">
+                <Select
+                  value={selectedModel}
+                  onValueChange={setSelectedModel}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a model..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableModels.map((model) => (
+                      <SelectItem key={model.model_id} value={model.model_id}>
+                        {model.model_id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={downloadModel}
+                  disabled={isLoading}
+                  className="px-8"
+                >
+                  {isLoading ? "Loading..." : "Download"}
+                </Button>
+              </div>
 
-          {downloadStatus && (
-            <div className="p-3 border rounded-md bg-muted text-sm">
-              {downloadStatus}
-            </div>
-          )}
+              {downloadStatus && (
+                <div className="p-4 border rounded-md bg-muted text-sm">
+                  {downloadStatus}
+                </div>
+              )}
 
-          {/* MCP Tools Status */}
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex justify-between items-center">
-              <span className="font-medium flex items-center gap-2">
-                🔧 MCP Tools:
-                {mcpToolsLoaded ? (
-                  <Badge
-                    variant="secondary"
-                    className="bg-green-100 text-green-700"
+              {/* MCP Tools Status */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium flex items-center gap-2">
+                    🔧 MCP Tools:
+                    {mcpToolsLoaded ? (
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-100 text-green-700"
+                      >
+                        {mcpTools.length} available
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className="bg-orange-100 text-orange-700"
+                      >
+                        Loading...
+                      </Badge>
+                    )}
+                  </span>
+                  <Button
+                    onClick={refreshMCPTools}
+                    disabled={!mcpToolsLoaded}
+                    variant="outline"
+                    size="sm"
                   >
-                    {mcpTools.length} available
-                  </Badge>
-                ) : (
-                  <Badge
-                    variant="secondary"
-                    className="bg-orange-100 text-orange-700"
-                  >
-                    Loading...
-                  </Badge>
+                    Refresh
+                  </Button>
+                </div>
+                {mcpToolsLoaded && mcpTools.length > 0 && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Available tools:{" "}
+                    {mcpTools.map((tool) => tool.name).join(", ")}
+                  </div>
                 )}
-              </span>
+              </div>
+
+              {/* Start Chat Button */}
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={() => setChatStarted(true)}
+                  disabled={!isModelLoaded}
+                  size="lg"
+                  className="px-12"
+                >
+                  Start Chat
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        // Main Chat Interface - Full Screen
+        <div className="flex flex-col h-full">
+          {/* Header with model info and back button */}
+          <div className="flex items-center justify-between p-4 border-b bg-muted/50">
+            <div className="flex items-center gap-3">
               <Button
-                onClick={refreshMCPTools}
-                disabled={!mcpToolsLoaded}
+                onClick={() => setChatStarted(false)}
                 variant="outline"
                 size="sm"
               >
-                Refresh
+                ← Back to Setup
               </Button>
-            </div>
-            {mcpToolsLoaded && mcpTools.length > 0 && (
-              <div className="mt-2 text-xs text-muted-foreground">
-                Available tools: {mcpTools.map((tool) => tool.name).join(", ")}
+              <div>
+                <h2 className="font-semibold">{selectedModel}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {mcpTools.length} tools available
+                </p>
               </div>
-            )}
+            </div>
+            <Button
+              onClick={() => {
+                setDisplayMessages([]);
+                messagesRef.current = messagesRef.current.slice(0, 1); // Keep only system message
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Clear Chat
+            </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Chat Interface */}
-      <Card className="flex-1 flex flex-col min-h-0">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Chat</CardTitle>
-          <CardDescription>
-            Step 2: Start a conversation with the AI
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col min-h-0 gap-4">
-          {/* Chat messages - Fixed height scrollable area */}
-          <ScrollArea
-            ref={scrollAreaRef}
-            className="flex-1 min-h-0 border rounded-md"
-          >
-            <div className="p-4 space-y-3">
+          {/* Chat messages - Full height scrollable area */}
+          <ScrollArea ref={scrollAreaRef} className="flex-1 min-h-0">
+            <div className="p-6 space-y-4">
               {displayMessages
                 .filter((m) => m.role !== "system")
                 .map((message, index) => (
@@ -802,7 +838,7 @@ const AIChatContent: React.FC = () => {
                     }`}
                   >
                     <div
-                      className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                      className={`max-w-[80%] px-4 py-3 rounded-lg ${
                         message.role === "user"
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground"
@@ -816,7 +852,7 @@ const AIChatContent: React.FC = () => {
                 ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-muted text-muted-foreground px-4 py-2 rounded-lg">
+                  <div className="bg-muted text-muted-foreground px-4 py-3 rounded-lg">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
                       <div
@@ -836,26 +872,28 @@ const AIChatContent: React.FC = () => {
           </ScrollArea>
 
           {/* Input area - Fixed at bottom */}
-          <div className="flex gap-2 pt-2 border-t">
-            <Input
-              type="text"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              className="flex-1"
-              disabled={!isModelLoaded || isLoading}
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!isModelLoaded || isLoading || !currentInput.trim()}
-              className="px-6"
-            >
-              Send
-            </Button>
+          <div className="p-4 border-t bg-background">
+            <div className="flex gap-3">
+              <Input
+                type="text"
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type a message..."
+                className="flex-1"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={isLoading || !currentInput.trim()}
+                className="px-6"
+              >
+                Send
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 };

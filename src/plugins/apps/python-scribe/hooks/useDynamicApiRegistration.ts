@@ -378,7 +378,8 @@ export const useDynamicApiRegistration = ({
         console.error(`Failed to unregister component ${componentId}:`, error);
       }
     }
-    registeredComponentsRef.current.clear();  }, [unregisterComponent]);
+    registeredComponentsRef.current.clear();
+  }, [unregisterComponent]);
 
   return {
     registerPythonFunctions,

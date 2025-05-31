@@ -1,12 +1,13 @@
-import React from 'react';
+import React from "react";
 
-import { PluginManifest } from '../../../plugins/types';
+import { PluginManifest } from "../../../plugins/types";
 
 export const manifest: PluginManifest = {
   id: "python-scribe",
   name: "PyServe",
   version: "1.0.0",
-  description: "Python script processor with AST analysis and TypeScript generation",
+  description:
+    "Python script processor with AST analysis and TypeScript generation",
   author: "Desktop System",
   icon: (
     <img
