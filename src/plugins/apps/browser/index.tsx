@@ -210,14 +210,27 @@ const BrowserContent = () => {
             ⟳
           </button>
         </div>
-        <input
-          type="text"
-          className="flex-1 px-2 py-1 border border-border rounded-l bg-background text-foreground"
-          placeholder="Enter URL..."
-          value={url}
-          onChange={handleUrlChange}
-          onKeyPress={handleKeyPress}
-        />
+        <div className="relative flex-1 flex items-center">
+          <input
+            type="text"
+            className="flex-1 px-2 py-1 border border-border rounded-l bg-background text-foreground pr-20"
+            placeholder="Enter URL..."
+            value={url}
+            onChange={handleUrlChange}
+            onKeyPress={handleKeyPress}
+            style={{ paddingRight: currentUrl.includes('/shadownet/') ? '80px' : undefined }}
+          />
+          {/* Show a mockup indicator if on a shadownet page */}
+          {currentUrl.includes('/shadownet/') && (
+            <span
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-200 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded border border-yellow-400 shadow z-10"
+              title="This is a local mockup, not the real site."
+              style={{ pointerEvents: 'none' }}
+            >
+              MOCKUP
+            </span>
+          )}
+        </div>
         <button
           onClick={() => navigateToUrl()}
           className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
