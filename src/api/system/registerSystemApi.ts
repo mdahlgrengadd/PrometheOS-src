@@ -9,7 +9,7 @@ import { IApiComponent, IApiContextValue } from "../core/types";
 export const systemApiComponent: IApiComponent = {
   id: "sys",
   type: "System",
-  name: "System Services",
+  name: "Services",
   description:
     "System-level operations including app management, notifications, dialogs, and events",
   path: "/api/sys",
