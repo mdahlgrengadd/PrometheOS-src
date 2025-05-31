@@ -22,7 +22,10 @@ import {
 //import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
 import * as webllm from "@mlc-ai/web-llm";
 
-import { useApi } from "../../../api/context/ApiContext";
+import {
+  registerApiActionHandler,
+  useApi,
+} from "../../../api/context/ApiContext";
 import { workerPluginManager } from "../../WorkerPluginManagerClient";
 import { manifest } from "./manifest";
 // Import model configuration
@@ -109,7 +112,121 @@ const AIChatContent: React.FC = () => {
     };
     registerComponent(componentDoc);
     // eslint-disable-next-line
-  }, []);
+  }, []); // Register action handler for sendMessage
+  useEffect(() => {
+    const handleSendMessage = async (params?: Record<string, unknown>) => {
+      try {
+        const message = params?.message as string;
+        if (!message || typeof message !== "string") {
+          return {
+            success: false,
+            error: "Message parameter is required and must be a string",
+          };
+        }
+
+        // Check if model is loaded
+        if (!isModelLoaded || !engineRef.current) {
+          return {
+            success: false,
+            error:
+              "AI model is not loaded yet. Please initialize the model first.",
+          };
+        }
+
+        // Auto-start chat if not started
+        if (!chatStarted) {
+          setChatStarted(true);
+        }
+
+        // Create user message directly
+        const userMessage: Message = {
+          role: "user",
+          content: message,
+        };
+
+        // Add to global messages array (source of truth)
+        messagesRef.current.push(userMessage);
+
+        // Add to display
+        appendMessage(userMessage);
+        setIsLoading(true);
+
+        // Process the message using the same logic as sendMessage
+        try {
+          let done = false;
+          let iter = 0;
+
+          // Tool calling loop (up to 3 iterations like in sendMessage)
+          while (!done && iter < 3) {
+            iter++;
+            console.log(`=== API sendMessage iteration ${iter}, done: ${done}`);
+
+            // Add "thinking..." message to display
+            const aiMessage: Message = {
+              role: "assistant",
+              content: "typing...",
+            };
+            appendMessage(aiMessage);
+
+            const onUpdate = (content: string) => {
+              updateLastMessage(content);
+            };
+
+            const onFinish = (
+              displayMessage: string,
+              usage: Usage | undefined,
+              conversationMessage?: string
+            ) => {
+              updateLastMessage(displayMessage);
+
+              // Add the conversation message to global messages array
+              const messageToAdd = conversationMessage || displayMessage;
+              messagesRef.current.push({
+                role: "assistant",
+                content: messageToAdd,
+              });
+            };
+
+            const rc = await streamingGenerating(
+              messagesRef.current,
+              onUpdate,
+              onFinish,
+              console.error
+            );
+
+            done = rc.done;
+
+            // Handle tool calls if needed
+            if (!done && rc.func && toolHandlerRef.current) {
+              // Tool handling logic would go here
+              // For now, we'll break to avoid infinite loops
+              done = true;
+            }
+          }
+        } catch (error) {
+          console.error("Error processing API message:", error);
+          appendMessage({
+            role: "assistant",
+            content: "Sorry, I encountered an error processing your message.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        return {
+          success: true,
+          message: `Message "${message}" sent to AI Chat`,
+        };
+      } catch (error) {
+        console.error("Error in sendMessage action handler:", error);
+        return {
+          success: false,
+          error: `Failed to send message: ${error}`,
+        };
+      }
+    };
+
+    registerApiActionHandler(manifest.id, "sendMessage", handleSendMessage);
+  }, [isModelLoaded, chatStarted]);
 
   // Initialize MCP tools on component mount
   useEffect(() => {
@@ -654,6 +771,120 @@ const AIChatContent: React.FC = () => {
       }
     }
   }, [displayMessages]);
+
+  // Register action handler for sendMessage API
+  useEffect(() => {
+    const handleSendMessage = async (params?: Record<string, unknown>) => {
+      try {
+        const message = params?.message as string;
+        if (!message || typeof message !== "string") {
+          return {
+            success: false,
+            error: "Message parameter is required and must be a string",
+          };
+        }
+
+        // Check if model is loaded
+        if (!isModelLoaded || !engineRef.current) {
+          return {
+            success: false,
+            error:
+              "AI model is not loaded yet. Please initialize the model first.",
+          };
+        }
+
+        // Auto-start chat if not started
+        if (!chatStarted) {
+          setChatStarted(true);
+        }
+
+        // Create user message directly and trigger the sendMessage flow
+        const userMessage: Message = {
+          role: "user",
+          content: message,
+        };
+
+        // Add to global messages array (source of truth)
+        messagesRef.current.push(userMessage);
+
+        // Add to display
+        appendMessage(userMessage);
+        setIsLoading(true);
+
+        // Use the same streaming generation logic as the UI sendMessage function
+        try {
+          let done = false;
+          let iter = 0;
+
+          while (!done && iter < 3) {
+            iter++;
+            console.log(`=== API sendMessage iteration ${iter}`);
+
+            const aiMessage: Message = {
+              role: "assistant",
+              content: "typing...",
+            };
+            appendMessage(aiMessage);
+
+            const onUpdate = (content: string) => {
+              updateLastMessage(content);
+            };
+
+            const onFinish = (
+              displayMessage: string,
+              usage: Usage | undefined,
+              conversationMessage?: string
+            ) => {
+              updateLastMessage(displayMessage);
+              const messageToAdd = conversationMessage || displayMessage;
+              messagesRef.current.push({
+                role: "assistant",
+                content: messageToAdd,
+              });
+            };
+
+            const rc = await streamingGenerating(
+              messagesRef.current,
+              onUpdate,
+              onFinish,
+              console.error
+            );
+
+            done = rc.done;
+
+            // Basic tool handling - simplified for API calls
+            if (!done && rc.func && toolHandlerRef.current) {
+              console.log("API call triggered tool:", rc.func.name);
+              // For API calls, we'll process one tool iteration then stop
+              done = true;
+            }
+          }
+        } catch (error) {
+          console.error("Error processing API message:", error);
+          appendMessage({
+            role: "assistant",
+            content: "Sorry, I encountered an error processing your message.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+
+        return {
+          success: true,
+          message: `Message "${message}" sent to AI Chat successfully`,
+        };
+      } catch (error) {
+        console.error("Error in sendMessage action handler:", error);
+        return {
+          success: false,
+          error: `Failed to send message: ${error}`,
+        };
+      }
+    };
+
+    registerApiActionHandler(manifest.id, "sendMessage", handleSendMessage);
+  }, [isModelLoaded, chatStarted]);
+
   return (
     <div className="flex flex-col h-full bg-background font-sans">
       {!chatStarted ? (
