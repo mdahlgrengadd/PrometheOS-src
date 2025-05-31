@@ -19,7 +19,7 @@ import {
   IApiContextValue,
   IOpenApiSpec,
 } from "../core/types";
-import { registerLauncherApi } from "../system/registerSystemApi";
+import { registerSystemApi } from "../system/registerSystemApi";
 import { generateOpenApiSpec } from "../utils/openapi";
 
 // Create the API context with null default value
@@ -148,9 +148,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     const workerManager = (
       window as unknown as {
         workerPluginManager?: {
-          unregisterMCPComponent?: (
-            componentId: string
-          ) => Promise<{
+          unregisterMCPComponent?: (componentId: string) => Promise<{
             status: string;
             unregistered: number;
             errors: string[];
@@ -409,7 +407,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       // Register the launcher API component and handler
-      registerLauncherApi(apiContext);
+      registerSystemApi(apiContext);
 
       // Store API context globally for Desktop API Bridge
       setGlobalApiContext(apiContext);

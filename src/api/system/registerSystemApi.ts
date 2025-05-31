@@ -1,49 +1,50 @@
-import { toast as sonnerToast } from 'sonner';
+import { toast as sonnerToast } from "sonner";
 
-import { toast as radialToast } from '../../hooks/use-toast';
-import { eventBus } from '../../plugins/EventBus';
-import { registerApiActionHandler } from '../context/ApiContext';
-import { IApiComponent, IApiContextValue } from '../core/types';
+import { toast as radialToast } from "../../hooks/use-toast";
+import { eventBus } from "../../plugins/EventBus";
+import { registerApiActionHandler } from "../context/ApiContext";
+import { IApiComponent, IApiContextValue } from "../core/types";
 
-// Define the launcher API component
-export const launcherApiComponent: IApiComponent = {
-  id: "launcher",
+// Define the consolidated system API component
+export const systemApiComponent: IApiComponent = {
+  id: "sys",
   type: "System",
-  name: "Services",
-  description: "Launches apps by ID or name",
-  path: "/api/launcher",
+  name: "System Services",
+  description:
+    "System-level operations including app management, notifications, dialogs, and events",
+  path: "/api/sys",
   actions: [
     {
-      id: "launchApp",
-      name: "Launch App",
-      description: "Launch an app by its ID",
+      id: "open",
+      name: "Open Desktop Application",
+      description: "Open an desktop app by its name",
       available: true,
       parameters: [
         {
-          name: "appId",
+          name: "name",
           type: "string",
-          description: "The ID of the app to launch",
+          description: "The name of the app to launch",
           required: true,
         },
       ],
     },
     {
-      id: "killApp",
-      name: "Kill App",
-      description: "Closes an app by its ID",
+      id: "kill",
+      name: "Close Desktop Applicaton",
+      description: "Closes an app by its name",
       available: true,
       parameters: [
         {
-          name: "appId",
+          name: "name",
           type: "string",
-          description: "The ID of the app to close",
+          description: "The name of the app to close",
           required: true,
         },
       ],
     },
     {
       id: "notify",
-      name: "Notify",
+      name: "Notify User",
       description: "Show a notification on screen",
       available: true,
       parameters: [
@@ -62,24 +63,9 @@ export const launcherApiComponent: IApiComponent = {
         },
       ],
     },
-  ],
-  state: {
-    enabled: true,
-    visible: true,
-  },
-};
-
-// Define the dialog API component
-export const dialogApiComponent: IApiComponent = {
-  id: "dialog",
-  type: "System",
-  name: "Dialog",
-  description: "Open a confirmation dialog and return user choice",
-  path: "/api/dialog",
-  actions: [
     {
-      id: "openDialog",
-      name: "Open Dialog",
+      id: "dialog",
+      name: "Open a System Dialog",
       description:
         "Opens a confirmation dialog and returns whether the user confirmed",
       available: true,
@@ -110,27 +96,15 @@ export const dialogApiComponent: IApiComponent = {
         },
       ],
     },
-  ],
-  state: { enabled: true, visible: true },
-};
-
-// Define the On Event API component
-export const onEventApiComponent: IApiComponent = {
-  id: "onEvent",
-  type: "System",
-  name: "On Event",
-  description: "Wait for a specific event by ID or until timeout",
-  path: "/api/onEvent",
-  actions: [
     {
-      id: "waitForEvent",
+      id: "events.waitFor",
       name: "Wait For Event",
       description:
         "Waits for the specified event to be emitted or until the timeout is reached",
       available: true,
       parameters: [
         {
-          name: "eventId",
+          name: "name",
           type: "string",
           description: "The name of the event to wait for",
           required: true,
@@ -144,50 +118,48 @@ export const onEventApiComponent: IApiComponent = {
         },
       ],
     },
-  ],
-  state: { enabled: true, visible: true },
-};
-
-// Define the Event API component for listing registered event IDs
-export const eventApiComponent: IApiComponent = {
-  id: "event",
-  type: "System",
-  name: "Events",
-  description: "List currently registered event IDs",
-  path: "/api/event",
-  actions: [
     {
-      id: "listEvents",
+      id: "events.list",
       name: "List Events",
       description: "Returns all known event names",
       available: true,
       parameters: [],
     },
   ],
-  state: { enabled: true, visible: true },
+  state: {
+    enabled: true,
+    visible: true,
+  },
 };
 
 // Register the component and its action handler at startup
-export function registerLauncherApi(apiContext: IApiContextValue) {
-  // Register the component
-  apiContext.registerComponent(launcherApiComponent);
+export function registerSystemApi(apiContext: IApiContextValue) {
+  // Populate name parameter enum for UI dropdowns
+  const nameParam = systemApiComponent.actions
+    .find((action) => action.id === "events.waitFor")
+    ?.parameters.find((p) => p.name === "name");
+  if (nameParam) {
+    nameParam.enum = eventBus.getEventNames();
+  }
 
+  // Register the consolidated component
+  apiContext.registerComponent(systemApiComponent);
   // Register the action handler
-  registerApiActionHandler("launcher", "launchApp", async (params) => {
-    const { appId } = params || {};
+  registerApiActionHandler("sys", "open", async (params) => {
+    const { name } = params || {};
 
-    if (!appId) {
-      return { success: false, error: "Missing appId" };
+    if (!name) {
+      return { success: false, error: "Missing app name" };
     }
 
     try {
       // Use eventBus to open the app - this is a pattern that works
       // regardless of whether we're in a React component context
-      eventBus.emit("plugin:openWindow", appId);
+      eventBus.emit("plugin:openWindow", name);
 
       return {
         success: true,
-        data: { message: `App ${appId} launched successfully` },
+        data: { message: `App ${name} launched successfully` },
       };
     } catch (error) {
       return {
@@ -196,21 +168,20 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
       };
     }
   });
-
   // Register killApp action handler
-  registerApiActionHandler("launcher", "killApp", async (params) => {
-    const { appId } = params || {};
+  registerApiActionHandler("sys", "kill", async (params) => {
+    const { name } = params || {};
 
-    if (!appId) {
-      return { success: false, error: "Missing appId" };
+    if (!name) {
+      return { success: false, error: "Missing app name" };
     }
 
     try {
-      eventBus.emit("plugin:closeWindow", appId);
+      eventBus.emit("plugin:closeWindow", name);
 
       return {
         success: true,
-        data: { message: `App ${appId} closed successfully` },
+        data: { message: `App ${name} closed successfully` },
       };
     } catch (error) {
       return {
@@ -219,9 +190,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
       };
     }
   });
-
   // Register notify action handler
-  registerApiActionHandler("launcher", "notify", async (params) => {
+  registerApiActionHandler("sys", "notify", async (params) => {
     const { message, type } = params || {};
     if (!message) {
       return { success: false, error: "Missing message" };
@@ -247,11 +217,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
             : "Failed to show notification",
       };
     }
-  });
-
-  // Register the dialog component and its handler
-  apiContext.registerComponent(dialogApiComponent);
-  registerApiActionHandler("dialog", "openDialog", async (params) => {
+  }); // Register openDialog action handler
+  registerApiActionHandler("sys", "dialog", async (params) => {
     const { title, description, confirmLabel, cancelLabel } = params || {};
     return new Promise((resolve) => {
       // Emit an event to open the dialog; listener will invoke callback
@@ -270,22 +237,15 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     });
   });
 
-  // Populate eventId parameter enum for UI dropdowns
-  const eventIdParam = onEventApiComponent.actions[0].parameters.find(
-    (p) => p.name === "eventId"
-  );
-  if (eventIdParam) {
-    eventIdParam.enum = eventBus.getEventNames();
-  }
-  apiContext.registerComponent(onEventApiComponent);
-  registerApiActionHandler("onEvent", "waitForEvent", async (params) => {
+  // Register waitForEvent action handler
+  registerApiActionHandler("sys", "events.waitFor", async (params) => {
     // Validate parameters
-    const eventIdRaw = params?.eventId;
+    const nameRaw = params?.name;
     const timeout = params?.timeout;
-    if (typeof eventIdRaw !== "string") {
-      return { success: false, error: "Missing or invalid eventId" };
+    if (typeof nameRaw !== "string") {
+      return { success: false, error: "Missing or invalid name" };
     }
-    const eventName: string = eventIdRaw;
+    const eventName: string = nameRaw;
     return new Promise((resolve) => {
       let timerId: number | undefined;
       const unsubscribe = eventBus.subscribe(
@@ -326,9 +286,8 @@ export function registerLauncherApi(apiContext: IApiContextValue) {
     });
   });
 
-  // Register Event listing API component and handler
-  apiContext.registerComponent(eventApiComponent);
-  registerApiActionHandler("event", "listEvents", async () => {
+  // Register listEvents action handler
+  registerApiActionHandler("sys", "events.list", async () => {
     return { success: true, data: eventBus.getEventNames() };
   });
 }
