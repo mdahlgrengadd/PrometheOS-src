@@ -1,14 +1,17 @@
-import 'swagger-ui-dist/swagger-ui.css';
+import "swagger-ui-dist/swagger-ui.css";
 
-import { RefreshCw } from 'lucide-react';
-import React, { useEffect, useMemo, useRef } from 'react';
-import SwaggerUI from 'swagger-ui-react';
+import { RefreshCw } from "lucide-react";
+import React, { useEffect, useMemo } from "react";
+import SwaggerUI from "swagger-ui-react";
 
-import { useApi } from '@/api/hooks/useApi';
-import { Button } from '@/components/ui/button';
+import { useApi } from "@/api/hooks/useApi";
+import { Button } from "@/components/ui/button";
 
-import { useOpenApiSpec } from '../openapi-service';
-import { preventSwaggerUIHashNavigation, stabilizeSwaggerUIForms } from '../swagger-utils';
+import { useOpenApiSpec } from "../openapi-service";
+import {
+  preventSwaggerUIHashNavigation,
+  stabilizeSwaggerUIForms,
+} from "../swagger-utils";
 
 // Add custom styles to fix SwaggerUI issues
 const swaggerUIStyles = `
@@ -47,11 +50,163 @@ const swaggerUIStyles = `
 /**
  * FastAPI-style SwaggerUI component that displays the OpenAPI specification
  */
+
+// --- GLOBAL INTERCEPTOR SETUP (idempotent, safe for StrictMode) ---
+let interceptorsRegistered = false;
+function setupGlobalInterceptors(getExecuteAction: () => any) {
+  if (interceptorsRegistered) return;
+  interceptorsRegistered = true;
+
+  const originalFetch = window.fetch;
+  const OriginalXHR = window.XMLHttpRequest;
+
+  // Intercept fetch calls
+  window.fetch = async function (input, init) {
+    const url = input instanceof Request ? input.url : String(input);
+    if (url.includes("/api/")) {
+      return handleApiCall(url, init, getExecuteAction());
+    }
+    return originalFetch.apply(window, [input, init]);
+  };
+
+  // Intercept XMLHttpRequest
+  class InterceptedXHR extends OriginalXHR {
+    private _url = "";
+    private _method = "";
+    open(
+      method: string,
+      url: string | URL,
+      async?: boolean,
+      username?: string | null,
+      password?: string | null
+    ): void {
+      this._url = url.toString();
+      this._method = method;
+      return super.open(method, url, async, username, password);
+    }
+    send(body?: Document | XMLHttpRequestBodyInit | null): void {
+      if (this._url.includes("/api/")) {
+        handleApiCall(
+          this._url,
+          { method: this._method, body: body as BodyInit },
+          getExecuteAction()
+        )
+          .then((response) => response.text())
+          .then((text) => {
+            Object.defineProperty(this, "status", {
+              value: 200,
+              writable: false,
+            });
+            Object.defineProperty(this, "statusText", {
+              value: "OK",
+              writable: false,
+            });
+            Object.defineProperty(this, "responseText", {
+              value: text,
+              writable: false,
+            });
+            Object.defineProperty(this, "response", {
+              value: text,
+              writable: false,
+            });
+            Object.defineProperty(this, "readyState", {
+              value: 4,
+              writable: false,
+            });
+            const loadEvent = new ProgressEvent("load", {
+              lengthComputable: true,
+              loaded: text.length,
+              total: text.length,
+            });
+            if (this.onload) this.onload.call(this, loadEvent);
+            if (this.onreadystatechange)
+              this.onreadystatechange.call(this, loadEvent);
+          })
+          .catch((error) => {
+            const errorResponse = JSON.stringify({ error: error.message });
+            Object.defineProperty(this, "status", {
+              value: 400,
+              writable: false,
+            });
+            Object.defineProperty(this, "statusText", {
+              value: "Bad Request",
+              writable: false,
+            });
+            Object.defineProperty(this, "responseText", {
+              value: errorResponse,
+              writable: false,
+            });
+            Object.defineProperty(this, "response", {
+              value: errorResponse,
+              writable: false,
+            });
+            Object.defineProperty(this, "readyState", {
+              value: 4,
+              writable: false,
+            });
+            const errorEvent = new ProgressEvent("error", {
+              lengthComputable: true,
+              loaded: 0,
+              total: 0,
+            });
+            if (this.onerror) this.onerror.call(this, errorEvent);
+            if (this.onreadystatechange)
+              this.onreadystatechange.call(this, errorEvent);
+          });
+        return;
+      }
+      return super.send(body);
+    }
+  }
+  window.XMLHttpRequest = InterceptedXHR;
+}
+
+// Helper function to handle API calls
+async function handleApiCall(
+  url: string,
+  init: RequestInit | undefined,
+  executeAction: any
+) {
+  // Extract the path part after /api regardless of base path
+  let apiPath;
+  const apiIndex = url.indexOf("/api/");
+  if (apiIndex !== -1) {
+    apiPath = url.substring(apiIndex + 4); // Remove "/api" prefix
+  } else {
+    return fetch(url, init);
+  }
+  const segments = apiPath.split("/").filter(Boolean);
+  if (segments.length >= 2) {
+    const componentId = segments[0];
+    const actionId = segments[1];
+    let params = {};
+    if (init && init.body) {
+      try {
+        params = JSON.parse(init.body.toString());
+      } catch {}
+    }
+    try {
+      const result = await executeAction(componentId, actionId, params);
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  }
+  return fetch(url, init);
+}
+
 const SwaggerExplorer: React.FC = () => {
   const { spec, refreshSpec } = useOpenApiSpec();
   const { executeAction } = useApi();
-  const hasMountedRef = useRef(false);
-  const swaggerContainerRef = useRef<HTMLDivElement>(null);
 
   // Prevent rerendering unless the spec actually changes
   const memoizedSpec = useMemo(() => {
@@ -70,212 +225,27 @@ const SwaggerExplorer: React.FC = () => {
   }, []);
 
   // Set up a MutationObserver to stabilize form inputs when the DOM changes
+  const swaggerContainerRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!swaggerContainerRef.current) return;
-
-    // Create a mutation observer to watch for DOM changes
     const observer = new MutationObserver((mutations) => {
-      // Only run stabilization if elements were added
       const hasAddedNodes = mutations.some(
         (mutation) => mutation.addedNodes.length > 0
       );
-
       if (hasAddedNodes) {
-        // Fix input fields to prevent resets
         stabilizeSwaggerUIForms();
-
-        // Prevent hash navigation
         preventSwaggerUIHashNavigation();
       }
     });
-
-    // Start observing the container for DOM changes
     observer.observe(swaggerContainerRef.current, {
       childList: true,
       subtree: true,
     });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);  // Customize Swagger UI to intercept HTTP calls and execute them via our API
+    return () => observer.disconnect();
+  }, []);
+  // Set up global interceptors ONCE (safe for StrictMode)
   useEffect(() => {
-    // Only set up once
-    if (hasMountedRef.current) return;
-    hasMountedRef.current = true;
-    
-    console.log("🔧 SETTING UP INTERCEPTORS");
-    
-    // Intercept fetch/XHR to handle requests through our API instead
-    const originalFetch = window.fetch;
-    const OriginalXHR = window.XMLHttpRequest;
-    
-    // Intercept fetch calls
-    window.fetch = async function (input, init) {
-      const url = input instanceof Request ? input.url : String(input);
-      
-      console.log("🔍 FETCH INTERCEPTOR - URL:", url, "Init:", init);
-
-      // Check for API calls - handle both development and production base paths
-      if (url.includes("/api/")) {
-        return handleApiCall(url, init);
-      } else {
-        console.log("🔄 NON-API CALL - PASSING THROUGH:", url);
-      }
-
-      // For non-API calls, use the original fetch
-      return originalFetch.apply(window, [input, init]);
-    };
-    
-    // Also intercept XMLHttpRequest which SwaggerUI might use
-    class InterceptedXHR extends OriginalXHR {
-      private _url = '';
-      private _method = '';
-      
-      open(method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null): void {
-        this._url = url.toString();
-        this._method = method;
-        console.log("🔍 XHR INTERCEPTOR - Opening:", method, url);
-        
-        if (url.toString().includes("/api/")) {
-          console.log("🎯 XHR API CALL DETECTED");
-          // Still call the original open but we'll intercept the send
-        }
-        
-        return super.open(method, url, async, username, password);
-      }
-      
-      send(body?: Document | XMLHttpRequestBodyInit | null): void {
-        console.log("🔍 XHR INTERCEPTOR - Sending:", this._method, this._url, body);
-        
-        if (this._url.includes("/api/")) {
-          console.log("🎯 XHR API CALL - INTERCEPTING");
-          // Handle API call through our system
-          handleApiCall(this._url, { method: this._method, body: body as BodyInit })
-            .then(response => response.text())
-            .then(text => {
-              console.log("✅ XHR API RESPONSE:", text);
-              // Simulate a successful XHR response
-              Object.defineProperty(this, 'status', { value: 200, writable: false });
-              Object.defineProperty(this, 'statusText', { value: 'OK', writable: false });
-              Object.defineProperty(this, 'responseText', { value: text, writable: false });
-              Object.defineProperty(this, 'response', { value: text, writable: false });
-              Object.defineProperty(this, 'readyState', { value: 4, writable: false });
-              
-              // Trigger the load event with proper ProgressEvent
-              const loadEvent = new ProgressEvent('load', {
-                lengthComputable: true,
-                loaded: text.length,
-                total: text.length
-              });
-              if (this.onload) this.onload.call(this, loadEvent);
-              if (this.onreadystatechange) this.onreadystatechange.call(this, loadEvent);
-            })
-            .catch(error => {
-              console.error("❌ XHR API ERROR:", error);
-              // Simulate an error response
-              const errorResponse = JSON.stringify({ error: error.message });
-              Object.defineProperty(this, 'status', { value: 400, writable: false });
-              Object.defineProperty(this, 'statusText', { value: 'Bad Request', writable: false });
-              Object.defineProperty(this, 'responseText', { value: errorResponse, writable: false });
-              Object.defineProperty(this, 'response', { value: errorResponse, writable: false });
-              Object.defineProperty(this, 'readyState', { value: 4, writable: false });
-              
-              // Trigger the error event with proper ProgressEvent
-              const errorEvent = new ProgressEvent('error', {
-                lengthComputable: true,
-                loaded: 0,
-                total: 0
-              });
-              if (this.onerror) this.onerror.call(this, errorEvent);
-              if (this.onreadystatechange) this.onreadystatechange.call(this, errorEvent);
-            });
-          
-          return;
-        }
-        
-        return super.send(body);
-      }
-    }
-    
-    window.XMLHttpRequest = InterceptedXHR;
-      // Helper function to handle API calls
-    async function handleApiCall(url: string, init?: RequestInit) {
-      console.log("🎯 API CALL DETECTED - URL:", url);
-      
-      // Extract the path part after /api regardless of base path
-      let apiPath;
-      const apiIndex = url.indexOf("/api/");
-      if (apiIndex !== -1) {
-        apiPath = url.substring(apiIndex + 4); // Remove "/api" prefix
-        console.log("📍 EXTRACTED API PATH:", apiPath);
-      } else {
-        console.warn("❌ Failed to extract API path from URL:", url);
-        return originalFetch.apply(window, [url, init]);
-      }
-      
-      const segments = apiPath.split("/").filter(Boolean);
-      console.log("🧩 PATH SEGMENTS:", segments);
-
-      if (segments.length >= 2) {
-        const componentId = segments[0];
-        const actionId = segments[1];
-
-        // Get parameters from the request body if available
-        let params = {};
-        if (init && init.body) {
-          try {
-            params = JSON.parse(init.body.toString());
-            console.log("📦 REQUEST BODY PARAMS:", params);
-          } catch (e) {
-            console.error("❌ Failed to parse request body:", e);
-          }
-        }
-
-        console.log(`🚀 EXECUTING ACTION: ${componentId}.${actionId}`, params);
-
-        // Execute the action through our API system
-        try {
-          const result = await executeAction(componentId, actionId, params);
-          console.log("✅ ACTION RESULT:", result);
-
-          // Return a mock Response object with our result
-          return new Response(JSON.stringify(result), {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        } catch (error) {
-          console.error("❌ Error executing action:", error);
-          // Handle errors gracefully
-          return new Response(
-            JSON.stringify({
-              success: false,
-              error: error instanceof Error ? error.message : String(error),
-            }),
-            {
-              status: 400,
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        }
-      } else {
-        console.warn("⚠️ Not enough path segments for API call:", segments);
-      }
-
-      // For non-API calls, use the original fetch
-      return originalFetch.apply(window, [url, init]);
-    }
-
-    // Cleanup when unmounted
-    return () => {
-      console.log("🧹 CLEANING UP INTERCEPTORS");
-      window.fetch = originalFetch;
-      window.XMLHttpRequest = OriginalXHR;
-    };
+    setupGlobalInterceptors(() => executeAction);
   }, [executeAction]);
 
   // Prevent URL hash changes from affecting React Router
@@ -357,7 +327,9 @@ const SwaggerExplorer: React.FC = () => {
         className="flex-1 overflow-auto"
         id="swagger-ui-container"
         ref={swaggerContainerRef}
-      >        <SwaggerUI
+      >
+        {" "}
+        <SwaggerUI
           spec={memoizedSpec}
           {...SwaggerUIOptions}
           supportedSubmitMethods={["get", "post", "put", "delete"]}
