@@ -32,63 +32,8 @@ import { ToolHandler } from "./toolHandler";
 import { fetch_wikipedia_content, sparql_exec } from "./toolImplementations";
 import { tools } from "./tools";
 
-// Declare WebLLM types
-declare global {
-  interface Window {
-    webllm: {
-      MLCEngine: new (config: { appConfig: unknown }) => WebLLMEngine;
-      prebuiltAppConfig: {
-        model_list: Array<{ model_id: string }>;
-      };
-    };
-  }
-}
-
-interface WebLLMEngine {
-  setInitProgressCallback: (
-    callback: (report: { text: string; progress: number }) => void
-  ) => void;
-  reload: (model: string, config: unknown) => Promise<void>;
-  getMessage: () => Promise<string>;
-  interruptGenerate: () => void;
-  chat: {
-    completions: {
-      create: (params: {
-        messages: Message[];
-        temperature: number;
-        max_tokens?: number;
-        stream?: boolean;
-        stream_options?: { include_usage: boolean };
-        seed?: number;
-      }) =>
-        | Promise<{
-            choices: Array<{
-              message: { content: string };
-              delta?: { content?: string };
-            }>;
-            usage?: {
-              prompt_tokens: number;
-              completion_tokens: number;
-              extra: {
-                prefill_tokens_per_s: number;
-                decode_tokens_per_s: number;
-              };
-            };
-          }>
-        | AsyncIterable<{
-            choices: Array<{ delta?: { content?: string } }>;
-            usage?: {
-              prompt_tokens: number;
-              completion_tokens: number;
-              extra: {
-                prefill_tokens_per_s: number;
-                decode_tokens_per_s: number;
-              };
-            };
-          }>;
-    };
-  };
-}
+// Use the actual WebLLM types
+type MLCEngine = webllm.MLCEngine;
 
 interface ToolFunction {
   name: string;
@@ -117,7 +62,7 @@ interface Usage {
 }
 
 const AIChatContent: React.FC = () => {
-  const { registerComponent, unregisterComponent } = useApi();
+  const { registerComponent } = useApi();
   const [displayMessages, setDisplayMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -127,7 +72,7 @@ const AIChatContent: React.FC = () => {
   const [chatStarted, setChatStarted] = useState(false);
   const [mcpTools, setMcpTools] = useState<MCPTool[]>([]);
   const [mcpToolsLoaded, setMcpToolsLoaded] = useState(false);
-  const engineRef = useRef<WebLLMEngine | null>(null);
+  const engineRef = useRef<MLCEngine | null>(null);
   const toolHandlerRef = useRef<ToolHandler | null>(null);
 
   // Global messages array like in index.js - this is the source of truth for conversation
@@ -280,7 +225,6 @@ const AIChatContent: React.FC = () => {
       setIsLoading(false);
     }
   };
-
   // Streaming generation function with tool support (based on index.js)
   const streamingGenerating = async (
     messages: Message[],
@@ -298,11 +242,25 @@ const AIChatContent: React.FC = () => {
 
     try {
       let curMessage = "";
-      let usage: Usage | undefined;
+      let usage: Usage | undefined; // Convert our Message format to WebLLM format, handling tool messages properly
+      const webllmMessages = messages.map((msg) => {
+        if (msg.role === "tool") {
+          return {
+            role: msg.role,
+            content: msg.content,
+            tool_call_id: msg.tool_call_id || "",
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      }) as webllm.ChatCompletionMessageParam[];
+
       const completion = await engineRef.current.chat.completions.create({
         seed: 0,
         stream: true,
-        messages,
+        messages: webllmMessages,
         temperature: 0.5,
         stream_options: { include_usage: true },
       });

@@ -89,6 +89,49 @@ if (fs.existsSync(PLUGINS_DIR)) {
 console.log("Building worker plugins:");
 console.log(workerFiles.map((file) => file.pluginId));
 
+// Copy Python files for pyodide plugin if it exists
+const pyodidePluginDir = path.join(WORKER_SOURCE_DIR, "pyodide");
+if (fs.existsSync(pyodidePluginDir)) {
+  const pythonDir = path.join(pyodidePluginDir, "python");
+  if (fs.existsSync(pythonDir)) {
+    const publicPythonDir = path.join(PUBLIC_WORKERS_DIR, "pyodide", "python");
+
+    // Ensure the directory exists
+    if (!fs.existsSync(publicPythonDir)) {
+      fs.mkdirSync(publicPythonDir, { recursive: true });
+      console.log(`Created directory: ${publicPythonDir}`);
+    }
+    // Copy all Python files
+    const pythonFiles = fs
+      .readdirSync(pythonDir)
+      .filter((file) => file.endsWith(".py"));
+    const pythonBundle = {};
+
+    pythonFiles.forEach((file) => {
+      const sourcePath = path.join(pythonDir, file);
+      const destPath = path.join(publicPythonDir, file);
+
+      // Copy individual files
+      fs.copyFileSync(sourcePath, destPath);
+      console.log(`Copied Python file: ${file}`);
+
+      // Also add to bundle for fallback
+      const content = fs.readFileSync(sourcePath, "utf8");
+      pythonBundle[file] = content;
+    });
+
+    // Create a Python bundle file as fallback
+    const bundlePath = path.join(
+      PUBLIC_WORKERS_DIR,
+      "pyodide-python-bundle.json"
+    );
+    fs.writeFileSync(bundlePath, JSON.stringify(pythonBundle, null, 2));
+    console.log(`Created Python bundle: pyodide-python-bundle.json`);
+
+    console.log(`Copied ${pythonFiles.length} Python files for pyodide plugin`);
+  }
+}
+
 // Process each plugin file
 workerFiles.forEach(({ pluginId, sourcePath }) => {
   const outputName = `${pluginId}.js`;
