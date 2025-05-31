@@ -286,7 +286,7 @@ const BetterFrontendExplorer = () => {
               )}
             </div>
             <ScrollArea className="flex-1">
-              <Accordion type="multiple" collapsible className="space-y-2">
+              <Accordion type="multiple" className="space-y-2">
                 {selectedComponent.actions.map((action) => {
                   // dynamic params for code snippet: use entered values or placeholder defaults
                   const snippetParams = action.parameters?.reduce((acc, param) => {

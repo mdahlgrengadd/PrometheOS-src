@@ -7,7 +7,14 @@ import { IApiComponent, IOpenApiSpec } from '../core/types';
  */
 export const generateOpenApiSpec = (
   components: IApiComponent[]
-): IOpenApiSpec => {
+): IOpenApiSpec => {  // Determine the current environment and base URL
+  const isDevelopment = import.meta.env.DEV;
+  
+  // Always use the Vite base URL configuration since it applies to both dev and prod
+  // In development: "/prometheos/" (from vite.config.ts)
+  // In production: "/prometheos/" (same base path)
+  const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
+  
   // Start with the basic OpenAPI structure
   const spec: IOpenApiSpec = {
     openapi: "3.0.0",
@@ -15,7 +22,12 @@ export const generateOpenApiSpec = (
       title: "PrometheOS API",
       description: "API for AI agent interaction with the PrometheOS",
       version: "1.0.0",
-    },
+    },    servers: [
+      {
+        url: baseUrl,
+        description: isDevelopment ? "Development Server" : "Production Server",
+      },
+    ],
     paths: {},
     components: {
       schemas: {},

@@ -107,14 +107,13 @@ export class ApiComponentService {
     const components = this.getApiComponents();
 
     // Extract unique app IDs from component paths
-    const appMap = new Map<string, string>();
-
-    components.forEach((component) => {
+    const appMap = new Map<string, string>();    components.forEach((component) => {
       const pathParts = component.path.split("/");
       // System APIs: /api/{componentId}
       if (pathParts.length >= 3 && pathParts[1] === "api") {
         const appId = pathParts[2];
-        const appName = component.name || appId;
+        // For system APIs, use the component type as the app name to differentiate App from Component display
+        const appName = component.type || appId;
         appMap.set(appId, appName);
       }
       // Top-level apps: /apps/{appId}/...

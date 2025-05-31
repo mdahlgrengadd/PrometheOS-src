@@ -1,7 +1,7 @@
-import * as Comlink from 'comlink';
+import * as Comlink from "comlink";
 
-import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
-import { PluginManifest } from './types';
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+import { PluginManifest } from "./types";
 
 // Define interfaces matching the worker's API
 interface WorkerPluginManager {
@@ -334,8 +334,18 @@ class WorkerPluginManagerClient {
     await this.callPlugin("webllm", "cleanup");
   }
 
-  // Pyodide Helper Methods
+  /**
+   * Get WebLLM MCP initialization state for debugging
+   */
+  async getWebLLMMCPInitializationState(): Promise<boolean> {
+    if (!this.registeredPlugins.has("webllm")) {
+      return false;
+    }
+    const result = await this.callPlugin("webllm", "getMCPInitializationState");
+    return Boolean(result);
+  }
 
+  // Pyodide Helper Methods
   /**
    * Initialize Pyodide runtime
    */
@@ -349,7 +359,10 @@ class WorkerPluginManagerClient {
       await this.registerPlugin("pyodide", workerPath);
     }
 
-    const result = await this.callPlugin("pyodide", "initPyodide");
+    // Pass the base URL from the main thread to the worker
+    const result = await this.callPlugin("pyodide", "initPyodide", {
+      baseUrl: import.meta.env.BASE_URL || "/",
+    });
 
     if (typeof result === "object" && result !== null && "status" in result) {
       return result as { status: string; message?: string };
@@ -593,7 +606,7 @@ class WorkerPluginManagerClient {
     Array<{
       name: string;
       description: string;
-      inputSchema: Record<string, unknown>;
+      parameters: Record<string, unknown>;
     }>
   > {
     if (!this.registeredPlugins.has("mcp-server")) {
@@ -606,7 +619,7 @@ class WorkerPluginManagerClient {
       return result as Array<{
         name: string;
         description: string;
-        inputSchema: Record<string, unknown>;
+        parameters: Record<string, unknown>;
       }>;
     }
 

@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  .ide-builder-app {
     --background: 220 13% 18%;
     --foreground: 0 0% 98%;
 
@@ -55,7 +55,7 @@
     --editor-active-tab: 220 13% 25%;
   }
 
-  .light {
+  .ide-builder-app.light {
     --background: 0 0% 100%;
     --foreground: 220 13% 10%;
 
@@ -105,11 +105,11 @@
 }
 
 @layer base {
-  * {
+  .ide-builder-app * {
     @apply border-border;
   }
 
-  body {
+  .ide-builder-app body {
     @apply bg-background text-foreground font-sans;
   }
   

@@ -1,12 +1,26 @@
 import React, {
-    createContext, useCallback, useContext, useEffect, useMemo, useRef, useState
-} from 'react';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { eventBus } from '../../plugins/EventBus';
-import { setGlobalApiContext, setupGlobalHybridApiBridge } from '../bridges/HybridDesktopApiBridge';
-import { IActionResult, IApiComponent, IApiContextValue, IOpenApiSpec } from '../core/types';
-import { registerLauncherApi } from '../system/registerSystemApi';
-import { generateOpenApiSpec } from '../utils/openapi';
+import { eventBus } from "../../plugins/EventBus";
+import {
+  setGlobalApiContext,
+  setupGlobalHybridApiBridge,
+} from "../bridges/HybridDesktopApiBridge";
+import {
+  IActionResult,
+  IApiComponent,
+  IApiContextValue,
+  IOpenApiSpec,
+} from "../core/types";
+import { registerSystemApi } from "../system/registerSystemApi";
+import { generateOpenApiSpec } from "../utils/openapi";
 
 // Create the API context with null default value
 const ApiContext = createContext<IApiContextValue | null>(null);
@@ -80,7 +94,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
           const mcpComponent = {
             id: component.id,
             actions: component.actions.map((action) => ({
-              name: action.id,  // Use action.id for consistency
+              name: action.id, // Use action.id for consistency
               description: action.description,
               parameters: action.parameters?.reduce(
                 (params, param) => ({
@@ -96,10 +110,18 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
             })),
           };
 
-          const registerResult = await workerManager.autoRegisterMCPTools([mcpComponent]);
-          console.log(`Auto-registered MCP tool for ${component.id}:`, registerResult);
+          const registerResult = await workerManager.autoRegisterMCPTools([
+            mcpComponent,
+          ]);
+          console.log(
+            `Auto-registered MCP tool for ${component.id}:`,
+            registerResult
+          );
         } catch (error) {
-          console.error(`Failed to auto-register MCP tool for ${component.id}:`, error);
+          console.error(
+            `Failed to auto-register MCP tool for ${component.id}:`,
+            error
+          );
         }
       }, 100); // Small delay to ensure component is fully registered
     }
@@ -126,9 +148,11 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     const workerManager = (
       window as unknown as {
         workerPluginManager?: {
-          unregisterMCPComponent?: (
-            componentId: string
-          ) => Promise<{ status: string; unregistered: number; errors: string[] }>;
+          unregisterMCPComponent?: (componentId: string) => Promise<{
+            status: string;
+            unregistered: number;
+            errors: string[];
+          }>;
         };
       }
     ).workerPluginManager;
@@ -136,10 +160,18 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     if (workerManager?.unregisterMCPComponent) {
       setTimeout(async () => {
         try {
-          const unregisterResult = await workerManager.unregisterMCPComponent(id);
-          console.log(`Auto-unregistered MCP tools for ${id}:`, unregisterResult);
+          const unregisterResult = await workerManager.unregisterMCPComponent(
+            id
+          );
+          console.log(
+            `Auto-unregistered MCP tools for ${id}:`,
+            unregisterResult
+          );
         } catch (error) {
-          console.error(`Failed to auto-unregister MCP tools for ${id}:`, error);
+          console.error(
+            `Failed to auto-unregister MCP tools for ${id}:`,
+            error
+          );
         }
       }, 100); // Small delay to ensure component is fully unregistered
     }
@@ -157,7 +189,8 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
     id: string,
     state: Partial<IApiComponent["state"]>
   ) => {
-    console.log(`Updating component state: ${id}`, state);
+    // Remove excessive logging - only log in development for debugging
+    // console.log(`Updating component state: ${id}`, state);
     setComponents((prev) => {
       if (!prev[id]) return prev;
 
@@ -374,7 +407,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({
       };
 
       // Register the launcher API component and handler
-      registerLauncherApi(apiContext);
+      registerSystemApi(apiContext);
 
       // Store API context globally for Desktop API Bridge
       setGlobalApiContext(apiContext);
