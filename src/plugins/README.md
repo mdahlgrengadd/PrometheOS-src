@@ -1,6 +1,6 @@
-# Desktop Dreamscape Plugin Architecture
+# PromethOS Plugin Architecture
 
-This document explains how to create new applications (plugins) for the Desktop Dreamscape environment and how to implement API functionality so your app can be controlled via the API Explorer.
+This document explains how to create new applications (plugins) for the PromethOS environment and how to implement API functionality so your app can be controlled via the API Explorer.
 
 ## Table of Contents
 
@@ -14,7 +14,7 @@ This document explains how to create new applications (plugins) for the Desktop 
 
 ## Overview
 
-The Desktop Dreamscape uses a plugin-based architecture where each application is a self-contained plugin. Plugins are loaded dynamically at runtime and can interact with each other through the API system. The API system allows components to expose functionality that can be discovered and called by other parts of the application or by AI agents.
+The PromethOS uses a plugin-based architecture where each application is a self-contained plugin. Plugins are loaded dynamically at runtime and can interact with each other through the API system. The API system allows components to expose functionality that can be discovered and called by other parts of the application or by AI agents.
 
 ## Creating a New Plugin
 
@@ -455,7 +455,7 @@ Look at existing plugins for reference implementations:
 
 Once your plugin is implemented with API functionality:
 
-1. Launch the Desktop Dreamscape
+1. Launch the PromethOS
 2. Open your app
 3. Open the API Explorer
 4. Your components should appear in the list of available components

@@ -1,7 +1,7 @@
-import { Music } from 'lucide-react';
-import React from 'react';
+import { Music } from "lucide-react";
+import React from "react";
 
-import { PluginManifest } from '../../../plugins/types';
+import { PluginManifest } from "../../../plugins/types";
 
 /**
  * API documentation for the audio player

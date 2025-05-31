@@ -1,10 +1,18 @@
-import { Howl, Howler } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button } from '@/components/ui/api/button';
+import { Button } from "@/components/ui/api/button";
 
-import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
+import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [

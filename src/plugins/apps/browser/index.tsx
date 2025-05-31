@@ -49,7 +49,7 @@ const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
         const text = await textResp.text();
         // Look for a unique string in your app's index.html
         if (
-          !text.includes("<title>Draggable Desktop Dreamscape</title>") &&
+          !text.includes("<title>Draggable PromethOS</title>") &&
           !text.includes('id="root"')
         ) {
           return shadownetUrl;

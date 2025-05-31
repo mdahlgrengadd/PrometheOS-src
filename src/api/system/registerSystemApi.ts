@@ -10,7 +10,7 @@ export const systemApiComponent: IApiComponent = {
   id: "sys",
   type: "System",
   name: "Desktop System Services",
-  description: `# Desktop Dreamscape System API
+  description: `# PromethOS System API
 
 ## Overview
 The System API provides core desktop management functionality including application lifecycle management, user notifications, system dialogs, and event bus integration. This API follows JSON RPC 2.0 specification and is designed for use by MCP (Model Context Protocol) agents and other AI systems.

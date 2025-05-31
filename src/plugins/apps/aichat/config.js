@@ -1,7 +1,7 @@
 // Configuration and rules for the Desktop System Services AI Assistant
 export const rules = {
   desktop_system_config: {
-    name: "Desktop Dreamscape AI Assistant",
+    name: "PromethOS AI Assistant",
     version: "1.0.0",
     features: {
       application_management: {
@@ -89,5 +89,5 @@ export const rules = {
         "Always consider how desktop applications can work together and suggest workflows that leverage multiple applications.",
     },
   },
-  init: "Hello! I'm your Desktop Dreamscape AI Assistant, specialized in helping you manage desktop applications and system services. I can help you:\n\n🚀 **Launch Applications** - Open notepad, browser, code editor (HybrIDE), audio player, calculator, and more with pre-loaded content\n📝 **Content Management** - Load text, code, markdown, JSON, or URLs directly into appropriate applications\n🔔 **Notifications** - Display system notifications and alerts\n💬 **System Dialogs** - Show confirmation dialogs and gather user input\n📡 **Event Monitoring** - Subscribe to system events and coordinate application workflows\n\nI understand the Desktop System Services API and can help you integrate applications, automate workflows, and manage your desktop environment efficiently. What would you like to do today?",
+  init: "Hello! I'm your PromethOS AI Assistant, specialized in helping you manage desktop applications and system services. I can help you:\n\n🚀 **Launch Applications** - Open notepad, browser, code editor (HybrIDE), audio player, calculator, and more with pre-loaded content\n📝 **Content Management** - Load text, code, markdown, JSON, or URLs directly into appropriate applications\n🔔 **Notifications** - Display system notifications and alerts\n💬 **System Dialogs** - Show confirmation dialogs and gather user input\n📡 **Event Monitoring** - Subscribe to system events and coordinate application workflows\n\nI understand the Desktop System Services API and can help you integrate applications, automate workflows, and manage your desktop environment efficiently. What would you like to do today?",
 };
