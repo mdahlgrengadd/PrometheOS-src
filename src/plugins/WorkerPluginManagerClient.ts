@@ -361,7 +361,7 @@ class WorkerPluginManagerClient {
 
     // Pass the base URL from the main thread to the worker
     const result = await this.callPlugin("pyodide", "initPyodide", {
-      baseUrl: import.meta.env.BASE_URL || '/'
+      baseUrl: import.meta.env.BASE_URL || "/",
     });
 
     if (typeof result === "object" && result !== null && "status" in result) {

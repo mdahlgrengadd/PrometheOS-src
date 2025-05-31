@@ -21,19 +21,19 @@ class Desktop:
         except NameError:
             self.api = None
             print("Warning: DesktopAPI not available")
-        
+
         try:
             self.events = Events()
         except NameError:
             self.events = None
             print("Warning: Events not available")
-        
+
         try:
             self.mcp = MCPProtocol()
         except NameError:
             self.mcp = None
             print("Warning: MCPProtocol not available")
-        
+
         try:
             self.comlink = ComlinkHelper()
         except NameError:

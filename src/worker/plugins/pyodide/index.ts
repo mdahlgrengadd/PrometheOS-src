@@ -35,12 +35,14 @@ const PyodideWorker: WorkerPlugin = {
   /**
    * Initialize Pyodide with progress tracking
    */
-  async initPyodide(params?: { baseUrl?: string }): Promise<{ status: string; message?: string }> {
+  async initPyodide(params?: {
+    baseUrl?: string;
+  }): Promise<{ status: string; message?: string }> {
     // Set the base URL for Python file loading if provided
     if (params?.baseUrl) {
       setBaseUrl(params.baseUrl);
     }
-    
+
     const result = await this._core.initPyodide();
 
     if (result.status === "success") {
@@ -190,7 +192,7 @@ const PyodideWorker: WorkerPlugin = {
 
   /**
    * Generic handler function that processes method calls with parameters
-   */  handle(method: string, params?: Record<string, unknown>): unknown {
+   */ handle(method: string, params?: Record<string, unknown>): unknown {
     switch (method) {
       case "initPyodide":
         return this.initPyodide(params as { baseUrl?: string });

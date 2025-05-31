@@ -44,16 +44,16 @@ export function setBaseUrl(baseUrl: string): void {
  */
 function getBaseUrl(): string {
   console.log(`getBaseUrl called, globalBaseUrl is: ${globalBaseUrl}`);
-  
+
   // Use the global base URL if available (passed from main thread)
   if (globalBaseUrl !== null) {
     console.log(`Using globalBaseUrl: ${globalBaseUrl}`);
     return globalBaseUrl;
   }
-  
+
   // Final fallback
   console.log(`Using fallback base URL: /`);
-  return '/';
+  return "/";
 }
 
 /**
@@ -63,7 +63,7 @@ export async function loadPythonCode(filename: string): Promise<string> {
   try {
     // Get the base URL from the configured source
     const baseUrl = getBaseUrl();
-    
+
     // Try multiple possible paths, starting with the most likely to work
     const possiblePaths = [
       // Production path (files copied to public/worker/)
@@ -119,7 +119,7 @@ async function loadFromBundle(filename: string): Promise<string> {
   try {
     // Get the base URL from the configured source
     const baseUrl = getBaseUrl();
-    
+
     // Try multiple bundle paths
     const bundlePaths = [
       `${baseUrl}worker/pyodide-python-bundle.json`,

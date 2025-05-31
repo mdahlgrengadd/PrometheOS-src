@@ -24,16 +24,17 @@ class Events:
             print(f"Error emitting event {event_name} via Comlink: {e}")
             # Fallback to postMessage (will be available from combined script)
             return {'success': False, 'error': 'Comlink bridge not available'}
-    
+
     @staticmethod
     async def subscribe(event_name, callback):
         """Subscribe to desktop events"""
         # Will reference DesktopAPI when combined
         return None
 
+
 class EventsLegacy:
     """EventBus integration via postMessage"""
-    
+
     @staticmethod
     def emit(event_name, data=None):
         """Emit an event to the desktop EventBus"""
@@ -41,7 +42,7 @@ class EventsLegacy:
             from js import postMessage
             import uuid
             request_id = str(uuid.uuid4())
-            
+
             message = to_js({
                 'type': 'desktop-api-request',
                 'requestId': request_id,
@@ -52,13 +53,13 @@ class EventsLegacy:
                 })
             })
             postMessage(message)
-            
+
             return {'success': True, 'message': f'Event {event_name} emitted'}
-            
+
         except Exception as e:
             print(f"Error emitting event {event_name}: {e}")
             return {'success': False, 'error': str(e)}
-    
+
     @staticmethod
     def subscribe(event_name, callback):
         """Subscribe to desktop events"""
