@@ -27,7 +27,6 @@ import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
 import { manifest as pythonScribeManifest } from "./apps/python-scribe/manifest";
 import { manifest as sessionManifest } from "./apps/session/manifest";
 import { manifest as settingsManifest } from "./apps/settings/manifest";
-import { manifest as urlTestManifest } from "./apps/url-test/manifest";
 import { manifest as webampManifest } from "./apps/webamp/manifest";
 import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
 import { eventBus } from "./EventBus";
@@ -68,7 +67,6 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
   "pyodide-test": () => import("./apps/pyodide-test").then((m) => m.default),
   "python-scribe": () => import("./apps/python-scribe").then((m) => m.default),
-  "url-test": () => import("./apps/url-test").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -133,7 +131,6 @@ const manifestMap: Record<string, PluginManifest> = {
   "file-explorer": fileExplorerManifest,
   "pyodide-test": pyodideTestManifest,
   "python-scribe": pythonScribeManifest,
-  "url-test": urlTestManifest,
 };
 
 // Debug: Log available plugins
