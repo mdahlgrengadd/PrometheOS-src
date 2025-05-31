@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { Plugin, PluginManifest } from "../../types";
-
-import { manifest } from './manifest';
+import { manifest } from "./manifest";
 
 const BrowserContent = () => {
   const [url, setUrl] = useState("https://en.wikipedia.org");
@@ -78,16 +77,19 @@ const BrowserContent = () => {
       const shadownetUrl = `${origin}${base}shadownet/${domain}/index.html`;
 
       // Try to fetch the shadownet file (HEAD request is enough)
-      const resp = await fetch(shadownetUrl, { method: 'HEAD' });
+      const resp = await fetch(shadownetUrl, { method: "HEAD" });
       let toLoad = formattedUrl;
       // Only use shadownet if it exists and is not the app's index.html fallback
       if (resp.ok) {
         // Try to detect if this is actually the app's index.html (Vite fallback)
         // We'll do a GET request and check for a known marker in your app's index.html
-        const textResp = await fetch(shadownetUrl, { method: 'GET' });
+        const textResp = await fetch(shadownetUrl, { method: "GET" });
         const text = await textResp.text();
         // Look for a unique string in your app's index.html, e.g. <title> or a root div id
-        if (!text.includes('<title>Draggable Desktop Dreamscape</title>') && !text.includes('id="root"')) {
+        if (
+          !text.includes("<title>Draggable Desktop Dreamscape</title>") &&
+          !text.includes('id="root"')
+        ) {
           toLoad = shadownetUrl;
         }
       }
@@ -218,14 +220,18 @@ const BrowserContent = () => {
             value={url}
             onChange={handleUrlChange}
             onKeyPress={handleKeyPress}
-            style={{ paddingRight: currentUrl.includes('/shadownet/') ? '80px' : undefined }}
+            style={{
+              paddingRight: currentUrl.includes("/shadownet/")
+                ? "80px"
+                : undefined,
+            }}
           />
           {/* Show a mockup indicator if on a shadownet page */}
-          {currentUrl.includes('/shadownet/') && (
+          {currentUrl.includes("/shadownet/") && (
             <span
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-200 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded border border-yellow-400 shadow z-10"
               title="This is a local mockup, not the real site."
-              style={{ pointerEvents: 'none' }}
+              style={{ pointerEvents: "none" }}
             >
               MOCKUP
             </span>
@@ -334,4 +340,3 @@ const BrowserPlugin: Plugin = {
 };
 
 export default BrowserPlugin;
-
