@@ -164,7 +164,7 @@ const AIChatContent: React.FC = () => {
             // Add "thinking..." message to display
             const aiMessage: Message = {
               role: "assistant",
-              content: "typing...",
+              content: "thinking...", // typing...
             };
             appendMessage(aiMessage);
 
@@ -484,7 +484,7 @@ const AIChatContent: React.FC = () => {
         // Add "thinking..." message to display
         const aiMessage: Message = {
           role: "assistant",
-          content: "typing...",
+          content: "thinking...", // typing...
         };
         appendMessage(aiMessage);
 
@@ -822,7 +822,7 @@ const AIChatContent: React.FC = () => {
 
             const aiMessage: Message = {
               role: "assistant",
-              content: "typing...",
+              content: "thinking...", // typing...
             };
             appendMessage(aiMessage);
 
@@ -1026,10 +1026,11 @@ const AIChatContent: React.FC = () => {
                       message.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
+                    {" "}
                     <div
                       className={`max-w-[80%] px-4 py-3 rounded-lg ${
                         message.role === "user"
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-blue-100 text-blue-900 border border-blue-200"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
@@ -1052,7 +1053,7 @@ const AIChatContent: React.FC = () => {
                         className="w-2 h-2 bg-current rounded-full animate-pulse"
                         style={{ animationDelay: "0.4s" }}
                       ></div>
-                      <span className="ml-2">Thinking...</span>
+                      <span className="ml-2"></span>
                     </div>
                   </div>
                 </div>
