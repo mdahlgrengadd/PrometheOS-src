@@ -1,18 +1,78 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import { Plugin, PluginManifest } from "../../types";
+import { Plugin, PluginInitData, PluginManifest } from "../../types";
 import { manifest } from "./manifest";
 
-const BrowserContent = () => {
-  const [url, setUrl] = useState("https://en.wikipedia.org");
-  const [currentUrl, setCurrentUrl] = useState("https://en.wikipedia.org");
-  const [history, setHistory] = useState<string[]>([
-    "https://en.wikipedia.org",
-  ]);
+interface BrowserContentProps {
+  initData?: PluginInitData;
+}
+
+const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
+  const rawDefaultUrl = initData?.initFromUrl || "https://en.wikipedia.org";
+
+  // Format the URL properly - add https:// if missing
+  const formatUrl = (url: string) => {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return "https://" + url;
+    }
+    return url;
+  };
+
+  const defaultUrl = formatUrl(rawDefaultUrl);
+  const [url, setUrl] = useState(defaultUrl);
+  const [currentUrl, setCurrentUrl] = useState(defaultUrl);
+  const [history, setHistory] = useState<string[]>([defaultUrl]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true for initial shadownet check
   const [frameError, setFrameError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Function to check shadownet and return the URL to load
+  const checkShadownet = async (formattedUrl: string): Promise<string> => {
+    try {
+      const urlObj = new URL(formattedUrl);
+      let domain = urlObj.hostname;
+      if (domain.startsWith("www.")) {
+        domain = domain.substring(4);
+      }
+      const base = import.meta.env.BASE_URL || "/";
+      const origin = window.location.origin;
+      const shadownetUrl = `${origin}${base}shadownet/${domain}/index.html`;
+
+      // Try to fetch the shadownet file (HEAD request is enough)
+      const resp = await fetch(shadownetUrl, { method: "HEAD" });
+
+      // Only use shadownet if it exists and is not the app's index.html fallback
+      if (resp.ok) {
+        // Try to detect if this is actually the app's index.html (Vite fallback)
+        const textResp = await fetch(shadownetUrl, { method: "GET" });
+        const text = await textResp.text();
+        // Look for a unique string in your app's index.html
+        if (
+          !text.includes("<title>Draggable Desktop Dreamscape</title>") &&
+          !text.includes('id="root"')
+        ) {
+          return shadownetUrl;
+        }
+      }
+    } catch (e) {
+      // If any error, just return the original URL
+    }
+    return formattedUrl;
+  };
+
+  // Check shadownet on initial load
+  useEffect(() => {
+    const initializeWithShadownet = async () => {
+      const urlToLoad = await checkShadownet(defaultUrl);
+      setCurrentUrl(urlToLoad);
+      setUrl(urlToLoad);
+      setHistory([urlToLoad]);
+      setIsLoading(false);
+    };
+
+    initializeWithShadownet();
+  }, [defaultUrl]);
 
   // // Handle X-Frame-Options errors
   // useEffect(() => {
@@ -44,7 +104,6 @@ const BrowserContent = () => {
       navigateToUrl();
     }
   };
-
   const navigateToUrl = async () => {
     // Add protocol if missing
     let formattedUrl = url;
@@ -65,49 +124,15 @@ const BrowserContent = () => {
     setIsLoading(true);
     setFrameError(null);
 
-    // Caching proxy: check shadownet first
-    try {
-      const urlObj = new URL(formattedUrl);
-      let domain = urlObj.hostname;
-      if (domain.startsWith("www.")) {
-        domain = domain.substring(4);
-      }
-      const base = import.meta.env.BASE_URL || "/";
-      const origin = window.location.origin;
-      const shadownetUrl = `${origin}${base}shadownet/${domain}/index.html`;
+    // Use the shadownet check helper
+    const toLoad = await checkShadownet(formattedUrl);
 
-      // Try to fetch the shadownet file (HEAD request is enough)
-      const resp = await fetch(shadownetUrl, { method: "HEAD" });
-      let toLoad = formattedUrl;
-      // Only use shadownet if it exists and is not the app's index.html fallback
-      if (resp.ok) {
-        // Try to detect if this is actually the app's index.html (Vite fallback)
-        // We'll do a GET request and check for a known marker in your app's index.html
-        const textResp = await fetch(shadownetUrl, { method: "GET" });
-        const text = await textResp.text();
-        // Look for a unique string in your app's index.html, e.g. <title> or a root div id
-        if (
-          !text.includes("<title>Draggable Desktop Dreamscape</title>") &&
-          !text.includes('id="root"')
-        ) {
-          toLoad = shadownetUrl;
-        }
-      }
-
-      // Add to history
-      const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push(toLoad);
-      setHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-      setCurrentUrl(toLoad);
-    } catch (e) {
-      // If any error, just load the real site
-      const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push(formattedUrl);
-      setHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-      setCurrentUrl(formattedUrl);
-    }
+    // Add to history
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(toLoad);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    setCurrentUrl(toLoad);
   };
 
   const goBack = () => {
@@ -172,7 +197,6 @@ const BrowserContent = () => {
     { name: "GitHub", url: "https://github.com" },
     { name: "Stack Overflow", url: "https://stackoverflow.com" },
   ];
-
   return (
     <div className="p-0 py-1 flex flex-col h-full">
       <div className="flex items-center mb-1 space-x-2">
@@ -328,14 +352,25 @@ const BrowserContent = () => {
   );
 };
 
-const BrowserPlugin: Plugin = {
+let globalInitData: PluginInitData | undefined = undefined;
+
+const BrowserPlugin: Plugin & { openWithUrl?: (url: string) => void } = {
   id: manifest.id,
   manifest,
-  init: async () => {
-    console.log("Browser plugin initialized");
+  init: async (initData?: PluginInitData) => {
+    globalInitData = initData;
+  },
+  onOpen: (initData?: PluginInitData) => {
+    if (initData) {
+      globalInitData = initData;
+    }
+  },
+  // Support openWithUrl for initial URL
+  openWithUrl: (url: string) => {
+    globalInitData = { initFromUrl: url };
   },
   render: () => {
-    return <BrowserContent />;
+    return <BrowserContent initData={globalInitData} />;
   },
 };
 

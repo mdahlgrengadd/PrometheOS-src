@@ -1,3 +1,5 @@
+import { PluginInitData } from "../plugins/types";
+
 /**
  * Generate a URL to directly launch an app
  * @param appId - The ID of the app to launch
@@ -146,7 +148,14 @@ export function getAppsToLaunchFromUrl(): AppLaunchData[] {
 /**
  * URL scheme types supported for plugin initialization
  */
-export type UrlScheme = "http" | "https" | "vfs" | "data" | "plain";
+export type UrlScheme =
+  | "http"
+  | "https"
+  | "vfs"
+  | "data"
+  | "plain"
+  | "none"
+  | "error";
 
 /**
  * Result of processing a URL for plugin initialization
@@ -187,13 +196,16 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
 
     // Handle Virtual File System scheme
     if (url.startsWith("vfs://")) {
-      const path = url.substring(6);
-      // Import or access your virtual file system implementation here
+      const path = url.substring(6); // Import or access your virtual file system implementation here
       // For example, if you have a module at ../vfs/virtualFs:
       // import { virtualFs } from "../vfs/virtualFs";
       // Make sure to move this import to the top of the file if needed.
-      // @ts-ignore
-      const virtualFs = (window as any).virtualFs || {};
+      const virtualFs =
+        (
+          window as unknown as {
+            virtualFs?: { readText?: (path: string) => Promise<string> };
+          }
+        ).virtualFs || {};
       if (typeof virtualFs.readText !== "function") {
         throw new Error("virtualFs.readText is not available");
       }
@@ -241,9 +253,7 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
         scheme: "data",
         content,
       };
-    }
-
-    // Default case: treat as plain text
+    } // Default case: treat as plain text
     return {
       initFromUrl: url,
       scheme: "plain",

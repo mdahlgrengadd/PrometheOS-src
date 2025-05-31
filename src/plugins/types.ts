@@ -38,7 +38,7 @@ export interface PluginManifest {
  */
 export interface PluginInitData {
   initFromUrl?: string;
-  scheme?: "http" | "https" | "vfs" | "data" | "plain";
+  scheme?: "http" | "https" | "vfs" | "data" | "plain" | "none" | "error";
   content?: string;
   error?: string;
 }
