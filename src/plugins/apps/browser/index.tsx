@@ -46,7 +46,7 @@ const BrowserContent = () => {
     }
   };
 
-  const navigateToUrl = () => {
+  const navigateToUrl = async () => {
     // Add protocol if missing
     let formattedUrl = url;
     if (
@@ -57,15 +57,55 @@ const BrowserContent = () => {
       setUrl(formattedUrl);
     }
 
+    // If already at this URL, do nothing and clear loading
+    if (currentUrl === formattedUrl) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setFrameError(null);
 
-    // Add to history
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(formattedUrl);
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-    setCurrentUrl(formattedUrl);
+    // Caching proxy: check shadownet first
+    try {
+      const urlObj = new URL(formattedUrl);
+      let domain = urlObj.hostname;
+      if (domain.startsWith("www.")) {
+        domain = domain.substring(4);
+      }
+      const base = import.meta.env.BASE_URL || "/";
+      const origin = window.location.origin;
+      const shadownetUrl = `${origin}${base}shadownet/${domain}/index.html`;
+
+      // Try to fetch the shadownet file (HEAD request is enough)
+      const resp = await fetch(shadownetUrl, { method: 'HEAD' });
+      let toLoad = formattedUrl;
+      // Only use shadownet if it exists and is not the app's index.html fallback
+      if (resp.ok) {
+        // Try to detect if this is actually the app's index.html (Vite fallback)
+        // We'll do a GET request and check for a known marker in your app's index.html
+        const textResp = await fetch(shadownetUrl, { method: 'GET' });
+        const text = await textResp.text();
+        // Look for a unique string in your app's index.html, e.g. <title> or a root div id
+        if (!text.includes('<title>Draggable Desktop Dreamscape</title>') && !text.includes('id="root"')) {
+          toLoad = shadownetUrl;
+        }
+      }
+
+      // Add to history
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(toLoad);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+      setCurrentUrl(toLoad);
+    } catch (e) {
+      // If any error, just load the real site
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(formattedUrl);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+      setCurrentUrl(formattedUrl);
+    }
   };
 
   const goBack = () => {
@@ -179,7 +219,7 @@ const BrowserContent = () => {
           onKeyPress={handleKeyPress}
         />
         <button
-          onClick={navigateToUrl}
+          onClick={() => navigateToUrl()}
           className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
         >
           Go
