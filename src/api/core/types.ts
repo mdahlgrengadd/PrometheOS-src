@@ -132,6 +132,10 @@ export interface IOpenApiSpec {
     description: string;
     version: string;
   };
+  servers?: Array<{
+    url: string;
+    description: string;
+  }>;
   paths: Record<string, Record<string, unknown>>;
   components: {
     schemas: Record<string, Record<string, unknown>>;
