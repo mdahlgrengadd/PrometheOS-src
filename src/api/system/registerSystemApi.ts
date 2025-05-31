@@ -27,9 +27,11 @@ No authentication required for system operations.
 ## Rate Limiting
 No rate limiting currently enforced.`,
   path: "/api/sys",
-  actions: [    {
+  actions: [
+    {
       id: "open",
-      name: "Open Desktop Application",      description: `# Desktop Application Launcher
+      name: "Open Desktop Application",
+      description: `# Desktop Application Launcher
 
 ## Overview
 Opens a desktop application by its identifier with optional initialization from string content.
@@ -46,13 +48,13 @@ Applications that support initialization will use the provided string content to
 
 ## JSON RPC2 Examples
 
-### Basic Application Launch
+### Open Audio Player to Play Music and Media Files
 \`\`\`json
 {
   "jsonrpc": "2.0",
   "method": "sys.open",
   "params": {
-    "name": "notepad"
+    "name": "audioplayer"
   },
   "id": 1
 }
@@ -71,13 +73,13 @@ Applications that support initialization will use the provided string content to
 }
 \`\`\`
 
-### Launch Notepad with Code Content
+### Launch HybrIDE Code Editor with Code Content
 \`\`\`json
 {
   "jsonrpc": "2.0",
   "method": "sys.open",
   "params": {
-    "name": "notepad",
+    "name": "hybride",
     "initFromUrl": "function greet(name) {\\n  return \`Hello, \${name}!\`;\\n}\\n\\nconsole.log(greet('World'));"
   },
   "id": 3
@@ -141,16 +143,20 @@ Applications that support initialization will use the provided string content to
         {
           name: "name",
           type: "string",
-          description: "Application identifier to launch (e.g., 'notepad', 'calculator', 'browser')",
+          description:
+            "Application identifier to launch (e.g., 'notepad', 'calculator', 'browser')",
           required: true,
-        },        {
+        },
+        {
           name: "initFromUrl",
           type: "string",
-          description: "Optional string content to initialize the application with (text, code, markdown, JSON, etc.)",
+          description:
+            "Optional string content to initialize the application with (text, code, markdown, JSON, etc.)",
           required: false,
         },
       ],
-    },    {
+    },
+    {
       id: "kill",
       name: "Close Desktop Application",
       description: `# Desktop Application Terminator
@@ -197,7 +203,8 @@ Forcefully closes a running desktop application by its identifier.
           required: true,
         },
       ],
-    },    {
+    },
+    {
       id: "notify",
       name: "User Notification System",
       description: `# User Notification Display
@@ -270,7 +277,8 @@ Displays a notification message to the user using the specified notification eng
           enum: ["radix", "sonner"],
         },
       ],
-    },    {
+    },
+    {
       id: "dialog",
       name: "System Confirmation Dialog",
       description: `# System Dialog Interface
@@ -354,7 +362,8 @@ Opens a modal confirmation dialog and returns the user's response. The dialog bl
           required: false,
         },
       ],
-    },    {
+    },
+    {
       id: "events.waitFor",
       name: "Event Subscription Waiter",
       description: `# Event System Waiter
@@ -424,17 +433,20 @@ Waits for a specific event to be emitted on the system event bus or until a time
         {
           name: "name",
           type: "string",
-          description: "The event name to wait for (must be registered in the event bus)",
+          description:
+            "The event name to wait for (must be registered in the event bus)",
           required: true,
         },
         {
           name: "timeout",
           type: "number",
-          description: "Maximum wait time in milliseconds (omit for infinite wait)",
+          description:
+            "Maximum wait time in milliseconds (omit for infinite wait)",
           required: false,
         },
       ],
-    },    {
+    },
+    {
       id: "events.list",
       name: "Event Registry Lister",
       description: `# Event System Registry
