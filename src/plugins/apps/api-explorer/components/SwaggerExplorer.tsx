@@ -15,6 +15,24 @@ import {
 
 // Add custom styles to fix SwaggerUI issues
 const swaggerUIStyles = `
+  /* Make ALL Swagger UI response preview text terminal green for JSON */
+  .swagger-ui .microlight,
+  .swagger-ui .microlight *,
+  .swagger-ui pre.microlight,
+  .swagger-ui pre.microlight *,
+  .swagger-ui .response .microlight,
+  .swagger-ui .response .microlight *,
+  .swagger-ui .response .microlight code,
+  .swagger-ui .response .microlight code *,
+  .swagger-ui .highlight-code pre,
+  .swagger-ui .highlight-code pre *,
+  .swagger-ui .highlight-code code,
+  .swagger-ui .highlight-code code * {
+    color: #00ff00 !important; /* Terminal green */
+    background: #222 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
+  }
   /* Prevent input field resets by fixing the id attributes */
   .swagger-ui input[id^="parameter"] {
     font-family: ui-monospace, monospace;
