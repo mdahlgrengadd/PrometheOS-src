@@ -15,13 +15,35 @@ import {
   WindowsMenubarTrigger,
 } from "@/components/ui/windows";
 
-import { Plugin, PluginManifest } from "../../../plugins/types";
+import { Plugin, PluginInitData, PluginManifest } from "../../../plugins/types";
 import { manifest } from "./manifest";
 
 // Create a separate React component for the Notepad
-const NotepadComponent: React.FC = () => {
+const NotepadComponent: React.FC<{ initData?: PluginInitData }> = ({
+  initData,
+}) => {
   // State to manage the textarea content
-  const [noteContent, setNoteContent] = React.useState<string>("");
+  const [noteContent, setNoteContent] = React.useState<string>(() => {
+    // Initialize with content from initData if available
+    if (initData?.content && !initData.error) {
+      console.log(
+        `[Notepad] Initializing with content from ${initData.scheme} scheme:`,
+        {
+          url: initData.initFromUrl,
+          contentLength: initData.content.length,
+        }
+      );
+      return initData.content;
+    }
+
+    // If there was an error processing the URL, show error message
+    if (initData?.error) {
+      console.error(`[Notepad] Error loading content:`, initData.error);
+      return `Error loading content from "${initData.initFromUrl}": ${initData.error}`;
+    }
+
+    return "";
+  });
 
   // Handle text changes
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -187,14 +209,34 @@ const NotepadComponent: React.FC = () => {
   );
 };
 
+// Global state for init data - simple approach for this demo
+let globalInitData: PluginInitData | undefined;
+
 const NotepadPlugin: Plugin = {
   id: manifest.id,
   manifest,
-  init: async () => {
-    console.log("Notepad plugin initialized");
+
+  init: async (initData?: PluginInitData) => {
+    console.log(
+      "Notepad plugin initialized",
+      initData ? "with init data" : "without init data"
+    );
+    globalInitData = initData;
   },
+
+  onOpen: (initData?: PluginInitData) => {
+    console.log(
+      "Notepad plugin opened",
+      initData ? "with init data" : "without init data"
+    );
+    // Update init data when opened with new data
+    if (initData) {
+      globalInitData = initData;
+    }
+  },
+
   render: () => {
-    return <NotepadComponent />;
+    return <NotepadComponent initData={globalInitData} />;
   },
 };
 

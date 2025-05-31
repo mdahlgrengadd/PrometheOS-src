@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { usePlugins } from "@/plugins/PluginContext";
-import { getOpenAppsFromUrl } from "@/utils/url";
+import { getAppsToLaunchFromUrl } from "@/utils/url";
 
 interface MobileAppOpenerProps {
   setActiveApp: (appId: string | null) => void;
@@ -12,28 +12,26 @@ interface MobileAppOpenerProps {
  */
 const MobileAppOpener = ({ setActiveApp }: MobileAppOpenerProps) => {
   const { pluginManager, openWindow } = usePlugins();
-
   useEffect(() => {
     // Get apps to open from URL query params
-    const appsToOpen = getOpenAppsFromUrl();
+    const appsToLaunch = getAppsToLaunchFromUrl();
 
-    console.log("Mobile: Apps to open from URL:", appsToOpen);
+    console.log("Mobile: Apps to launch from URL:", appsToLaunch);
 
-    if (appsToOpen.length > 0) {
-      const firstAppId = appsToOpen[0];
-      console.log("Mobile: Attempting to open app:", firstAppId);
+    if (appsToLaunch.length > 0) {
+      const firstApp = appsToLaunch[0];
+      console.log("Mobile: Attempting to open app:", firstApp.appId);
 
       // Try to open the app after a short delay to ensure plugins are loaded
       const timer = setTimeout(() => {
         try {
           // First try to open the window (loads the plugin if needed)
-          openWindow(firstAppId);
-
+          openWindow(firstApp.appId, firstApp.initFromUrl);
           // Then set it as the active app in mobile view
-          setActiveApp(firstAppId);
-          console.log(`Mobile: Successfully opened ${firstAppId}`);
+          setActiveApp(firstApp.appId);
+          console.log(`Mobile: Successfully opened ${firstApp.appId}`);
         } catch (err) {
-          console.warn(`Mobile: Failed to open ${firstAppId}:`, err);
+          console.warn(`Mobile: Failed to open ${firstApp.appId}:`, err);
         }
       }, 10);
 
@@ -44,11 +42,11 @@ const MobileAppOpener = ({ setActiveApp }: MobileAppOpenerProps) => {
   // Also add URL change listener
   useEffect(() => {
     const handleUrlChange = () => {
-      const newAppsToOpen = getOpenAppsFromUrl();
-      if (newAppsToOpen.length > 0) {
-        const appId = newAppsToOpen[0];
-        openWindow(appId);
-        setActiveApp(appId);
+      const appsToLaunch = getAppsToLaunchFromUrl();
+      if (appsToLaunch.length > 0) {
+        const firstApp = appsToLaunch[0];
+        openWindow(firstApp.appId, firstApp.initFromUrl);
+        setActiveApp(firstApp.appId);
       }
     };
 

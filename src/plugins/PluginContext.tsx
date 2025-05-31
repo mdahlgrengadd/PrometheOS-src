@@ -10,6 +10,7 @@ import React, {
 } from "react";
 
 import { useWindowStore } from "@/store/windowStore";
+import { createInitDataFromUrl } from "@/utils/url";
 
 import { manifest as aichatManifest } from "./apps/aichat/manifest";
 // Import manifests instead of full plugin implementations
@@ -26,6 +27,7 @@ import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
 import { manifest as pythonScribeManifest } from "./apps/python-scribe/manifest";
 import { manifest as sessionManifest } from "./apps/session/manifest";
 import { manifest as settingsManifest } from "./apps/settings/manifest";
+import { manifest as urlTestManifest } from "./apps/url-test/manifest";
 import { manifest as webampManifest } from "./apps/webamp/manifest";
 import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
 import { eventBus } from "./EventBus";
@@ -35,7 +37,7 @@ import {
   installPlugin,
   uninstallPlugin as removePluginFromRegistry,
 } from "./registry";
-import { Plugin, PluginManifest } from "./types";
+import { Plugin, PluginInitData, PluginManifest } from "./types";
 import { workerPluginManager } from "./WorkerPluginManagerClient";
 
 // Lazy loading factory for plugins
@@ -66,6 +68,7 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
   "pyodide-test": () => import("./apps/pyodide-test").then((m) => m.default),
   "python-scribe": () => import("./apps/python-scribe").then((m) => m.default),
+  "url-test": () => import("./apps/url-test").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -130,6 +133,7 @@ const manifestMap: Record<string, PluginManifest> = {
   "file-explorer": fileExplorerManifest,
   "pyodide-test": pyodideTestManifest,
   "python-scribe": pythonScribeManifest,
+  "url-test": urlTestManifest,
 };
 
 // Debug: Log available plugins
@@ -138,7 +142,7 @@ console.log("Available plugin loaders:", Object.keys(pluginLoaders));
 type PluginContextType = {
   pluginManager: PluginManager;
   loadedPlugins: Plugin[];
-  openWindow: (pluginId: string) => void;
+  openWindow: (pluginId: string, initFromUrl?: string) => void;
   closeWindow: (pluginId: string) => void;
   minimizeWindow: (pluginId: string) => void;
   maximizeWindow: (pluginId: string) => void;
@@ -351,61 +355,64 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
     }, [manifest, pluginManager]);
 
     return Component || <LoadingFallback />;
-  };
+  }; // Load a plugin on demand when it's first opened
+  const loadPlugin = useCallback(
+    async (pluginId: string) => {
+      // Check if the plugin is already loaded
+      if (pluginManager.getPlugin(pluginId)) {
+        return pluginManager.getPlugin(pluginId);
+      }
 
-  // Load a plugin on demand when it's first opened
-  const loadPlugin = async (pluginId: string) => {
-    // Check if the plugin is already loaded
-    if (pluginManager.getPlugin(pluginId)) {
-      return pluginManager.getPlugin(pluginId);
-    }
+      try {
+        // Get the plugin loader
+        const loader = pluginLoaders[pluginId];
+        if (!loader) {
+          console.error(`No loader found for plugin ${pluginId}`);
+          return undefined;
+        }
 
-    try {
-      // Get the plugin loader
-      const loader = pluginLoaders[pluginId];
-      if (!loader) {
-        console.error(`No loader found for plugin ${pluginId}`);
+        // Load the plugin
+        const plugin = await loader();
+
+        // Register the plugin
+        pluginManager.registerPlugin(plugin);
+
+        // Register worker if needed
+        if (plugin.manifest.workerEntrypoint) {
+          console.log(`Registering worker for plugin ${plugin.id}`);
+
+          // Use the workerEntrypoint from the manifest
+          const workerUrl = plugin.manifest.workerEntrypoint;
+
+          // Register the worker plugin
+          workerPluginManager
+            .registerPlugin(plugin.id, workerUrl)
+            .then((success) => {
+              if (success) {
+                console.log(`Worker for ${plugin.id} registered successfully`);
+              } else {
+                console.error(`Failed to register worker for ${plugin.id}`);
+              }
+            })
+            .catch((error) => {
+              console.error(
+                `Error registering worker for ${plugin.id}:`,
+                error
+              );
+            });
+        }
+
+        return plugin;
+      } catch (error) {
+        console.error(`Failed to load plugin ${pluginId}:`, error);
         return undefined;
       }
-
-      // Load the plugin
-      const plugin = await loader();
-
-      // Register the plugin
-      pluginManager.registerPlugin(plugin);
-
-      // Register worker if needed
-      if (plugin.manifest.workerEntrypoint) {
-        console.log(`Registering worker for plugin ${plugin.id}`);
-
-        // Use the workerEntrypoint from the manifest
-        const workerUrl = plugin.manifest.workerEntrypoint;
-
-        // Register the worker plugin
-        workerPluginManager
-          .registerPlugin(plugin.id, workerUrl)
-          .then((success) => {
-            if (success) {
-              console.log(`Worker for ${plugin.id} registered successfully`);
-            } else {
-              console.error(`Failed to register worker for ${plugin.id}`);
-            }
-          })
-          .catch((error) => {
-            console.error(`Error registering worker for ${plugin.id}:`, error);
-          });
-      }
-
-      return plugin;
-    } catch (error) {
-      console.error(`Failed to load plugin ${pluginId}:`, error);
-      return undefined;
-    }
-  };
-
+    },
+    [pluginManager]
+  );
   // Wrap callbacks in useCallback to prevent unnecessary re-renders
   const openWindow = useCallback(
-    async (pluginId: string) => {
+    async (pluginId: string, initFromUrl?: string) => {
       // Ensure the plugin is loaded
       let plugin = pluginManager.getPlugin(pluginId);
 
@@ -414,6 +421,29 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         if (!plugin) {
           console.error(`Failed to load plugin ${pluginId}`);
           return;
+        }
+      }
+
+      // Process initialization data if provided
+      let initData: PluginInitData | undefined;
+      if (initFromUrl) {
+        try {
+          initData = await createInitDataFromUrl(initFromUrl);
+          console.log(`[PluginContext] Processing init URL for ${pluginId}:`, {
+            url: initFromUrl,
+            scheme: initData?.scheme,
+            contentLength: initData?.content?.length || 0,
+            error: initData?.error,
+          });
+        } catch (error) {
+          console.error(`Failed to process init URL for ${pluginId}:`, error);
+          initData = {
+            initFromUrl,
+            scheme: "plain",
+            content: initFromUrl,
+            error:
+              error instanceof Error ? error.message : "Failed to process URL",
+          };
         }
       }
 
@@ -433,7 +463,8 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
         pluginManager.activatePlugin(pluginId);
       }
 
-      plugin.onOpen?.();
+      // Call onOpen with initialization data
+      plugin.onOpen?.(initData);
 
       // Center the window on the screen before opening
       const store = useWindowStore.getState();
@@ -456,16 +487,23 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       setOpen(pluginId, true);
       focus(pluginId);
     },
-    [pluginManager, setOpen, focus]
+    [pluginManager, setOpen, focus, loadPlugin]
   );
-
   // Listen for plugin:openWindow event (used by the API system)
   useEffect(() => {
     const openWindowUnsubscribe = eventBus.subscribe(
       "plugin:openWindow",
-      (pluginId: string) => {
-        console.log(`[PluginContext] Opening window ${pluginId} from event`);
-        openWindow(pluginId);
+      (data: string | { pluginId: string; initFromUrl?: string }) => {
+        if (typeof data === "string") {
+          console.log(`[PluginContext] Opening window ${data} from event`);
+          openWindow(data);
+        } else {
+          console.log(
+            `[PluginContext] Opening window ${data.pluginId} from event with init URL:`,
+            data.initFromUrl
+          );
+          openWindow(data.pluginId, data.initFromUrl);
+        }
       }
     );
 

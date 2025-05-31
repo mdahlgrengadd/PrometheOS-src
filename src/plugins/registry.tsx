@@ -13,6 +13,7 @@ import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
 import { manifest as pythonScribeManifest } from "./apps/python-scribe/manifest";
 import { manifest as sessionManifest } from "./apps/session/manifest";
 import { manifest as settingsManifest } from "./apps/settings/manifest";
+import { manifest as urlTestManifest } from "./apps/url-test/manifest";
 import { manifest as webampManifest } from "./apps/webamp/manifest";
 import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
 import {
@@ -41,6 +42,7 @@ export const staticPlugins: PluginManifest[] = [
   fileExplorerManifest,
   pyodideTestManifest,
   pythonScribeManifest,
+  urlTestManifest,
 ];
 
 // For backward compatibility

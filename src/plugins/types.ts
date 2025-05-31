@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { IApiComponent } from '../api/core/types';
+import { IApiComponent } from "../api/core/types";
 
 /**
  * Plugin manifest definition that describes a plugin in the system
@@ -34,14 +34,24 @@ export interface PluginManifest {
 }
 
 /**
+ * Initialization data for plugins with URL scheme support
+ */
+export interface PluginInitData {
+  initFromUrl?: string;
+  scheme?: "http" | "https" | "vfs" | "data" | "plain";
+  content?: string;
+  error?: string;
+}
+
+/**
  * Standard interface for plugins with lifecycle methods
  */
 export interface Plugin {
   id: string;
   manifest: PluginManifest;
-  init: () => Promise<void> | void;
+  init: (initData?: PluginInitData) => Promise<void> | void;
   render: () => React.ReactNode;
-  onOpen?: () => void;
+  onOpen?: (initData?: PluginInitData) => void;
   onClose?: () => void;
   onMinimize?: () => void;
   onMaximize?: () => void;

@@ -6,7 +6,7 @@ import { getAppLaunchUrl } from "@/utils/url";
 import { usePlugins } from "../plugins/PluginContext";
 
 interface DesktopIconsProps {
-  openWindow: (id: string) => void;
+  openWindow: (id: string, initFromUrl?: string) => void;
 }
 
 const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
