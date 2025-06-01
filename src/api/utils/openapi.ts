@@ -33,9 +33,10 @@ export const generateOpenApiSpec = (
       schemas: {},
     },
   };
-
-  // Generate paths for each component and action
-  components.forEach((component) => {
+  // Generate paths for each component and action (only for visible components)
+  components
+    .filter((component) => component.state?.visible !== false)
+    .forEach((component) => {
     // Create a path for the component - make sure it starts with /api
     const basePath = `/api${component.path}`;
 

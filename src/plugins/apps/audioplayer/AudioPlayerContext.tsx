@@ -18,13 +18,16 @@ type AudioPlayerCtx = {
   onSetVolume: (v: number) => void;
 };
 
+// Optional: Add more granular control over API exposure
+type ApiExposureLevel = boolean | "full" | "readonly" | "hidden";
+
 const Ctx = createContext<AudioPlayerCtx | null>(null);
 
 export const AudioPlayerProvider: React.FC<
   AudioPlayerCtx & {
     apiId: string;
     children: React.ReactNode;
-    exposeApi?: boolean;
+    exposeApi?: ApiExposureLevel;
   }
 > = ({
   apiId,

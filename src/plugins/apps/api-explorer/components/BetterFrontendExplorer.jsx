@@ -191,11 +191,14 @@ const BetterFrontendExplorer = () => {
   const [results, setResults] = useState({});
   const [executingActions, setExecutingActions] = useState({});
   const [exampleTabs, setExampleTabs] = useState({});
-
   // Poll API components every 2 seconds
   useEffect(() => {
     const fetchComponents = () => {
-      const all = getComponents().filter((c) => c.actions && c.actions.length > 0);
+      const all = getComponents().filter((c) => 
+        c.actions && 
+        c.actions.length > 0 && 
+        c.state?.visible !== false
+      );
       // Dynamically update onEvent.waitForEvent parameter enum
       all.forEach((comp) => {
         if (comp.id === 'onEvent') {
