@@ -33,7 +33,7 @@ const BeginWorkflowNode = ({
       {/* Node content */}
       <div className="node-content">
         <div className="node-center-content text-center text-sm text-gray-300">
-          Starting point for workflow execution
+          {/* Starting point for workflow execution*/}
         </div>
         {/* Right execution pins (output) */}
         <div className="right-pins-container">

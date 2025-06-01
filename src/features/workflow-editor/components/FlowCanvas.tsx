@@ -111,6 +111,9 @@ const FlowCanvasInner: React.FC = () => {
   // Snap to grid state (disabled by default)
   const [snapToGrid, setSnapToGrid] = useState(false);
 
+  // Minimap visibility state (hidden by default)
+  const [showMinimap, setShowMinimap] = useState(false);
+
   useEffect(() => {
     if (containerRef.current) {
       setViewportSize({
@@ -347,6 +350,25 @@ const FlowCanvasInner: React.FC = () => {
             Snap to Grid
           </button>
           <button
+            onClick={() => setShowMinimap(!showMinimap)}
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: showMinimap 
+                ? 'linear-gradient(to bottom, #3b82f6, #2563eb)'
+                : 'linear-gradient(to bottom, #6b7280, #4b5563)',
+              border: '1px solid #1a1a1a',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `,
+              cursor: 'pointer'
+            }}
+          >
+            Minimap
+          </button>
+          <button
             onClick={executeWorkflow}
             disabled={isExecuting}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
@@ -487,28 +509,30 @@ const FlowCanvasInner: React.FC = () => {
         </div>
 
         {/* Place minimap directly in the app container instead of inside ReactFlow */}
-        <div className="minimap-wrapper absolute bottom-4 right-4 z-20">
-          <MiniMap
-            nodeColor={(node) => {
-              return node.selected ? "#ffff00" : "#6b7280";
-            }}
-            maskColor="rgba(26, 26, 26, 0.8)"
-            className="rounded-md"
-            style={{
-              background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
-              border: '2px solid #1a1a1a',
-              boxShadow: `
-                inset 0 1px 0 rgba(255,255,255,0.2),
-                inset 0 -1px 0 rgba(0,0,0,0.3),
-                inset 1px 0 0 rgba(255,255,255,0.1),
-                inset -1px 0 0 rgba(0,0,0,0.2),
-                0 4px 8px rgba(0,0,0,0.4)
-              `
-            }}
-            zoomable
-            pannable
-          />
-        </div>
+        {showMinimap && (
+          <div className="minimap-wrapper absolute bottom-4 right-4 z-20">
+            <MiniMap
+              nodeColor={(node) => {
+                return node.selected ? "#ffff00" : "#6b7280";
+              }}
+              maskColor="rgba(26, 26, 26, 0.8)"
+              className="rounded-md"
+              style={{
+                background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
+                border: '2px solid #1a1a1a',
+                boxShadow: `
+                  inset 0 1px 0 rgba(255,255,255,0.2),
+                  inset 0 -1px 0 rgba(0,0,0,0.3),
+                  inset 1px 0 0 rgba(255,255,255,0.1),
+                  inset -1px 0 0 rgba(0,0,0,0.2),
+                  0 4px 8px rgba(0,0,0,0.4)
+                `
+              }}
+              zoomable
+              pannable
+            />
+          </div>
+        )}
       </div>
     </div>
   );
