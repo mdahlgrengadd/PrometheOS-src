@@ -149,8 +149,8 @@ export async function loadShadowFolder(): Promise<FileSystemItem[]> {
     const filesWithContent: FileSystemItem[] = await Promise.all(
       manifest.map(async (item) => {
         if (item.type === "file") {
-          const relative = item.contentPath.replace(/^\//, "");
-          const fileUrl = `${import.meta.env.BASE_URL}${relative}`;
+          // contentPath already includes the full path with base URL
+          const fileUrl = item.contentPath;
           const fileRes = await fetch(fileUrl);
           const content = await fileRes.text();
           let language: string | undefined;

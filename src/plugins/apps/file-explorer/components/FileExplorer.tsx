@@ -4,12 +4,13 @@ import { toast } from 'sonner';
 
 import { useFileSystemStore } from '@/store/fileSystem';
 import { useSelectionContainer } from '@air/react-drag-to-select';
+import { useApi } from '@/api/hooks/useApi';
 
 import { ideSettings } from '../../../../plugins/apps/builder/utils/esbuild-settings';
 import {
     ContextMenuPosition, FileSystemItem, TEXT_FILE_EXTENSIONS, User
 } from '../types/fileSystem';
-import { findFolderPath } from '../utils/fileUtils';
+import { findFolderPath, getAppForFileExtension } from '../utils/fileUtils';
 import ContextMenu from './ContextMenu';
 import { NewItemDialog, RenameDialog } from './Dialogs';
 import FileGrid from './FileGrid';
@@ -53,6 +54,9 @@ const FileExplorer: React.FC = () => {
   const renameItemStore = useFileSystemStore((s) => s.renameItem);
   const deleteItemStore = useFileSystemStore((s) => s.deleteItem);
   const moveItem = useFileSystemStore((s) => s.moveItem);
+
+  // Use API context for opening files with appropriate apps
+  const apiContext = useApi();
 
   // Derive ignore patterns from .vfsignore at root
   const ignoreFile = useMemo(
@@ -204,6 +208,29 @@ const FileExplorer: React.FC = () => {
       return newExpanded;
     });
   }, []);
+
+  // Handle opening files with appropriate apps
+  const openFile = useCallback(async (file: FileSystemItem) => {
+    if (file.type !== 'file') return;
+    
+    const appId = getAppForFileExtension(file.name);
+    if (!appId) {
+      toast(`No default app for file type: ${file.name.split('.').pop()}`);
+      return;
+    }
+
+    try {
+      const vfsPath = `vfs://${file.id}`;
+      await apiContext?.executeAction('sys', 'open', {
+        name: appId,
+        initFromUrl: vfsPath
+      });
+      toast(`Opening ${file.name} with ${appId}`);
+    } catch (error) {
+      console.error('Failed to open file:', error);
+      toast(`Failed to open ${file.name}`);
+    }
+  }, [apiContext]);
 
   // Handle drag selection
   function handleSelectionChange(selectionBox: {
@@ -589,6 +616,7 @@ const FileExplorer: React.FC = () => {
                   handleFolderDrop={handleFolderDrop}
                   dragOverFolder={dragOverFolder}
                   selectionBox={selectionBox}
+                  openFile={openFile}
                 />
               ) : (
                 <div className="text-center text-gray-500 mb-8">

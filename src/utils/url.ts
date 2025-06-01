@@ -196,20 +196,16 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
 
     // Handle Virtual File System scheme
     if (url.startsWith("vfs://")) {
-      const path = url.substring(6); // Import or access your virtual file system implementation here
-      // For example, if you have a module at ../vfs/virtualFs:
-      // import { virtualFs } from "../vfs/virtualFs";
-      // Make sure to move this import to the top of the file if needed.
-      const virtualFs =
-        (
-          window as unknown as {
-            virtualFs?: { readText?: (path: string) => Promise<string> };
-          }
-        ).virtualFs || {};
-      if (typeof virtualFs.readText !== "function") {
-        throw new Error("virtualFs.readText is not available");
+      const fileId = url.substring(6); // Remove "vfs://" prefix
+      
+      // Import the file system helper function
+      const { getFileContent } = await import("@/store/fileSystem");
+      const content = getFileContent(fileId);
+      
+      if (content === null) {
+        throw new Error(`File not found in VFS: ${fileId}`);
       }
-      const content = await virtualFs.readText(path);
+      
       return {
         initFromUrl: url,
         scheme: "vfs",

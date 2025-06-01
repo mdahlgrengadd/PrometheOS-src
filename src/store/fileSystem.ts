@@ -4,6 +4,36 @@ import { loadShadowFolder } from '@/utils/virtual-fs';
 
 import type { FileSystemItem } from "@/plugins/apps/file-explorer/types/fileSystem";
 
+// Helper function to find a file by ID recursively
+function findFileById(root: FileSystemItem, id: string): FileSystemItem | null {
+  if (root.id === id) {
+    return root;
+  }
+  
+  if (root.children) {
+    for (const child of root.children) {
+      const found = findFileById(child, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Global helper function to read file content by ID from the file system store
+export function getFileContent(fileId: string): string | null {
+  const state = useFileSystemStore.getState();
+  const file = findFileById(state.fs, fileId);
+  
+  if (file && file.type === 'file') {
+    return file.content || '';
+  }
+  
+  return null;
+}
+
 interface FileSystemStore {
   fs: FileSystemItem;
   init: () => Promise<void>;

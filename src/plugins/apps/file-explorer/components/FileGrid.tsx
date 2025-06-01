@@ -15,6 +15,7 @@ interface FileGridProps {
   handleFolderDrop?: (folderId: string, e: React.DragEvent) => void;
   dragOverFolder?: string | null;
   selectionBox?: { top: number, left: number, width: number, height: number } | null;
+  openFile?: (file: FileSystemItem) => Promise<void>;
 }
 
 const FileGrid: React.FC<FileGridProps> = ({
@@ -28,7 +29,8 @@ const FileGrid: React.FC<FileGridProps> = ({
   handleFolderDragLeave,
   handleFolderDrop,
   dragOverFolder,
-  selectionBox
+  selectionBox,
+  openFile
 }) => {
   return (
     <div
@@ -84,6 +86,8 @@ const FileGrid: React.FC<FileGridProps> = ({
             e.stopPropagation();
             if (item.type === 'folder') {
               navigateToFolder(item.id);
+            } else if (item.type === 'file' && openFile) {
+              openFile(item);
             }
           }}
           onContextMenu={(e) => {

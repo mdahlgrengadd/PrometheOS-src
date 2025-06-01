@@ -32,11 +32,16 @@ import Underline from '@tiptap/extension-underline';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
+import { PluginInitData } from '../../types';
 import content from './content.json';
 import FontSize from './extensions/FontSize';
 // Internal components (toolbar + page view)
 import WordEditorContent from './ui';
 import WordEditorToolbar from './WordEditorToolbar';
+
+interface WordEditorProps {
+  initData?: PluginInitData;
+}
 
 // API doc for WordEditor
 export const wordEditorApiDoc = {
@@ -83,8 +88,24 @@ export const wordEditorApiDoc = {
   path: "/plugins/apps/wordeditor",
 };
 
-const WordEditor = () => {
-  const [documentName, setDocumentName] = useState("Untitled Document");
+const WordEditor = ({ initData }: WordEditorProps) => {
+  // Initialize document name based on initData
+  const initialDocumentName = React.useMemo(() => {
+    if (initData?.scheme === 'vfs' && initData.initFromUrl?.includes('/')) {
+      return initData.initFromUrl.split('/').pop() || 'Untitled Document';
+    }
+    return "Untitled Document";
+  }, [initData]);
+  
+  const [documentName, setDocumentName] = useState(initialDocumentName);
+  
+  // Determine initial content based on initData
+  const initialContent = React.useMemo(() => {
+    if (initData?.scheme === 'vfs' && initData.content) {
+      return initData.content;
+    }
+    return content;
+  }, [initData]);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -130,7 +151,7 @@ const WordEditor = () => {
         tightLists: true,
       }),
     ],
-    content: content,
+    content: initialContent,
     autofocus: true,
     editorProps: {
       attributes: {

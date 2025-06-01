@@ -2,13 +2,18 @@ import React, { useEffect } from 'react';
 
 import { useFileSystemStore } from '@/store/fileSystem';
 
+import { PluginInitData } from '../../../types';
 import CommandPalette from '../components/CommandPalette';
 import EditorArea from '../components/EditorArea';
 import SideBar from '../components/SideBar';
 import StatusBar from '../components/StatusBar';
 import useIdeStore from '../store/ide-store';
 
-const IdeLayout: React.FC = () => {
+interface IdeLayoutProps {
+  initData?: PluginInitData;
+}
+
+const IdeLayout: React.FC<IdeLayoutProps> = ({ initData }) => {
   const {
     theme,
     toggleCommandPalette,
@@ -68,6 +73,31 @@ const IdeLayout: React.FC = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [toggleCommandPalette, toggleSidebar, togglePanel, togglePreviewPanel]);
+
+  // Handle opening file from initData
+  useEffect(() => {
+    if (initData && initData.content && !initData.error && initData.scheme === 'vfs') {
+      console.log(`[Builder] Opening file from VFS:`, {
+        url: initData.initFromUrl,
+        contentLength: initData.content.length,
+      });
+      
+      // Extract file ID from vfs:// URL
+      const fileId = initData.initFromUrl?.substring(6); // Remove "vfs://" prefix
+      if (fileId) {
+        // Import the store dynamically to avoid circular dependency issues
+        import('../store/ide-store').then(({ default: useIdeStore }) => {
+          const { openTab } = useIdeStore.getState();
+          // Open the file as a tab in the IDE
+          openTab(fileId);
+        }).catch(error => {
+          console.error('[Builder] Failed to open file tab:', error);
+        });
+      }
+    } else if (initData?.error) {
+      console.error(`[Builder] Error loading content:`, initData.error);
+    }
+  }, [initData]);
 
   return (
     <div className="ide-container">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileSystemItem } from "../types/fileSystem";
 import { 
@@ -12,6 +11,76 @@ import {
   Code,
   Settings
 } from 'lucide-react';
+
+// Map file extensions to appropriate desktop applications
+export const getAppForFileExtension = (fileName: string): string | null => {
+  const extension = fileName.split('.').pop()?.toLowerCase();
+  
+  switch (extension) {
+    // Code files -> HybrIDE
+    case 'js':
+    case 'jsx':
+    case 'ts':
+    case 'tsx':
+    case 'py':
+    case 'css':
+    case 'html':
+    case 'json':
+    case 'xml':
+    case 'yml':
+    case 'yaml':
+    case 'c':
+    case 'h':
+    case 'cpp':
+    case 'cc':
+    case 'hpp':
+    case 'java':
+    case 'php':
+    case 'rb':
+    case 'go':
+    case 'rs':
+    case 'swift':
+    case 'kt':
+    case 'sh':
+    case 'bat':
+    case 'ps1':
+      return 'hybride';
+    
+    // Text files -> Notepad
+    case 'txt':
+    case 'log':
+    case 'ini':
+    case 'cfg':
+    case 'conf':
+      return 'notepad';
+    
+    // Document files -> Word Editor
+    case 'md':
+    case 'markdown':
+    case 'doc':
+    case 'docx':
+    case 'rtf':
+      return 'wordeditor';
+    
+    // Audio files -> Audio Player
+    case 'mp3':
+    case 'wav':
+    case 'flac':
+    case 'ogg':
+    case 'm4a':
+    case 'aac':
+    case 'wma':
+      return 'audioplayer';
+    
+    // Web files -> Browser
+    case 'htm':
+    case 'url':
+      return 'browser';
+    
+    default:
+      return null;
+  }
+};
 
 // Get file icon based on extension and type with proper color coding
 export const getFileIcon = (item: FileSystemItem) => {
