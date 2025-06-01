@@ -1,8 +1,8 @@
 import { Music } from "lucide-react";
 import React from "react";
 
-import { PluginManifest } from "../../../plugins/types";
 import { ApiComponentJson } from "../../../api/core/types";
+import { PluginManifest } from "../../../plugins/types";
 import * as audioPlayerApiDocModule from "./audioplayer-openapi.json";
 
 // Cast the JSON import to the global API component type

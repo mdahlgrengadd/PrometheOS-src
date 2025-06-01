@@ -1,5 +1,5 @@
 {
-  "name": "python-scribe",
+  "name": "pyserve",
   "version": "1.0.0",
   "description": "Portable Python code editor and TypeScript generator module for Vite/React projects",
   "main": "index.ts",

@@ -10,7 +10,7 @@ import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest"
 // Import all plugin manifests
 import { manifest as notepadManifest } from "./apps/notepad/manifest";
 import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
-import { manifest as pythonScribeManifest } from "./apps/python-scribe/manifest";
+import { manifest as pythonScribeManifest } from "./apps/pyserve/manifest";
 import { manifest as sessionManifest } from "./apps/session/manifest";
 import { manifest as settingsManifest } from "./apps/settings/manifest";
 import { manifest as webampManifest } from "./apps/webamp/manifest";

@@ -3,7 +3,7 @@ import React from "react";
 import { PluginManifest } from "../../../plugins/types";
 
 export const manifest: PluginManifest = {
-  id: "python-scribe",
+  id: "pyserve",
   name: "PyServe",
   version: "1.0.0",
   description:
@@ -19,9 +19,9 @@ export const manifest: PluginManifest = {
       alt="PyServe"
     />
   ),
-  entry: "apps/python-scribe",
+  entry: "apps/pyserve",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "python-scribe.js",
+  // workerEntrypoint: "pyserve.js",
   preferredSize: {
     width: 1200,
     height: 800,

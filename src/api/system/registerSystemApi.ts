@@ -60,14 +60,14 @@ Applications that support initialization will use the provided string content to
 }
 \`\`\`
 
-### Launch Notepad with Text Content
+### Launch Notepad with Text Content, here we use a simple "Hello World!" string
 \`\`\`json
 {
   "jsonrpc": "2.0",
   "method": "sys.open",
   "params": {
     "name": "notepad",
-    "initFromUrl": "Hello World!\\nThis is sample text content for the notepad application."
+    "initFromUrl": "Hello World!"
   },
   "id": 2
 }

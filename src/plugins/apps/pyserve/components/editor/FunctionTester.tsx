@@ -307,12 +307,11 @@ const FunctionTester: React.FC<FunctionTesterProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">
+          <div>            <label className="block text-sm font-medium text-white mb-2">
               Select Function
             </label>
             <select
-              className="w-full p-3 bg-slate-800 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-3 bg-slate-800 border border-slate-600 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={selectedFunction}
               onChange={(e) => {
                 setSelectedFunction(e.target.value);

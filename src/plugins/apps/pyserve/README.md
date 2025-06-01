@@ -14,7 +14,7 @@ This is a self-contained, portable module for Python code editing, execution, an
 
 ## Installation
 
-1. Copy the entire `python-scribe` folder to your project's `src` directory
+1. Copy the entire `pyserve` folder to your project's `src` directory
 2. Ensure your project has the required dependencies (see below)
 3. Import and use the components as needed
 
@@ -41,7 +41,7 @@ Make sure your project has these dependencies in `package.json`:
 
 ```tsx
 // In your main page component
-import { PythonCodeEditor } from "@/python-scribe";
+import { PythonCodeEditor } from "@/pyserve";
 
 const MyPage = () => {
   return (
@@ -60,7 +60,7 @@ import {
   usePyodide, 
   useScriptProcessor,
   generateTypeScript 
-} from "@/python-scribe";
+} from "@/pyserve";
 
 const CustomEditor = () => {
   const { pyodide, isLoading } = usePyodide();
@@ -71,7 +71,7 @@ const CustomEditor = () => {
 ## Project Structure
 
 ```
-src/python-scribe/
+src/pyserve/
 ├── index.ts                    # Main exports
 ├── components/
 │   ├── PythonCodeEditor.tsx    # Main editor component
@@ -124,9 +124,9 @@ All internal paths use relative imports, making the module self-contained. You c
 
 ## Integration Steps
 
-1. **Copy the module**: Place the `python-scribe` folder in your `src` directory
+1. **Copy the module**: Place the `pyserve` folder in your `src` directory
 2. **Install dependencies**: Add the required packages to your project
-3. **Import components**: Use the exports from `@/python-scribe`
+3. **Import components**: Use the exports from `@/pyserve`
 4. **Style integration**: The module uses Tailwind classes that should work with your existing setup
 5. **Toast system**: Ensure you have a compatible toast system at `@/hooks/use-toast`
 

@@ -31,18 +31,18 @@ interface OpenAPISpec {
 }
 
 interface UseDynamicApiRegistrationProps {
-  /** Unique ID for this python-scribe instance */
+  /** Unique ID for this pyserve instance */
   instanceId?: string;
   /** Whether to enable API registration */
   enabled?: boolean;
 }
 
 /**
- * Hook to dynamically register python-scribe generated functions as API components
+ * Hook to dynamically register pyserve generated functions as API components
  * This enables Python functions to become MCP tools for WebLLM chat integration
  */
 export const useDynamicApiRegistration = ({
-  instanceId = "python-scribe",
+  instanceId = "pyserve",
   enabled = true,
 }: UseDynamicApiRegistrationProps = {}) => {
   const { registerComponent, unregisterComponent } = useApi();
@@ -118,7 +118,7 @@ export const useDynamicApiRegistration = ({
           functionsCount: functions.length,
         },
         metadata: {
-          source: "python-scribe",
+          source: "pyserve",
           fileName,
           instanceId,
           generatedAt: new Date().toISOString(),
