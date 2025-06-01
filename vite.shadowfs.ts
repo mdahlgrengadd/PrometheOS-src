@@ -32,6 +32,7 @@ export default function shadowFsPlugin(): Plugin {
     configResolved(config) {
       // Store the base URL from config
       baseUrl = config.base || "/";
+      console.log(`[shadowfs] Base URL set to: ${baseUrl}`);
     },
     async configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
@@ -118,6 +119,7 @@ export default function shadowFsPlugin(): Plugin {
         const item = fileToFsItem(path.join(SHADOW_DIR, file), SHADOW_DIR);
         // Update contentPath to include base URL for production
         item.contentPath = `${baseUrl.replace(/\/$/, '')}/shadow/${item.id}`;
+        console.log(`[shadowfs] Generated contentPath: ${item.contentPath} (baseUrl: ${baseUrl})`);
         return item;
       });
 

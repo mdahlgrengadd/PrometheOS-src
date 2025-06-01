@@ -56,5 +56,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    // Copy shadow files to the output directory
+    copyPublicDir: true,
   },
 }));
