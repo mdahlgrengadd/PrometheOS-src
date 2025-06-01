@@ -95,28 +95,63 @@ export const virtualFs = new VirtualFS();
 // A helper to build nested tree from flat file list
 function buildFsTree(files: FileSystemItem[]): FileSystemItem[] {
   const root: { [name: string]: FileSystemItem } = {};
+  const allPaths = new Set<string>();
 
+  // First pass: collect all paths and create directory structure
   for (const file of files) {
-    const parts = file.id.split("/"); // id is the relative path
-    let current = root as any;
+    const parts = file.id.split("/");
     let pathSoFar = "";
+
+    // Add all parent directories to our path set
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
       pathSoFar = pathSoFar ? `${pathSoFar}/${part}` : part;
+
+      if (i < parts.length - 1) {
+        // This is a directory path
+        allPaths.add(pathSoFar);
+      }
+    }
+  }
+
+  // Second pass: create all directories first
+  for (const dirPath of allPaths) {
+    const parts = dirPath.split("/");
+    let current = root as any;
+    let pathSoFar = "";
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      pathSoFar = pathSoFar ? `${pathSoFar}/${part}` : part;
+
+      if (!current[part]) {
+        current[part] = {
+          id: pathSoFar,
+          name: part,
+          type: "folder",
+          children: {},
+        } as any;
+      }
+      if (!current[part].children) current[part].children = {};
+      current = current[part].children;
+    }
+  }
+
+  // Third pass: add files to their proper directories
+  for (const file of files) {
+    const parts = file.id.split("/");
+    let current = root as any;
+    let pathSoFar = "";
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      pathSoFar = pathSoFar ? `${pathSoFar}/${part}` : part;
+
       if (i === parts.length - 1) {
-        // File
+        // This is the file itself
         current[part] = { ...file, name: part, id: pathSoFar };
       } else {
-        // Folder
-        if (!current[part]) {
-          current[part] = {
-            id: pathSoFar,
-            name: part,
-            type: "folder",
-            children: {},
-          } as any;
-        }
-        if (!current[part].children) current[part].children = {};
+        // Navigate to the parent directory
         current = current[part].children;
       }
     }
@@ -125,7 +160,8 @@ function buildFsTree(files: FileSystemItem[]): FileSystemItem[] {
   function toArray(node: any): FileSystemItem[] {
     return Object.values(node).map((item: any) => {
       if (item.type === "folder") {
-        return { ...item, children: toArray(item.children) };
+        const children = toArray(item.children);
+        return { ...item, children };
       }
       return item;
     });
@@ -146,9 +182,35 @@ export async function loadShadowFolder(): Promise<FileSystemItem[]> {
       type: string;
       contentPath: string;
     }> = await res.json();
-    const filesWithContent: FileSystemItem[] = await Promise.all(
-      manifest.map(async (item) => {
-        if (item.type === "file") {
+
+    // First, extract all directory paths from file paths (including those with empty.txt)
+    const allDirectoryPaths = new Set<string>();
+    for (const item of manifest) {
+      if (item.type === "file") {
+        const pathParts = item.id.split("/");
+        // Add all parent directory paths
+        for (let i = 1; i < pathParts.length; i++) {
+          const dirPath = pathParts.slice(0, i).join("/");
+          allDirectoryPaths.add(dirPath);
+        }
+      }
+    }
+
+    // Create directory entries for all directories that should exist
+    const directoryEntries: FileSystemItem[] = Array.from(
+      allDirectoryPaths
+    ).map((dirPath) => ({
+      id: dirPath,
+      name: dirPath.split("/").pop() || dirPath,
+      type: "folder" as const,
+      children: [],
+    }));
+
+    // Process files, excluding empty.txt placeholders
+    const fileEntries: FileSystemItem[] = await Promise.all(
+      manifest
+        .filter((item) => item.type === "file" && item.name !== "empty.txt")
+        .map(async (item) => {
           // contentPath already includes the full path with base URL
           const fileUrl = item.contentPath;
           const fileRes = await fetch(fileUrl);
@@ -168,16 +230,12 @@ export async function loadShadowFolder(): Promise<FileSystemItem[]> {
             content,
             language,
           } as FileSystemItem;
-        }
-        return {
-          id: item.id,
-          name: item.name,
-          type: "folder",
-          children: [],
-        } as FileSystemItem;
-      })
-    );
-    return buildFsTree(filesWithContent);
+        })
+    ); // Combine directories and files
+    const allItems = [...directoryEntries, ...fileEntries];
+
+    // Build the tree structure
+    return buildFsTree(allItems);
   } catch (e) {
     console.error("Failed to load shadow folder:", e);
     return [];
