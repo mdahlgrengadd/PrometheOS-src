@@ -65,8 +65,7 @@ const FlowCanvasInner: React.FC = () => {
 
   // Reference to the workflow execution context
   const executionContext = useRef<WorkflowExecutionContext>({
-    currentNodeId: null,
-    isExecuting: false,
+    currentNodeId: "",
     variables: {},
     results: {},
     getVariable: function (id: string) {
@@ -74,6 +73,14 @@ const FlowCanvasInner: React.FC = () => {
     },
     addVariable: function (id: string, value: WorkflowVariableValue) {
       this.variables[id] = value;
+    },
+    addNodeScopedVariable: function (nodeId: string, pinId: string, value: WorkflowVariableValue) {
+      const scopedKey = `${nodeId}:${pinId}`;
+      this.variables[scopedKey] = value;
+    },
+    getNodeScopedVariable: function (nodeId: string, pinId: string) {
+      const scopedKey = `${nodeId}:${pinId}`;
+      return this.variables[scopedKey];
     },
     setResult: function (nodeId: string, result: unknown) {
       this.results[nodeId] = result;
@@ -100,6 +107,9 @@ const FlowCanvasInner: React.FC = () => {
   // Get viewport size for node positioning
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Snap to grid state (disabled by default)
+  const [snapToGrid, setSnapToGrid] = useState(false);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -268,7 +278,6 @@ const FlowCanvasInner: React.FC = () => {
     try {
       setIsExecuting(true);
       setCurrentNodeId(startNode.id);
-      executionContext.current.isExecuting = true;
       executionContext.current.variables = {};
       executionContext.current.results = {};
       setExecutionResults({});
@@ -295,7 +304,6 @@ const FlowCanvasInner: React.FC = () => {
     } finally {
       setIsExecuting(false);
       setCurrentNodeId(null);
-      executionContext.current.isExecuting = false;
     }
   };
 
@@ -318,31 +326,86 @@ const FlowCanvasInner: React.FC = () => {
           hasBeginWorkflowNode={hasBeginWorkflowNode()}
         />
 
-        <div className="flow-controls absolute top-4 right-4 z-10">
+        <div className="flow-controls absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={() => setSnapToGrid(!snapToGrid)}
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: snapToGrid 
+                ? 'linear-gradient(to bottom, #3b82f6, #2563eb)'
+                : 'linear-gradient(to bottom, #6b7280, #4b5563)',
+              border: '1px solid #1a1a1a',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `,
+              cursor: 'pointer'
+            }}
+          >
+            Snap to Grid
+          </button>
           <button
             onClick={executeWorkflow}
             disabled={isExecuting}
-            className={`px-4 py-2 bg-green-600 hover:bg-green-700 text-primary rounded-md shadow-lg ${
-              isExecuting ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: isExecuting 
+                ? 'linear-gradient(to bottom, #6b7280, #4b5563)'
+                : 'linear-gradient(to bottom, #16a34a, #15803d)',
+              border: '1px solid #166534',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `,
+              opacity: isExecuting ? 0.5 : 1,
+              cursor: isExecuting ? 'not-allowed' : 'pointer'
+            }}
           >
             {isExecuting ? "Executing..." : "Execute Workflow"}
           </button>
         </div>
 
         {currentNodeId && (
-          <div className="execution-indicator absolute bottom-4 right-4 z-10 bg-blue-800 text-primary px-4 py-2 rounded-md shadow-lg">
+          <div className="execution-indicator absolute bottom-4 right-4 z-10 text-white px-4 py-2 rounded-md shadow-lg"
+            style={{
+              background: 'linear-gradient(to bottom, #0ea5e9, #0284c7)',
+              border: '2px solid #1a1a1a',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                inset 1px 0 0 rgba(255,255,255,0.1),
+                inset -1px 0 0 rgba(0,0,0,0.2),
+                0 4px 8px rgba(0,0,0,0.4)
+              `,
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+            }}>
             Executing node: {currentNodeId}
           </div>
         )}
 
         {executionError && (
-          <div className="execution-error absolute bottom-4 left-4 z-10 bg-red-800 text-primary p-4 max-w-md rounded-md shadow-lg">
+          <div className="execution-error absolute bottom-4 left-4 z-10 text-white p-4 max-w-md rounded-md shadow-lg"
+            style={{
+              background: 'linear-gradient(to bottom, #dc2626, #b91c1c)',
+              border: '2px solid #1a1a1a',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                inset 1px 0 0 rgba(255,255,255,0.1),
+                inset -1px 0 0 rgba(0,0,0,0.2),
+                0 4px 8px rgba(0,0,0,0.4)
+              `,
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+            }}>
             <h3 className="font-bold mb-2">Execution Error</h3>
             <div className="text-sm">{executionError}</div>
             <button
               onClick={() => setExecutionError(null)}
-              className="absolute top-1 right-1 text-red-500 hover:text-red-700"
+              className="absolute top-1 right-1 text-red-200 hover:text-white"
             >
               ✕
             </button>
@@ -366,7 +429,16 @@ const FlowCanvasInner: React.FC = () => {
           panOnScroll={true}
           panOnScrollMode={PanOnScrollMode.Free}
           selectionOnDrag={true}
-          className="bg-[#1A1F2C] h-full w-full"
+          className="h-full w-full"
+          style={{
+            background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)',
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+              radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 70%)
+            `,
+            backgroundSize: '20px 20px, 20px 20px, 100px 100px'
+          }}
           deleteKeyCode={["Backspace", "Delete"]}
           defaultEdgeOptions={{
             type: "custom",
@@ -380,23 +452,34 @@ const FlowCanvasInner: React.FC = () => {
             animated: true,
           }}
           fitView={false}
-          snapToGrid={true}
-          snapGrid={[15, 15]}
+          snapToGrid={snapToGrid}
+          snapGrid={[20, 20]}
           edgesFocusable={true}
           selectNodesOnDrag={false}
         >
           <Background
             variant={BackgroundVariant.Dots}
-            color="#2D3748"
-            gap={24}
-            size={1.5}
+            color="rgba(255,255,255,0.1)"
+            gap={20}
+            size={1}
           />
         </ReactFlow>
 
         {/* Place controls directly in the app container instead of inside ReactFlow */}
         <div className="controls-wrapper absolute bottom-4 left-4 z-20">
           <Controls
-            className="bg-[#2D3748] border-[#4A5568] rounded-md"
+            className="rounded-md"
+            style={{
+              background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
+              border: '2px solid #1a1a1a',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                inset 1px 0 0 rgba(255,255,255,0.1),
+                inset -1px 0 0 rgba(0,0,0,0.2),
+                0 4px 8px rgba(0,0,0,0.4)
+              `
+            }}
             showInteractive={true}
             showZoom={true}
             showFitView={true}
@@ -407,10 +490,21 @@ const FlowCanvasInner: React.FC = () => {
         <div className="minimap-wrapper absolute bottom-4 right-4 z-20">
           <MiniMap
             nodeColor={(node) => {
-              return node.selected ? "#F56565" : "#4A5568";
+              return node.selected ? "#ffff00" : "#6b7280";
             }}
-            maskColor="rgba(26, 31, 44, 0.7)"
-            className="bg-[#2D3748] border-[#4A5568] rounded-md"
+            maskColor="rgba(26, 26, 26, 0.8)"
+            className="rounded-md"
+            style={{
+              background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
+              border: '2px solid #1a1a1a',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                inset 1px 0 0 rgba(255,255,255,0.1),
+                inset -1px 0 0 rgba(0,0,0,0.2),
+                0 4px 8px rgba(0,0,0,0.4)
+              `
+            }}
             zoomable
             pannable
           />

@@ -1,72 +1,88 @@
-/* Unified workflow node base style for all node types */
+/* Unified workflow node base style for all node types - Unreal Engine Blueprint styling */
 .workflow-node-base {
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-  background-color: #2D3748;
-  border: 2px solid #4A5568;
-  min-width: 220px;
+  min-width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
 }
 
 .node-header {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  color: var(--text-primary, #fff);
+  padding: 8px 12px;
+  color: white;
   font-weight: bold;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 1rem;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    inset 1px 0 0 rgba(255,255,255,0.2),
+    inset -1px 0 0 rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.4);
+  border-top: 1px solid rgba(255,255,255,0.2);
+  border-left: 1px solid rgba(255,255,255,0.15);
+  border-right: 1px solid rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  border-radius: 8px 8px 0 0;
 }
 
 .node-content {
   display: flex;
+  align-items: stretch;
+  background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+  border: 2px solid #1a1a1a;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 
+    inset 0 2px 4px rgba(0,0,0,0.6),
+    inset 0 -1px 0 rgba(255,255,255,0.05),
+    inset 2px 0 0 rgba(0,0,0,0.3),
+    inset -2px 0 0 rgba(0,0,0,0.3),
+    0 1px 2px rgba(0,0,0,0.3);
 }
 
 .left-pins-container, .right-pins-container {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  gap: 12px;
+  padding: 12px 0;
+  min-height: 40px;
+  justify-content: flex-start;
+  position: relative;
 }
 .left-pins-container {
   padding-left: 0;
-  padding-right: 0.75rem;
+  padding-right: 12px;
   border-right: 1px solid #4A5568;
 }
 .right-pins-container {
+  padding-left: 12px;
   padding-right: 0;
-  padding-left: 0.75rem;
   border-left: 1px solid #4A5568;
 }
 
 .node-center-content {
-  flex: 1 1 0%;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  flex: 1;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  color: #e2e8f0;
 }
 
 .node-footer {
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
-  background-color: #1A202C;
-  font-size: 0.85rem;
-  color: #A0AEC0;
+  background: linear-gradient(to bottom, #1A202C, #0F1419);
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: #A0ADB8;
   border-top: 1px solid #4A5568;
-  display: flex;
-  justify-content: space-between;
 }
 /* Flow Editor styles */
 
@@ -86,40 +102,42 @@
   border-color: red !important;
 }
 
-/* Custom styling for React Flow elements */
-.react-flow__node {
-  /* Remove transition for smoother dragging */
-}
+/* Custom styling for React Flow elements - Unreal Engine Blueprint style */
+/* Transitions removed for smoother dragging - edges and nodes move together */
 
 .react-flow__node:hover {
-  /* Remove transform for smoother dragging */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* Connection line styles */
+/* Connection line styles - Unreal Engine Blueprint style */
 .react-flow__edge-path {
-  stroke-width: 2;
+  stroke-width: 4;
+  filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.8)) drop-shadow(0px 0px 3px rgba(255,255,255,0.2));
+  stroke-linecap: round;
 }
 
 /* Execution paths - thicker lines for execution flow */
 .react-flow__edge.execution-edge .react-flow__edge-path {
-  stroke-width: 2;
+  stroke-width: 4;
   stroke: #ffffff;
   stroke-dasharray: 5, 5;
+  filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.8)) drop-shadow(0px 0px 3px rgba(255,255,255,0.2));
 }
 
 /* Data paths - different style for data flow */
 .react-flow__edge.data-edge .react-flow__edge-path {
-  stroke-width: 2;
-  stroke: #A78BFA;
+  stroke-width: 4;
+  stroke: #00bfff;
   stroke-dasharray: none;
+  filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.8)) drop-shadow(0px 0px 3px rgba(0,191,255,0.3));
 }
 
 /* Selected edge styling */
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #F56565 !important;
-  stroke-width: 3 !important;
-  filter: drop-shadow(0 0 5px rgba(245, 101, 101, 0.5));
+  stroke: #ffff00 !important;
+  stroke-width: 5 !important;
+  filter: drop-shadow(0px 0px 8px #ffff00) drop-shadow(0px 2px 4px rgba(0,0,0,0.6)) !important;
 }
 
 /* Improve edge interaction - wider interaction path */

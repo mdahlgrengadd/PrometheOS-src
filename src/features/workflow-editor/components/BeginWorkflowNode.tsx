@@ -22,7 +22,10 @@ const BeginWorkflowNode = ({
   return (
     <div className="workflow-node-base">
       {/* Header */}
-      <div className="node-header bg-green-600">
+      <div className="node-header" style={{
+        background: 'linear-gradient(to bottom, #16a34a, #15803d)',
+        border: '1px solid #166534'
+      }}>
         <span className="text-sm truncate">
           {data.label || "Begin Workflow"}
         </span>

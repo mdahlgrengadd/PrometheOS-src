@@ -25,112 +25,85 @@
   color: var(--text-primary, #23272e) !important;
   border: 1px solid #4A5568 !important;
 }
-/* Pin size and spacing adjustments for workflow editor */
+/* Pin size and spacing adjustments for workflow editor - Unreal Engine Blueprint style */
 
-/* Pin size overrides for larger pins */
+/* Pin size overrides for larger 3D pins */
 .react-flow__handle {
-  width: 15px !important;
-  height: 15px !important;
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid #666 !important;
+  /* transition removed for immediate response during node dragging */
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    inset 1px 0 0 rgba(255,255,255,0.3),
+    inset -1px 0 0 rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.1) !important;
 }
 
-/* Pin type-specific styling */
-/* Execution pins are white */
-
-/* Execution pins are white, but label should be light for dark backgrounds */
+/* Pin type-specific styling - Unreal Engine Blueprint colors */
+/* Execution pins are white with enhanced 3D effect */
 .react-flow__handle[data-pin-type="execution"] {
-  background-color: #fff !important;
-  border-color: #4B5563 !important;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%) !important;
+  border: 2px solid #999 !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    inset 1px 0 0 rgba(255,255,255,0.5),
+    inset -1px 0 0 rgba(0,0,0,0.1),
+    0 2px 4px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.2) !important;
 }
 
-/* String pins are purple */
+/* String pins are purple with gradient */
 .react-flow__handle[data-pin-data-type="string"] {
-  background-color: #8B5CF6 !important; /* purple-500 */
-  border-color: #7C3AED !important; /* purple-600 */
+  background: linear-gradient(135deg, #8B5CF6 0%, #8B5CF6cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Number pins are orange by default */
-
-/* Number pins are orange by default */
+/* Number pins are orange with gradient */
 .react-flow__handle[data-pin-data-type="number"] {
-  background-color: #F97316 !important; /* orange-500 */
-  border-color: #EA580C !important; /* orange-600 */
+  background: linear-gradient(135deg, #F97316 0%, #F97316cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Integer pins (sub-type of number) - currently same as number */
-
-/* Integer pins (sub-type of number) - currently same as number */
+/* Integer pins (sub-type of number) - same as number */
 .react-flow__handle[data-pin-data-type="integer"] {
-  background-color: #F97316 !important; /* orange-500 */
-  border-color: #EA580C !important; /* orange-600 */
+  background: linear-gradient(135deg, #F97316 0%, #F97316cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Float pins (sub-type of number) */
-
-/* Float pins (sub-type of number) */
+/* Float pins (sub-type of number) - green variant */
 .react-flow__handle[data-pin-data-type="float"] {
-  background-color: #22C55E !important; /* green-500 */
-  border-color: #16A34A !important; /* green-600 */
+  background: linear-gradient(135deg, #22C55E 0%, #22C55Ecc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Boolean pins are red */
-
-/* Boolean pins are red */
+/* Boolean pins are red with gradient */
 .react-flow__handle[data-pin-data-type="boolean"] {
-  background-color: #EF4444 !important; /* red-500 */
-  border-color: #DC2626 !important; /* red-600 */
+  background: linear-gradient(135deg, #EF4444 0%, #EF4444cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Object pins */
-
-/* Object pins */
+/* Object pins are blue with gradient */
 .react-flow__handle[data-pin-data-type="object"] {
-  background-color: #3B82F6 !important; /* blue-500 */
-  border-color: #2563EB !important; /* blue-600 */
+  background: linear-gradient(135deg, #3B82F6 0%, #3B82F6cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Array pins */
-
-/* Array pins */
+/* Array pins are pink with gradient */
 .react-flow__handle[data-pin-data-type="array"] {
-  background-color: #EC4899 !important; /* pink-500 */
-  border-color: #DB2777 !important; /* pink-600 */
+  background: linear-gradient(135deg, #EC4899 0%, #EC4899cc 100%) !important;
+  border: 2px solid #666 !important;
 }
 
-/* Hover effects for all pins */
+/* Hover effects removed for cleaner blueprint experience */
 
-/* Hover effects for all pins */
-.react-flow__handle:hover {
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important;
-  cursor: crosshair !important;
-}
-
-/* Type-specific hover effects with matching glow colors */
-
-/* Type-specific hover effects with matching glow colors */
-.react-flow__handle[data-pin-type="execution"]:hover {
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8) !important;
-}
-
-
-.react-flow__handle[data-pin-data-type="string"]:hover {
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.8) !important; /* purple glow */
-}
-
-
-.react-flow__handle[data-pin-data-type="number"]:hover,
-.react-flow__handle[data-pin-data-type="integer"]:hover {
-  box-shadow: 0 0 8px rgba(249, 115, 22, 0.8) !important; /* orange glow */
-}
-
-
-.react-flow__handle[data-pin-data-type="float"]:hover {
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8) !important; /* green glow */
-}
-
-
-.react-flow__handle[data-pin-data-type="boolean"]:hover {
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8) !important; /* red glow */
-}
+/* Removed all hover effects from pins to match Unreal Engine blueprint style */
+/* .react-flow__handle:hover - disabled */
+/* Type-specific hover effects - disabled */
+/* This creates a cleaner, more professional blueprint appearance */
 
 /* Adjust spacing for pins and labels to accommodate larger pins */
 

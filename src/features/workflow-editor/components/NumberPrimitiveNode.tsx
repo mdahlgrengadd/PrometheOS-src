@@ -45,7 +45,10 @@ const NumberPrimitiveNode = ({
   return (
     <div className="workflow-node-base">
       {/* Header */}
-      <div className="node-header bg-green-600">
+      <div className="node-header" style={{
+        background: 'linear-gradient(to bottom, #F97316, #EA580C)',
+        border: '1px solid #C2410C'
+      }}>
         <span className="text-sm truncate">{data.label || "Number Value"}</span>
       </div>
       {/* Node content */}

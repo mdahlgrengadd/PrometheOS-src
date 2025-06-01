@@ -42,7 +42,10 @@ const StringPrimitiveNode = ({
   return (
     <div className="workflow-node-base">
       {/* Header */}
-      <div className="node-header bg-blue-600">
+      <div className="node-header" style={{
+        background: 'linear-gradient(to bottom, #8B5CF6, #7C3AED)',
+        border: '1px solid #6D28D9'
+      }}>
         <span className="text-sm truncate">{data.label || "String Value"}</span>
       </div>
       {/* Node content */}

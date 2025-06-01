@@ -584,7 +584,17 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("basic");
             }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-primary rounded-md shadow-lg"
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: 'linear-gradient(to bottom, #0ea5e9, #0284c7)',
+              border: '1px solid #0369a1',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `
+            }}
           >
             Add REST API Node
           </button>
@@ -593,7 +603,17 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("app");
             }}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-primary rounded-md shadow-lg"
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: 'linear-gradient(to bottom, #16a34a, #15803d)',
+              border: '1px solid #166534',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `
+            }}
           >
             Add App API Node
           </button>
@@ -602,14 +622,36 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               setIsOpen(true);
               setNodeMode("primitive");
             }}
-            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-primary rounded-md shadow-lg"
+            className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
+            style={{
+              background: 'linear-gradient(to bottom, #8B5CF6, #7C3AED)',
+              border: '1px solid #6D28D9',
+              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              boxShadow: `
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                inset 0 -1px 0 rgba(0,0,0,0.3),
+                0 2px 4px rgba(0,0,0,0.3)
+              `
+            }}
           >
             Add Primitive
           </button>
         </div>
       ) : (
-        <div className="p-4 bg-[#2D3748] rounded-md shadow-xl border border-[#4A5568] w-64">
-          <h3 className="text-primary font-bold mb-3">
+        <div className="p-4 rounded-md shadow-xl w-64"
+          style={{
+            background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
+            border: '2px solid #1a1a1a',
+            boxShadow: `
+              inset 0 1px 0 rgba(255,255,255,0.2),
+              inset 0 -1px 0 rgba(0,0,0,0.3),
+              inset 1px 0 0 rgba(255,255,255,0.1),
+              inset -1px 0 0 rgba(0,0,0,0.2),
+              0 4px 8px rgba(0,0,0,0.4)
+            `
+          }}>
+          <h3 className="text-white font-bold mb-3"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
             {nodeMode === "basic"
               ? "Add REST API Node"
               : nodeMode === "app"
@@ -618,33 +660,47 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
           </h3>
 
           {/* Tabs to switch between node types */}
-          <div className="flex mb-4 bg-[#1A202C] rounded overflow-hidden">
+          <div className="flex mb-4 rounded overflow-hidden"
+            style={{
+              background: 'linear-gradient(to bottom, #2a2a2a, #1a1a1a)',
+              border: '1px solid #444',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)'
+            }}>
             <button
-              className={`flex-1 py-1 text-sm ${
-                nodeMode === "basic"
-                  ? "bg-blue-600 text-primary"
-                  : "text-gray-400"
-              }`}
+              className="flex-1 py-1 text-sm text-white transition-all"
+              style={{
+                background: nodeMode === "basic" 
+                  ? 'linear-gradient(to bottom, #0ea5e9, #0284c7)'
+                  : 'transparent',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                opacity: nodeMode === "basic" ? 1 : 0.7
+              }}
               onClick={() => setNodeMode("basic")}
             >
               REST API
             </button>
             <button
-              className={`flex-1 py-1 text-sm ${
-                nodeMode === "app"
-                  ? "bg-green-600 text-primary"
-                  : "text-gray-400"
-              }`}
+              className="flex-1 py-1 text-sm text-white transition-all"
+              style={{
+                background: nodeMode === "app" 
+                  ? 'linear-gradient(to bottom, #16a34a, #15803d)'
+                  : 'transparent',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                opacity: nodeMode === "app" ? 1 : 0.7
+              }}
               onClick={() => setNodeMode("app")}
             >
               App API
             </button>
             <button
-              className={`flex-1 py-1 text-sm ${
-                nodeMode === "primitive"
-                  ? "bg-purple-600 text-primary"
-                  : "text-gray-400"
-              }`}
+              className="flex-1 py-1 text-sm text-white transition-all"
+              style={{
+                background: nodeMode === "primitive" 
+                  ? 'linear-gradient(to bottom, #8B5CF6, #7C3AED)'
+                  : 'transparent',
+                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                opacity: nodeMode === "primitive" ? 1 : 0.7
+              }}
               onClick={() => setNodeMode("primitive")}
             >
               Primitive

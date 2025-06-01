@@ -34,8 +34,8 @@ function CustomEdge({
 
   // Apply selection styles
   if (selected) {
-    edgeColor = "#F56565"; // Red when selected
-    strokeWidth = 3; // Thicker when selected
+    edgeColor = "#ffff00"; // Yellow when selected for blueprint style
+    strokeWidth = 5; // Thicker when selected
   } else if (isExecution) {
     edgeColor = "white"; // White for execution connections
     strokeDasharray = "5, 5"; // Dashed pattern for execution
@@ -77,7 +77,11 @@ function CustomEdge({
           stroke: edgeColor,
           strokeWidth,
           strokeDasharray,
-          transition: "stroke-width 0.2s, stroke 0.2s",
+          /* transition removed for immediate response during node dragging */
+          filter: selected 
+            ? 'drop-shadow(0px 0px 8px #ffff00) drop-shadow(0px 2px 4px rgba(0,0,0,0.6))' 
+            : 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8)) drop-shadow(0px 0px 3px rgba(255,255,255,0.2))',
+          strokeLinecap: 'round'
         }}
       />
       {/* Add interactive hitbox for better edge selection */}
