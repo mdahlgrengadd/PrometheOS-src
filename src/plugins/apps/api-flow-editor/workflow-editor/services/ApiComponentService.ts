@@ -1,5 +1,10 @@
-import { IActionResult, IApiAction, IApiComponent, IApiParameter } from '../../../api/core/types';
-import { useApi } from '../../../api/hooks/useApi';
+import {
+  IActionResult,
+  IApiAction,
+  IApiComponent,
+  IApiParameter,
+} from "../../../../../api/core/types";
+import { useApi } from "../../../../../api/hooks/useApi";
 
 /**
  * Service to retrieve and interact with API components from registered apps
@@ -107,7 +112,8 @@ export class ApiComponentService {
     const components = this.getApiComponents();
 
     // Extract unique app IDs from component paths
-    const appMap = new Map<string, string>();    components.forEach((component) => {
+    const appMap = new Map<string, string>();
+    components.forEach((component) => {
       const pathParts = component.path.split("/");
       // System APIs: /api/{componentId}
       if (pathParts.length >= 3 && pathParts[1] === "api") {

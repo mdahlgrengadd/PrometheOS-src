@@ -1,7 +1,6 @@
-import React from 'react';
+import React from "react";
 
-//import { PluginManifest } from '../../../plugins/types';
-import { PluginManifest } from '../../../plugins/types';
+import { PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "api-flow-editor",

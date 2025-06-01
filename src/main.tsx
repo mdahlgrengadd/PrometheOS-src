@@ -7,6 +7,12 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { processWindowUrlParams } from "./store/windowStore";
 
+// Clear localStorage on launch
+console.warn(
+  "🧹 Clearing localStorage on application launch - all stored data will be reset"
+);
+localStorage.clear();
+
 // Process any URL parameters for opening windows
 processWindowUrlParams();
 

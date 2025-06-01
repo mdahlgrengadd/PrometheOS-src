@@ -1,6 +1,6 @@
-import { Connection, Edge, getOutgoers, Node } from '@xyflow/react';
+import { Connection, Edge, getOutgoers, Node } from "@xyflow/react";
 
-import { Pin } from '../features/workflow-editor/types/flowTypes';
+import { Pin } from "../plugins/apps/api-flow-editor/workflow-editor/types/flowTypes";
 
 /**
  * Validates if a connection is valid based on pin types, data types, and cycle detection

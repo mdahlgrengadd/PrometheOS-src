@@ -2,6 +2,7 @@ import { AlertCircle, CheckCircle, Play, Zap } from "lucide-react";
 import React, { useState } from "react";
 
 import { useToast } from "@/hooks/use-toast";
+
 import {
   executePythonFunction,
   formatExecutionResult,
@@ -307,7 +308,9 @@ const FunctionTester: React.FC<FunctionTesterProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <div>            <label className="block text-sm font-medium text-white mb-2">
+          <div>
+            {" "}
+            <label className="block text-sm font-medium text-white mb-2">
               Select Function
             </label>
             <select

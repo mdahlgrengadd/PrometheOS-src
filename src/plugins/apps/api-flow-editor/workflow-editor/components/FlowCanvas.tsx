@@ -24,14 +24,14 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 
-import { useApi } from "../../../api/hooks/useApi";
+import { useApi } from "../../../../../api/hooks/useApi";
 import {
   edgeTypes,
   mapGeneralAction,
   mapSetValueAction,
   nodeTypes,
   validateConnection,
-} from "../../../flowPlugins";
+} from "../../flowPlugins";
 import { ApiComponentService } from "../services/ApiComponentService";
 import { WorkflowExecutionService } from "../services/WorkflowExecutionService";
 import {
@@ -74,7 +74,11 @@ const FlowCanvasInner: React.FC = () => {
     addVariable: function (id: string, value: WorkflowVariableValue) {
       this.variables[id] = value;
     },
-    addNodeScopedVariable: function (nodeId: string, pinId: string, value: WorkflowVariableValue) {
+    addNodeScopedVariable: function (
+      nodeId: string,
+      pinId: string,
+      value: WorkflowVariableValue
+    ) {
       const scopedKey = `${nodeId}:${pinId}`;
       this.variables[scopedKey] = value;
     },
@@ -334,17 +338,17 @@ const FlowCanvasInner: React.FC = () => {
             onClick={() => setSnapToGrid(!snapToGrid)}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: snapToGrid 
-                ? 'linear-gradient(to bottom, #3b82f6, #2563eb)'
-                : 'linear-gradient(to bottom, #6b7280, #4b5563)',
-              border: '1px solid #1a1a1a',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: snapToGrid
+                ? "linear-gradient(to bottom, #3b82f6, #2563eb)"
+                : "linear-gradient(to bottom, #6b7280, #4b5563)",
+              border: "1px solid #1a1a1a",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
               `,
-              cursor: 'pointer'
+              cursor: "pointer",
             }}
           >
             Snap to Grid
@@ -353,17 +357,17 @@ const FlowCanvasInner: React.FC = () => {
             onClick={() => setShowMinimap(!showMinimap)}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: showMinimap 
-                ? 'linear-gradient(to bottom, #3b82f6, #2563eb)'
-                : 'linear-gradient(to bottom, #6b7280, #4b5563)',
-              border: '1px solid #1a1a1a',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: showMinimap
+                ? "linear-gradient(to bottom, #3b82f6, #2563eb)"
+                : "linear-gradient(to bottom, #6b7280, #4b5563)",
+              border: "1px solid #1a1a1a",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
               `,
-              cursor: 'pointer'
+              cursor: "pointer",
             }}
           >
             Minimap
@@ -373,18 +377,18 @@ const FlowCanvasInner: React.FC = () => {
             disabled={isExecuting}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: isExecuting 
-                ? 'linear-gradient(to bottom, #6b7280, #4b5563)'
-                : 'linear-gradient(to bottom, #16a34a, #15803d)',
-              border: '1px solid #166534',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: isExecuting
+                ? "linear-gradient(to bottom, #6b7280, #4b5563)"
+                : "linear-gradient(to bottom, #16a34a, #15803d)",
+              border: "1px solid #166534",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
               `,
               opacity: isExecuting ? 0.5 : 1,
-              cursor: isExecuting ? 'not-allowed' : 'pointer'
+              cursor: isExecuting ? "not-allowed" : "pointer",
             }}
           >
             {isExecuting ? "Executing..." : "Execute Workflow"}
@@ -392,10 +396,11 @@ const FlowCanvasInner: React.FC = () => {
         </div>
 
         {currentNodeId && (
-          <div className="execution-indicator absolute bottom-4 right-4 z-10 text-white px-4 py-2 rounded-md shadow-lg"
+          <div
+            className="execution-indicator absolute bottom-4 right-4 z-10 text-white px-4 py-2 rounded-md shadow-lg"
             style={{
-              background: 'linear-gradient(to bottom, #0ea5e9, #0284c7)',
-              border: '2px solid #1a1a1a',
+              background: "linear-gradient(to bottom, #0ea5e9, #0284c7)",
+              border: "2px solid #1a1a1a",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.2),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
@@ -403,17 +408,19 @@ const FlowCanvasInner: React.FC = () => {
                 inset -1px 0 0 rgba(0,0,0,0.2),
                 0 4px 8px rgba(0,0,0,0.4)
               `,
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-            }}>
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+            }}
+          >
             Executing node: {currentNodeId}
           </div>
         )}
 
         {executionError && (
-          <div className="execution-error absolute bottom-4 left-4 z-10 text-white p-4 max-w-md rounded-md shadow-lg"
+          <div
+            className="execution-error absolute bottom-4 left-4 z-10 text-white p-4 max-w-md rounded-md shadow-lg"
             style={{
-              background: 'linear-gradient(to bottom, #dc2626, #b91c1c)',
-              border: '2px solid #1a1a1a',
+              background: "linear-gradient(to bottom, #dc2626, #b91c1c)",
+              border: "2px solid #1a1a1a",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.2),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
@@ -421,8 +428,9 @@ const FlowCanvasInner: React.FC = () => {
                 inset -1px 0 0 rgba(0,0,0,0.2),
                 0 4px 8px rgba(0,0,0,0.4)
               `,
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-            }}>
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+            }}
+          >
             <h3 className="font-bold mb-2">Execution Error</h3>
             <div className="text-sm">{executionError}</div>
             <button
@@ -453,13 +461,13 @@ const FlowCanvasInner: React.FC = () => {
           selectionOnDrag={true}
           className="h-full w-full"
           style={{
-            background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)',
+            background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)",
             backgroundImage: `
               linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
               linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
               radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 70%)
             `,
-            backgroundSize: '20px 20px, 20px 20px, 100px 100px'
+            backgroundSize: "20px 20px, 20px 20px, 100px 100px",
           }}
           deleteKeyCode={["Backspace", "Delete"]}
           defaultEdgeOptions={{
@@ -492,15 +500,15 @@ const FlowCanvasInner: React.FC = () => {
           <Controls
             className="rounded-md"
             style={{
-              background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
-              border: '2px solid #1a1a1a',
+              background: "linear-gradient(to bottom, #4a4a4a, #2a2a2a)",
+              border: "2px solid #1a1a1a",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.2),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 inset 1px 0 0 rgba(255,255,255,0.1),
                 inset -1px 0 0 rgba(0,0,0,0.2),
                 0 4px 8px rgba(0,0,0,0.4)
-              `
+              `,
             }}
             showInteractive={true}
             showZoom={true}
@@ -518,15 +526,15 @@ const FlowCanvasInner: React.FC = () => {
               maskColor="rgba(26, 26, 26, 0.8)"
               className="rounded-md"
               style={{
-                background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
-                border: '2px solid #1a1a1a',
+                background: "linear-gradient(to bottom, #4a4a4a, #2a2a2a)",
+                border: "2px solid #1a1a1a",
                 boxShadow: `
                   inset 0 1px 0 rgba(255,255,255,0.2),
                   inset 0 -1px 0 rgba(0,0,0,0.3),
                   inset 1px 0 0 rgba(255,255,255,0.1),
                   inset -1px 0 0 rgba(0,0,0,0.2),
                   0 4px 8px rgba(0,0,0,0.4)
-                `
+                `,
               }}
               zoomable
               pannable

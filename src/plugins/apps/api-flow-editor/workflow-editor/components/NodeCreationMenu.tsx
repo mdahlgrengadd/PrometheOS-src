@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { Node } from '@xyflow/react';
+import { Node } from "@xyflow/react";
 
-import { IApiComponent } from '../../../api/core/types';
-import { useApi } from '../../../api/hooks/useApi';
-import { useDataPin, useExecPin } from '../../../hooks/usePin';
-import { eventBus } from '../../../plugins/EventBus';
-import { ApiComponentService } from '../services/ApiComponentService';
-import { ApiAppNodeData, Pin, PinDataType, PinType } from '../types/flowTypes';
-import { DataTypeConversionNodeData } from './DataTypeConversionNode';
+import { IApiComponent } from "../../../../../api/core/types";
+import { useApi } from "../../../../../api/hooks/useApi";
+import { useDataPin, useExecPin } from "../../../../../hooks/usePin";
+import { eventBus } from "../../../../../plugins/EventBus";
+import { ApiComponentService } from "../services/ApiComponentService";
+import { ApiAppNodeData, Pin, PinDataType, PinType } from "../types/flowTypes";
+import { DataTypeConversionNodeData } from "./DataTypeConversionNode";
 
 interface NodeCreationMenuProps {
   onAddNode: (node: Node) => void;
@@ -199,17 +199,17 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
   // Add keyboard event handler for Escape key to close menu
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
+      if (event.key === "Escape" && isOpen) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 
@@ -603,14 +603,14 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             }}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: 'linear-gradient(to bottom, #0ea5e9, #0284c7)',
-              border: '1px solid #0369a1',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: "linear-gradient(to bottom, #0ea5e9, #0284c7)",
+              border: "1px solid #0369a1",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
-              `
+              `,
             }}
           >
             Add REST API Node
@@ -622,14 +622,14 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             }}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: 'linear-gradient(to bottom, #16a34a, #15803d)',
-              border: '1px solid #166534',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: "linear-gradient(to bottom, #16a34a, #15803d)",
+              border: "1px solid #166534",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
-              `
+              `,
             }}
           >
             Add App API Node
@@ -641,36 +641,40 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             }}
             className="px-4 py-2 text-white rounded-md shadow-lg transition-all"
             style={{
-              background: 'linear-gradient(to bottom, #8B5CF6, #7C3AED)',
-              border: '1px solid #6D28D9',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+              background: "linear-gradient(to bottom, #8B5CF6, #7C3AED)",
+              border: "1px solid #6D28D9",
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
               boxShadow: `
                 inset 0 1px 0 rgba(255,255,255,0.3),
                 inset 0 -1px 0 rgba(0,0,0,0.3),
                 0 2px 4px rgba(0,0,0,0.3)
-              `
+              `,
             }}
           >
             Add Primitive
           </button>
         </div>
       ) : (
-        <div className="p-4 rounded-md shadow-xl w-64"
+        <div
+          className="p-4 rounded-md shadow-xl w-64"
           style={{
-            background: 'linear-gradient(to bottom, #4a4a4a, #2a2a2a)',
-            border: '2px solid #1a1a1a',
+            background: "linear-gradient(to bottom, #4a4a4a, #2a2a2a)",
+            border: "2px solid #1a1a1a",
             boxShadow: `
               inset 0 1px 0 rgba(255,255,255,0.2),
               inset 0 -1px 0 rgba(0,0,0,0.3),
               inset 1px 0 0 rgba(255,255,255,0.1),
               inset -1px 0 0 rgba(0,0,0,0.2),
               0 4px 8px rgba(0,0,0,0.4)
-            `
-          }}>
+            `,
+          }}
+        >
           {/* Header with title and close button */}
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white font-bold"
-              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+            <h3
+              className="text-white font-bold"
+              style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}
+            >
               {nodeMode === "basic"
                 ? "Add REST API Node"
                 : nodeMode === "app"
@@ -681,13 +685,13 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               onClick={() => setIsOpen(false)}
               className="text-gray-400 hover:text-white transition-colors p-1 rounded"
               style={{
-                fontSize: '18px',
-                lineHeight: '1',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                fontSize: "18px",
+                lineHeight: "1",
+                width: "24px",
+                height: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
               title="Close menu"
             >
@@ -696,20 +700,23 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
           </div>
 
           {/* Tabs to switch between node types */}
-          <div className="flex mb-4 rounded overflow-hidden"
+          <div
+            className="flex mb-4 rounded overflow-hidden"
             style={{
-              background: 'linear-gradient(to bottom, #2a2a2a, #1a1a1a)',
-              border: '1px solid #444',
-              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4)'
-            }}>
+              background: "linear-gradient(to bottom, #2a2a2a, #1a1a1a)",
+              border: "1px solid #444",
+              boxShadow: "inset 0 1px 2px rgba(0,0,0,0.4)",
+            }}
+          >
             <button
               className="flex-1 py-1 text-sm text-white transition-all"
               style={{
-                background: nodeMode === "basic" 
-                  ? 'linear-gradient(to bottom, #0ea5e9, #0284c7)'
-                  : 'transparent',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                opacity: nodeMode === "basic" ? 1 : 0.7
+                background:
+                  nodeMode === "basic"
+                    ? "linear-gradient(to bottom, #0ea5e9, #0284c7)"
+                    : "transparent",
+                textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                opacity: nodeMode === "basic" ? 1 : 0.7,
               }}
               onClick={() => setNodeMode("basic")}
             >
@@ -718,11 +725,12 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <button
               className="flex-1 py-1 text-sm text-white transition-all"
               style={{
-                background: nodeMode === "app" 
-                  ? 'linear-gradient(to bottom, #16a34a, #15803d)'
-                  : 'transparent',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                opacity: nodeMode === "app" ? 1 : 0.7
+                background:
+                  nodeMode === "app"
+                    ? "linear-gradient(to bottom, #16a34a, #15803d)"
+                    : "transparent",
+                textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                opacity: nodeMode === "app" ? 1 : 0.7,
               }}
               onClick={() => setNodeMode("app")}
             >
@@ -731,11 +739,12 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
             <button
               className="flex-1 py-1 text-sm text-white transition-all"
               style={{
-                background: nodeMode === "primitive" 
-                  ? 'linear-gradient(to bottom, #8B5CF6, #7C3AED)'
-                  : 'transparent',
-                textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                opacity: nodeMode === "primitive" ? 1 : 0.7
+                background:
+                  nodeMode === "primitive"
+                    ? "linear-gradient(to bottom, #8B5CF6, #7C3AED)"
+                    : "transparent",
+                textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+                opacity: nodeMode === "primitive" ? 1 : 0.7,
               }}
               onClick={() => setNodeMode("primitive")}
             >

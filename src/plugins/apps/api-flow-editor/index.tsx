@@ -1,10 +1,10 @@
-import '@xyflow/react/dist/style.css';
+import "@xyflow/react/dist/style.css";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import FlowEditor from '../../../features/workflow-editor/FlowEditor';
-import { Plugin } from '../../types';
-import { manifest } from './manifest';
+import { Plugin } from "../../types";
+import { manifest } from "./manifest";
+import FlowEditor from "./workflow-editor/FlowEditor";
 
 // Main component for the API Flow Editor
 const ApiFlowEditorComponent: React.FC = () => {

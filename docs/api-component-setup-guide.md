@@ -1,6 +1,6 @@
 # API Component Setup Guide
 
-This guide explains how to create API-enabled components that can be discovered and controlled by AI agents through our API explorer and OpenAPI documentation system. We'll use the Audio Player as a complete example.
+This guide explains how to create API-enabled components that can be discovered and controlled by AI agents through the API explorer and OpenAPI documentation system. We'll use the Audio Player as a complete example.
 
 ## Table of Contents
 

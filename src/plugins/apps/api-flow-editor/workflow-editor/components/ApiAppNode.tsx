@@ -2,9 +2,9 @@ import React, { memo, useEffect, useState } from "react";
 
 import { Node, NodeProps, Position, useReactFlow } from "@xyflow/react";
 
-import { IApiAction, IApiComponent } from "../../../api/core/types";
-import { usePlugins } from "../../../plugins/PluginContext";
-import { PluginManifest } from "../../../plugins/types";
+import { IApiAction, IApiComponent } from "../../../../../api/core/types";
+import { usePlugins } from "../../../../../plugins/PluginContext";
+import { PluginManifest } from "../../../../../plugins/types";
 import { ApiComponentService } from "../services/ApiComponentService";
 import { ApiAppNodeData, PinDataType } from "../types/flowTypes";
 import ExecutionPin from "./ExecutionPin";
