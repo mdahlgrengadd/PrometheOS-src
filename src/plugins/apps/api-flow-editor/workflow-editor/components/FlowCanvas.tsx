@@ -6,8 +6,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   addEdge,
-  Background,
-  BackgroundVariant,
   Connection,
   ConnectionMode,
   Controls,
@@ -48,6 +46,7 @@ import CustomEdge from "./CustomEdge";
 import DataTypeConversionNode from "./DataTypeConversionNode";
 import NodeCreationMenu from "./NodeCreationMenu";
 import NumberPrimitiveNode from "./NumberPrimitiveNode";
+import SkeumorphicGridBackground from "./skeumorphic-grid-background";
 import StringPrimitiveNode from "./StringPrimitiveNode";
 
 // Initialize with empty arrays
@@ -460,15 +459,6 @@ const FlowCanvasInner: React.FC = () => {
           panOnScrollMode={PanOnScrollMode.Free}
           selectionOnDrag={true}
           className="h-full w-full"
-          style={{
-            background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)",
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
-              radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 70%)
-            `,
-            backgroundSize: "20px 20px, 20px 20px, 100px 100px",
-          }}
           deleteKeyCode={["Backspace", "Delete"]}
           defaultEdgeOptions={{
             type: "custom",
@@ -487,12 +477,7 @@ const FlowCanvasInner: React.FC = () => {
           edgesFocusable={true}
           selectNodesOnDrag={false}
         >
-          <Background
-            variant={BackgroundVariant.Dots}
-            color="rgba(255,255,255,0.1)"
-            gap={20}
-            size={1}
-          />
+          <SkeumorphicGridBackground className="absolute inset-0" />
         </ReactFlow>
 
         {/* Place controls directly in the app container instead of inside ReactFlow */}

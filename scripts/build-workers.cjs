@@ -137,12 +137,22 @@ workerFiles.forEach(({ pluginId, sourcePath }) => {
   const outputName = `${pluginId}.js`;
   const outputPath = path.join(PUBLIC_WORKERS_DIR, outputName);
 
-  console.log(`Building ${pluginId} worker...`);
-
+  const isProduction = process.argv.includes("--production");
+  console.log(
+    `Building ${pluginId} worker${
+      isProduction
+        ? " (production - console removal enabled)"
+        : " (development)"
+    }...`
+  );
   try {
-    // Use esbuild to bundle and minify the worker file
+    // Use esbuild to bundle and minify the worker file with console removal in production
+    const isProduction = process.argv.includes("--production");
+    //const dropOptions = isProduction ? "--drop:console --drop:debugger" : "";
+    const dropOptions = isProduction ? "--drop:debugger" : "";
+
     execSync(
-      `npx esbuild ${sourcePath} --bundle --format=esm --minify --outfile=${outputPath}`,
+      `npx esbuild ${sourcePath} --bundle --format=esm --minify ${dropOptions} --outfile=${outputPath}`,
       {
         stdio: "inherit",
       }

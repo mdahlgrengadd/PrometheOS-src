@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/build-workers.cjs && vite",
-    "build": "node scripts/build-workers.cjs && tsc && vite build && node scripts/setup-shadow.mjs && node scripts/fix-symlinks.mjs",
+    "build": "node scripts/build-workers.cjs --production && tsc && vite build && node scripts/setup-shadow.mjs && node scripts/fix-symlinks.mjs",
     "build:dev": "vite build --mode development",
     "build:workers": "node scripts/build-workers.cjs",
     "setup-shadow": "node scripts/setup-shadow.mjs",
@@ -157,6 +157,7 @@
     "swagger-typescript-api": "^13.1.3",
     "tailwindcss": "^3.4.11",
     "tailwindcss-animate": "^1.0.7",
+    "terser": "^5.40.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1",

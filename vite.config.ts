@@ -1,12 +1,12 @@
-import { componentTagger } from 'lovable-tagger';
-import path from 'path';
-import * as sass from 'sass';
-import { defineConfig } from 'vite';
-import comlink from 'vite-plugin-comlink';
+import { componentTagger } from "lovable-tagger";
+import path from "path";
+import * as sass from "sass";
+import { defineConfig } from "vite";
+import comlink from "vite-plugin-comlink";
 
-import react from '@vitejs/plugin-react-swc';
+import react from "@vitejs/plugin-react-swc";
 
-import shadowFsPlugin from './vite.shadowfs';
+import shadowFsPlugin from "./vite.shadowfs";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -45,6 +45,9 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+  },
   worker: {
     format: "es",
   },
@@ -58,5 +61,13 @@ export default defineConfig(({ mode }) => ({
     },
     // Copy shadow files to the output directory
     copyPublicDir: true,
+    // Remove console logs in production
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
   },
 }));
