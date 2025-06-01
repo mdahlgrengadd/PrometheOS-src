@@ -196,6 +196,23 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
     setAppComponents(components);
   }, [selectedAppId]);
 
+  // Add keyboard event handler for Escape key to close menu
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
   // Handle adding a basic node
   const handleAddBasicNode = () => {
     if (!nodeName.trim() || !endpoint.trim()) return;
@@ -650,14 +667,33 @@ const NodeCreationMenu: React.FC<NodeCreationMenuProps> = ({
               0 4px 8px rgba(0,0,0,0.4)
             `
           }}>
-          <h3 className="text-white font-bold mb-3"
-            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
-            {nodeMode === "basic"
-              ? "Add REST API Node"
-              : nodeMode === "app"
-              ? "Add App API Node"
-              : "Add Primitive Node"}
-          </h3>
+          {/* Header with title and close button */}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white font-bold"
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+              {nodeMode === "basic"
+                ? "Add REST API Node"
+                : nodeMode === "app"
+                ? "Add App API Node"
+                : "Add Primitive Node"}
+            </h3>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors p-1 rounded"
+              style={{
+                fontSize: '18px',
+                lineHeight: '1',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Close menu"
+            >
+              ✕
+            </button>
+          </div>
 
           {/* Tabs to switch between node types */}
           <div className="flex mb-4 rounded overflow-hidden"
