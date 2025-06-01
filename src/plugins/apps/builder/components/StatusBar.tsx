@@ -1,10 +1,18 @@
-import { Bell, GitBranch, Zap } from "lucide-react";
-import React from "react";
+import { Bell, Database, GitBranch, Zap } from "lucide-react";
+import React, { useState } from "react";
+
+import { VFSDebugPanel } from "@/components/debug";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import useIdeStore from "../store/ide-store";
 
 const StatusBar: React.FC = () => {
   const { theme, toggleTheme, toggleCommandPalette } = useIdeStore();
+  const [showVFSDebug, setShowVFSDebug] = useState(false);
 
   return (
     <div className="status-bar flex items-center px-2 text-xs">
@@ -36,6 +44,18 @@ const StatusBar: React.FC = () => {
         <div className="flex items-center">
           <span>UTF-8</span>
         </div>
+
+        {/* VFS Debug Panel */}
+        <Popover open={showVFSDebug} onOpenChange={setShowVFSDebug}>
+          <PopoverTrigger asChild>
+            <button className="flex items-center hover:bg-sidebar-accent px-2 py-0.5 rounded">
+              <Database size={14} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="end">
+            <VFSDebugPanel />
+          </PopoverContent>
+        </Popover>
 
         <button
           className="flex items-center hover:bg-sidebar-accent px-2 py-0.5 rounded"

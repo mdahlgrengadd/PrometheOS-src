@@ -384,14 +384,14 @@ const useIdeStore = create<IdeStore>((set, get) => ({
 
       if (existingBuildCode && !state.buildError) {
         // Use existing build code if available and no errors
-        console.log("Using existing build code from preview");
+        console.log("[Publish] Using existing build code from preview");
         result = {
           code: existingBuildCode,
           error: null,
         };
       } else {
         // Build the code fresh if no existing build or there were errors
-        console.log("Building code fresh for publish");
+        console.log("[Publish] Building code fresh for publish");
         // Add all files to virtual FS for the build process
         const addAllFilesToVirtualFs = (
           item: FileSystemItem,
@@ -443,8 +443,8 @@ const useIdeStore = create<IdeStore>((set, get) => ({
       const publishedAppId = `published-app-${publishData.name}-${Date.now()}`;
 
       // Check if "Published Apps" folder exists, create if it doesn't
-      const currentFileSystem = fileSystemStore.fs;
-      const publishedAppsFolder = currentFileSystem.children?.find(
+      let currentFileSystem = fileSystemStore.fs;
+      let publishedAppsFolder = currentFileSystem.children?.find(
         (child) => child.id === publishedAppsId
       );
 
@@ -456,7 +456,20 @@ const useIdeStore = create<IdeStore>((set, get) => ({
           type: "folder",
           children: [],
         };
+
         fileSystemStore.addItems(rootPath, [newFolder]);
+
+        // Re-fetch the file system to ensure we have the updated state
+        // Get a FRESH reference after the store update
+        const updatedFileSystemStore = useFileSystemStore.getState();
+        currentFileSystem = updatedFileSystemStore.fs;
+        publishedAppsFolder = currentFileSystem.children?.find(
+          (child) => child.id === publishedAppsId
+        );
+
+        if (!publishedAppsFolder) {
+          throw new Error("Failed to create Published Apps folder");
+        }
       }
 
       // Check if app with same name already exists and remove it
@@ -464,7 +477,10 @@ const useIdeStore = create<IdeStore>((set, get) => ({
         (child) => child.name === `${publishData.name}.exe`
       );
 
+      console.log("[Publish] Existing app check:", !!existingApp);
+
       if (existingApp) {
+        console.log("[Publish] Removing existing app:", existingApp.name);
         // Remove the existing app
         fileSystemStore.deleteItem(
           [...rootPath, publishedAppsId],
@@ -521,6 +537,8 @@ const useIdeStore = create<IdeStore>((set, get) => ({
         },
       ];
 
+      console.log("[Publish] Created app files:", publishedAppFiles.length);
+
       // Create app folder with .exe extension for special handling
       const appFolder: FileSystemItem = {
         id: publishedAppId,
@@ -529,8 +547,26 @@ const useIdeStore = create<IdeStore>((set, get) => ({
         children: publishedAppFiles,
       };
 
+      console.log("[Publish] Created app folder:", appFolder.name);
+
       // Add the app folder to "Published Apps"
+      console.log("[Publish] Adding app to Published Apps folder...");
       fileSystemStore.addItems([...rootPath, publishedAppsId], [appFolder]);
+
+      // Verify the app was added
+      const updatedFileSystem = useFileSystemStore.getState().fs;
+      const updatedPublishedAppsFolder = updatedFileSystem.children?.find(
+        (child) => child.id === publishedAppsId
+      );
+      const addedApp = updatedPublishedAppsFolder?.children?.find(
+        (child) => child.name === `${publishData.name}.exe`
+      );
+
+      console.log("[Publish] App successfully added:", !!addedApp);
+      console.log(
+        "[Publish] Published Apps folder children count:",
+        updatedPublishedAppsFolder?.children?.length || 0
+      );
 
       // Show success notification
       toast({
