@@ -320,7 +320,7 @@ const FlowCanvasInner: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col h-full w-full api-flow-editor"
+      className="flex flex-col h-full w-full blueprints"
       style={{ height: "100%" }}
       tabIndex={0}
       onKeyDown={onKeyDown}

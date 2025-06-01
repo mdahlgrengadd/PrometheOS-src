@@ -3,8 +3,8 @@ import React from "react";
 import { PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
-  id: "api-flow-editor",
-  name: "API Flow Editor",
+  id: "blueprints",
+  name: "Blueprints",
   version: "1.0.0",
   description: "Blueprints-style visual editor for API workflows",
   author: "Desktop System",
@@ -13,9 +13,9 @@ export const manifest: PluginManifest = {
       FE
     </div>
   ),
-  entry: "apps/api-flow-editor",
+  entry: "apps/blueprints",
   // Uncomment if your plugin has a worker component
-  // workerEntrypoint: "api-flow-editor.js",
+  // workerEntrypoint: "blueprints.js",
   preferredSize: {
     width: 1024,
     height: 768,

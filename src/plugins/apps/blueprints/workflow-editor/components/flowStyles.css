@@ -214,8 +214,8 @@
 }
 
 /* Fix positioning for NodeCreationMenu in light and dark themes */
-.theme-light .api-flow-editor .node-creation-menu,
-.theme-dark .api-flow-editor .node-creation-menu {
+.theme-light .blueprints .node-creation-menu,
+.theme-dark .blueprints .node-creation-menu {
   top: calc(var(--header-height) + 8px) !important; /* Use CSS variable + small gap */
 }
 
@@ -269,7 +269,7 @@
 
 /* Fix for BeOS theme - no adjustment needed as header is separate */
 .theme-beos .flow-controls,
-.theme-beos .api-flow-editor .node-creation-menu {
+.theme-beos .blueprints .node-creation-menu {
   /* Default positioning works fine for BeOS theme */
   top: 16px; /* Default top position */
 }
@@ -363,7 +363,7 @@
 }
 
 /* Main API flow editor container to ensure proper sizing */
-.api-flow-editor {
+.blueprints {
   position: relative;
   width: 100%;
   height: 100%;

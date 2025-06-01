@@ -5,7 +5,7 @@ import { WorkerPlugin } from '../../plugins/types';
  * This runs in a Web Worker context with no DOM access
  */
 const apiFlowEditorWorker: WorkerPlugin = {
-  id: "api-flow-editor",
+  id: "blueprints",
 
   /**
    * Example method that can be called from the UI
@@ -36,7 +36,7 @@ const apiFlowEditorWorker: WorkerPlugin = {
       }
 
       default:
-        return { error: `Method ${method} not supported for api-flow-editor` };
+        return { error: `Method ${method} not supported for blueprints` };
     }
   },
 };

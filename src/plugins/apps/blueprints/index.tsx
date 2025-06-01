@@ -19,7 +19,7 @@ const ApiFlowEditorComponent: React.FC = () => {
   }, []);
 
   return (
-    <div className="api-flow-editor h-full flex flex-col bg-[#1A1F2C] text-gray-200">
+    <div className="blueprints h-full flex flex-col bg-[#1A1F2C] text-gray-200">
       {/* Help modal */}
       {showHelp && (
         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">

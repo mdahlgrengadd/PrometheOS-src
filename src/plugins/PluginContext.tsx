@@ -15,8 +15,8 @@ import { createInitDataFromUrl } from "@/utils/url";
 import { manifest as aichatManifest } from "./apps/aichat/manifest";
 // Import manifests instead of full plugin implementations
 import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
-import { manifest as apiFlowEditorManifest } from "./apps/api-flow-editor/manifest";
 import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
+import { manifest as apiFlowEditorManifest } from "./apps/blueprints/manifest";
 import { manifest as browserManifest } from "./apps/browser/manifest";
 import { manifest as builderManifest } from "./apps/builder/manifest";
 import { manifest as calculatorManifest } from "./apps/calculator/manifest";
@@ -51,8 +51,7 @@ const createLazyPlugin = (pluginId: string) => {
 // Map of plugin loaders - these don't load the actual plugin until needed
 const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "api-explorer": () => import("./apps/api-explorer").then((m) => m.default),
-  "api-flow-editor": () =>
-    import("./apps/api-flow-editor").then((m) => m.default),
+  blueprints: () => import("./apps/blueprints").then((m) => m.default),
   notepad: () => import("./apps/notepad").then((m) => m.default),
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
@@ -116,7 +115,7 @@ const lazyPluginComponents: Record<
 // Map of manifests by plugin ID
 const manifestMap: Record<string, PluginManifest> = {
   "api-explorer": apiExplorerManifest,
-  "api-flow-editor": apiFlowEditorManifest,
+  blueprints: apiFlowEditorManifest,
   notepad: notepadManifest,
   calculator: calculatorManifest,
   browser: browserManifest,

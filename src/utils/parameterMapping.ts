@@ -1,4 +1,4 @@
-import { ApiAppNodeData } from "../plugins/apps/api-flow-editor/workflow-editor/types/flowTypes";
+import { ApiAppNodeData } from "../plugins/apps/blueprints/workflow-editor/types/flowTypes";
 
 /**
  * Extended parameter mapping interface for value actions
