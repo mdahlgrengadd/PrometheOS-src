@@ -1,11 +1,10 @@
-import { Bell, GitBranch, Upload, Zap } from "lucide-react";
+import { Bell, GitBranch, Zap } from "lucide-react";
 import React from "react";
 
 import useIdeStore from "../store/ide-store";
 
 const StatusBar: React.FC = () => {
-  const { theme, toggleTheme, toggleCommandPalette, publishApp, isBuilding } =
-    useIdeStore();
+  const { theme, toggleTheme, toggleCommandPalette } = useIdeStore();
 
   return (
     <div className="status-bar flex items-center px-2 text-xs">
@@ -17,16 +16,6 @@ const StatusBar: React.FC = () => {
         >
           <Zap size={14} className="mr-1" />
           <span>Command Palette</span>
-        </button>
-
-        <button
-          className="flex items-center px-2 py-1 hover:bg-sidebar-accent rounded ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={publishApp}
-          disabled={isBuilding}
-          title="Publish current app to Published Apps folder"
-        >
-          <Upload size={14} className="mr-1" />
-          <span>{isBuilding ? "Publishing..." : "Publish App"}</span>
         </button>
       </div>
       <div className="flex-1"></div>

@@ -1,6 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import { Upload } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-import useIdeStore from '../store/ide-store';
+import { Button } from "@/components/ui/button";
+
+import useIdeStore from "../store/ide-store";
+import PublishDialog from "./PublishDialog";
 
 // Props for preview targeting a specific tab
 interface PreviewPanelProps {
@@ -8,8 +12,18 @@ interface PreviewPanelProps {
 }
 
 const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
-  const { buildCode, buildError } = useIdeStore();
+  const { buildCode, buildError, getTabById, getFileById } = useIdeStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+
+  // Get current file name for publish dialog
+  const getCurrentFileName = () => {
+    if (!previewTabId) return undefined;
+    const tab = getTabById(previewTabId);
+    if (!tab) return undefined;
+    const file = getFileById(tab.fileId);
+    return file?.name;
+  };
 
   // Update preview when build code changes
   useEffect(() => {
@@ -66,6 +80,19 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
             title="Preview"
             className="w-full h-full border-none bg-white"
           />
+          {/* Publish button overlay - only show when there's a successful build */}
+          {buildCode && !buildError && (
+            <div className="absolute top-4 right-4">
+              <Button
+                onClick={() => setShowPublishDialog(true)}
+                className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                size="sm"
+              >
+                <Upload size={16} className="mr-1" />
+                Publish
+              </Button>
+            </div>
+          )}
           {buildError && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-50">
               <div className="text-red-600 p-4 text-center">
@@ -86,6 +113,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ previewTabId }) => {
           )}
         </div>
       </div>
+
+      {/* Publish Dialog */}
+      <PublishDialog
+        open={showPublishDialog}
+        onClose={() => setShowPublishDialog(false)}
+        currentFileName={getCurrentFileName()}
+        previewTabId={previewTabId}
+      />
     </div>
   );
 };
