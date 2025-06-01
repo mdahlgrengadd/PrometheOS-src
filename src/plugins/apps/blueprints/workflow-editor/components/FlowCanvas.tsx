@@ -317,7 +317,7 @@ const FlowCanvasInner: React.FC = () => {
   const hasBeginWorkflowNode = useCallback(() => {
     return nodes.some((node) => node.type === "beginWorkflow");
   }, [nodes]);
-
+  const proOptions = { hideAttribution: true };
   return (
     <div
       className="flex flex-col h-full w-full blueprints"
@@ -458,6 +458,7 @@ const FlowCanvasInner: React.FC = () => {
           panOnScroll={true}
           panOnScrollMode={PanOnScrollMode.Free}
           selectionOnDrag={true}
+          proOptions={proOptions}
           className="h-full w-full"
           deleteKeyCode={["Backspace", "Delete"]}
           defaultEdgeOptions={{
