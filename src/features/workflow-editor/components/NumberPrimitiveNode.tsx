@@ -42,6 +42,12 @@ const NumberPrimitiveNode = ({
     }
   };
 
+  // Prevent key events from bubbling up to React Flow when input is focused
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Stop propagation for all key events when typing in input
+    e.stopPropagation();
+  };
+
   return (
     <div className="workflow-node-base">
       {/* Header */}
@@ -59,6 +65,7 @@ const NumberPrimitiveNode = ({
             type="number"
             value={data.value}
             onChange={handleValueChange}
+            onKeyDown={handleKeyDown}
             className="w-full px-2 py-1 bg-[#1A202C] border border-[#4A5568] text-primary rounded"
             placeholder="Enter number value..."
             step="0.1"
