@@ -10,9 +10,27 @@ interface BrowserContentProps {
 const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
   const rawDefaultUrl = initData?.initFromUrl || "https://en.wikipedia.org";
 
-  // Format the URL properly - add https:// if missing
+  // Check if this is an app:// URL for published apps
+  const isPublishedApp = rawDefaultUrl.startsWith("app://");
+  
+  // For published apps, construct the VFS path to the index.html
+  const getPublishedAppUrl = (appUrl: string) => {
+    // Extract app name from app://PublishedApps/AppName.exe
+    const urlParts = appUrl.substring(6); // Remove "app://"
+    if (urlParts.startsWith("PublishedApps/")) {
+      const appName = urlParts.substring(14); // Remove "PublishedApps/"
+      // Construct path to the published app's index.html via data URL
+      return `vfs://published-apps/${appName}/index.html`;
+    }
+    return appUrl;
+  };
+
+  // Format the URL properly - add https:// if missing, or handle app:// scheme
   const formatUrl = (url: string) => {
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    if (url.startsWith("app://")) {
+      return getPublishedAppUrl(url);
+    }
+    if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("vfs://")) {
       return "https://" + url;
     }
     return url;
@@ -26,10 +44,26 @@ const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
   const [isLoading, setIsLoading] = useState(true); // Start with loading true for initial shadownet check
   const [frameError, setFrameError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
   // Function to check shadownet and return the URL to load
   const checkShadownet = async (formattedUrl: string): Promise<string> => {
     try {
+      // Handle VFS URLs by converting them to data URLs
+      if (formattedUrl.startsWith("vfs://")) {
+        const fileId = formattedUrl.substring(6); // Remove "vfs://" prefix
+        
+        // Import and get file content
+        const { getFileContent } = await import("@/store/fileSystem");
+        const content = getFileContent(fileId);
+        
+        if (content !== null) {
+          // Convert to data URL for display in iframe
+          const encodedContent = encodeURIComponent(content);
+          return `data:text/html;charset=utf-8,${encodedContent}`;
+        } else {
+          throw new Error(`File not found in VFS: ${fileId}`);
+        }
+      }
+      
       const urlObj = new URL(formattedUrl);
       let domain = urlObj.hostname;
       if (domain.startsWith("www.")) {
@@ -103,15 +137,23 @@ const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
     if (e.key === "Enter") {
       navigateToUrl();
     }
-  };
-  const navigateToUrl = async () => {
+  };  const navigateToUrl = async () => {
     // Add protocol if missing
     let formattedUrl = url;
     if (
       !formattedUrl.startsWith("http://") &&
-      !formattedUrl.startsWith("https://")
+      !formattedUrl.startsWith("https://") &&
+      !formattedUrl.startsWith("vfs://") &&
+      !formattedUrl.startsWith("app://") &&
+      !formattedUrl.startsWith("data:")
     ) {
       formattedUrl = "https://" + formattedUrl;
+      setUrl(formattedUrl);
+    }
+
+    // Handle app:// URLs by converting to VFS
+    if (formattedUrl.startsWith("app://")) {
+      formattedUrl = getPublishedAppUrl(formattedUrl);
       setUrl(formattedUrl);
     }
 
@@ -196,78 +238,80 @@ const BrowserContent: React.FC<BrowserContentProps> = ({ initData }) => {
     { name: "HTML5 Rocks", url: "https://www.html5rocks.com" },
     { name: "GitHub", url: "https://github.com" },
     { name: "Stack Overflow", url: "https://stackoverflow.com" },
-  ];
-  return (
+  ];  return (
     <div className="p-0 py-1 flex flex-col h-full">
-      <div className="flex items-center mb-1 space-x-2">
-        <div className="flex space-x-1">
-          <button
-            onClick={goBack}
-            disabled={historyIndex <= 0}
-            className={`px-2 py-1 rounded ${
-              historyIndex <= 0
-                ? "bg-muted text-muted-foreground"
-                : "bg-blue-500 text-primary hover:bg-blue-600"
-            }`}
-            aria-label="Go back"
-            title="Go back"
-          >
-            ←
-          </button>
-          <button
-            onClick={goForward}
-            disabled={historyIndex >= history.length - 1}
-            className={`px-2 py-1 rounded ${
-              historyIndex >= history.length - 1
-                ? "bg-muted text-muted-foreground"
-                : "bg-blue-500 text-primary hover:bg-blue-600"
-            }`}
-            aria-label="Go forward"
-            title="Go forward"
-          >
-            →
-          </button>
-          <button
-            onClick={refresh}
-            className="px-2 py-1 bg-blue-500 text-primary rounded hover:bg-blue-600"
-            aria-label="Refresh"
-            title="Refresh page"
-          >
-            ⟳
-          </button>
-        </div>
-        <div className="relative flex-1 flex items-center">
-          <input
-            type="text"
-            className="flex-1 px-2 py-1 border border-border rounded-l bg-background text-foreground pr-20"
-            placeholder="Enter URL..."
-            value={url}
-            onChange={handleUrlChange}
-            onKeyPress={handleKeyPress}
-            style={{
-              paddingRight: currentUrl.includes("/shadownet/")
-                ? "80px"
-                : undefined,
-            }}
-          />
-          {/* Show a mockup indicator if on a shadownet page */}
-          {currentUrl.includes("/shadownet/") && (
-            <span
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-200 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded border border-yellow-400 shadow z-10"
-              title="This is a local mockup, not the real site."
-              style={{ pointerEvents: "none" }}
+      {/* Hide navigation bar for published apps to provide full window experience */}
+      {!isPublishedApp && (
+        <div className="flex items-center mb-1 space-x-2">
+          <div className="flex space-x-1">
+            <button
+              onClick={goBack}
+              disabled={historyIndex <= 0}
+              className={`px-2 py-1 rounded ${
+                historyIndex <= 0
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-blue-500 text-primary hover:bg-blue-600"
+              }`}
+              aria-label="Go back"
+              title="Go back"
             >
-              MOCKUP
-            </span>
-          )}
+              ←
+            </button>
+            <button
+              onClick={goForward}
+              disabled={historyIndex >= history.length - 1}
+              className={`px-2 py-1 rounded ${
+                historyIndex >= history.length - 1
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-blue-500 text-primary hover:bg-blue-600"
+              }`}
+              aria-label="Go forward"
+              title="Go forward"
+            >
+              →
+            </button>
+            <button
+              onClick={refresh}
+              className="px-2 py-1 bg-blue-500 text-primary rounded hover:bg-blue-600"
+              aria-label="Refresh"
+              title="Refresh page"
+            >
+              ⟳
+            </button>
+          </div>
+          <div className="relative flex-1 flex items-center">
+            <input
+              type="text"
+              className="flex-1 px-2 py-1 border border-border rounded-l bg-background text-foreground pr-20"
+              placeholder="Enter URL..."
+              value={url}
+              onChange={handleUrlChange}
+              onKeyPress={handleKeyPress}
+              style={{
+                paddingRight: currentUrl.includes("/shadownet/")
+                  ? "80px"
+                  : undefined,
+              }}
+            />
+            {/* Show a mockup indicator if on a shadownet page */}
+            {currentUrl.includes("/shadownet/") && (
+              <span
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-200 text-yellow-900 text-xs font-semibold px-2 py-0.5 rounded border border-yellow-400 shadow z-10"
+                title="This is a local mockup, not the real site."
+                style={{ pointerEvents: "none" }}
+              >
+                MOCKUP
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => navigateToUrl()}
+            className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
+          >
+            Go
+          </button>
         </div>
-        <button
-          onClick={() => navigateToUrl()}
-          className="bg-blue-500 text-primary px-3 py-1 rounded-r hover:bg-blue-600"
-        >
-          Go
-        </button>
-      </div>
+      )}
 
       <div className="relative flex-1 bg-background">
         {isLoading && !frameError && (

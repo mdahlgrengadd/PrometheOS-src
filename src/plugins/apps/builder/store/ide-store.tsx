@@ -1,7 +1,7 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { useFileSystemStore } from '../../../../store/fileSystem';
-import { AppState, FileSystemItem, Tab, ViewType } from '../types';
+import { useFileSystemStore } from "../../../../store/fileSystem";
+import { AppState, FileSystemItem, Tab, ViewType } from "../types";
 
 interface IdeStore extends AppState {
   toggleSidebar: () => void;
@@ -22,6 +22,7 @@ interface IdeStore extends AppState {
   setBuildCode: (code: string) => void;
   setIsBuilding: (isBuilding: boolean) => void;
   runBuild: (command?: string) => Promise<void>;
+  publishApp: () => Promise<void>;
 }
 
 // Default state
@@ -320,6 +321,182 @@ const useIdeStore = create<IdeStore>((set, get) => ({
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       state.setBuildError(`Build failed: ${errorMessage}`);
+    } finally {
+      state.setIsBuilding(false);
+    }
+  },
+
+  publishApp: async () => {
+    const state = get();
+
+    // Import build utilities and toast
+    const { buildCode, addToVirtualFs } = await import(
+      "../utils/esbuild-service"
+    );
+    const { toast } = await import("@/hooks/use-toast");
+
+    state.setIsBuilding(true);
+    state.setBuildError(null);
+
+    // Get active file content
+    const getActiveFileContent = () => {
+      if (!state.activeTab) return null;
+      const tab = state.getTabById(state.activeTab);
+      if (!tab) return null;
+      const file = state.getFileById(tab.fileId);
+      if (!file || file.type !== "file") return null;
+      return {
+        filePath: file.id,
+        fileName: file.name,
+        content: file.content || "",
+      };
+    };
+
+    const activeFile = getActiveFileContent();
+
+    if (!activeFile) {
+      state.setBuildError("No active file to publish");
+      state.setIsBuilding(false);
+      toast({
+        title: "Publish Failed",
+        description: "No active file to publish",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Add all files to virtual FS for the build process
+      const addAllFilesToVirtualFs = (
+        item: FileSystemItem,
+        parentPath = ""
+      ) => {
+        const filePath = item.id;
+        if (item.type === "file" && item.content !== undefined) {
+          addToVirtualFs(filePath, item.content);
+        }
+        if (item.type === "folder" && item.children) {
+          item.children.forEach((child) => {
+            addAllFilesToVirtualFs(child, filePath);
+          });
+        }
+      };
+
+      // Get the file system from the shared store
+      const fileSystem = useFileSystemStore.getState().fs;
+      addAllFilesToVirtualFs(fileSystem); // Build the code
+      const buildOptions = {
+        entryPoint: activeFile.filePath,
+        content: activeFile.content,
+        options: {
+          bundle: true,
+          minify: true,
+          format: "esm" as const,
+        },
+      };
+
+      const result = await buildCode(buildOptions);
+
+      if (result.error) {
+        state.setBuildError(result.error);
+        toast({
+          title: "Publish Failed",
+          description: "Build failed: " + result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create the published app in the virtual file system
+      const appName = activeFile.fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+      const publishedAppId = `published-app-${appName}-${Date.now()}`;
+      const publishedAppsId = "published-apps"; // Check if "Published Apps" folder exists, create if it doesn't
+      const fileSystemStore = useFileSystemStore.getState();
+      const rootPath = ["root"];
+      const publishedAppsFolder = fileSystem.children?.find(
+        (child) => child.id === publishedAppsId
+      );
+
+      if (!publishedAppsFolder) {
+        // Create "Published Apps" folder
+        const newFolder: FileSystemItem = {
+          id: publishedAppsId,
+          name: "Published Apps",
+          type: "folder",
+          children: [],
+        };
+        fileSystemStore.addItems(rootPath, [newFolder]);
+      }
+
+      // Create the published app files
+      const publishedAppFiles: FileSystemItem[] = [
+        {
+          id: `${publishedAppId}-index.html`,
+          name: "index.html",
+          type: "file",
+          content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${appName}</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script type="module" src="./app.js"></script>
+</body>
+</html>`,
+        },
+        {
+          id: `${publishedAppId}-app.js`,
+          name: "app.js",
+          type: "file",
+          content: result.code,
+        },
+        {
+          id: `${publishedAppId}-package.json`,
+          name: "package.json",
+          type: "file",
+          content: JSON.stringify(
+            {
+              name: appName.toLowerCase().replace(/\s+/g, "-"),
+              version: "1.0.0",
+              description: `Published app: ${appName}`,
+              main: "app.js",
+              type: "module",
+              publishedAt: new Date().toISOString(),
+              sourceFile: activeFile.fileName,
+            },
+            null,
+            2
+          ),
+        },
+      ]; // Create app folder with .exe extension for special handling
+      const appFolder: FileSystemItem = {
+        id: publishedAppId,
+        name: `${appName}.exe`,
+        type: "folder",
+        children: publishedAppFiles,
+      };
+
+      // Add the app folder to "Published Apps"
+      fileSystemStore.addItems([...rootPath, publishedAppsId], [appFolder]); // Show success notification
+      toast({
+        title: "App Published Successfully!",
+        description: `${appName}.exe has been published to the Published Apps folder`,
+        variant: "default",
+      }); // Update build output to show success
+      state.setBuildOutput(
+        `App published successfully!\nName: ${appName}.exe\nLocation: Published Apps/${appName}.exe\nFiles created: index.html, app.js, package.json`
+      );
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      state.setBuildError(`Publish failed: ${errorMessage}`);
+      toast({
+        title: "Publish Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       state.setIsBuilding(false);
     }

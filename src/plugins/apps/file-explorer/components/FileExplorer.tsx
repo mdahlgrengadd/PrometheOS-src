@@ -104,7 +104,7 @@ const FileExplorer: React.FC = () => {
       if (ignoreMatchers.some((rx) => rx.test(child.id))) return false;
       return true;
     });
-  }, [fileSystem, currentPath, ignoreMatchers, ideSettings.showHiddenFiles]);
+  }, [fileSystem, currentPath, ignoreMatchers]);
   const sortedChildren = useMemo(() => {
     return [...visibleChildren].sort((a, b) => {
       if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
@@ -208,10 +208,25 @@ const FileExplorer: React.FC = () => {
       return newExpanded;
     });
   }, []);
-
   // Handle opening files with appropriate apps
   const openFile = useCallback(async (file: FileSystemItem) => {
-    if (file.type !== 'file') return;
+    if (file.type !== 'file' && !(file.type === 'folder' && file.name.endsWith('.exe'))) return;
+    
+    // Special handling for .exe folders (published apps)
+    if (file.type === 'folder' && file.name.endsWith('.exe')) {
+      try {
+        const appPath = `app://PublishedApps/${file.name}`;
+        await apiContext?.executeAction('sys', 'open', {
+          name: 'browser',
+          initFromUrl: appPath
+        });
+        toast(`Opening published app: ${file.name}`);
+      } catch (error) {
+        console.error('Failed to open published app:', error);
+        toast(`Failed to open ${file.name}`);
+      }
+      return;
+    }
     
     const appId = getAppForFileExtension(file.name);
     if (!appId) {

@@ -152,6 +152,7 @@ export type UrlScheme =
   | "http"
   | "https"
   | "vfs"
+  | "app"
   | "data"
   | "plain"
   | "none"
@@ -192,6 +193,30 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
         scheme: "http",
         content,
       };
+    }    // Handle App scheme (app:// for published apps)
+    if (url.startsWith("app://")) {
+      // Extract app path from app://PublishedApps/AppName.exe
+      const urlParts = url.substring(6); // Remove "app://"
+      if (urlParts.startsWith("PublishedApps/")) {
+        const appName = urlParts.substring(14); // Remove "PublishedApps/"
+        
+        // Try to get the index.html content from the published app
+        const appIndexPath = `published-apps/${appName}/index.html`;
+        const { getFileContent } = await import("@/store/fileSystem");
+        const content = getFileContent(appIndexPath);
+        
+        if (content !== null) {
+          return {
+            initFromUrl: url,
+            scheme: "app",
+            content,
+          };
+        } else {
+          throw new Error(`Published app not found: ${appName}`);
+        }
+      } else {
+        throw new Error(`Invalid app:// URL format: ${url}`);
+      }
     }
 
     // Handle Virtual File System scheme

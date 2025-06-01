@@ -71,10 +71,13 @@ export const getAppForFileExtension = (fileName: string): string | null => {
     case 'aac':
     case 'wma':
       return 'audioplayer';
-    
-    // Web files -> Browser
+      // Web files -> Browser
     case 'htm':
     case 'url':
+      return 'browser';
+    
+    // Published apps (folders with .exe extension) -> Browser with app:// scheme
+    case 'exe':
       return 'browser';
     
     default:
@@ -85,6 +88,10 @@ export const getAppForFileExtension = (fileName: string): string | null => {
 // Get file icon based on extension and type with proper color coding
 export const getFileIcon = (item: FileSystemItem) => {
   if (item.type === 'folder') {
+    // Special handling for .exe folders (published apps)
+    if (item.name.endsWith('.exe')) {
+      return <Settings className="w-4 h-4 text-purple-600" />;
+    }
     return <Folder className="w-4 h-4 text-blue-500" />;
   }
   
