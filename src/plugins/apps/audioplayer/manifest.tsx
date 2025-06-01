@@ -2,74 +2,14 @@ import { Music } from "lucide-react";
 import React from "react";
 
 import { PluginManifest } from "../../../plugins/types";
+import { ApiComponentJson } from "../../../api/core/types";
+import * as audioPlayerApiDocModule from "./audioplayer-openapi.json";
 
-/**
- * API documentation for the audio player
- */
-export const audioPlayerApiDoc = {
-  type: "AudioPlayer",
-  description: "An audio player component with playback controls",
-  state: {
-    enabled: true,
-    visible: true,
-    isPlaying: false,
-    currentTrack: 0,
-    volume: 1.0,
-    isMuted: false,
-  },
-  actions: [
-    {
-      id: "play",
-      name: "Play",
-      description: "Start playback of current track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "pause",
-      name: "Pause",
-      description: "Pause playback of current track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "next",
-      name: "Next Track",
-      description: "Skip to next track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "previous",
-      name: "Previous Track",
-      description: "Skip to previous track",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "toggleMute",
-      name: "Toggle Mute",
-      description: "Mute or unmute audio",
-      available: true,
-      parameters: [],
-    },
-    {
-      id: "setVolume",
-      name: "Set Volume",
-      description: "Set the volume level",
-      available: true,
-      parameters: [
-        {
-          name: "volume",
-          type: "number",
-          description: "Volume level (0.0 to 1.0)",
-          required: true,
-        },
-      ],
-    },
-  ],
-  path: "/apps/audioplayer/controls",
-};
+// Cast the JSON import to the global API component type
+const audioPlayerApiDoc = audioPlayerApiDocModule as ApiComponentJson;
+
+// Export for backward compatibility
+export { audioPlayerApiDoc };
 
 export const manifest: PluginManifest & { apiDoc?: typeof audioPlayerApiDoc } =
   {

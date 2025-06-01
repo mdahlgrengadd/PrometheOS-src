@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/api/button";
 
 import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
+import { manifest } from "./manifest";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -508,11 +509,10 @@ const AudioPlayerContent = () => {
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
   }, []);
-
   return (
     <>
       <AudioPlayerProvider
-        apiId="audio-player-controls"
+        apiId={manifest.id}
         onPlay={handlePlay}
         onPause={handlePause}
         onNext={handleNext}
