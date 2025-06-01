@@ -76,9 +76,9 @@ export const getAppForFileExtension = (fileName: string): string | null => {
     case 'url':
       return 'browser';
     
-    // Published apps (folders with .exe extension) -> Browser with app:// scheme
+    // Published apps (folders with .exe extension) -> App Preview plugin
     case 'exe':
-      return 'browser';
+      return 'app-preview';
     
     default:
       return null;

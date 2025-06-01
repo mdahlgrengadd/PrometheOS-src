@@ -1,5 +1,6 @@
 import { manifest as aichatManifest } from "./apps/aichat/manifest";
 import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
+import { manifest as appPreviewManifest } from "./apps/app-preview/manifest";
 import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
 import { manifest as apiFlowEditorManifest } from "./apps/blueprints/manifest";
 import { manifest as browserManifest } from "./apps/browser/manifest";
@@ -27,6 +28,7 @@ export const staticPlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,
   aichatManifest,
+  appPreviewManifest,
   audioPlayerManifest,
   browserManifest,
   builderManifest,

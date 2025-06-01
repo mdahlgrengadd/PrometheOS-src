@@ -216,9 +216,10 @@ const FileExplorer: React.FC = () => {
     if (file.type === 'folder' && file.name.endsWith('.exe')) {
       try {
         const appPath = `app://PublishedApps/${file.name}`;
+        // Use App Preview plugin for published apps
         await apiContext?.executeAction('sys', 'open', {
-          name: 'browser',
-          initFromUrl: appPath
+          name: 'app-preview',
+          initFromUrl: appPath,
         });
         toast(`Opening published app: ${file.name}`);
       } catch (error) {

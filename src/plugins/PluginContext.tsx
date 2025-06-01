@@ -51,6 +51,7 @@ const createLazyPlugin = (pluginId: string) => {
 // Map of plugin loaders - these don't load the actual plugin until needed
 const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "api-explorer": () => import("./apps/api-explorer").then((m) => m.default),
+  "app-preview": () => import("./apps/app-preview").then((m) => m.default),
   blueprints: () => import("./apps/blueprints").then((m) => m.default),
   notepad: () => import("./apps/notepad").then((m) => m.default),
   calculator: () => import("./apps/calculator").then((m) => m.default),

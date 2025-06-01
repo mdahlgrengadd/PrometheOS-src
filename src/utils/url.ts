@@ -1,4 +1,4 @@
-import { PluginInitData } from "../plugins/types";
+import { PluginInitData } from '../plugins/types';
 
 /**
  * Generate a URL to directly launch an app
@@ -193,27 +193,49 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
         scheme: "http",
         content,
       };
-    }    // Handle App scheme (app:// for published apps)
+    } // Handle App scheme (app:// for published apps)
     if (url.startsWith("app://")) {
       // Extract app path from app://PublishedApps/AppName.exe
       const urlParts = url.substring(6); // Remove "app://"
       if (urlParts.startsWith("PublishedApps/")) {
         const appName = urlParts.substring(14); // Remove "PublishedApps/"
-        
-        // Try to get the index.html content from the published app
-        const appIndexPath = `published-apps/${appName}/index.html`;
-        const { getFileContent } = await import("@/store/fileSystem");
-        const content = getFileContent(appIndexPath);
-        
-        if (content !== null) {
-          return {
-            initFromUrl: url,
-            scheme: "app",
-            content,
-          };
-        } else {
+
+        // Import the file system helper function
+        const { useFileSystemStore } = await import("@/store/fileSystem");
+        const fileSystem = useFileSystemStore.getState().fs;
+
+        // Find the published apps folder
+        const publishedAppsFolder = fileSystem.children?.find(
+          (child) => child.id === "published-apps" && child.type === "folder"
+        );
+
+        if (!publishedAppsFolder) {
+          throw new Error(`Published Apps folder not found`);
+        }
+
+        // Find the specific app folder by name
+        const appFolder = publishedAppsFolder.children?.find(
+          (child) => child.name === appName && child.type === "folder"
+        );
+
+        if (!appFolder) {
           throw new Error(`Published app not found: ${appName}`);
         }
+
+        // Find the index.html file within the app folder
+        const indexFile = appFolder.children?.find(
+          (child) => child.name === "index.html" && child.type === "file"
+        );
+
+        if (!indexFile || !indexFile.content) {
+          throw new Error(`index.html not found in published app: ${appName}`);
+        }
+
+        return {
+          initFromUrl: url,
+          scheme: "app",
+          content: indexFile.content,
+        };
       } else {
         throw new Error(`Invalid app:// URL format: ${url}`);
       }
@@ -222,15 +244,15 @@ export async function processInitUrl(url: string): Promise<PluginInitData> {
     // Handle Virtual File System scheme
     if (url.startsWith("vfs://")) {
       const fileId = url.substring(6); // Remove "vfs://" prefix
-      
+
       // Import the file system helper function
       const { getFileContent } = await import("@/store/fileSystem");
       const content = getFileContent(fileId);
-      
+
       if (content === null) {
         throw new Error(`File not found in VFS: ${fileId}`);
       }
-      
+
       return {
         initFromUrl: url,
         scheme: "vfs",
