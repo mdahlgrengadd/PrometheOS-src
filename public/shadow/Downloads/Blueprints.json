@@ -1,6 +1,6 @@
 {
   "name": "Blueprints",
-  "description": "Blueprints-style visual editor for API workflows",
+  "description": "Blueprints-style visual editor for API workflows.",
   "target": "blueprints",
   "iconType": "plugin",
   "icon": "blueprints"
