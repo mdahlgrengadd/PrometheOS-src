@@ -20,9 +20,11 @@ import {
   User,
 } from "../types/fileSystem";
 import {
+  createDesktopCopyWithUniqueName,
   createDesktopShortcut,
   createFileShortcut,
   findFolderPath,
+  generateUniqueFileName,
   getAppForFileExtension,
 } from "../utils/fileUtils";
 import ContextMenu from "./ContextMenu";
@@ -440,6 +442,11 @@ const FileExplorer: React.FC = () => {
     if (!currentItem) return;
 
     try {
+      // Get the Desktop folder to check existing items
+      const desktopPath = ["root", "Desktop"];
+      const desktopFolder = findItemByPath(desktopPath);
+      const existingItems = desktopFolder?.children || [];
+
       let shortcutFile: FileSystemItem;
 
       if (currentItem.type === "file") {
@@ -458,9 +465,18 @@ const FileExplorer: React.FC = () => {
         );
       }
 
+      // Generate unique name for the shortcut
+      const uniqueName = generateUniqueFileName(
+        shortcutFile.name,
+        existingItems
+      );
+      shortcutFile.name = uniqueName;
+
       // Add to Desktop folder
-      addItems(["root", "desktop"], [shortcutFile]);
-      toast.success(`Desktop shortcut created for ${currentItem.name}`);
+      addItems(desktopPath, [shortcutFile]);
+
+      const displayName = uniqueName.replace(".json", ""); // Remove .json for display
+      toast.success(`Desktop shortcut created: ${displayName}`);
 
       setShowContextMenu(null);
     } catch (error) {
@@ -566,8 +582,40 @@ const FileExplorer: React.FC = () => {
     const targetFolderPath = findFolderPath(fileSystem, targetFolderId);
     if (!targetFolderPath) return;
 
-    // For now only support single-item moves
-    moveItem(currentPath, draggedItem, targetFolderPath);
+    // Check if we're dropping into the Desktop folder
+    const isDroppingToDesktop =
+      targetFolderId === "Desktop" ||
+      targetFolderPath.includes("Desktop") ||
+      targetFolderPath[targetFolderPath.length - 1] === "Desktop";
+
+    if (isDroppingToDesktop) {
+      // Handle Desktop drops with unique naming
+      const currentItem = currentFolder?.children?.find(
+        (item) => item.id === draggedItem
+      );
+      if (currentItem) {
+        // Get the target Desktop folder to check existing items
+        const targetFolder = findItemByPath(targetFolderPath);
+        const existingItems = targetFolder?.children || [];
+
+        // Create a copy with unique naming
+        const uniqueItem = createDesktopCopyWithUniqueName(
+          currentItem,
+          existingItems
+        );
+
+        // Add the item to Desktop folder
+        addItems(targetFolderPath, [uniqueItem]);
+
+        console.log(
+          `[FileExplorer] Copied ${currentItem.name} to Desktop as ${uniqueItem.name}`
+        );
+        toast.success(`Copied to Desktop as ${uniqueItem.name}`);
+      }
+    } else {
+      // For non-Desktop folders, use the existing move logic
+      moveItem(currentPath, draggedItem, targetFolderPath);
+    }
 
     setDraggedItem(null);
   };

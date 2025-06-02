@@ -6,6 +6,8 @@ import {
 } from "@/plugins/apps/file-explorer/types/fileSystem";
 import {
   createDesktopCopy,
+  createDesktopCopyWithUniqueName,
+  generateUniqueFileName,
   getAppForFileExtension,
   getFileIcon,
 } from "@/plugins/apps/file-explorer/utils/fileUtils";
@@ -584,13 +586,16 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           dragData.itemId
         );
         if (draggedItem) {
-          // Create a copy of the item for the desktop
-          const desktopItem = createDesktopCopy(draggedItem);
+          // Create a copy of the item for the desktop with unique naming
+          const desktopItem = createDesktopCopyWithUniqueName(
+            draggedItem,
+            desktopItems
+          );
 
           // Add to Desktop folder using correct path
           addItems(desktopPath, [desktopItem]);
           console.log(
-            `[DesktopIcons] Copied ${draggedItem.name} to desktop using path:`,
+            `[DesktopIcons] Copied ${draggedItem.name} to desktop as ${desktopItem.name} using path:`,
             desktopPath
           );
         } else {
@@ -649,10 +654,13 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           "at path:",
           found.path
         );
-        const desktopItem = createDesktopCopy(found.item);
+        const desktopItem = createDesktopCopyWithUniqueName(
+          found.item,
+          desktopItems
+        );
         addItems(desktopPath, [desktopItem]);
         console.log(
-          `[DesktopIcons] Copied ${found.item.name} to desktop using fallback method`
+          `[DesktopIcons] Copied ${found.item.name} to desktop as ${desktopItem.name} using fallback method`
         );
         return;
       }
@@ -695,15 +703,26 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
             content = "[Binary file content]";
           }
 
+          // Generate unique name considering both existing desktop items and previously processed files in this batch
+          const allExistingItems = [...desktopItems, ...newFiles];
+          const uniqueName = generateUniqueFileName(
+            file.name,
+            allExistingItems
+          );
+
           newFiles.push({
             id: `desktop_file_${Date.now()}_${Math.random()
               .toString(36)
               .slice(2, 9)}`,
-            name: file.name,
+            name: uniqueName,
             type: "file",
             size: file.size,
             content,
           });
+
+          console.log(
+            `[DesktopIcons] Generated unique name: ${file.name} -> ${uniqueName}`
+          );
         }
 
         // Add files directly to Desktop folder using correct path

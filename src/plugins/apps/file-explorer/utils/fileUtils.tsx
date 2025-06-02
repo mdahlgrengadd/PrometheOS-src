@@ -294,3 +294,48 @@ export const createDesktopCopy = (item: FileSystemItem): FileSystemItem => {
     id: `desktop_copy_${item.id}_${Date.now()}`, // New ID for desktop copy
   };
 };
+
+// Generate a unique file name if duplicates exist
+export const generateUniqueFileName = (
+  originalName: string,
+  existingItems: FileSystemItem[]
+): string => {
+  // Check if the original name already exists
+  const existingNames = existingItems.map((item) => item.name.toLowerCase());
+
+  if (!existingNames.includes(originalName.toLowerCase())) {
+    return originalName; // No conflict, return original name
+  }
+
+  // Parse the file name and extension
+  const lastDotIndex = originalName.lastIndexOf(".");
+  const baseName =
+    lastDotIndex > 0 ? originalName.substring(0, lastDotIndex) : originalName;
+  const extension =
+    lastDotIndex > 0 ? originalName.substring(lastDotIndex) : "";
+
+  // Try numbers starting from 1
+  let counter = 1;
+  let newName: string;
+
+  do {
+    newName = `${baseName} (${counter})${extension}`;
+    counter++;
+  } while (existingNames.includes(newName.toLowerCase()));
+
+  return newName;
+};
+
+// Create a copy of a VFS item for desktop with unique naming
+export const createDesktopCopyWithUniqueName = (
+  item: FileSystemItem,
+  existingItems: FileSystemItem[]
+): FileSystemItem => {
+  const uniqueName = generateUniqueFileName(item.name, existingItems);
+
+  return {
+    ...item,
+    id: `desktop_copy_${item.id}_${Date.now()}`, // New ID for desktop copy
+    name: uniqueName, // Use the unique name
+  };
+};
