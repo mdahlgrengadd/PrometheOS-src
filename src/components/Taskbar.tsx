@@ -97,6 +97,7 @@ const Taskbar: FC<TaskbarProps> = ({ onWindowClick }) => {
       "var(--taskbar-shadow, inset 0 1px 0 0 #d0d0d0, 0 -1px 0 0 #b0b0b0)",
     transition: autoHide ? "transform 0.3s ease" : undefined,
     transform: autoHide && !isVisible ? "translateY(100%)" : "translateY(0)",
+    zIndex: 2,
   };
 
   return (

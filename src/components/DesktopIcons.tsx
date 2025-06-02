@@ -855,18 +855,23 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
         border: isDragOver ? "2px dashed #3b82f6" : "2px dashed transparent",
         transition: "all 0.2s ease-in-out",
         // Ensure the drop zone is active and properly sized
-        minHeight: "100%",
+        minHeight: "calc(100% - 128px)", // Leave space at bottom for taskbar
         position: "relative",
         zIndex: 1,
+        marginBottom: "128px", // Add margin to avoid covering taskbar
       }}
     >
       {/* Explicit drop zone overlay when dragging */}
       {isDragOver && (
         <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          className="absolute flex items-center justify-center pointer-events-none z-10"
           style={{
             backgroundColor: "rgba(59, 130, 246, 0.1)",
             border: "2px dashed #3b82f6",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: "128px", // Leave space for the taskbar
           }}
         >
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
