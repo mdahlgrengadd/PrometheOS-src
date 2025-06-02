@@ -729,13 +729,13 @@ const FileExplorer: React.FC = () => {
       className="h-screen flex flex-col bg-white"
       onClick={handleClickOutside}
     >
-      {/* Title Bar */}
+      {/* Title Bar
       <TitleBar
         isAuthenticated={isAuthenticated}
         user={user}
         handleGithubAuth={handleGithubAuth}
         handleLogout={handleLogout}
-      />
+      /> */}
 
       {/* Toolbar */}
       <Toolbar
