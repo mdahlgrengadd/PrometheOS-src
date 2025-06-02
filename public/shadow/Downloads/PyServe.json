@@ -1,0 +1,7 @@
+{
+  "name": "PyServe",
+  "description": "Python script processor with AST analysis and TypeScript generation",
+  "target": "pyserve",
+  "iconType": "plugin",
+  "icon": "pyserve"
+}

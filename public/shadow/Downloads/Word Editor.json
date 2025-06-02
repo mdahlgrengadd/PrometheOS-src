@@ -1,0 +1,7 @@
+{
+  "name": "Word Editor",
+  "description": "Rich text document editor",
+  "target": "wordeditor",
+  "iconType": "plugin",
+  "icon": "wordeditor"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "AI Chat",
+  "description": "WebLLM powered AI chat with tool calling support",
+  "target": "aichat",
+  "iconType": "plugin",
+  "icon": "aichat"
+}
