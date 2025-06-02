@@ -131,7 +131,12 @@ const FileExplorer: React.FC = () => {
   // initialize file system from shadow on mount
   useEffect(() => {
     initFs().then(() => setExpandedFolders(new Set(["root"])));
-  }, [initFs]);
+
+    // Auto-authenticate by default
+    if (!isAuthenticated) {
+      handleGithubAuth();
+    }
+  }, [initFs, isAuthenticated]);
 
   // Set up drag selection container
   const { DragSelection } = useSelectionContainer({
@@ -424,6 +429,28 @@ const FileExplorer: React.FC = () => {
   const deleteItem = (itemId: string) => {
     if (!isAuthenticated) return;
 
+    // Check if this is a shadow file (system file)
+    const itemToDelete = currentFolder?.children?.find(
+      (item) => item.id === itemId
+    );
+
+    // List of protected files that came from shadow fs
+    const protectedFiles = [
+      "test.md",
+      "test.txt",
+      "package.json",
+      "package-lock.json",
+      ".vfsignore",
+    ];
+
+    if (itemToDelete && protectedFiles.includes(itemToDelete.name)) {
+      toast.error(`Cannot delete system file: ${itemToDelete.name}`, {
+        description:
+          "Files loaded from the shadow filesystem are protected and cannot be deleted.",
+      });
+      return;
+    }
+
     deleteItemStore(currentPath, itemId);
     toast.success("Item deleted");
 
@@ -587,6 +614,33 @@ const FileExplorer: React.FC = () => {
       targetFolderId === "Desktop" ||
       targetFolderPath.includes("Desktop") ||
       targetFolderPath[targetFolderPath.length - 1] === "Desktop";
+
+    // Get the dragged item
+    const draggedItemObj = currentFolder?.children?.find(
+      (item) => item.id === draggedItem
+    );
+
+    // List of protected files that came from shadow fs
+    const protectedFiles = [
+      "test.md",
+      "test.txt",
+      "package.json",
+      "package-lock.json",
+      ".vfsignore",
+    ];
+
+    // Check if trying to move a protected file (not to Desktop, which is a copy operation)
+    if (
+      !isDroppingToDesktop &&
+      draggedItemObj &&
+      protectedFiles.includes(draggedItemObj.name)
+    ) {
+      toast.error(`Cannot move system file: ${draggedItemObj.name}`, {
+        description:
+          "Files loaded from the shadow filesystem are protected and cannot be moved. You can copy them to Desktop instead.",
+      });
+      return;
+    }
 
     if (isDroppingToDesktop) {
       // Handle Desktop drops with unique naming
