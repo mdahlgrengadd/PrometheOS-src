@@ -1,8 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import { Plugin, PluginInitData } from '../../types';
-import AppPreview from './components/AppPreview';
-import { manifest } from './manifest';
+import { Plugin, PluginInitData } from "../../types";
+import AppPreview from "./components/AppPreview";
+import { manifest } from "./manifest";
 
 // Store initialization data globally for this plugin instance
 let globalInitData: PluginInitData | undefined = undefined;

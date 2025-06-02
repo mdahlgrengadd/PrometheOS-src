@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { PluginManifest } from '../../types';
+import { PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "app-preview",
