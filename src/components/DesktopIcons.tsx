@@ -448,7 +448,17 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
 
   // Delete item from desktop
   const deleteFromDesktop = (item: ProcessedDesktopItem) => {
-    deleteItem(["root", "desktop"], item.id);
+    // Determine the correct Desktop path
+    const desktopPath =
+      desktopFolder?.id === "Desktop"
+        ? ["root", "Desktop"]
+        : ["root", "desktop"];
+    console.log(
+      "[DesktopIcons] Deleting item using desktop path:",
+      desktopPath
+    );
+
+    deleteItem(desktopPath, item.id);
     console.log(`[DesktopIcons] Deleted ${item.displayName} from desktop`);
     setContextMenu(null);
   };
@@ -457,13 +467,45 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log("[DesktopIcons] Drag enter detected");
+    console.log(
+      "[DesktopIcons] Drag enter - DataTransfer types:",
+      e.dataTransfer.types
+    );
+    console.log(
+      "[DesktopIcons] Drag enter - effectAllowed:",
+      e.dataTransfer.effectAllowed
+    );
     setIsDragOver(true);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    e.dataTransfer.dropEffect = "copy";
+    console.log("[DesktopIcons] Drag over detected");
+    console.log(
+      "[DesktopIcons] Drag over - effectAllowed:",
+      e.dataTransfer.effectAllowed
+    );
+
+    // Match the dropEffect to the effectAllowed from the source
+    if (e.dataTransfer.effectAllowed === "move") {
+      e.dataTransfer.dropEffect = "move";
+    } else if (e.dataTransfer.effectAllowed === "copy") {
+      e.dataTransfer.dropEffect = "copy";
+    } else if (e.dataTransfer.effectAllowed === "copyMove") {
+      e.dataTransfer.dropEffect = "copy"; // Prefer copy for copyMove
+    } else {
+      e.dataTransfer.dropEffect = "copy"; // Default fallback
+    }
+
+    console.log(
+      "[DesktopIcons] Drag over - dropEffect set to:",
+      e.dataTransfer.dropEffect
+    );
+
+    // Keep drag state active
+    setIsDragOver(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -476,6 +518,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
     const y = e.clientY;
 
     if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      console.log("[DesktopIcons] Drag leave - exiting desktop area");
       setIsDragOver(false);
     }
   };
@@ -484,6 +527,34 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragOver(false);
+
+    console.log("[DesktopIcons] Drop event detected");
+    console.log("[DesktopIcons] DataTransfer types:", e.dataTransfer.types);
+    console.log("[DesktopIcons] Files count:", e.dataTransfer.files.length);
+
+    // Debug: Try to access all possible data types
+    console.log(
+      "[DesktopIcons] Trying to get text/plain:",
+      e.dataTransfer.getData("text/plain")
+    );
+    console.log(
+      "[DesktopIcons] Trying to get application/vfs-item:",
+      e.dataTransfer.getData("application/vfs-item")
+    );
+
+    // Check all available types
+    for (let i = 0; i < e.dataTransfer.types.length; i++) {
+      const type = e.dataTransfer.types[i];
+      const data = e.dataTransfer.getData(type);
+      console.log(`[DesktopIcons] DataTransfer[${type}]:`, data);
+    }
+
+    // Determine the correct Desktop path
+    const desktopPath =
+      desktopFolder?.id === "Desktop"
+        ? ["root", "Desktop"]
+        : ["root", "desktop"];
+    console.log("[DesktopIcons] Using desktop path:", desktopPath);
 
     // Handle internal drag from file explorer first
     const vfsItemData = e.dataTransfer.getData("application/vfs-item");
@@ -516,9 +587,14 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           // Create a copy of the item for the desktop
           const desktopItem = createDesktopCopy(draggedItem);
 
-          // Add to Desktop folder
-          addItems(["root", "desktop"], [desktopItem]);
-          console.log(`[DesktopIcons] Copied ${draggedItem.name} to desktop`);
+          // Add to Desktop folder using correct path
+          addItems(desktopPath, [desktopItem]);
+          console.log(
+            `[DesktopIcons] Copied ${draggedItem.name} to desktop using path:`,
+            desktopPath
+          );
+        } else {
+          console.error("[DesktopIcons] Could not find dragged item in VFS");
         }
       } catch (error) {
         console.error("[DesktopIcons] Error parsing VFS drag data:", error);
@@ -526,8 +602,65 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       return;
     }
 
+    // Try to get text/plain as fallback for internal drags
+    const textData = e.dataTransfer.getData("text/plain");
+    if (textData && textData !== "") {
+      console.log(
+        "[DesktopIcons] Found text/plain data, trying as item ID:",
+        textData
+      );
+
+      // Try to find item by ID in current file system
+      const findItemById = (
+        fs: FileSystemItem,
+        id: string
+      ): { item: FileSystemItem; path: string[] } | null => {
+        if (fs.id === id) {
+          return { item: fs, path: ["root"] };
+        }
+
+        if (fs.children) {
+          for (const child of fs.children) {
+            if (child.id === id) {
+              return { item: child, path: ["root", fs.id] };
+            }
+
+            // Recursively search in child folders
+            if (child.type === "folder") {
+              const result = findItemById(child, id);
+              if (result) {
+                return {
+                  item: result.item,
+                  path: ["root", fs.id, ...result.path.slice(1)],
+                };
+              }
+            }
+          }
+        }
+
+        return null;
+      };
+
+      const found = findItemById(fileSystem, textData);
+      if (found) {
+        console.log(
+          "[DesktopIcons] Found item by text ID:",
+          found.item.name,
+          "at path:",
+          found.path
+        );
+        const desktopItem = createDesktopCopy(found.item);
+        addItems(desktopPath, [desktopItem]);
+        console.log(
+          `[DesktopIcons] Copied ${found.item.name} to desktop using fallback method`
+        );
+        return;
+      }
+    }
+
     // Handle external file drops
     const files = Array.from(e.dataTransfer.files);
+    console.log("[DesktopIcons] External files detected:", files.length);
 
     if (files.length > 0) {
       try {
@@ -535,12 +668,32 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
         const newFiles: FileSystemItem[] = [];
 
         for (const file of files) {
-          const content = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsText(file);
-          });
+          console.log(
+            "[DesktopIcons] Processing file:",
+            file.name,
+            file.type,
+            file.size
+          );
+
+          let content: string;
+
+          // Determine if it's a text file or binary
+          if (
+            file.type.startsWith("text/") ||
+            [".txt", ".json", ".md", ".js", ".css", ".html", ".xml"].some(
+              (ext) => file.name.toLowerCase().endsWith(ext)
+            )
+          ) {
+            content = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = () => reject(reader.error);
+              reader.readAsText(file);
+            });
+          } else {
+            // For binary files, just store a placeholder
+            content = "[Binary file content]";
+          }
 
           newFiles.push({
             id: `desktop_file_${Date.now()}_${Math.random()
@@ -553,14 +706,17 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           });
         }
 
-        // Add files directly to Desktop folder
-        addItems(["root", "desktop"], newFiles);
+        // Add files directly to Desktop folder using correct path
+        addItems(desktopPath, newFiles);
         console.log(
-          `[DesktopIcons] Added ${newFiles.length} file(s) to desktop`
+          `[DesktopIcons] Added ${newFiles.length} file(s) to desktop using path:`,
+          desktopPath
         );
       } catch (error) {
         console.error("[DesktopIcons] Error handling dropped files:", error);
       }
+    } else {
+      console.log("[DesktopIcons] No files or VFS data found in drop event");
     }
   };
 
@@ -623,6 +779,35 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
     );
   };
 
+  // Test function to create a test file directly
+  const createTestFile = () => {
+    console.log("[DesktopIcons] Creating test file...");
+    const desktopPath =
+      desktopFolder?.id === "Desktop"
+        ? ["root", "Desktop"]
+        : ["root", "desktop"];
+
+    const testFile: FileSystemItem = {
+      id: `test_file_${Date.now()}`,
+      name: "test-drag-drop.txt",
+      type: "file",
+      size: 25,
+      content: "This is a test file!",
+    };
+
+    addItems(desktopPath, [testFile]);
+    console.log("[DesktopIcons] Created test file using path:", desktopPath);
+  };
+
+  // Mouse event handlers for debugging
+  const handleMouseEnter = () => {
+    console.log("[DesktopIcons] Mouse entered desktop area");
+  };
+
+  const handleMouseLeave = () => {
+    console.log("[DesktopIcons] Mouse left desktop area");
+  };
+
   // If icons should be hidden, don't render anything
   if (!showIcons) {
     console.log("[DesktopIcons] Icons are hidden, not rendering");
@@ -644,14 +829,27 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         backgroundColor: isDragOver ? "rgba(59, 130, 246, 0.1)" : "transparent",
         border: isDragOver ? "2px dashed #3b82f6" : "2px dashed transparent",
         transition: "all 0.2s ease-in-out",
+        // Ensure the drop zone is active and properly sized
+        minHeight: "100%",
+        position: "relative",
+        zIndex: 1,
       }}
     >
+      {/* Explicit drop zone overlay when dragging */}
       {isDragOver && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          style={{
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            border: "2px dashed #3b82f6",
+          }}
+        >
           <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
             Drop files here to add to Desktop
           </div>
@@ -660,7 +858,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
 
       {/* Debug element to show that the component is rendering */}
       {processedItems.length === 0 && (
-        <div className="absolute top-4 left-4 bg-yellow-200 text-black p-4 rounded text-sm">
+        <div className="absolute top-4 left-4 bg-yellow-200 text-black p-4 rounded text-sm z-20">
           <div>
             Desktop: {desktopFolder ? "Found" : "Not Found"} | Items:{" "}
             {processedItems.length}
@@ -684,6 +882,12 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
               className="px-2 py-1 bg-green-500 text-white rounded text-xs"
             >
               Create Shortcuts
+            </button>
+            <button
+              onClick={createTestFile}
+              className="px-2 py-1 bg-purple-500 text-white rounded text-xs"
+            >
+              Create Test File
             </button>
           </div>
         </div>

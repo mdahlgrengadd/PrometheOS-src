@@ -525,10 +525,10 @@ const FileExplorer: React.FC = () => {
       JSON.stringify({
         itemId,
         currentPath,
-        action: "move",
+        action: "copy",
       })
     );
-    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.effectAllowed = "copyMove";
 
     // If the item isn't in the current selection, make it the only selected item
     if (!selectedItems.has(itemId)) {
