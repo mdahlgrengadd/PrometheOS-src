@@ -1,23 +1,37 @@
-import { Folder } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { Folder } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
-import { useFileSystemStore } from '@/store/fileSystem';
-import { useSelectionContainer } from '@air/react-drag-to-select';
-import { useApi } from '@/api/hooks/useApi';
+import { useApi } from "@/api/hooks/useApi";
+import { useFileSystemStore } from "@/store/fileSystem";
+import { useSelectionContainer } from "@air/react-drag-to-select";
 
-import { ideSettings } from '../../../../plugins/apps/builder/utils/esbuild-settings';
+import { ideSettings } from "../../../../plugins/apps/builder/utils/esbuild-settings";
 import {
-    ContextMenuPosition, FileSystemItem, TEXT_FILE_EXTENSIONS, User
-} from '../types/fileSystem';
-import { findFolderPath, getAppForFileExtension } from '../utils/fileUtils';
-import ContextMenu from './ContextMenu';
-import { NewItemDialog, RenameDialog } from './Dialogs';
-import FileGrid from './FileGrid';
-import Sidebar from './Sidebar';
+  ContextMenuPosition,
+  FileSystemItem,
+  TEXT_FILE_EXTENSIONS,
+  User,
+} from "../types/fileSystem";
+import {
+  createDesktopShortcut,
+  createFileShortcut,
+  findFolderPath,
+  getAppForFileExtension,
+} from "../utils/fileUtils";
+import ContextMenu from "./ContextMenu";
+import { NewItemDialog, RenameDialog } from "./Dialogs";
+import FileGrid from "./FileGrid";
+import Sidebar from "./Sidebar";
 // Component imports
-import TitleBar from './TitleBar';
-import Toolbar from './Toolbar';
+import TitleBar from "./TitleBar";
+import Toolbar from "./Toolbar";
 
 const FileExplorer: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string[]>(["root"]);
@@ -209,44 +223,51 @@ const FileExplorer: React.FC = () => {
     });
   }, []);
   // Handle opening files with appropriate apps
-  const openFile = useCallback(async (file: FileSystemItem) => {
-    if (file.type !== 'file' && !(file.type === 'folder' && file.name.endsWith('.exe'))) return;
-    
-    // Special handling for .exe folders (published apps)
-    if (file.type === 'folder' && file.name.endsWith('.exe')) {
+  const openFile = useCallback(
+    async (file: FileSystemItem) => {
+      if (
+        file.type !== "file" &&
+        !(file.type === "folder" && file.name.endsWith(".exe"))
+      )
+        return;
+
+      // Special handling for .exe folders (published apps)
+      if (file.type === "folder" && file.name.endsWith(".exe")) {
+        try {
+          const appPath = `app://PublishedApps/${file.name}`;
+          // Use App Preview plugin for published apps
+          await apiContext?.executeAction("sys", "open", {
+            name: "app-preview",
+            initFromUrl: appPath,
+          });
+          toast(`Opening published app: ${file.name}`);
+        } catch (error) {
+          console.error("Failed to open published app:", error);
+          toast(`Failed to open ${file.name}`);
+        }
+        return;
+      }
+
+      const appId = getAppForFileExtension(file.name);
+      if (!appId) {
+        toast(`No default app for file type: ${file.name.split(".").pop()}`);
+        return;
+      }
+
       try {
-        const appPath = `app://PublishedApps/${file.name}`;
-        // Use App Preview plugin for published apps
-        await apiContext?.executeAction('sys', 'open', {
-          name: 'app-preview',
-          initFromUrl: appPath,
+        const vfsPath = `vfs://${file.id}`;
+        await apiContext?.executeAction("sys", "open", {
+          name: appId,
+          initFromUrl: vfsPath,
         });
-        toast(`Opening published app: ${file.name}`);
+        toast(`Opening ${file.name} with ${appId}`);
       } catch (error) {
-        console.error('Failed to open published app:', error);
+        console.error("Failed to open file:", error);
         toast(`Failed to open ${file.name}`);
       }
-      return;
-    }
-    
-    const appId = getAppForFileExtension(file.name);
-    if (!appId) {
-      toast(`No default app for file type: ${file.name.split('.').pop()}`);
-      return;
-    }
-
-    try {
-      const vfsPath = `vfs://${file.id}`;
-      await apiContext?.executeAction('sys', 'open', {
-        name: appId,
-        initFromUrl: vfsPath
-      });
-      toast(`Opening ${file.name} with ${appId}`);
-    } catch (error) {
-      console.error('Failed to open file:', error);
-      toast(`Failed to open ${file.name}`);
-    }
-  }, [apiContext]);
+    },
+    [apiContext]
+  );
 
   // Handle drag selection
   function handleSelectionChange(selectionBox: {
@@ -408,6 +429,46 @@ const FileExplorer: React.FC = () => {
     setShowContextMenu(null);
   };
 
+  // Create desktop shortcut
+  const createShortcut = (itemId: string) => {
+    if (!isAuthenticated) return;
+
+    const currentItem = currentFolder?.children?.find(
+      (item) => item.id === itemId
+    );
+
+    if (!currentItem) return;
+
+    try {
+      let shortcutFile: FileSystemItem;
+
+      if (currentItem.type === "file") {
+        // Create file shortcut
+        shortcutFile = createFileShortcut(
+          currentItem.name,
+          currentItem.id,
+          currentItem.name.replace(/\.[^/.]+$/, "") // Remove extension for display name
+        );
+      } else {
+        // Create folder shortcut
+        shortcutFile = createDesktopShortcut(
+          currentItem.id,
+          currentItem.name,
+          `Open ${currentItem.name} folder`
+        );
+      }
+
+      // Add to Desktop folder
+      addItems(["root", "desktop"], [shortcutFile]);
+      toast.success(`Desktop shortcut created for ${currentItem.name}`);
+
+      setShowContextMenu(null);
+    } catch (error) {
+      console.error("Error creating desktop shortcut:", error);
+      toast.error("Failed to create desktop shortcut");
+    }
+  };
+
   // GitHub authentication simulation
   const handleGithubAuth = () => {
     // Simulate GitHub OAuth flow
@@ -456,7 +517,17 @@ const FileExplorer: React.FC = () => {
     if (!isAuthenticated) return;
 
     setDraggedItem(itemId);
+
+    // Set up data transfer for different drag targets
     e.dataTransfer.setData("text/plain", itemId);
+    e.dataTransfer.setData(
+      "application/vfs-item",
+      JSON.stringify({
+        itemId,
+        currentPath,
+        action: "move",
+      })
+    );
     e.dataTransfer.effectAllowed = "move";
 
     // If the item isn't in the current selection, make it the only selected item

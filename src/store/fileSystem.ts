@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { eventBus } from "@/plugins/EventBus";
 import { virtualFs } from "@/utils/virtual-fs";
 
 import type { FileSystemItem } from "@/plugins/apps/file-explorer/types/fileSystem";
@@ -66,29 +67,57 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     virtualFs.addItems(path, items);
     const newFs = virtualFs.getRootFileSystemItem();
     set({ fs: newFs });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemsAdded", { path, items });
+    console.log("[VFS Store] Emitted vfs:itemsAdded event for path:", path);
   },
 
   // Rename an item under a given path
   renameItem: (path, id, newName) => {
     virtualFs.renameItem(path, id, newName);
     set({ fs: virtualFs.getRootFileSystemItem() });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemRenamed", { path, id, newName });
+    console.log("[VFS Store] Emitted vfs:itemRenamed event for path:", path);
   },
 
   // Delete an item under a given path
   deleteItem: (path, id) => {
     virtualFs.deleteItem(path, id);
     set({ fs: virtualFs.getRootFileSystemItem() });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemDeleted", { path, id });
+    console.log("[VFS Store] Emitted vfs:itemDeleted event for path:", path);
   },
 
   // Move a single item from one folder path to another
   moveItem: (fromPath, id, toPath) => {
     virtualFs.moveItem(fromPath, id, toPath);
     set({ fs: virtualFs.getRootFileSystemItem() });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemMoved", { fromPath, id, toPath });
+    console.log(
+      "[VFS Store] Emitted vfs:itemMoved event from:",
+      fromPath,
+      "to:",
+      toPath
+    );
   },
 
   // Update the content of a file without having to delete and re-create it
   updateFileContent: (path, id, content) => {
     virtualFs.updateFileContent(path, id, content);
     set({ fs: virtualFs.getRootFileSystemItem() });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:fileContentUpdated", { path, id, content });
+    console.log(
+      "[VFS Store] Emitted vfs:fileContentUpdated event for path:",
+      path
+    );
   },
 }));

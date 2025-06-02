@@ -1,0 +1,7 @@
+{
+  "name": "Calculator",
+  "description": "Perform calculations",
+  "target": "calculator",
+  "iconType": "plugin",
+  "icon": "calculator"
+}

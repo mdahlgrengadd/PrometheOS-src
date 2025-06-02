@@ -1,0 +1,7 @@
+{
+  "name": "File Explorer",
+  "description": "Browse files and folders",
+  "target": "file-explorer",
+  "iconType": "plugin",
+  "icon": "file-explorer"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Browser",
+  "description": "Browse the web",
+  "target": "browser",
+  "iconType": "plugin",
+  "icon": "browser"
+}
