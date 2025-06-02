@@ -1,15 +1,15 @@
-import './App.css';
+import "./App.css";
 
-import React, { lazy, Suspense } from 'react';
-import { HashRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { lazy, Suspense } from "react";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
 
-import DialogListener from '@/components/DialogListener';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
-import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from '@/lib/ThemeProvider';
+import DialogListener from "@/components/DialogListener";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/lib/ThemeProvider";
 
-import { WindowDndContext } from './components/shelley-wm/WindowDndContext';
-import { useViewMode } from './hooks/useViewMode';
+import { WindowDndContext } from "./components/shelley-wm/WindowDndContext";
+import { useViewMode } from "./hooks/useViewMode";
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/index"));
@@ -38,6 +38,8 @@ function App() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                fontSize: "1.0rem",
+                color: "white",
               }}
             >
               Loading...

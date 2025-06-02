@@ -2,7 +2,7 @@
  * Worker-specific Calculator plugin implementation that doesn't depend on React or DOM
  */
 
-import { WorkerPlugin } from '../../plugins/types';
+import { WorkerPlugin } from "../../plugins/types";
 
 /**
  * Simple calculator functionality without any UI dependencies
@@ -16,9 +16,9 @@ const WorkerCalculator: WorkerPlugin = {
     secondOperand: number,
     operator: string
   ): number {
-    console.log(
-      `Worker calculating: ${firstOperand} ${operator} ${secondOperand}`
-    );
+    // console.log(
+    //   `Worker calculating: ${firstOperand} ${operator} ${secondOperand}`
+    // );
     let result: number;
 
     switch (operator) {
@@ -38,7 +38,7 @@ const WorkerCalculator: WorkerPlugin = {
         result = secondOperand;
     }
 
-    console.log(`Worker result: ${result}`);
+    //console.log(`Worker result: ${result}`);
     return result;
   },
 

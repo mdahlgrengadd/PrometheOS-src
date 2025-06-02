@@ -1,4 +1,4 @@
-import { IApiComponent, IOpenApiSpec } from '../core/types';
+import { IApiComponent, IOpenApiSpec } from "../core/types";
 
 /**
  * Generate an OpenAPI specification from the registered components
@@ -7,14 +7,15 @@ import { IApiComponent, IOpenApiSpec } from '../core/types';
  */
 export const generateOpenApiSpec = (
   components: IApiComponent[]
-): IOpenApiSpec => {  // Determine the current environment and base URL
+): IOpenApiSpec => {
+  // Determine the current environment and base URL
   const isDevelopment = import.meta.env.DEV;
-  
+
   // Always use the Vite base URL configuration since it applies to both dev and prod
   // In development: "/prometheos/" (from vite.config.ts)
   // In production: "/prometheos/" (same base path)
   const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
-  
+
   // Start with the basic OpenAPI structure
   const spec: IOpenApiSpec = {
     openapi: "3.0.0",
@@ -22,7 +23,8 @@ export const generateOpenApiSpec = (
       title: "PrometheOS API",
       description: "API for AI agent interaction with the PrometheOS",
       version: "1.0.0",
-    },    servers: [
+    },
+    servers: [
       {
         url: baseUrl,
         description: isDevelopment ? "Development Server" : "Production Server",
@@ -33,151 +35,152 @@ export const generateOpenApiSpec = (
       schemas: {},
     },
   };
+  // Generate paths for each component and action (only for visible components)
+  components
+    .filter((component) => component.state?.visible !== false)
+    .forEach((component) => {
+      // Create a path for the component - make sure it starts with /api
+      const basePath = `/api${component.path}`;
 
-  // Generate paths for each component and action
-  components.forEach((component) => {
-    // Create a path for the component - make sure it starts with /api
-    const basePath = `/api${component.path}`;
+      // Add each action as an operation
+      component.actions.forEach((action) => {
+        // Create a simple path format that our interceptor can parse: /api/componentId/actionId
+        const actionPath = `/api/${component.id}/${action.id}`;
 
-    // Add each action as an operation
-    component.actions.forEach((action) => {
-      // Create a simple path format that our interceptor can parse: /api/componentId/actionId
-      const actionPath = `/api/${component.id}/${action.id}`;
+        // Create request body from parameters
+        const requestBody =
+          action.parameters && action.parameters.length > 0
+            ? {
+                required: action.parameters.some((p) => p.required),
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: action.parameters.reduce(
+                        (props, param) => ({
+                          ...props,
+                          [param.name]: {
+                            type: param.type,
+                            description: param.description,
+                          },
+                        }),
+                        {}
+                      ),
+                      required: action.parameters
+                        .filter((p) => p.required)
+                        .map((p) => p.name),
+                    },
+                  },
+                },
+              }
+            : undefined;
 
-      // Create request body from parameters
-      const requestBody =
-        action.parameters && action.parameters.length > 0
-          ? {
-              required: action.parameters.some((p) => p.required),
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: action.parameters.reduce(
-                      (props, param) => ({
-                        ...props,
-                        [param.name]: {
-                          type: param.type,
-                          description: param.description,
+        // Add the operation
+        spec.paths[actionPath] = {
+          post: {
+            summary: action.name,
+            description: action.description,
+            operationId: `${component.id}_${action.id}`,
+            requestBody,
+            responses: {
+              "200": {
+                description: "Successful operation",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        success: {
+                          type: "boolean",
+                          description: "Whether the operation was successful",
                         },
-                      }),
-                      {}
-                    ),
-                    required: action.parameters
-                      .filter((p) => p.required)
-                      .map((p) => p.name),
+                        data: {
+                          type: "object",
+                          description: "Result data from the operation",
+                        },
+                      },
+                    },
                   },
                 },
               },
-            }
-          : undefined;
-
-      // Add the operation
-      spec.paths[actionPath] = {
-        post: {
-          summary: action.name,
-          description: action.description,
-          operationId: `${component.id}_${action.id}`,
-          requestBody,
-          responses: {
-            "200": {
-              description: "Successful operation",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      success: {
-                        type: "boolean",
-                        description: "Whether the operation was successful",
-                      },
-                      data: {
-                        type: "object",
-                        description: "Result data from the operation",
+              "400": {
+                description: "Error response",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        success: {
+                          type: "boolean",
+                          example: false,
+                          description: "Operation failed",
+                        },
+                        error: {
+                          type: "string",
+                          description: "Error message",
+                        },
                       },
                     },
                   },
                 },
               },
             },
-            "400": {
-              description: "Error response",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      success: {
-                        type: "boolean",
-                        example: false,
-                        description: "Operation failed",
-                      },
-                      error: {
-                        type: "string",
-                        description: "Error message",
-                      },
-                    },
-                  },
+            tags: [component.type || "default"],
+          },
+        };
+      });
+
+      // Add component schema
+      const componentSchema = {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Unique identifier for the component",
+          },
+          type: {
+            type: "string",
+            description: "Type of component",
+          },
+          description: {
+            type: "string",
+            description: "Description of what the component does",
+          },
+          state: {
+            type: "object",
+            description: "Current state of the component",
+          },
+          actions: {
+            type: "array",
+            description:
+              "Available actions that can be performed on this component",
+            items: {
+              type: "object",
+              properties: {
+                id: {
+                  type: "string",
+                  description: "Unique identifier for the action",
+                },
+                name: {
+                  type: "string",
+                  description: "Human-readable name for the action",
+                },
+                description: {
+                  type: "string",
+                  description: "Description of what the action does",
+                },
+                available: {
+                  type: "boolean",
+                  description: "Whether the action is currently available",
                 },
               },
             },
           },
-          tags: [component.type || "default"],
         },
       };
+
+      spec.components.schemas[component.type] = componentSchema;
     });
-
-    // Add component schema
-    const componentSchema = {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "Unique identifier for the component",
-        },
-        type: {
-          type: "string",
-          description: "Type of component",
-        },
-        description: {
-          type: "string",
-          description: "Description of what the component does",
-        },
-        state: {
-          type: "object",
-          description: "Current state of the component",
-        },
-        actions: {
-          type: "array",
-          description:
-            "Available actions that can be performed on this component",
-          items: {
-            type: "object",
-            properties: {
-              id: {
-                type: "string",
-                description: "Unique identifier for the action",
-              },
-              name: {
-                type: "string",
-                description: "Human-readable name for the action",
-              },
-              description: {
-                type: "string",
-                description: "Description of what the action does",
-              },
-              available: {
-                type: "boolean",
-                description: "Whether the action is currently available",
-              },
-            },
-          },
-        },
-      },
-    };
-
-    spec.components.schemas[component.type] = componentSchema;
-  });
 
   return spec;
 };

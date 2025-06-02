@@ -1,0 +1,138 @@
+/* macOS and Fluxbox themes: Node title label should be light color for dark backgrounds */
+.theme-macos .workflow-node-base .node-header,
+.theme-fluxbox .workflow-node-base .node-header {
+  color: #f8fafc !important; /* light color for node title */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+
+/* macOS and Fluxbox themes: Make workflow editor input/select/button text light for dark backgrounds */
+.theme-macos .blueprints input,
+.theme-macos .blueprints select,
+.theme-macos .blueprints button,
+.theme-fluxbox .blueprints input,
+.theme-fluxbox .blueprints select,
+.theme-fluxbox .blueprints button {
+  color: #f8fafc !important;
+}
+/* BeOS theme: Node title label should be light color for dark backgrounds */
+.theme-beos .workflow-node-base .node-header {
+  color: #f8fafc !important; /* light color for node title */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+/* BeOS theme: Make workflow editor dropdown/select background light for contrast */
+.theme-beos .blueprints select {
+  background-color: #f0f0f0 !important;
+  color: var(--text-primary, #23272e) !important;
+  border: 1px solid #4A5568 !important;
+}
+/* Pin size and spacing adjustments for workflow editor - Unreal Engine Blueprint style */
+
+/* Pin size overrides for larger 3D pins */
+.react-flow__handle {
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid #666 !important;
+  /* transition removed for immediate response during node dragging */
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    inset 1px 0 0 rgba(255,255,255,0.3),
+    inset -1px 0 0 rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.1) !important;
+}
+
+/* Pin type-specific styling - Unreal Engine Blueprint colors */
+/* Execution pins are white with enhanced 3D effect */
+.react-flow__handle[data-pin-type="execution"] {
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%) !important;
+  border: 2px solid #999 !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    inset 0 -1px 0 rgba(0,0,0,0.2),
+    inset 1px 0 0 rgba(255,255,255,0.5),
+    inset -1px 0 0 rgba(0,0,0,0.1),
+    0 2px 4px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(255,255,255,0.2) !important;
+}
+
+/* String pins are purple with gradient */
+.react-flow__handle[data-pin-data-type="string"] {
+  background: linear-gradient(135deg, #8B5CF6 0%, #8B5CF6cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Number pins are orange with gradient */
+.react-flow__handle[data-pin-data-type="number"] {
+  background: linear-gradient(135deg, #F97316 0%, #F97316cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Integer pins (sub-type of number) - same as number */
+.react-flow__handle[data-pin-data-type="integer"] {
+  background: linear-gradient(135deg, #F97316 0%, #F97316cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Float pins (sub-type of number) - green variant */
+.react-flow__handle[data-pin-data-type="float"] {
+  background: linear-gradient(135deg, #22C55E 0%, #22C55Ecc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Boolean pins are red with gradient */
+.react-flow__handle[data-pin-data-type="boolean"] {
+  background: linear-gradient(135deg, #EF4444 0%, #EF4444cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Object pins are blue with gradient */
+.react-flow__handle[data-pin-data-type="object"] {
+  background: linear-gradient(135deg, #3B82F6 0%, #3B82F6cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Array pins are pink with gradient */
+.react-flow__handle[data-pin-data-type="array"] {
+  background: linear-gradient(135deg, #EC4899 0%, #EC4899cc 100%) !important;
+  border: 2px solid #666 !important;
+}
+
+/* Hover effects removed for cleaner blueprint experience */
+
+/* Removed all hover effects from pins to match Unreal Engine blueprint style */
+/* .react-flow__handle:hover - disabled */
+/* Type-specific hover effects - disabled */
+/* This creates a cleaner, more professional blueprint appearance */
+
+/* Adjust spacing for pins and labels to accommodate larger pins */
+
+/* Adjust spacing for pins and labels to accommodate larger pins */
+.execution-pin, .input-pin, .output-pin {
+  margin-top: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+/* Adjust label positioning for the larger pins */
+
+/* Pin label colors for dark backgrounds */
+.execution-pin .execution-label,
+.input-pin .pin-label,
+.output-pin .pin-label {
+  color: #F3F4F6 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.18);
+}
+.execution-pin .execution-label {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+
+.input-pin .pin-label {
+  margin-left: 1.25rem;
+}
+
+
+.output-pin .pin-label {
+  margin-right: 1.25rem;
+}

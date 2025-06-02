@@ -176,3 +176,133 @@
   background-color: hsl(var(--api-explorer-secondary)) !important;
   color: hsl(var(--api-explorer-secondary-foreground)) !important;
 }
+
+/* Markdown content styles for API descriptions */
+.api-explorer-isolated .prose {
+  color: hsl(var(--api-explorer-foreground)) !important;
+  max-width: none !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+  word-break: break-word !important;
+}
+
+.api-explorer-isolated .prose h1,
+.api-explorer-isolated .prose h2,
+.api-explorer-isolated .prose h3,
+.api-explorer-isolated .prose h4,
+.api-explorer-isolated .prose h5,
+.api-explorer-isolated .prose h6 {
+  color: hsl(var(--api-explorer-foreground)) !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.api-explorer-isolated .prose p {
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.5 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+}
+
+.api-explorer-isolated .prose code {
+  background-color: hsl(var(--api-explorer-muted)) !important;
+  color: hsl(var(--api-explorer-foreground)) !important;
+  padding: 0.125rem 0.25rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875rem !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+}
+
+.api-explorer-isolated .prose pre {
+  background-color: hsl(var(--api-explorer-muted)) !important;
+  color: hsl(var(--api-explorer-foreground)) !important;
+  padding: 0.75rem !important;
+  border-radius: 0.375rem !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  font-size: 0.875rem !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+  margin: 0.5rem 0 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+.api-explorer-isolated .prose ul,
+.api-explorer-isolated .prose ol {
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+  margin: 0.5rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.api-explorer-isolated .prose li {
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+  margin: 0.25rem 0 !important;
+}
+
+.api-explorer-isolated .prose blockquote {
+  border-left: 4px solid hsl(var(--api-explorer-border)) !important;
+  padding-left: 1rem !important;
+  margin: 0.5rem 0 !important;
+  font-style: italic !important;
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+}
+
+.api-explorer-isolated .prose strong {
+  color: hsl(var(--api-explorer-foreground)) !important;
+  font-weight: 600 !important;
+}
+
+.api-explorer-isolated .prose em {
+  color: hsl(var(--api-explorer-muted-foreground)) !important;
+  font-style: italic !important;
+}
+
+.api-explorer-isolated .prose a {
+  color: hsl(var(--api-explorer-primary)) !important;
+  text-decoration: none !important;
+}
+
+.api-explorer-isolated .prose a:hover {
+  text-decoration: underline !important;
+}
+
+/* Ensure markdown content doesn't inherit conflicting styles */
+.api-explorer-isolated .prose * {
+  box-sizing: border-box !important;
+}
+
+/* Additional word wrapping and overflow control */
+.api-explorer-isolated * {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Specific handling for code elements to prevent horizontal overflow */
+.api-explorer-isolated code,
+.api-explorer-isolated pre {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Ensure long URLs and strings break properly */
+.api-explorer-isolated .prose p,
+.api-explorer-isolated .prose li,
+.api-explorer-isolated .prose div {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* Container overflow control */
+.api-explorer-isolated .accordion-content,
+.api-explorer-isolated .card-content,
+.api-explorer-isolated .tab-content {
+  overflow: hidden !important;
+  min-width: 0 !important;
+}

@@ -11,7 +11,7 @@ print("Starting Hybrid Desktop API bridge setup...")
 
 
 class DesktopAPI:
-    """Python interface to Desktop Dreamscape APIs using Comlink"""
+    """Python interface to PromethOS APIs using Comlink"""
 
     @staticmethod
     async def list_components():

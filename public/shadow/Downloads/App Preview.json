@@ -1,0 +1,7 @@
+{
+  "name": "App Preview",
+  "description": "Preview published applications in full-window mode",
+  "target": "app-preview",
+  "iconType": "plugin",
+  "icon": "app-preview"
+}

@@ -39,7 +39,7 @@ html {
 .chat-box {
   overflow-y: scroll;
   background-color: #c3c3c3;
-//  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   border: 2px solid black;
   padding: 5px;
   flex: 1 1;
@@ -72,11 +72,17 @@ html {
 .message-container.user .message {
   background: #007bff;
   color: #fff;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .message-container.assistant .message {
   background: #f1f0f0;
   color: #333;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .chat-input-container {
@@ -241,4 +247,192 @@ button:hover:not(:disabled) {
       border: 1px solid #f2f2f2;
     }
   }
+}
+
+/* Custom styles for markdown in chat messages */
+.prose {
+  color: inherit;
+  max-width: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: inherit;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.prose h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.prose h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.prose p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose ul,
+.prose ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.prose em {
+  font-style: italic;
+  color: inherit;
+}
+
+.prose code {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #1f2937 !important; /* Ensure dark text for light backgrounds */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap; /* Allow wrapping while preserving some formatting */
+  max-width: 100%;
+  display: inline-block;
+}
+
+.prose pre {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  color: #1f2937 !important; /* Ensure dark text for light backgrounds */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  display: block;
+}
+
+/* Dark mode overrides for code blocks */
+@media (prefers-color-scheme: dark) {
+  .prose code {
+    color: #f9fafb !important; /* Light text for dark backgrounds */
+  }
+  
+  .prose pre {
+    color: #f9fafb !important; /* Light text for dark backgrounds */
+  }
+}
+
+.prose blockquote {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose table {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  table-layout: auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.prose table tbody,
+.prose table thead {
+  display: table;
+  width: 100%;
+}
+
+/* Ensure proper spacing for first and last elements */
+.prose > *:first-child {
+  margin-top: 0;
+}
+
+.prose > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Additional word-wrapping utilities for chat messages */
+.chat-message-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: pre-wrap;
+}
+
+/* Ensure long URLs and code don't break layout */
+.prose a {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Force code blocks to respect container width */
+.prose pre,
+.prose code {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Ensure code blocks inside messages don't exceed message width */
+.message .prose pre,
+.message .prose code {
+  max-width: calc(100% - 2rem) !important; /* Account for message padding */
+}
+
+/* Force long words in code to break if necessary */
+.prose pre code,
+.prose code {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: pre-wrap !important;
+}
+
+/* Prevent horizontal scrolling on the entire chat */
+.chat-box {
+  overflow-x: hidden !important;
 }

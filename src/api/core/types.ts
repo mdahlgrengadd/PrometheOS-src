@@ -227,3 +227,47 @@ export interface IActionResult {
   data?: unknown;
   error?: string;
 }
+
+/**
+ * JSON-compatible API Component Documentation
+ * This is a serializable version of IApiComponent for importing from JSON files.
+ * It excludes the 'id' field since that's typically assigned when the component is registered.
+ *
+ * @example
+ * ```typescript
+ * import * as apiDocModule from "./my-component-api.json";
+ * const apiDoc = apiDocModule as ApiComponentJson;
+ * ```
+ */
+export interface ApiComponentJson {
+  /** Type of component (Button, Input, AudioPlayer, etc.) */
+  type: string;
+
+  /** Human-readable description of what the component does */
+  description: string;
+
+  /** Current state of the component with flexible properties */
+  state: {
+    enabled: boolean;
+    visible: boolean;
+    /** Allow any additional state properties */
+    [key: string]: unknown;
+  };
+
+  /** Available actions that can be performed on this component */
+  actions: Array<{
+    id: string;
+    name: string;
+    description: string;
+    available: boolean;
+    parameters: Array<{
+      name: string;
+      type: string;
+      description: string;
+      required: boolean;
+    }>;
+  }>;
+
+  /** Path to the component in the application (e.g., /apps/audioplayer) */
+  path: string;
+}

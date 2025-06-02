@@ -66,14 +66,11 @@ export const buildCode = async ({
   // Always ensure ESBuild is initialized before building
   await initializeEsbuild();
 
-  // React is copied during npm run build to the shadow directory
-  // We should not load React modules here, as they are already available in the shadow directory
-  console.warn("We should remove loadReactModules() from here");
-
-  // // Load React modules into virtual filesystem if not already loaded
-  // if (!virtualFs["node_modules/react/index.js"]) {
-  //   await loadReactModules();
-  // }
+  // Load React modules into virtual filesystem if not already loaded
+  if (!virtualFs["node_modules/react/index.js"]) {
+    console.log("Loading React modules from shadow directory...");
+    await loadReactModules();
+  }
 
   try {
     // Store the entry file in our virtual filesystem

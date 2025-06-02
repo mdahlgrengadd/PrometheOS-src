@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { Badge } from "@/components/ui/badge";
 // Import shadcn components
@@ -22,7 +24,10 @@ import {
 //import * as webllm from "https://unpkg.com/@mlc-ai/web-llm@0.2.78";
 import * as webllm from "@mlc-ai/web-llm";
 
-import { useApi } from "../../../api/context/ApiContext";
+import {
+  registerApiActionHandler,
+  useApi,
+} from "../../../api/context/ApiContext";
 import { workerPluginManager } from "../../WorkerPluginManagerClient";
 import { manifest } from "./manifest";
 // Import model configuration
@@ -80,7 +85,97 @@ const AIChatContent: React.FC = () => {
 
   // Get available models from config
   const appConfig = createAppConfig();
-  const availableModels = appConfig.model_list;
+  const availableModels = appConfig.model_list; // Markdown rendering component for assistant messages
+  const MarkdownMessage: React.FC<{ content: string }> = ({ content }) => (
+    <div className="prose prose-sm max-w-none dark:prose-invert">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Customize code blocks
+          code: ({ children, className, ...props }) => {
+            const match = /language-(\w+)/.exec(className || "");
+            const isInline = !match;
+            return isInline ? (
+              <code
+                className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-1 py-0.5 rounded text-sm break-words"
+                {...props}
+              >
+                {children}
+              </code>
+            ) : (
+              <pre className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md p-3 overflow-x-auto max-w-full">
+                <code
+                  className="break-words whitespace-pre-wrap overflow-wrap-anywhere"
+                  {...props}
+                >
+                  {children}
+                </code>
+              </pre>
+            );
+          },
+          // Customize pre blocks
+          pre: ({ children, ...props }) => (
+            <pre
+              className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md p-3 overflow-x-auto max-w-full break-words whitespace-pre-wrap"
+              {...props}
+            >
+              {children}
+            </pre>
+          ),
+          // Customize tables
+          table: ({ children, ...props }) => (
+            <div className="overflow-x-auto">
+              <table
+                className="min-w-full border-collapse border border-gray-300 dark:border-gray-600"
+                {...props}
+              >
+                {children}
+              </table>
+            </div>
+          ),
+          th: ({ children, ...props }) => (
+            <th
+              className="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-gray-50 dark:bg-gray-700 font-semibold text-left"
+              {...props}
+            >
+              {children}
+            </th>
+          ),
+          td: ({ children, ...props }) => (
+            <td
+              className="border border-gray-300 dark:border-gray-600 px-3 py-2"
+              {...props}
+            >
+              {children}
+            </td>
+          ),
+          // Customize links
+          a: ({ children, href, ...props }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+              {...props}
+            >
+              {children}
+            </a>
+          ),
+          // Customize blockquotes
+          blockquote: ({ children, ...props }) => (
+            <blockquote
+              className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-700 dark:text-gray-300"
+              {...props}
+            >
+              {children}
+            </blockquote>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
   useEffect(() => {
     // Register the AI Chat component
     const componentDoc = {
@@ -109,7 +204,121 @@ const AIChatContent: React.FC = () => {
     };
     registerComponent(componentDoc);
     // eslint-disable-next-line
-  }, []);
+  }, []); // Register action handler for sendMessage
+  useEffect(() => {
+    const handleSendMessage = async (params?: Record<string, unknown>) => {
+      try {
+        const message = params?.message as string;
+        if (!message || typeof message !== "string") {
+          return {
+            success: false,
+            error: "Message parameter is required and must be a string",
+          };
+        }
+
+        // Check if model is loaded
+        if (!isModelLoaded || !engineRef.current) {
+          return {
+            success: false,
+            error:
+              "AI model is not loaded yet. Please initialize the model first.",
+          };
+        }
+
+        // Auto-start chat if not started
+        if (!chatStarted) {
+          setChatStarted(true);
+        }
+
+        // Create user message directly
+        const userMessage: Message = {
+          role: "user",
+          content: message,
+        };
+
+        // Add to global messages array (source of truth)
+        messagesRef.current.push(userMessage);
+
+        // Add to display
+        appendMessage(userMessage);
+        setIsLoading(true);
+
+        // Process the message using the same logic as sendMessage
+        try {
+          let done = false;
+          let iter = 0;
+
+          // Tool calling loop (up to 3 iterations like in sendMessage)
+          while (!done && iter < 3) {
+            iter++;
+            console.log(`=== API sendMessage iteration ${iter}, done: ${done}`);
+
+            // Add "thinking..." message to display
+            const aiMessage: Message = {
+              role: "assistant",
+              content: "thinking...", // typing...
+            };
+            appendMessage(aiMessage);
+
+            const onUpdate = (content: string) => {
+              updateLastMessage(content);
+            };
+
+            const onFinish = (
+              displayMessage: string,
+              usage: Usage | undefined,
+              conversationMessage?: string
+            ) => {
+              updateLastMessage(displayMessage);
+
+              // Add the conversation message to global messages array
+              const messageToAdd = conversationMessage || displayMessage;
+              messagesRef.current.push({
+                role: "assistant",
+                content: messageToAdd,
+              });
+            };
+
+            const rc = await streamingGenerating(
+              messagesRef.current,
+              onUpdate,
+              onFinish,
+              console.error
+            );
+
+            done = rc.done;
+
+            // Handle tool calls if needed
+            if (!done && rc.func && toolHandlerRef.current) {
+              // Tool handling logic would go here
+              // For now, we'll break to avoid infinite loops
+              done = true;
+            }
+          }
+        } catch (error) {
+          console.error("Error processing API message:", error);
+          appendMessage({
+            role: "assistant",
+            content: "Sorry, I encountered an error processing your message.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        return {
+          success: true,
+          message: `Message "${message}" sent to AI Chat`,
+        };
+      } catch (error) {
+        console.error("Error in sendMessage action handler:", error);
+        return {
+          success: false,
+          error: `Failed to send message: ${error}`,
+        };
+      }
+    };
+
+    registerApiActionHandler(manifest.id, "sendMessage", handleSendMessage);
+  }, [isModelLoaded, chatStarted]);
 
   // Initialize MCP tools on component mount
   useEffect(() => {
@@ -142,11 +351,100 @@ const AIChatContent: React.FC = () => {
       const tools = await workerPluginManager.getMCPTools();
       console.log("Refreshed MCP tools:", tools);
       setMcpTools(tools);
+
+      // If model is loaded and we have a tool handler, regenerate the system prompt
+      if (isModelLoaded && toolHandlerRef.current) {
+        await updateSystemPromptWithNewTools(tools);
+      }
     } catch (error) {
       console.error("Error refreshing MCP tools:", error);
     }
   };
+  // Function to manually refresh tools (useful for testing or when MCP server changes)
+  const manualRefreshTools = useCallback(async () => {
+    console.log("Manual refresh triggered...");
+    await refreshMCPTools();
+  }, [refreshMCPTools]);
 
+  // Expose the refresh function globally for debugging/testing
+  useEffect(() => {
+    (
+      window as typeof window & { aiChatRefreshTools?: () => Promise<void> }
+    ).aiChatRefreshTools = manualRefreshTools;
+    return () => {
+      delete (
+        window as typeof window & { aiChatRefreshTools?: () => Promise<void> }
+      ).aiChatRefreshTools;
+    };
+  }, [manualRefreshTools]);
+
+  // Function to dynamically update system prompt when new tools are available
+  const updateSystemPromptWithNewTools = async (newMcpTools: MCPTool[]) => {
+    if (!toolHandlerRef.current) {
+      console.warn("Tool handler not available for system prompt update");
+      return;
+    }
+
+    try {
+      console.log("Updating system prompt with new tools...");
+
+      // Create new combined tools list
+      const combinedTools = [...tools, ...newMcpTools];
+
+      // Generate new system prompt
+      const newSystemPrompt =
+        toolHandlerRef.current.createSystemPrompt(combinedTools);
+
+      // Preserve conversation history while updating system prompt
+      const conversationMessages = messagesRef.current.slice(1); // Remove old system message
+
+      // Update messages array with new system prompt
+      messagesRef.current = [
+        {
+          role: "system" as const,
+          content: newSystemPrompt,
+        },
+        ...conversationMessages, // Preserve all conversation history
+      ];
+
+      // Update display messages (only if chat has started)
+      if (chatStarted && displayMessages.length > 0) {
+        // Find the first non-system message index in display
+        const firstUserMessageIndex = displayMessages.findIndex(
+          (msg) => msg.role !== "system"
+        );
+        const conversationDisplayMessages =
+          firstUserMessageIndex >= 0
+            ? displayMessages.slice(firstUserMessageIndex)
+            : displayMessages;
+
+        setDisplayMessages([
+          {
+            role: "system" as const,
+            content: newSystemPrompt,
+          },
+          ...conversationDisplayMessages,
+        ]);
+      }
+
+      console.log(
+        `System prompt updated with ${combinedTools.length} total tools (${newMcpTools.length} MCP tools)`
+      );
+
+      // Optionally notify user about new tools
+      if (chatStarted && newMcpTools.length > mcpTools.length) {
+        const newToolsCount = newMcpTools.length - mcpTools.length;
+        appendMessage({
+          role: "assistant",
+          content: `🔧 **System Update:** ${newToolsCount} new tool${
+            newToolsCount > 1 ? "s" : ""
+          } now available! I can now help you with additional capabilities.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating system prompt with new tools:", error);
+    }
+  };
   // Listen for new API component registrations to refresh tools
   useEffect(() => {
     const handleComponentRegistration = () => {
@@ -168,7 +466,7 @@ const AIChatContent: React.FC = () => {
         handleComponentRegistration
       );
     };
-  }, []);
+  }, [refreshMCPTools]);
 
   const downloadModel = async () => {
     setIsLoading(true);
@@ -197,34 +495,53 @@ const AIChatContent: React.FC = () => {
         prefill_chunk_size: 8192,
         attention_sink_size: 4096,
       };
-
       await engineRef.current.reload(selectedModel, config); // Initialize tool handler
       toolHandlerRef.current = new ToolHandler(selectedModel);
 
       setIsModelLoaded(true);
       setDownloadStatus("Model loaded successfully!");
 
-      // Create combined tools list (static tools + MCP tools)
-      const combinedTools = [...tools, ...mcpTools];
-      console.log("Combined tools for AI:", combinedTools);
-
-      // Add system message with tool support
-      const systemPrompt =
-        toolHandlerRef.current.createSystemPrompt(combinedTools);
-      messagesRef.current = [
-        {
-          role: "system" as const,
-          content: systemPrompt,
-        },
-      ];
-      setDisplayMessages([...messagesRef.current]);
+      // Initialize system prompt with current tools
+      await updateSystemPromptWithNewTools(mcpTools);
     } catch (error) {
       console.error("Error loading model:", error);
       setDownloadStatus("Error loading model. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }; // Add debugging helper for system prompt inspection
+  const inspectSystemPrompt = useCallback(() => {
+    if (
+      messagesRef.current.length > 0 &&
+      messagesRef.current[0].role === "system"
+    ) {
+      console.log("Current system prompt:", messagesRef.current[0].content);
+      console.log("Current tools count:", tools.length + mcpTools.length);
+      console.log("Static tools:", tools.length);
+      console.log("MCP tools:", mcpTools.length);
+    } else {
+      console.log("No system prompt found in messages");
+    }
+  }, [mcpTools]);
+
+  // Expose debugging helper globally
+  useEffect(() => {
+    (
+      window as typeof window & {
+        aiChatRefreshTools?: () => Promise<void>;
+        aiChatInspectSystemPrompt?: () => void;
+      }
+    ).aiChatInspectSystemPrompt = inspectSystemPrompt;
+    return () => {
+      delete (
+        window as typeof window & {
+          aiChatRefreshTools?: () => Promise<void>;
+          aiChatInspectSystemPrompt?: () => void;
+        }
+      ).aiChatInspectSystemPrompt;
+    };
+  }, [inspectSystemPrompt]);
+
   // Streaming generation function with tool support (based on index.js)
   const streamingGenerating = async (
     messages: Message[],
@@ -367,7 +684,7 @@ const AIChatContent: React.FC = () => {
         // Add "thinking..." message to display
         const aiMessage: Message = {
           role: "assistant",
-          content: "typing...",
+          content: "thinking...", // typing...
         };
         appendMessage(aiMessage);
 
@@ -654,6 +971,120 @@ const AIChatContent: React.FC = () => {
       }
     }
   }, [displayMessages]);
+
+  // Register action handler for sendMessage API
+  useEffect(() => {
+    const handleSendMessage = async (params?: Record<string, unknown>) => {
+      try {
+        const message = params?.message as string;
+        if (!message || typeof message !== "string") {
+          return {
+            success: false,
+            error: "Message parameter is required and must be a string",
+          };
+        }
+
+        // Check if model is loaded
+        if (!isModelLoaded || !engineRef.current) {
+          return {
+            success: false,
+            error:
+              "AI model is not loaded yet. Please initialize the model first.",
+          };
+        }
+
+        // Auto-start chat if not started
+        if (!chatStarted) {
+          setChatStarted(true);
+        }
+
+        // Create user message directly and trigger the sendMessage flow
+        const userMessage: Message = {
+          role: "user",
+          content: message,
+        };
+
+        // Add to global messages array (source of truth)
+        messagesRef.current.push(userMessage);
+
+        // Add to display
+        appendMessage(userMessage);
+        setIsLoading(true);
+
+        // Use the same streaming generation logic as the UI sendMessage function
+        try {
+          let done = false;
+          let iter = 0;
+
+          while (!done && iter < 3) {
+            iter++;
+            console.log(`=== API sendMessage iteration ${iter}`);
+
+            const aiMessage: Message = {
+              role: "assistant",
+              content: "thinking...", // typing...
+            };
+            appendMessage(aiMessage);
+
+            const onUpdate = (content: string) => {
+              updateLastMessage(content);
+            };
+
+            const onFinish = (
+              displayMessage: string,
+              usage: Usage | undefined,
+              conversationMessage?: string
+            ) => {
+              updateLastMessage(displayMessage);
+              const messageToAdd = conversationMessage || displayMessage;
+              messagesRef.current.push({
+                role: "assistant",
+                content: messageToAdd,
+              });
+            };
+
+            const rc = await streamingGenerating(
+              messagesRef.current,
+              onUpdate,
+              onFinish,
+              console.error
+            );
+
+            done = rc.done;
+
+            // Basic tool handling - simplified for API calls
+            if (!done && rc.func && toolHandlerRef.current) {
+              console.log("API call triggered tool:", rc.func.name);
+              // For API calls, we'll process one tool iteration then stop
+              done = true;
+            }
+          }
+        } catch (error) {
+          console.error("Error processing API message:", error);
+          appendMessage({
+            role: "assistant",
+            content: "Sorry, I encountered an error processing your message.",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+
+        return {
+          success: true,
+          message: `Message "${message}" sent to AI Chat successfully`,
+        };
+      } catch (error) {
+        console.error("Error in sendMessage action handler:", error);
+        return {
+          success: false,
+          error: `Failed to send message: ${error}`,
+        };
+      }
+    };
+
+    registerApiActionHandler(manifest.id, "sendMessage", handleSendMessage);
+  }, [isModelLoaded, chatStarted]);
+
   return (
     <div className="flex flex-col h-full bg-background font-sans">
       {!chatStarted ? (
@@ -765,22 +1196,33 @@ const AIChatContent: React.FC = () => {
                 ← Back to Setup
               </Button>
               <div>
-                <h2 className="font-semibold">{selectedModel}</h2>
+                <h2 className="font-semibold">{selectedModel}</h2>{" "}
                 <p className="text-sm text-muted-foreground">
-                  {mcpTools.length} tools available
+                  {tools.length + mcpTools.length} tools available (
+                  {mcpTools.length} MCP tools)
                 </p>
               </div>
+            </div>{" "}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={manualRefreshTools}
+                variant="outline"
+                size="sm"
+                title="Refresh available tools"
+              >
+                🔧 Refresh Tools
+              </Button>
+              <Button
+                onClick={() => {
+                  setDisplayMessages([]);
+                  messagesRef.current = messagesRef.current.slice(0, 1); // Keep only system message
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Clear Chat
+              </Button>
             </div>
-            <Button
-              onClick={() => {
-                setDisplayMessages([]);
-                messagesRef.current = messagesRef.current.slice(0, 1); // Keep only system message
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Clear Chat
-            </Button>
           </div>
 
           {/* Chat messages - Full height scrollable area */}
@@ -795,16 +1237,21 @@ const AIChatContent: React.FC = () => {
                       message.role === "user" ? "justify-end" : "justify-start"
                     }`}
                   >
+                    {" "}
                     <div
-                      className={`max-w-[80%] px-4 py-3 rounded-lg ${
+                      className={`max-w-[80%] px-4 py-3 rounded-lg break-words ${
                         message.role === "user"
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-blue-100 text-blue-900 border border-blue-200"
                           : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      <div className="whitespace-pre-wrap break-words">
-                        {message.content}
-                      </div>
+                      {message.role === "assistant" ? (
+                        <MarkdownMessage content={message.content} />
+                      ) : (
+                        <div className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                          {message.content}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -821,7 +1268,7 @@ const AIChatContent: React.FC = () => {
                         className="w-2 h-2 bg-current rounded-full animate-pulse"
                         style={{ animationDelay: "0.4s" }}
                       ></div>
-                      <span className="ml-2">Thinking...</span>
+                      <span className="ml-2"></span>
                     </div>
                   </div>
                 </div>

@@ -8,6 +8,16 @@ export interface FileSystemItem {
   children?: FileSystemItem[];
 }
 
+// Desktop shortcut manifest format
+export interface DesktopShortcut {
+  name: string; // Display name for the icon
+  description?: string; // Tooltip description
+  target: string; // Plugin ID to launch OR vfs:// path
+  icon?: string; // Path to icon image OR plugin icon reference
+  iconType?: "file" | "plugin" | "url";
+  args?: Record<string, unknown>; // Optional arguments to pass
+}
+
 // List of file extensions to treat as text when uploading
 export const TEXT_FILE_EXTENSIONS: string[] = [
   "txt",

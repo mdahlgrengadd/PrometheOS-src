@@ -1,4 +1,8 @@
-import { Pin, PinDataType, PinType } from '../features/workflow-editor/types/flowTypes';
+import {
+  Pin,
+  PinDataType,
+  PinType,
+} from "../plugins/apps/blueprints/workflow-editor/types/flowTypes";
 
 // Counter to ensure unique IDs
 let pinCounter = 0;

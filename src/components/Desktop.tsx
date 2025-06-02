@@ -1,22 +1,44 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from "react";
 
-import { useTheme } from '@/lib/ThemeProvider';
-import { useWindowStore } from '@/store/windowStore';
-import { WindowState } from '@/types/window';
-import { getOpenAppsFromUrl } from '@/utils/url';
+import { useTheme } from "@/lib/ThemeProvider";
+import { useWindowStore } from "@/store/windowStore";
+import { WindowState } from "@/types/window";
+import { getAppsToLaunchFromUrl, getPluginInitFromUrl } from "@/utils/url";
 
-import { usePlugins } from '../plugins/PluginContext';
-import AppWindow from './AppWindow';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
+import { usePlugins } from "../plugins/PluginContext";
+import AppWindow from "./AppWindow";
+import DesktopIcons from "./DesktopIcons";
+import Taskbar from "./Taskbar";
 
 const Desktop = () => {
   // Open apps from URL after all plugins/windows are registered
   useEffect(() => {
-    const appsToOpen = getOpenAppsFromUrl();
-    appsToOpen.forEach((appId) => {
-      openWindow(appId);
+    // Handle app opening with initialization data
+    const appsToLaunch = getAppsToLaunchFromUrl();
+    console.log("[Desktop] Apps to launch from URL:", appsToLaunch);
+
+    appsToLaunch.forEach(({ appId, initFromUrl }) => {
+      console.log(
+        `[Desktop] Opening app ${appId}${
+          initFromUrl ? ` with init URL: ${initFromUrl}` : ""
+        }`
+      );
+      openWindow(appId, initFromUrl);
     });
+
+    // Handle legacy plugin initialization with URL (for backward compatibility)
+    const pluginInit = getPluginInitFromUrl();
+    if (
+      pluginInit?.pluginId &&
+      !appsToLaunch.find((app) => app.appId === pluginInit.pluginId)
+    ) {
+      console.log(
+        "[Desktop] Opening plugin with init URL (legacy):",
+        pluginInit
+      );
+      openWindow(pluginInit.pluginId, pluginInit.initFromUrl);
+    }
+
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

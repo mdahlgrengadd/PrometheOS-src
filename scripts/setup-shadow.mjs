@@ -12,6 +12,21 @@ const __dirname = path.dirname(__filename);
 const DIST_SHADOW_DIR = path.resolve(__dirname, "../dist/shadow");
 const PUBLIC_SHADOW_DIR = path.resolve(__dirname, "../public/shadow");
 
+// Read base URL from Vite config
+let BASE_URL = '/';
+try {
+  const { loadConfigFromFile } = await import('vite');
+  const config = await loadConfigFromFile(
+    { command: 'build', mode: 'production' },
+    path.resolve(__dirname, '../vite.config.ts')
+  );
+  if (config?.config?.base) {
+    BASE_URL = config.config.base;
+  }
+} catch (error) {
+  console.warn('Could not load base URL from vite config, using default "/":', error.message);
+}
+
 /**
  * @typedef {Object} ShadowFsItem
  * @property {string} id
@@ -27,16 +42,19 @@ const PUBLIC_SHADOW_DIR = path.resolve(__dirname, "../public/shadow");
  */
 function fileToFsItem(filePath, root) {
   const rel = path.relative(root, filePath).replace(/\\/g, "/");
+  // Use the base URL from Vite config, ensuring proper path concatenation
+  const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
   return {
     id: rel,
     name: path.basename(filePath),
     type: "file",
-    contentPath: `/shadow/${rel}`,
+    contentPath: `${baseUrl}/shadow/${rel}`,
   };
 }
 
 async function setupShadowEnvironment() {
   console.log("Setting up shadow environment...");
+  console.log(`Using base URL: ${BASE_URL}`);
 
   try {
     // 1. Check if dist/shadow directory exists

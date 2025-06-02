@@ -1,10 +1,19 @@
-import { Howl, Howler } from 'howler';
-import { List, Pause, Play, SkipBack, SkipForward, Volume, VolumeX } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Howl, Howler } from "howler";
+import {
+  List,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume,
+  VolumeX,
+} from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button } from '@/components/ui/api/button';
+import { Button } from "@/components/ui/api/button";
 
-import { AudioPlayerProvider, useAudioPlayer } from './AudioPlayerContext';
+import { AudioPlayerProvider, useAudioPlayer } from "./AudioPlayerContext";
+import { manifest } from "./manifest";
 
 // Define sample songs - in a real app these would come from a database or files
 const songs = [
@@ -346,7 +355,7 @@ const AudioPlayerUI = () => {
         className="w-full flex-1 flex items-start justify-center pt-4 min-h-0"
       ></div>
 
-      {/* Progress Bar */}
+      {/* Progress Bar 
       <div className="w-full px-4 relative mb-2">
         <div
           id="bar"
@@ -360,7 +369,7 @@ const AudioPlayerUI = () => {
           ></div>
         </div>
       </div>
-
+      */}
       {/* Controls */}
       <div className="p-2 pb-3 flex items-center justify-between">
         <button
@@ -378,10 +387,14 @@ const AudioPlayerUI = () => {
             apiDescription="Skip to the previous track in the playlist"
             apiPath="/apps/audioplayer/controls"
             onClick={onPrevious}
+            apiState={{
+              enabled: false, // This disables API registration
+              visible: false, // This hides the button from API being visible
+            }}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
             <SkipBack size={24} />
-          </Button>
+          </Button>{" "}
           <Button
             apiId="audio-player-controls-play"
             apiName={isPlaying ? "Pause" : "Play"}
@@ -389,6 +402,10 @@ const AudioPlayerUI = () => {
               isPlaying ? "Pause the current track" : "Play the current track"
             }
             apiPath="/apps/audioplayer/controls"
+            apiState={{
+              enabled: false, // This disables API registration
+              visible: false, // This hides the button from API being visible
+            }}
             onClick={togglePlay}
             className="text-white w-10 h-10 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -399,6 +416,10 @@ const AudioPlayerUI = () => {
             apiName="Next Track"
             apiDescription="Skip to the next track in the playlist"
             apiPath="/apps/audioplayer/controls"
+            apiState={{
+              enabled: false, // This disables API registration
+              visible: false, // This hides the button from API being visible
+            }}
             onClick={onNext}
             className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
           >
@@ -412,6 +433,10 @@ const AudioPlayerUI = () => {
             isMuted ? "Unmute the audio player" : "Mute the audio player"
           }
           apiPath="/apps/audioplayer/controls"
+          apiState={{
+            enabled: false, // This disables API registration
+            visible: false, // This hides the button from API being visible
+          }}
           onClick={onToggleMute}
           className="text-white w-10 h-10 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity bg-transparent"
         >
@@ -484,11 +509,10 @@ const AudioPlayerContent = () => {
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
   }, []);
-
   return (
     <>
       <AudioPlayerProvider
-        apiId="audio-player-controls"
+        apiId={manifest.id}
         onPlay={handlePlay}
         onPause={handlePause}
         onNext={handleNext}
@@ -499,6 +523,7 @@ const AudioPlayerContent = () => {
         currentTrack={currentTrack}
         volume={volume}
         isMuted={isMuted}
+        exposeApi={true}
       >
         <AudioPlayerUI />
       </AudioPlayerProvider>

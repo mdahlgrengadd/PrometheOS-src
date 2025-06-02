@@ -1,13 +1,15 @@
-
-import React from 'react';
-import { Edit3, Trash2 } from 'lucide-react';
+import { Edit3, Link, Trash2 } from "lucide-react";
+import React from "react";
 
 interface ContextMenuProps {
-  position: { x: number, y: number };
+  position: { x: number; y: number };
   itemId: string;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
-  setShowContextMenu: (menu: { x: number, y: number, itemId: string } | null) => void;
+  onCreateShortcut?: (id: string) => void;
+  setShowContextMenu: (
+    menu: { x: number; y: number; itemId: string } | null
+  ) => void;
 }
 
 const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -15,7 +17,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
   itemId,
   onRename,
   onDelete,
-  setShowContextMenu
+  onCreateShortcut,
+  setShowContextMenu,
 }) => {
   return (
     <div
@@ -33,6 +36,19 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         <Edit3 className="w-4 h-4" />
         Rename
       </button>
+      {onCreateShortcut && (
+        <button
+          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCreateShortcut(itemId);
+            setShowContextMenu(null);
+          }}
+        >
+          <Link className="w-4 h-4" />
+          Create Desktop Shortcut
+        </button>
+      )}
       <button
         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 text-red-600 hover:bg-red-50 transition-colors"
         onClick={(e) => {

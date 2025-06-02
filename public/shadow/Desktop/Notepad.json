@@ -1,0 +1,7 @@
+{
+  "name": "Notepad",
+  "description": "Simple text editor",
+  "target": "notepad",
+  "iconType": "plugin",
+  "icon": "notepad"
+}

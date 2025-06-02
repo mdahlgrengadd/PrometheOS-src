@@ -3,7 +3,7 @@
 # ----------------------------------------------------
 
 class DesktopAPILegacy:
-    """Python interface to Desktop Dreamscape APIs using postMessage"""
+    """Python interface to PromethOS APIs using postMessage"""
 
     @staticmethod
     def list_components():

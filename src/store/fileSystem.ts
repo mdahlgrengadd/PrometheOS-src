@@ -1,12 +1,44 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { loadShadowFolder } from '@/utils/virtual-fs';
+import { eventBus } from "@/plugins/EventBus";
+import { virtualFs } from "@/utils/virtual-fs";
 
 import type { FileSystemItem } from "@/plugins/apps/file-explorer/types/fileSystem";
+
+// Helper function to find a file by ID recursively
+function findFileById(root: FileSystemItem, id: string): FileSystemItem | null {
+  if (root.id === id) {
+    return root;
+  }
+
+  if (root.children) {
+    for (const child of root.children) {
+      const found = findFileById(child, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+}
+
+// Global helper function to read file content by ID from the file system store
+export function getFileContent(fileId: string): string | null {
+  const state = useFileSystemStore.getState();
+  const file = findFileById(state.fs, fileId);
+
+  if (file && file.type === "file") {
+    return file.content || "";
+  }
+
+  return null;
+}
 
 interface FileSystemStore {
   fs: FileSystemItem;
   init: () => Promise<void>;
+  forceReload: () => Promise<void>;
   addItems: (path: string[], items: FileSystemItem[]) => void;
   renameItem: (path: string[], id: string, newName: string) => void;
   deleteItem: (path: string[], id: string) => void;
@@ -14,106 +46,78 @@ interface FileSystemStore {
   updateFileContent: (path: string[], id: string, content: string) => void;
 }
 
-export const useFileSystemStore = create<FileSystemStore>((set) => ({
-  // root wrapper
-  fs: { id: "root", name: "My Computer", type: "folder", children: [] },
+export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
+  // Get current state from the singleton VirtualFS
+  fs: virtualFs.getRootFileSystemItem(),
 
-  // load initial state from shadow manifest
+  // Initialize the singleton VirtualFS (only loads once)
   init: async () => {
-    const items = await loadShadowFolder();
-    set({
-      fs: { id: "root", name: "My Computer", type: "folder", children: items },
-    });
+    await virtualFs.initializeOnce();
+    set({ fs: virtualFs.getRootFileSystemItem() });
   },
 
-  // add new items under a given path
-  addItems: (path, items) =>
-    set((state) => {
-      const clone = JSON.parse(JSON.stringify(state.fs)) as FileSystemItem;
-      let curr = clone;
-      for (let i = 1; i < path.length; i++) {
-        const next = curr.children?.find((c) => c.id === path[i]);
-        if (!next) return { fs: clone };
-        curr = next;
-      }
-      curr.children = [...(curr.children || []), ...items];
-      return { fs: clone };
-    }),
+  // Force reload from shadow (use carefully - will destroy runtime files!)
+  forceReload: async () => {
+    await virtualFs.forceReloadFromShadow();
+    set({ fs: virtualFs.getRootFileSystemItem() });
+  },
 
-  // rename an item under a given path
-  renameItem: (path, id, newName) =>
-    set((state) => {
-      const clone = JSON.parse(JSON.stringify(state.fs)) as FileSystemItem;
-      let curr = clone;
-      for (let i = 1; i < path.length; i++) {
-        const next = curr.children?.find((c) => c.id === path[i]);
-        if (!next) return { fs: clone };
-        curr = next;
-      }
-      const item = curr.children?.find((c) => c.id === id);
-      if (item) item.name = newName;
-      return { fs: clone };
-    }),
+  // Add new items under a given path
+  addItems: (path, items) => {
+    virtualFs.addItems(path, items);
+    const newFs = virtualFs.getRootFileSystemItem();
+    set({ fs: newFs });
 
-  // delete an item under a given path
-  deleteItem: (path, id) =>
-    set((state) => {
-      const clone = JSON.parse(JSON.stringify(state.fs)) as FileSystemItem;
-      let curr = clone;
-      for (let i = 1; i < path.length; i++) {
-        const next = curr.children?.find((c) => c.id === path[i]);
-        if (!next) return { fs: clone };
-        curr = next;
-      }
-      curr.children = curr.children?.filter((c) => c.id !== id);
-      return { fs: clone };
-    }),
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemsAdded", { path, items });
+    console.log("[VFS Store] Emitted vfs:itemsAdded event for path:", path);
+  },
 
-  // move a single item from one folder path to another
-  moveItem: (fromPath, id, toPath) =>
-    set((state) => {
-      const clone = JSON.parse(JSON.stringify(state.fs)) as FileSystemItem;
-      // remove from source
-      let src = clone;
-      for (let i = 1; i < fromPath.length; i++) {
-        const next = src.children?.find((c) => c.id === fromPath[i]);
-        if (!next) return { fs: clone };
-        src = next;
-      }
-      const item = src.children?.find((c) => c.id === id);
-      if (!item) return { fs: clone };
-      src.children = src.children?.filter((c) => c.id !== id);
+  // Rename an item under a given path
+  renameItem: (path, id, newName) => {
+    virtualFs.renameItem(path, id, newName);
+    set({ fs: virtualFs.getRootFileSystemItem() });
 
-      // add to destination
-      let dst = clone;
-      for (let i = 1; i < toPath.length; i++) {
-        const next = dst.children?.find((c) => c.id === toPath[i]);
-        if (!next) return { fs: clone };
-        dst = next;
-      }
-      dst.children = [...(dst.children || []), item];
-      return { fs: clone };
-    }),
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemRenamed", { path, id, newName });
+    console.log("[VFS Store] Emitted vfs:itemRenamed event for path:", path);
+  },
 
-  // update the content of a file without having to delete and re-create it
-  updateFileContent: (path, id, content) =>
-    set((state) => {
-      const clone = JSON.parse(JSON.stringify(state.fs)) as FileSystemItem;
-      let curr = clone;
+  // Delete an item under a given path
+  deleteItem: (path, id) => {
+    virtualFs.deleteItem(path, id);
+    set({ fs: virtualFs.getRootFileSystemItem() });
 
-      // Navigate to the containing folder
-      for (let i = 1; i < path.length; i++) {
-        const next = curr.children?.find((c) => c.id === path[i]);
-        if (!next) return { fs: clone };
-        curr = next;
-      }
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemDeleted", { path, id });
+    console.log("[VFS Store] Emitted vfs:itemDeleted event for path:", path);
+  },
 
-      // Find and update the file
-      const file = curr.children?.find((c) => c.id === id);
-      if (file && file.type === "file") {
-        file.content = content;
-      }
+  // Move a single item from one folder path to another
+  moveItem: (fromPath, id, toPath) => {
+    virtualFs.moveItem(fromPath, id, toPath);
+    set({ fs: virtualFs.getRootFileSystemItem() });
 
-      return { fs: clone };
-    }),
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:itemMoved", { fromPath, id, toPath });
+    console.log(
+      "[VFS Store] Emitted vfs:itemMoved event from:",
+      fromPath,
+      "to:",
+      toPath
+    );
+  },
+
+  // Update the content of a file without having to delete and re-create it
+  updateFileContent: (path, id, content) => {
+    virtualFs.updateFileContent(path, id, content);
+    set({ fs: virtualFs.getRootFileSystemItem() });
+
+    // Emit event for components to react to changes
+    eventBus.emit("vfs:fileContentUpdated", { path, id, content });
+    console.log(
+      "[VFS Store] Emitted vfs:fileContentUpdated event for path:",
+      path
+    );
+  },
 }));

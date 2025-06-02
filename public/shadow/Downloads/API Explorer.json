@@ -1,0 +1,7 @@
+{
+  "name": "API Explorer",
+  "description": "Explore and interact with available API components",
+  "target": "api-explorer",
+  "iconType": "plugin",
+  "icon": "api-explorer"
+}

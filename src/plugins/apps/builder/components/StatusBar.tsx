@@ -1,15 +1,24 @@
+import { Bell, Database, GitBranch, Zap } from "lucide-react";
+import React, { useState } from "react";
 
-import React from 'react';
-import { GitBranch, Bell, Zap } from 'lucide-react';
-import useIdeStore from '../store/ide-store';
+import { VFSDebugPanel } from "@/components/debug";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import useIdeStore from "../store/ide-store";
 
 const StatusBar: React.FC = () => {
   const { theme, toggleTheme, toggleCommandPalette } = useIdeStore();
-  
+  const [showVFSDebug, setShowVFSDebug] = useState(false);
+
   return (
     <div className="status-bar flex items-center px-2 text-xs">
+      {" "}
       <div className="flex items-center">
-        <button 
+        <button
           className="flex items-center px-2 py-1 hover:bg-sidebar-accent rounded"
           onClick={toggleCommandPalette}
         >
@@ -17,34 +26,44 @@ const StatusBar: React.FC = () => {
           <span>Command Palette</span>
         </button>
       </div>
-      
       <div className="flex-1"></div>
-      
       <div className="flex items-center space-x-4">
         <div className="flex items-center">
           <GitBranch size={14} className="mr-1" />
           <span>main</span>
         </div>
-        
+
         <div className="flex items-center">
           <span>Ln 1, Col 1</span>
         </div>
-        
+
         <div className="flex items-center">
           <span>Spaces: 2</span>
         </div>
-        
+
         <div className="flex items-center">
           <span>UTF-8</span>
         </div>
-        
-        <button 
+
+        {/* VFS Debug Panel */}
+        <Popover open={showVFSDebug} onOpenChange={setShowVFSDebug}>
+          <PopoverTrigger asChild>
+            <button className="flex items-center hover:bg-sidebar-accent px-2 py-0.5 rounded">
+              <Database size={14} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="end">
+            <VFSDebugPanel />
+          </PopoverContent>
+        </Popover>
+
+        <button
           className="flex items-center hover:bg-sidebar-accent px-2 py-0.5 rounded"
           onClick={toggleTheme}
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === "dark" ? "☀️" : "🌙"}
         </button>
-        
+
         <button className="flex items-center hover:bg-sidebar-accent px-2 py-0.5 rounded">
           <Bell size={14} />
         </button>

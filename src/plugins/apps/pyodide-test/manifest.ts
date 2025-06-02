@@ -1,13 +1,13 @@
-import React from 'react';
+import React from "react";
 
-import { PluginManifest } from '../../types';
+import { PluginManifest } from "../../types";
 
 export const manifest: PluginManifest = {
   id: "pyodide-test",
   name: "Python Notebook",
   description: "Jupyter-style Python notebook with Pyodide integration",
   version: "1.0.0",
-  author: "Desktop Dreamscape",
+  author: "PromethOS",
   icon: React.createElement("div", {
     className: "w-6 h-6 bg-blue-500 rounded",
   }),

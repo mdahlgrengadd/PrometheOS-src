@@ -1,0 +1,190 @@
+// Example: How to trigger dynamic tool registration from other components
+
+// Method 1: Direct event dispatch (works from anywhere)
+export const triggerToolRefresh = () => {
+  window.dispatchEvent(new CustomEvent("mcp-tools-refresh"));
+};
+
+// Method 2: Trigger when a new API component is registered
+export const registerComponentWithToolRefresh = (component) => {
+  // Register the component first
+  const { registerComponent } = useApi(); // In React context
+  registerComponent(component);
+
+  // Then trigger the tool refresh
+  window.dispatchEvent(new CustomEvent("api-component-registered"));
+};
+
+// Method 3: Using the global function (if available)
+export const manualToolRefresh = async () => {
+  if (typeof window.aiChatRefreshTools === "function") {
+    await window.aiChatRefreshTools();
+  } else {
+    console.warn("AI Chat tool refresh function not available");
+  }
+};
+
+// Example usage in a plugin that dynamically adds tools
+export const PluginWithDynamicTools = () => {
+  const { registerComponent } = useApi();
+
+  const addNewTool = useCallback(() => {
+    const newComponent = {
+      id: `dynamic-tool-${Date.now()}`,
+      type: "DynamicTool",
+      name: "Dynamic Plugin Tool",
+      description: "A tool added dynamically during runtime",
+      path: `/api/dynamic-tool-${Date.now()}`,
+      actions: [
+        {
+          id: "dynamicAction",
+          name: "Dynamic Action",
+          description: "An action added at runtime",
+          parameters: [
+            {
+              name: "input",
+              type: "string",
+              description: "Input for the dynamic action",
+              required: true,
+            },
+          ],
+        },
+      ],
+    };
+
+    // Register the new component
+    registerComponent(newComponent);
+
+    // Trigger tool refresh in AI Chat
+    window.dispatchEvent(new CustomEvent("api-component-registered"));
+
+    console.log("Dynamic tool registered and AI Chat notified");
+  }, [registerComponent]);
+
+  return <button onClick={addNewTool}>Add Dynamic Tool</button>;
+};
+
+// Example: Bulk tool registration
+export const registerMultipleTools = (tools) => {
+  const { registerComponent } = useApi();
+
+  tools.forEach((tool) => {
+    registerComponent(tool);
+  });
+
+  // Single refresh after all tools are registered
+  window.dispatchEvent(new CustomEvent("api-component-registered"));
+};
+
+// Example: Plugin lifecycle with tool management
+export class DynamicToolPlugin {
+  constructor(apiContext) {
+    this.apiContext = apiContext;
+    this.registeredTools = new Set();
+  }
+
+  async initialize() {
+    // Register initial tools
+    this.registerInitialTools();
+
+    // Set up periodic tool discovery
+    this.startToolDiscovery();
+  }
+
+  registerInitialTools() {
+    const initialTools = this.getInitialTools();
+    initialTools.forEach((tool) => {
+      this.apiContext.registerComponent(tool);
+      this.registeredTools.add(tool.id);
+    });
+
+    // Notify AI Chat of new tools
+    window.dispatchEvent(new CustomEvent("api-component-registered"));
+  }
+
+  async discoverNewTools() {
+    const availableTools = await this.scanForTools();
+    const newTools = availableTools.filter(
+      (tool) => !this.registeredTools.has(tool.id)
+    );
+
+    if (newTools.length > 0) {
+      newTools.forEach((tool) => {
+        this.apiContext.registerComponent(tool);
+        this.registeredTools.add(tool.id);
+      });
+
+      // Notify AI Chat of new tools
+      window.dispatchEvent(new CustomEvent("api-component-registered"));
+      console.log(`Discovered and registered ${newTools.length} new tools`);
+    }
+  }
+
+  startToolDiscovery() {
+    // Check for new tools every 30 seconds
+    setInterval(() => {
+      this.discoverNewTools().catch(console.error);
+    }, 30000);
+  }
+
+  getInitialTools() {
+    // Return array of initial tool definitions
+    return [
+      {
+        id: "plugin-tool-1",
+        type: "PluginTool",
+        name: "Plugin Tool 1",
+        description: "A tool provided by the plugin",
+        path: "/api/plugin-tool-1",
+        actions: [
+          // ... action definitions
+        ],
+      },
+    ];
+  }
+
+  async scanForTools() {
+    // Implement tool discovery logic
+    // This could scan file system, network services, etc.
+    return [];
+  }
+}
+
+// Example: MCP Server integration
+export const MCPServerWithDynamicRegistration = {
+  async initializeWithDynamicTools() {
+    try {
+      // Initialize MCP server
+      await workerPluginManager.initMCPServer();
+
+      // Get initial tools
+      const initialTools = await workerPluginManager.getMCPTools();
+      console.log("Initial MCP tools loaded:", initialTools.length);
+
+      // Set up periodic refresh for dynamic tool discovery
+      setInterval(async () => {
+        try {
+          const currentTools = await workerPluginManager.getMCPTools();
+          if (currentTools.length !== initialTools.length) {
+            console.log("MCP tools changed, triggering refresh");
+            window.dispatchEvent(new CustomEvent("mcp-tools-refresh"));
+          }
+        } catch (error) {
+          console.error("Error checking for MCP tool changes:", error);
+        }
+      }, 10000); // Check every 10 seconds
+    } catch (error) {
+      console.error("Error initializing MCP server with dynamic tools:", error);
+    }
+  },
+};
+
+export default {
+  triggerToolRefresh,
+  registerComponentWithToolRefresh,
+  manualToolRefresh,
+  PluginWithDynamicTools,
+  registerMultipleTools,
+  DynamicToolPlugin,
+  MCPServerWithDynamicRegistration,
+};

@@ -3,7 +3,7 @@
  * Converts Desktop API components to MCP tools for WebLLM function calling
  */
 
-import { WorkerPlugin } from '../../plugins/types';
+import { WorkerPlugin } from "../../plugins/types";
 
 // MCP Protocol Types
 export interface MCPTool {
@@ -74,7 +74,9 @@ const MCPServerWorker: WorkerPlugin = {
   async initialize(): Promise<{ status: string; message?: string }> {
     try {
       this._isInitialized = true;
-      console.log("MCP Server initialized");
+      console.log("Made with love by the PrometheOS team ❤️");
+      console.log("https://www.linkedin.com/in/erik-martin-dahlgren/");
+      //console.log("MCP Server initialized");
       return { status: "success", message: "MCP Server initialized" };
     } catch (error) {
       return {
@@ -141,9 +143,12 @@ const MCPServerWorker: WorkerPlugin = {
    */
   async _handleToolsList(message: MCPRequest): Promise<MCPResponse> {
     // Allow provider format override via params ("openai" or "anthropic")
-    const format = (message.params && typeof message.params === 'object' && typeof message.params['format'] === 'string')
-      ? (message.params['format'] as 'openai' | 'anthropic')
-      : 'openai';
+    const format =
+      message.params &&
+      typeof message.params === "object" &&
+      typeof message.params["format"] === "string"
+        ? (message.params["format"] as "openai" | "anthropic")
+        : "openai";
     const tools = await this.getAvailableTools(format);
 
     return {
@@ -258,7 +263,7 @@ const MCPServerWorker: WorkerPlugin = {
       this._tools.set(toolName, toolDef);
       this._registeredComponents.add(componentId); // Track registered component
 
-      console.log(`Registered MCP tool: ${toolName}`);
+      //console.log(`Registered MCP tool: ${toolName}`);
       return { status: "success", message: `Tool ${toolName} registered` };
     } catch (error) {
       return {
@@ -283,10 +288,10 @@ const MCPServerWorker: WorkerPlugin = {
     this._tools.delete(toolName);
 
     // Check if component is still registered with other tools
-    const componentId = toolName.split('.')[0];
+    const componentId = toolName.split(".")[0];
     let isComponentRegistered = false;
     for (const registeredTool of this._tools.keys()) {
-      if (registeredTool.startsWith(componentId + '.')) {
+      if (registeredTool.startsWith(componentId + ".")) {
         isComponentRegistered = true;
         break;
       }
@@ -296,7 +301,7 @@ const MCPServerWorker: WorkerPlugin = {
       this._registeredComponents.delete(componentId); // Cleanup untracked component
     }
 
-    console.log(`Unregistered MCP tool: ${toolName}`);
+    //console.log(`Unregistered MCP tool: ${toolName}`);
     return { status: "success", message: `Tool ${toolName} unregistered` };
   },
 
@@ -307,17 +312,23 @@ const MCPServerWorker: WorkerPlugin = {
    * Get all available tools, with optional format for OpenAI or Anthropic
    * @param format 'openai' | 'anthropic' (default: 'openai')
    */
-  async getAvailableTools(format: 'openai' | 'anthropic' = 'openai'): Promise<MCPTool[]> {
+  async getAvailableTools(
+    format: "openai" | "anthropic" = "openai"
+  ): Promise<MCPTool[]> {
     // Both OpenAI and Anthropic expect an array of tool objects with 'parameters' field
     // This method is future-proofed for further provider-specific tweaks
-    return Array.from((this._tools as Map<string, ToolDefinition>).values()).map((toolDef) => toolDef.tool);
+    return Array.from(
+      (this._tools as Map<string, ToolDefinition>).values()
+    ).map((toolDef) => toolDef.tool);
   },
 
   /**
    * Execute a tool call
    */
   async executeTool(toolCall: MCPToolCall): Promise<MCPToolResult> {
-    const toolDef = (this._tools as Map<string, ToolDefinition>).get(toolCall.name);
+    const toolDef = (this._tools as Map<string, ToolDefinition>).get(
+      toolCall.name
+    );
 
     if (!toolDef) {
       return {
@@ -369,7 +380,9 @@ const MCPServerWorker: WorkerPlugin = {
     params: Record<string, unknown>
   ): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      const requestId = `mcp-tool-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const requestId = `mcp-tool-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
       let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
       // Listen for response
@@ -378,9 +391,9 @@ const MCPServerWorker: WorkerPlugin = {
           event.data.type === "mcp-tool-response" &&
           event.data.requestId === requestId
         ) {
-          console.log(`MCP tool response received for ${requestId}: ${componentId}.${action}`);
+          //console.log(`MCP tool response received for ${requestId}: ${componentId}.${action}`);
           self.removeEventListener("message", messageHandler);
-          
+
           // Clear the timeout since we got a response
           if (timeoutId !== null) {
             clearTimeout(timeoutId);
@@ -397,7 +410,7 @@ const MCPServerWorker: WorkerPlugin = {
       self.addEventListener("message", messageHandler);
 
       // Send request to main thread
-      console.log(`MCP tool request sent: ${requestId} for ${componentId}.${action}`);
+      //console.log(`MCP tool request sent: ${requestId} for ${componentId}.${action}`);
       self.postMessage({
         type: "mcp-tool-request",
         requestId,
@@ -408,7 +421,7 @@ const MCPServerWorker: WorkerPlugin = {
 
       // Timeout after 30 seconds
       timeoutId = setTimeout(() => {
-        console.log(`MCP tool timeout: ${requestId} for ${componentId}.${action}`);
+        //console.log(`MCP tool timeout: ${requestId} for ${componentId}.${action}`);
         self.removeEventListener("message", messageHandler);
         reject(new Error("Tool execution timeout"));
       }, 30000);
@@ -437,7 +450,7 @@ const MCPServerWorker: WorkerPlugin = {
     for (const component of components) {
       // Skip if component is already registered to prevent duplicates
       if (this._registeredComponents.has(component.id)) {
-        console.log(`MCP: Skipping already registered component: ${component.id}`);
+        //console.log(`MCP: Skipping already registered component: ${component.id}`);
         continue;
       }
 
@@ -512,7 +525,7 @@ const MCPServerWorker: WorkerPlugin = {
 
     // Remove component from registered set
     this._registeredComponents.delete(componentId);
-    console.log(`MCP: Unregistered component ${componentId} with ${unregistered} tools`);
+    //console.log(`MCP: Unregistered component ${componentId} with ${unregistered} tools`);
 
     return {
       status: "success",
@@ -553,7 +566,7 @@ const MCPServerWorker: WorkerPlugin = {
     this._tools.clear();
     this._registeredComponents.clear();
     this._isInitialized = false;
-    console.log("MCP Server cleaned up");
+    //console.log("MCP Server cleaned up");
   },
 
   /**
@@ -590,7 +603,11 @@ const MCPServerWorker: WorkerPlugin = {
 
       case "getAvailableTools":
         // Allow provider format override via params ("openai" or "anthropic")
-        return this.getAvailableTools(params && typeof params.format === 'string' ? params.format as 'openai' | 'anthropic' : 'openai');
+        return this.getAvailableTools(
+          params && typeof params.format === "string"
+            ? (params.format as "openai" | "anthropic")
+            : "openai"
+        );
 
       case "executeTool":
         if (!params?.toolCall) {

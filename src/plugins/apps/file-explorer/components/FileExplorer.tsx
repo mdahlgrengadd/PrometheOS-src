@@ -1,22 +1,39 @@
-import { Folder } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { Folder } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
-import { useFileSystemStore } from '@/store/fileSystem';
-import { useSelectionContainer } from '@air/react-drag-to-select';
+import { useApi } from "@/api/hooks/useApi";
+import { useFileSystemStore } from "@/store/fileSystem";
+import { useSelectionContainer } from "@air/react-drag-to-select";
 
-import { ideSettings } from '../../../../plugins/apps/builder/utils/esbuild-settings';
+import { ideSettings } from "../../../../plugins/apps/builder/utils/esbuild-settings";
 import {
-    ContextMenuPosition, FileSystemItem, TEXT_FILE_EXTENSIONS, User
-} from '../types/fileSystem';
-import { findFolderPath } from '../utils/fileUtils';
-import ContextMenu from './ContextMenu';
-import { NewItemDialog, RenameDialog } from './Dialogs';
-import FileGrid from './FileGrid';
-import Sidebar from './Sidebar';
+  ContextMenuPosition,
+  FileSystemItem,
+  TEXT_FILE_EXTENSIONS,
+  User,
+} from "../types/fileSystem";
+import {
+  createDesktopCopyWithUniqueName,
+  createDesktopShortcut,
+  createFileShortcut,
+  findFolderPath,
+  generateUniqueFileName,
+  getAppForFileExtension,
+} from "../utils/fileUtils";
+import ContextMenu from "./ContextMenu";
+import { NewItemDialog, RenameDialog } from "./Dialogs";
+import FileGrid from "./FileGrid";
+import Sidebar from "./Sidebar";
 // Component imports
-import TitleBar from './TitleBar';
-import Toolbar from './Toolbar';
+import TitleBar from "./TitleBar";
+import Toolbar from "./Toolbar";
 
 const FileExplorer: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string[]>(["root"]);
@@ -53,6 +70,9 @@ const FileExplorer: React.FC = () => {
   const renameItemStore = useFileSystemStore((s) => s.renameItem);
   const deleteItemStore = useFileSystemStore((s) => s.deleteItem);
   const moveItem = useFileSystemStore((s) => s.moveItem);
+
+  // Use API context for opening files with appropriate apps
+  const apiContext = useApi();
 
   // Derive ignore patterns from .vfsignore at root
   const ignoreFile = useMemo(
@@ -100,7 +120,7 @@ const FileExplorer: React.FC = () => {
       if (ignoreMatchers.some((rx) => rx.test(child.id))) return false;
       return true;
     });
-  }, [fileSystem, currentPath, ignoreMatchers, ideSettings.showHiddenFiles]);
+  }, [fileSystem, currentPath, ignoreMatchers]);
   const sortedChildren = useMemo(() => {
     return [...visibleChildren].sort((a, b) => {
       if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
@@ -111,7 +131,12 @@ const FileExplorer: React.FC = () => {
   // initialize file system from shadow on mount
   useEffect(() => {
     initFs().then(() => setExpandedFolders(new Set(["root"])));
-  }, [initFs]);
+
+    // Auto-authenticate by default
+    if (!isAuthenticated) {
+      handleGithubAuth();
+    }
+  }, [initFs, isAuthenticated]);
 
   // Set up drag selection container
   const { DragSelection } = useSelectionContainer({
@@ -204,6 +229,52 @@ const FileExplorer: React.FC = () => {
       return newExpanded;
     });
   }, []);
+  // Handle opening files with appropriate apps
+  const openFile = useCallback(
+    async (file: FileSystemItem) => {
+      if (
+        file.type !== "file" &&
+        !(file.type === "folder" && file.name.endsWith(".exe"))
+      )
+        return;
+
+      // Special handling for .exe folders (published apps)
+      if (file.type === "folder" && file.name.endsWith(".exe")) {
+        try {
+          const appPath = `app://PublishedApps/${file.name}`;
+          // Use App Preview plugin for published apps
+          await apiContext?.executeAction("sys", "open", {
+            name: "app-preview",
+            initFromUrl: appPath,
+          });
+          toast(`Opening published app: ${file.name}`);
+        } catch (error) {
+          console.error("Failed to open published app:", error);
+          toast(`Failed to open ${file.name}`);
+        }
+        return;
+      }
+
+      const appId = getAppForFileExtension(file.name);
+      if (!appId) {
+        toast(`No default app for file type: ${file.name.split(".").pop()}`);
+        return;
+      }
+
+      try {
+        const vfsPath = `vfs://${file.id}`;
+        await apiContext?.executeAction("sys", "open", {
+          name: appId,
+          initFromUrl: vfsPath,
+        });
+        toast(`Opening ${file.name} with ${appId}`);
+      } catch (error) {
+        console.error("Failed to open file:", error);
+        toast(`Failed to open ${file.name}`);
+      }
+    },
+    [apiContext]
+  );
 
   // Handle drag selection
   function handleSelectionChange(selectionBox: {
@@ -358,11 +429,88 @@ const FileExplorer: React.FC = () => {
   const deleteItem = (itemId: string) => {
     if (!isAuthenticated) return;
 
+    // Check if this is a shadow file (system file)
+    const itemToDelete = currentFolder?.children?.find(
+      (item) => item.id === itemId
+    );
+
+    // List of protected files that came from shadow fs
+    const protectedFiles = [
+      "Documents",
+      "Downloads",
+      "Desktop",
+      "package.json",
+      "package-lock.json",
+      ".vfsignore",
+    ];
+
+    if (itemToDelete && protectedFiles.includes(itemToDelete.name)) {
+      toast.error(`Cannot delete system file: ${itemToDelete.name}`, {
+        description:
+          "Files loaded from the shadow filesystem are protected and cannot be deleted.",
+      });
+      return;
+    }
+
     deleteItemStore(currentPath, itemId);
     toast.success("Item deleted");
 
     setSelectedItems(new Set());
     setShowContextMenu(null);
+  };
+
+  // Create desktop shortcut
+  const createShortcut = (itemId: string) => {
+    if (!isAuthenticated) return;
+
+    const currentItem = currentFolder?.children?.find(
+      (item) => item.id === itemId
+    );
+
+    if (!currentItem) return;
+
+    try {
+      // Get the Desktop folder to check existing items
+      const desktopPath = ["root", "Desktop"];
+      const desktopFolder = findItemByPath(desktopPath);
+      const existingItems = desktopFolder?.children || [];
+
+      let shortcutFile: FileSystemItem;
+
+      if (currentItem.type === "file") {
+        // Create file shortcut
+        shortcutFile = createFileShortcut(
+          currentItem.name,
+          currentItem.id,
+          currentItem.name.replace(/\.[^/.]+$/, "") // Remove extension for display name
+        );
+      } else {
+        // Create folder shortcut
+        shortcutFile = createDesktopShortcut(
+          currentItem.id,
+          currentItem.name,
+          `Open ${currentItem.name} folder`
+        );
+      }
+
+      // Generate unique name for the shortcut
+      const uniqueName = generateUniqueFileName(
+        shortcutFile.name,
+        existingItems
+      );
+      shortcutFile.name = uniqueName;
+
+      // Add to Desktop folder
+      addItems(desktopPath, [shortcutFile]);
+
+      const displayName = uniqueName.replace(".json", ""); // Remove .json for display
+      toast.success(`Desktop shortcut created: ${displayName}`);
+
+      setShowContextMenu(null);
+    } catch (error) {
+      console.error("Error creating desktop shortcut:", error);
+      toast.error("Failed to create desktop shortcut");
+    }
   };
 
   // GitHub authentication simulation
@@ -413,8 +561,18 @@ const FileExplorer: React.FC = () => {
     if (!isAuthenticated) return;
 
     setDraggedItem(itemId);
+
+    // Set up data transfer for different drag targets
     e.dataTransfer.setData("text/plain", itemId);
-    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData(
+      "application/vfs-item",
+      JSON.stringify({
+        itemId,
+        currentPath,
+        action: "copy",
+      })
+    );
+    e.dataTransfer.effectAllowed = "copyMove";
 
     // If the item isn't in the current selection, make it the only selected item
     if (!selectedItems.has(itemId)) {
@@ -452,8 +610,67 @@ const FileExplorer: React.FC = () => {
     const targetFolderPath = findFolderPath(fileSystem, targetFolderId);
     if (!targetFolderPath) return;
 
-    // For now only support single-item moves
-    moveItem(currentPath, draggedItem, targetFolderPath);
+    // Check if we're dropping into the Desktop folder
+    const isDroppingToDesktop =
+      targetFolderId === "Desktop" ||
+      targetFolderPath.includes("Desktop") ||
+      targetFolderPath[targetFolderPath.length - 1] === "Desktop";
+
+    // Get the dragged item
+    const draggedItemObj = currentFolder?.children?.find(
+      (item) => item.id === draggedItem
+    );
+
+    // List of protected files that came from shadow fs
+    const protectedFiles = [
+      "test.md",
+      "test.txt",
+      "package.json",
+      "package-lock.json",
+      ".vfsignore",
+    ];
+
+    // Check if trying to move a protected file (not to Desktop, which is a copy operation)
+    if (
+      !isDroppingToDesktop &&
+      draggedItemObj &&
+      protectedFiles.includes(draggedItemObj.name)
+    ) {
+      toast.error(`Cannot move system file: ${draggedItemObj.name}`, {
+        description:
+          "Files loaded from the shadow filesystem are protected and cannot be moved. You can copy them to Desktop instead.",
+      });
+      return;
+    }
+
+    if (isDroppingToDesktop) {
+      // Handle Desktop drops with unique naming
+      const currentItem = currentFolder?.children?.find(
+        (item) => item.id === draggedItem
+      );
+      if (currentItem) {
+        // Get the target Desktop folder to check existing items
+        const targetFolder = findItemByPath(targetFolderPath);
+        const existingItems = targetFolder?.children || [];
+
+        // Create a copy with unique naming
+        const uniqueItem = createDesktopCopyWithUniqueName(
+          currentItem,
+          existingItems
+        );
+
+        // Add the item to Desktop folder
+        addItems(targetFolderPath, [uniqueItem]);
+
+        console.log(
+          `[FileExplorer] Copied ${currentItem.name} to Desktop as ${uniqueItem.name}`
+        );
+        toast.success(`Copied to Desktop as ${uniqueItem.name}`);
+      }
+    } else {
+      // For non-Desktop folders, use the existing move logic
+      moveItem(currentPath, draggedItem, targetFolderPath);
+    }
 
     setDraggedItem(null);
   };
@@ -513,13 +730,13 @@ const FileExplorer: React.FC = () => {
       className="h-screen flex flex-col bg-white"
       onClick={handleClickOutside}
     >
-      {/* Title Bar */}
+      {/* Title Bar
       <TitleBar
         isAuthenticated={isAuthenticated}
         user={user}
         handleGithubAuth={handleGithubAuth}
         handleLogout={handleLogout}
-      />
+      /> */}
 
       {/* Toolbar */}
       <Toolbar
@@ -589,6 +806,7 @@ const FileExplorer: React.FC = () => {
                   handleFolderDrop={handleFolderDrop}
                   dragOverFolder={dragOverFolder}
                   selectionBox={selectionBox}
+                  openFile={openFile}
                 />
               ) : (
                 <div className="text-center text-gray-500 mb-8">

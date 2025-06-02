@@ -33,6 +33,7 @@ const swaggerUIStyles = `
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 14px;
   }
+  
   /* Prevent input field resets by fixing the id attributes */
   .swagger-ui input[id^="parameter"] {
     font-family: ui-monospace, monospace;
@@ -62,6 +63,132 @@ const swaggerUIStyles = `
   /* Preserve input values by preventing hidden inputs */
   .swagger-ui .parameters-container .parameters {
     display: block !important;
+  }
+
+  /* WORD WRAPPING AND OVERFLOW PREVENTION */
+  
+  /* Prevent horizontal overflow on the main container */
+  .swagger-ui {
+    overflow-x: hidden !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+  }
+
+  /* Ensure all text content wraps properly */
+  .swagger-ui .opblock-description,
+  .swagger-ui .opblock-summary-description,
+  .swagger-ui .parameter__name,
+  .swagger-ui .parameter__type,
+  .swagger-ui .parameter__deprecated,
+  .swagger-ui .parameter__in,
+  .swagger-ui .renderedMarkdown,
+  .swagger-ui .markdown p,
+  .swagger-ui .markdown div,
+  .swagger-ui .markdown span,
+  .swagger-ui .info .description,
+  .swagger-ui .info .title {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Handle long URLs and code snippets */
+  .swagger-ui .markdown code,
+  .swagger-ui .parameter__name code,
+  .swagger-ui .response-col_description code,
+  .swagger-ui pre,
+  .swagger-ui code {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  /* Fix markdown content in descriptions */
+  .swagger-ui .renderedMarkdown h1,
+  .swagger-ui .renderedMarkdown h2,
+  .swagger-ui .renderedMarkdown h3,
+  .swagger-ui .renderedMarkdown h4,
+  .swagger-ui .renderedMarkdown h5,
+  .swagger-ui .renderedMarkdown h6 {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+  }
+
+  .swagger-ui .renderedMarkdown p,
+  .swagger-ui .renderedMarkdown li,
+  .swagger-ui .renderedMarkdown div {
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Handle JSON examples and responses */
+  .swagger-ui .response-col_description pre,
+  .swagger-ui .highlight-code,
+  .swagger-ui .model-example pre,
+  .swagger-ui .example pre {
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    word-break: break-all !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  /* Fix parameter tables */
+  .swagger-ui .parameters-col_description,
+  .swagger-ui .parameters-col_name {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 300px !important;
+    min-width: 0 !important;
+  }
+
+  /* Container overflow control */
+  .swagger-ui .opblock-section,
+  .swagger-ui .opblock-section-header,
+  .swagger-ui .opblock-description-wrapper,
+  .swagger-ui .parameters-container,
+  .swagger-ui .responses-wrapper {
+    overflow: hidden !important;
+    min-width: 0 !important;
+  }
+
+  /* Ensure operation blocks don't overflow */
+  .swagger-ui .opblock {
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    max-width: 100% !important;
+  }
+
+  /* Fix schema descriptions */
+  .swagger-ui .model-box .model-description,
+  .swagger-ui .prop-type,
+  .swagger-ui .prop-format {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+  }
+
+  /* Responsive table handling */
+  .swagger-ui table {
+    table-layout: fixed !important;
+    width: 100% !important;
+  }
+
+  .swagger-ui table td,
+  .swagger-ui table th {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 0 !important;
+    overflow: hidden !important;
   }
 `;
 
