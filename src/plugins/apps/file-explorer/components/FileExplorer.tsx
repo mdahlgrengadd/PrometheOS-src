@@ -436,8 +436,9 @@ const FileExplorer: React.FC = () => {
 
     // List of protected files that came from shadow fs
     const protectedFiles = [
-      "test.md",
-      "test.txt",
+      "Documents",
+      "Downloads",
+      "Desktop",
       "package.json",
       "package-lock.json",
       ".vfsignore",
