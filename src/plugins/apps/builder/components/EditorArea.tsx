@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import useIdeStore from "../store/ide-store";
 import { registerEditor, unregisterEditor } from "../utils/editor-registry";
+import HybrideStartScreen from "./HybrideStartScreen";
 import PreviewPanel from "./PreviewPanel";
 
 import type * as monacoType from "monaco-editor";
@@ -334,13 +335,9 @@ const EditorArea: React.FC = () => {
               </div>
             )}
           </div>
-        </>
-      ) : (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          <div className="text-center">
-            <h3 className="text-xl mb-2">Welcome to HybrIDE Editor</h3>
-            <p>Open a file to start editing</p>
-          </div>
+        </>      ) : (
+        <div className="h-full">
+          <HybrideStartScreen />
         </div>
       )}
 

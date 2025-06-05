@@ -1,0 +1,7 @@
+{
+  "name": "HybrIDE Code Editor",
+  "description": "A full-featured IDE environment for code editing and development",
+  "target": "hybride",
+  "iconType": "plugin",
+  "icon": "hybride"
+}

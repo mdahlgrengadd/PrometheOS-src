@@ -7,6 +7,7 @@ import { manifest as browserManifest } from "./apps/browser/manifest";
 import { manifest as builderManifest } from "./apps/builder/manifest";
 import { manifest as calculatorManifest } from "./apps/calculator/manifest";
 import { manifest as chatManifest } from "./apps/chat/manifest";
+import { manifest as desktop3dManifest } from "./apps/desktop-3d/manifest";
 import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
 // Import all plugin manifests
 import { manifest as notepadManifest } from "./apps/notepad/manifest";
@@ -35,6 +36,7 @@ export const staticPlugins: PluginManifest[] = [
   settingsManifest,
   wordEditorManifest,
   webampManifest,
+  desktop3dManifest,
 
   apiExplorerManifest,
   apiFlowEditorManifest,

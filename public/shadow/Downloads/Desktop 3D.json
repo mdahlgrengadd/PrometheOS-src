@@ -1,0 +1,7 @@
+{
+  "name": "Desktop 3D",
+  "description": "A 3D desktop environment with interactive windows and icons",
+  "target": "desktop-3d",
+  "iconType": "plugin",
+  "icon": "desktop-3d"
+}

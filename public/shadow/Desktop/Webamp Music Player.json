@@ -1,0 +1,7 @@
+{
+  "name": "Webamp Music Player",
+  "description": "A Winamp-inspired music player for your desktop",
+  "target": "webamp",
+  "iconType": "plugin",
+  "icon": "webamp"
+}

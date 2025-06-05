@@ -21,6 +21,7 @@ import { manifest as browserManifest } from "./apps/browser/manifest";
 import { manifest as builderManifest } from "./apps/builder/manifest";
 import { manifest as calculatorManifest } from "./apps/calculator/manifest";
 import { manifest as chatManifest } from "./apps/chat/manifest";
+import { manifest as desktop3dManifest } from "./apps/desktop-3d/manifest";
 import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
 import { manifest as notepadManifest } from "./apps/notepad/manifest";
 import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
@@ -67,6 +68,8 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
   "pyodide-test": () => import("./apps/pyodide-test").then((m) => m.default),
   pyserve: () => import("./apps/pyserve").then((m) => m.default),
+  "desktop-3d": () =>
+    import("./apps/desktop-3d/index.tsx").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -131,6 +134,7 @@ const manifestMap: Record<string, PluginManifest> = {
   "file-explorer": fileExplorerManifest,
   "pyodide-test": pyodideTestManifest,
   pyserve: pythonScribeManifest,
+  "desktop-3d": desktop3dManifest,
 };
 
 // Debug: Log available plugins

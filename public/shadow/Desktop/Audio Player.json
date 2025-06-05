@@ -1,0 +1,7 @@
+{
+  "name": "Audio Player",
+  "description": "A modern audio player",
+  "target": "audioplayer",
+  "iconType": "plugin",
+  "icon": "audioplayer"
+}

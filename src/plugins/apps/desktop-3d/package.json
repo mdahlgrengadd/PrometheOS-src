@@ -1,0 +1,43 @@
+{
+  "name": "desktop-3d-module",
+  "version": "1.0.0",
+  "description": "Self-contained 3D desktop environment module for React applications",
+  "main": "index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0",
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.95.0",
+    "lucide-react": "^0.263.0",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.160.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "react",
+    "threejs",
+    "3d",
+    "desktop",
+    "ui",
+    "component",
+    "module"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/desktop-3d-module"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/desktop-3d-module/issues"
+  },
+  "homepage": "https://github.com/yourusername/desktop-3d-module#readme"
+}

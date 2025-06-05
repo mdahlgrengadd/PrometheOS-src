@@ -14,6 +14,7 @@ export default BuilderPlugin;
 export { default as ActivityBar } from "./components/ActivityBar";
 export { default as CommandPalette } from "./components/CommandPalette";
 export { default as EditorArea } from "./components/EditorArea";
+export { default as HybrideStartScreen } from "./components/HybrideStartScreen";
 export { default as PreviewPanel } from "./components/PreviewPanel";
 export { default as SideBar } from "./components/SideBar";
 export { default as StatusBar } from "./components/StatusBar";
