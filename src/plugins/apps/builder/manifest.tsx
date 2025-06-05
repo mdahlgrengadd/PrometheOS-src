@@ -20,8 +20,8 @@ export const manifest: PluginManifest = {
   ),
   entry: "apps/hybride",
   preferredSize: {
-    width: 800,
-    height: 500,
+    width: 1200,
+    height: 800,
   },
   hideWindowChrome: false, // IDE should control its own chrome
 };

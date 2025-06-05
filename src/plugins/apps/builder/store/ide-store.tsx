@@ -43,7 +43,7 @@ const initialState: AppState = {
   previewPanelVisible: false,
   activeTab: null,
   tabs: [],
-  theme: "light",
+  theme: "dark",
   commandPaletteOpen: false,
   buildOutput: "",
   buildError: null,
