@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // Camera control options interface
 interface CameraControlOptions {
@@ -18,6 +18,9 @@ interface CameraControlOptions {
   panSpeed?: number;
 }
 
+// Icon size options
+export type IconSize = "small" | "medium" | "large";
+
 interface LayoutControlsProps {
   onLayoutChange: (
     layout: "table" | "sphere" | "helix" | "grid" | "columns"
@@ -31,6 +34,8 @@ interface LayoutControlsProps {
     maxRandomDelay: number;
     speedVariation: number;
   }) => void;
+  iconSize?: IconSize;
+  onIconSizeChange?: (size: IconSize) => void;
   isPopup?: boolean;
   side?: "left" | "right";
   cameraControls?: CameraControlOptions;
@@ -42,18 +47,22 @@ const LayoutControls: React.FC<LayoutControlsProps> = ({
   currentLayout,
   animationRandomness = { maxRandomDelay: 0, speedVariation: 0 },
   onRandomnessChange,
+  iconSize = "large",
+  onIconSizeChange,
   isPopup = false,
   side = "left",
   cameraControls,
   onCameraControlsChange,
 }) => {
   const layouts = [
-    { key: "grid", label: "GRID", shortcut: "1" },
-    { key: "table", label: "TABLE", shortcut: "2" },
-    { key: "sphere", label: "SPHERE", shortcut: "3" },
-    { key: "helix", label: "HELIX", shortcut: "4" },
-    { key: "columns", label: "COLUMNS", shortcut: "5" },
+    { key: "grid", label: "TABLET", shortcut: "1" },
+    { key: "helix", label: "TASKBAR", shortcut: "2" },
+    { key: "columns", label: "DESKTOP", shortcut: "3" },
   ] as const;
+
+  // Hidden layouts (still available programmatically but not shown in UI)
+  // { key: "table", label: "TABLE", shortcut: "2" },
+  // { key: "sphere", label: "SPHERE", shortcut: "3" },
 
   // Custom CSS for range sliders
   const sliderStyles = `
@@ -101,8 +110,39 @@ const LayoutControls: React.FC<LayoutControlsProps> = ({
             >
               {layout.label}
             </button>
-          ))}
+          ))}{" "}
         </div>
+
+        {/* Desktop Icons Size Control */}
+        {onIconSizeChange && (
+          <div className="space-y-2 border-t border-white/10 pt-3">
+            <div className="text-white/80 text-sm font-medium">
+              Desktop Icons Size
+            </div>
+            <div className="flex gap-2">
+              {[
+                { value: "small", label: "Small" },
+                { value: "medium", label: "Medium" },
+                { value: "large", label: "Large" },
+              ].map((size) => (
+                <button
+                  key={size.value}
+                  onClick={() => onIconSizeChange(size.value as IconSize)}
+                  className={`
+                    flex-1 px-3 py-1.5 rounded text-xs font-medium transition-all duration-200
+                    ${
+                      iconSize === size.value
+                        ? "bg-white/20 text-white shadow-md"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    }
+                  `}
+                >
+                  {size.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Randomness Controls */}
         {onRandomnessChange && (
@@ -461,10 +501,10 @@ const LayoutControls: React.FC<LayoutControlsProps> = ({
             </div>
           </div>
         )}
-      </div>
+      </div>{" "}
       {!isPopup && (
         <div className="text-center text-white/60 text-xs mt-2">
-          Press 1-5 for quick layout switching
+          Press 1-3 for quick layout switching
         </div>
       )}
     </div>

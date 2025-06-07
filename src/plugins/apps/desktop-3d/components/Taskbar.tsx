@@ -1,10 +1,10 @@
-import { Clock, Search, Settings, Wifi } from 'lucide-react';
-import React from 'react';
+import { Clock, Search, Settings, Wifi } from "lucide-react";
+import React from "react";
 
-import { WindowData } from '../types/Window';
-import LayoutControls from './LayoutControls';
-import SearchPopup from './SearchPopup';
-import TaskbarButton from './TaskbarButton';
+import { WindowData } from "../types/Window";
+import LayoutControls, { IconSize } from "./LayoutControls";
+import SearchPopup from "./SearchPopup";
+import TaskbarButton from "./TaskbarButton";
 
 // Camera control options interface
 interface CameraControlOptions {
@@ -32,6 +32,8 @@ interface TaskbarProps {
     layout: "table" | "sphere" | "helix" | "grid" | "columns"
   ) => void;
   currentLayout?: "table" | "sphere" | "helix" | "grid" | "columns";
+  iconSize?: IconSize;
+  onIconSizeChange?: (size: IconSize) => void;
   animationRandomness?: {
     maxRandomDelay: number;
     speedVariation: number;
@@ -50,6 +52,8 @@ const Taskbar: React.FC<TaskbarProps> = ({
   onToggleLayoutControls,
   onLayoutChange,
   currentLayout = "table",
+  iconSize,
+  onIconSizeChange,
   animationRandomness,
   onRandomnessChange,
   cameraControls,
@@ -107,6 +111,8 @@ const Taskbar: React.FC<TaskbarProps> = ({
             <LayoutControls
               onLayoutChange={onLayoutChange}
               currentLayout={currentLayout}
+              iconSize={iconSize}
+              onIconSizeChange={onIconSizeChange}
               animationRandomness={animationRandomness}
               onRandomnessChange={onRandomnessChange}
               cameraControls={cameraControls}

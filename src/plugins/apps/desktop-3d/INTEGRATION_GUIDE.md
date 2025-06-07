@@ -152,11 +152,11 @@ export const desktopIcons: DesktopIconData[] = [
 
 ### Custom Layouts
 The system supports 5 layout types:
-- `grid` - 3D grid arrangement
+- `grid` - Tablet: 3D grid arrangement
 - `table` - Periodic table style
 - `sphere` - Spherical distribution
-- `helix` - Spiral arrangement
-- `columns` - Traditional desktop columns
+- `helix` - Taskbar: Spiral arrangement
+- `columns` - Desktop: Traditional desktop columns
 
 ### Styling Customization
 Override CSS classes in your main stylesheet:
@@ -178,11 +178,11 @@ Override CSS classes in your main stylesheet:
 ```
 
 ## Keyboard Shortcuts
-- `1` - Grid layout
+- `1` - Tablet layout
 - `2` - Table layout  
 - `3` - Sphere layout
-- `4` - Helix layout
-- `5` - Columns layout
+- `4` - Taskbar layout
+- `5` - Desktop layout
 
 ## Migration from Original Structure
 

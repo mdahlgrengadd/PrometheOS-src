@@ -44,10 +44,43 @@ export function Desktop3DWithCustomBackground() {
       style={{ touchAction: "none" }}
     >
       {/* Custom background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900" />
-
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900" />{" "}
       {/* Desktop 3D Component */}
       <Desktop3D />
+    </div>
+  );
+}
+
+/**
+ * Desktop 3D with 3D mesh geometries instead of icons
+ */
+export function Desktop3DWith3DMeshes() {
+  return (
+    <div className="w-full h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
+      {/* Add some ambient lighting for better 3D mesh visibility */}
+      <div className="absolute inset-0">
+        <Desktop3D
+          // Enable 3D mesh mode
+          use3DMesh={true}
+          // Choose geometry type (dodecahedron, icosahedron, octahedron, tetrahedron, cube)
+          meshType="dodecahedron"
+          // Enable spinning animation
+          enableMeshRotation={true}
+          // Start with sphere layout to show off the 3D effect
+          initialLayout="sphere"
+        />
+      </div>
+
+      {/* Instructions overlay */}
+      <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-4 text-white max-w-xs">
+        <h3 className="font-semibold mb-2">3D Mesh Mode</h3>
+        <p className="text-sm text-gray-300 mb-2">
+          Icons are now spinning 3D dodecahedrons with colorful materials.
+        </p>
+        <p className="text-xs text-gray-400">
+          Try different layouts: 1=Grid, 2=Table, 3=Sphere, 4=Helix, 5=Columns
+        </p>
+      </div>
     </div>
   );
 }
@@ -57,7 +90,7 @@ export function Desktop3DWithCustomBackground() {
  */
 export function App() {
   const [activeExample, setActiveExample] = React.useState<
-    "basic" | "advanced" | "custom"
+    "basic" | "advanced" | "custom" | "3d-meshes"
   >("basic");
 
   const renderExample = () => {
@@ -68,6 +101,8 @@ export function App() {
         return <AdvancedDesktop3DExample />;
       case "custom":
         return <Desktop3DWithCustomBackground />;
+      case "3d-meshes":
+        return <Desktop3DWith3DMeshes />;
       default:
         return <BasicDesktop3DExample />;
     }
