@@ -116,15 +116,28 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
    */
   const createCSS3DWindow = useCallback(
     (window: WindowData): CSS3DObject => {
+      // Calculate actual window size and position based on maximized state
+      const taskbarHeight = 48;
+      const actualWidth = window.isMaximized
+        ? globalThis.window.innerWidth
+        : window.size.width;
+      const actualHeight = window.isMaximized
+        ? globalThis.window.innerHeight - taskbarHeight
+        : window.size.height;
+
       // Create window container
       const windowElement = document.createElement("div");
-      windowElement.style.width = window.size.width + "px";
-      windowElement.style.height = window.size.height + "px";
+      windowElement.style.width = actualWidth + "px";
+      windowElement.style.height = actualHeight + "px";
       windowElement.style.background = "rgba(255, 255, 255, 0.95)";
       windowElement.style.backdropFilter = "blur(16px)";
-      windowElement.style.borderRadius = "12px";
-      windowElement.style.border = "1px solid rgba(255, 255, 255, 0.3)";
-      windowElement.style.boxShadow = "0 25px 50px -12px rgba(0, 0, 0, 0.4)";
+      windowElement.style.borderRadius = window.isMaximized ? "0px" : "12px";
+      windowElement.style.border = window.isMaximized
+        ? "none"
+        : "1px solid rgba(255, 255, 255, 0.3)";
+      windowElement.style.boxShadow = window.isMaximized
+        ? "none"
+        : "0 25px 50px -12px rgba(0, 0, 0, 0.4)";
       windowElement.style.pointerEvents = "auto";
       windowElement.style.overflow = "hidden";
       windowElement.style.fontFamily = "system-ui, sans-serif";
@@ -274,19 +287,38 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
         // So we pass screen coordinates directly - the drag logic will handle the conversion
         startWindowDrag(e.clientX, e.clientY, currentX, currentY);
       }); // Create CSS3DObject
-      const css3dObject = new CSS3DObject(windowElement); // Apply position constraints before setting position
-      const constrainedPosition = constrainWindowPosition(
-        window.position,
-        window.size,
-        window.isMaximized
-      );
+      const css3dObject = new CSS3DObject(windowElement);
+
+      // For maximized windows, calculate the center position for full viewport coverage
+      let finalPosition;
+      if (window.isMaximized) {
+        const taskbarHeight = 48;
+        const viewportWidth = globalThis.window.innerWidth;
+        const viewportHeight = globalThis.window.innerHeight - taskbarHeight;
+
+        // Position the center of the maximized window at the center of the available viewport
+        finalPosition = {
+          x: viewportWidth / 2,
+          y: viewportHeight / 2,
+          z: window.position.z,
+        };
+      } else {
+        // Apply position constraints for normal windows
+        finalPosition = constrainWindowPosition(
+          window.position,
+          window.size,
+          window.isMaximized
+        );
+      }
 
       // Set initial position (convert screen Y to world Y coordinates)
       css3dObject.position.set(
-        constrainedPosition.x,
-        -constrainedPosition.y, // Negative Y for world coordinates
-        constrainedPosition.z
-      ); // Animate window entrance (without conflicting transforms)
+        finalPosition.x,
+        -finalPosition.y, // Negative Y for world coordinates
+        finalPosition.z
+      );
+
+      // Animate window entrance (without conflicting transforms)
       windowElement.style.opacity = "0";
       windowElement.style.transition =
         "opacity 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)";
@@ -364,9 +396,18 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
         const currentWidth = parseInt(existingObject.element.style.width);
         const currentHeight = parseInt(existingObject.element.style.height);
 
+        // Calculate expected width and height based on maximized state
+        const taskbarHeight = 48;
+        const expectedWidth = window.isMaximized
+          ? globalThis.window.innerWidth
+          : window.size.width;
+        const expectedHeight = window.isMaximized
+          ? globalThis.window.innerHeight - taskbarHeight
+          : window.size.height;
+
         if (
-          currentWidth !== window.size.width ||
-          currentHeight !== window.size.height
+          currentWidth !== expectedWidth ||
+          currentHeight !== expectedHeight
         ) {
           // Recreate window with new size
           css3dScene.remove(existingObject);
