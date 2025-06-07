@@ -6,6 +6,7 @@ import { WindowState } from '../../../../types/window';
 import { Plugin } from '../../../types';
 import { useWindowStore } from '../stores/windowStore';
 import { WindowData } from '../types/Window';
+import Background3D from './Background3D';
 import { DesktopCanvas } from './DesktopCanvas';
 import { LayoutType } from './IconInstances';
 import { IconSize } from './LayoutControls';
@@ -40,6 +41,8 @@ interface Desktop3DProps {
   focusWindow: (id: string) => void;
   handleDragStop: (id: string, position: { x: number; y: number }) => void;
   handleTabClick: (id: string) => void;
+  // Background configuration
+  use3DBackground?: boolean; // Default to false for 2D gradient
 }
 
 /**
@@ -59,6 +62,7 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
   focusWindow: mainFocusWindow,
   handleDragStop: mainHandleDragStop,
   handleTabClick: mainHandleTabClick,
+  use3DBackground = false,
 }) => {
   // Convert main windows to Desktop3D format for compatibility
   const [windows, setWindows] = useState<WindowData[]>([]);
@@ -96,27 +100,25 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
     removeWindow,
   } = useWindowStore();
 
-  // Camera control state
+  // Keep track of window refs for state management
+  const windowsRef = useRef<WindowData[]>([]);
+  windowsRef.current = windows;
+
+  // Container ref for the Background3D component
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Camera controls state
   const [cameraControls, setCameraControls] = useState<CameraControlOptions>({
     enabled: true,
     enableRotate: true,
     enablePan: true,
     enableZoom: true,
-    lockRotationX: false,
-    lockRotationY: false,
-    lockRotationZ: true,
-    lockPanX: false,
-    lockPanY: false,
     minDistance: 500,
     maxDistance: 6000,
     rotateSpeed: 1.0,
     zoomSpeed: 1.2,
-    panSpeed: 0.2,
+    panSpeed: 0.8,
   });
-
-  // Keep track of window refs for state management
-  const windowsRef = useRef<WindowData[]>(windows);
-  windowsRef.current = windows;
 
   // Persist layout to localStorage whenever it changes
   useEffect(() => {
@@ -326,7 +328,10 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
   );
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900">
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden">
+      {/* Background3D component - defaults to 2D gradient, can be 3D */}
+      <Background3D containerRef={containerRef} use3D={use3DBackground} />
+
       {/* 3D Desktop Canvas with icons and windows */}
       <DesktopCanvas
         windows={windows}
@@ -340,7 +345,7 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
         iconSize={iconSize}
         animationRandomness={animationRandomness}
         cameraControls={cameraControls}
-        use3DBackground={true}
+        use3DBackground={use3DBackground}
         environmentPreset="sunset"
         enable3DMeshIcons={true}
         meshIconPercentage={0.25}

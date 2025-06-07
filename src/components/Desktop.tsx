@@ -161,6 +161,7 @@ const Desktop = () => {
         focusWindow={focusWindow}
         handleDragStop={updateWindowPosition}
         handleTabClick={handleTabClick}
+        use3DBackground={false}
       />
     </div>
   );

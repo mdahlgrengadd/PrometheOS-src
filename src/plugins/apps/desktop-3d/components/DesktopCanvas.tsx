@@ -161,7 +161,8 @@ const BackgroundScene: React.FC<{
   return (
     <>
       {/* Remove background color so CSS gradient shows through */}
-      <fog attach="fog" args={["#1a1a2e", 2000, 8000]} />
+      {/* Use transparent/light fog that won't interfere with background transparency */}
+      <fog attach="fog" args={["rgba(26, 26, 46, 0.1)", 3000, 12000]} />
     </>
   );
 };
@@ -421,6 +422,8 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
           antialias: true,
           alpha: true,
           powerPreference: "high-performance",
+          premultipliedAlpha: false, // Better transparency handling
+          preserveDrawingBuffer: true, // Improve compatibility
         }}
         dpr={window.devicePixelRatio}
         frameloop={needsRender ? "always" : "demand"}
@@ -430,6 +433,7 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
           left: 0,
           zIndex: 1,
           pointerEvents: "auto",
+          backgroundColor: "transparent", // Ensure transparent background
         }}
       >
         {/* Background scene */}
