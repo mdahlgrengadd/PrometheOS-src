@@ -88,10 +88,26 @@ const LayoutControls: React.FC<LayoutControlsProps> = ({
   return (
     <div
       className={`${
-        isPopup ? "" : "fixed z-20 bottom-8 left-1/2 transform -translate-x-1/2"
+        isPopup ? "" : "fixed z-20 bottom-8 left-0 right-0 flex justify-center"
       }`}
     >
-      <div className="flex flex-col gap-3 bg-black/20 backdrop-blur-sm rounded-lg p-4 border border-white/10 min-w-96">
+      <div
+        className="flex flex-col gap-3 rounded-lg p-4 border border-white/20 min-w-96 relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 30, 0.9) 50%, rgba(0, 0, 0, 0.85) 100%)",
+          boxShadow:
+            "0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        {/* Frosted glass effect overlay */}
+        <div
+          className="absolute inset-0 rounded-lg opacity-30 pointer-events-none"
+          style={{
+            background:
+              "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255, 255, 255, 0.03) 2px, rgba(255, 255, 255, 0.03) 4px)",
+          }}
+        />
         {/* Layout Controls */}
         <div className="flex gap-2">
           {layouts.map((layout) => (

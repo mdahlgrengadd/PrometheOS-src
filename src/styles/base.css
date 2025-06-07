@@ -198,6 +198,25 @@
     /* Use the complete hsla() value */
     background-color: var(--background);
   }
+
+  /* Custom backdrop blur utility with browser prefixes */
+  .backdrop-blur-enhanced {
+    -webkit-backdrop-filter: blur(12px) saturate(1.5);
+    backdrop-filter: blur(12px) saturate(1.5);
+    /* Ensure the element has its own stacking context */
+    isolation: isolate;
+    /* Add a subtle fallback for browsers without backdrop-filter support */
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Ensure backdrop-filter works in Webkit browsers */
+  @supports (-webkit-backdrop-filter: blur(1px)) {
+    .backdrop-blur-enhanced {
+      -webkit-backdrop-filter: blur(12px) saturate(1.5);
+      backdrop-filter: blur(12px) saturate(1.5);
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
 }
 
 

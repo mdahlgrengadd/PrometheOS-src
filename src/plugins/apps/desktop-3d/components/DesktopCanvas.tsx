@@ -161,8 +161,8 @@ const BackgroundScene: React.FC<{
   return (
     <>
       {/* Remove background color so CSS gradient shows through */}
-      {/* Use transparent/light fog that won't interfere with background transparency */}
-      <fog attach="fog" args={["rgba(26, 26, 46, 0.1)", 3000, 12000]} />
+      {/* Use very distant fog with subtle color that won't interfere with background transparency */}
+      <fog attach="fog" args={["#1a1a2e", 8000, 15000]} />
     </>
   );
 };

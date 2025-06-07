@@ -141,6 +141,7 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
       windowElement.style.pointerEvents = "auto";
       windowElement.style.overflow = "hidden";
       windowElement.style.fontFamily = "system-ui, sans-serif";
+      windowElement.style.paddingBottom = "10px";
 
       // Create window header
       const header = document.createElement("div");
@@ -424,7 +425,7 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
             existingObject.element.style.boxShadow = "none";
             // Center the maximized window
             const centerX = expectedWidth / 2;
-            const centerY = (expectedHeight + taskbarHeight) / 2;
+            const centerY = expectedHeight / 2;
             existingObject.position.set(
               centerX,
               -centerY,
