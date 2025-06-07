@@ -5,12 +5,52 @@ import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 import { Environment, OrbitControls } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 
+// Import the real Plugin interface
+import { Plugin } from '../../../types';
+// Import manifests to create icons even when plugins aren't loaded
+import { manifest as aichatManifest } from '../../aichat/manifest';
+import { manifest as apiExplorerManifest } from '../../api-explorer/manifest';
+import { manifest as audioPlayerManifest } from '../../audioplayer/manifest';
+import { manifest as apiFlowEditorManifest } from '../../blueprints/manifest';
+import { manifest as browserManifest } from '../../browser/manifest';
+import { manifest as builderManifest } from '../../builder/manifest';
+import { manifest as calculatorManifest } from '../../calculator/manifest';
+import { manifest as chatManifest } from '../../chat/manifest';
+import { manifest as fileExplorerManifest } from '../../file-explorer/manifest';
+import { manifest as notepadManifest } from '../../notepad/manifest';
+import { manifest as pyodideTestManifest } from '../../pyodide-test/manifest';
+import { manifest as pythonScribeManifest } from '../../pyserve/manifest';
+import { manifest as sessionManifest } from '../../session/manifest';
+import { manifest as settingsManifest } from '../../settings/manifest';
+import { manifest as webampManifest } from '../../webamp/manifest';
+import { manifest as wordEditorManifest } from '../../wordeditor/manifest';
 import { applyRandom3DMesh, desktopIcons } from '../data/iconData';
 import { useDualRenderer } from '../hooks/useDualRenderer';
 import { useWindowStore } from '../stores/windowStore';
 import { WindowData } from '../types/Window';
+import { getIconPathForTitle } from '../utils/iconMapper';
 import { IconInstances, IconSize, LayoutType } from './IconInstances';
 import { WindowLayer } from './WindowLayer';
+
+// Map of manifests by plugin ID for fallback
+const manifestMap = {
+  aichat: aichatManifest,
+  "api-explorer": apiExplorerManifest,
+  audioplayer: audioPlayerManifest,
+  blueprints: apiFlowEditorManifest,
+  browser: browserManifest,
+  hybride: builderManifest,
+  calculator: calculatorManifest,
+  chat: chatManifest,
+  "file-explorer": fileExplorerManifest,
+  notepad: notepadManifest,
+  "pyodide-test": pyodideTestManifest,
+  pyserve: pythonScribeManifest,
+  session: sessionManifest,
+  settings: settingsManifest,
+  webamp: webampManifest,
+  wordeditor: wordEditorManifest,
+};
 
 interface CameraControlOptions {
   enabled?: boolean;
@@ -27,16 +67,6 @@ interface CameraControlOptions {
   rotateSpeed?: number;
   zoomSpeed?: number;
   panSpeed?: number;
-}
-
-// Temporary Plugin interface to match Desktop3D
-interface SimplePlugin {
-  id: string;
-  manifest: {
-    name: string;
-    frameless?: boolean;
-  };
-  render: () => React.ReactNode;
 }
 
 interface DesktopCanvasProps {
@@ -70,7 +100,7 @@ interface DesktopCanvasProps {
   randomSeed?: number; // Optional seed for reproducible randomization
 
   /** Plugin integration */
-  plugins?: SimplePlugin[];
+  plugins?: Plugin[];
   onPluginLaunch?: (pluginId: string, initFromUrl?: string) => void;
 }
 
@@ -200,23 +230,70 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
-  // Create icon data from plugins
+  // Create icon data from plugins or manifests
   const pluginIconData = useMemo(() => {
-    return plugins.map((plugin) => ({
-      id: plugin.id,
-      title: plugin.manifest.name,
-      description: `Launch ${plugin.manifest.name}`,
-      iconPath: `/icons/34737_logo_beos_logo_beos.png`, // Default icon for now
-      color: "#4A90E2",
-      is3DMesh: false,
-      meshType: "cube" as const,
-    }));
+    console.log(
+      "Creating plugin icon data from plugins:",
+      plugins?.length || 0
+    );
+
+    if (plugins && plugins.length > 0) {
+      // Use loaded plugins if available
+      return plugins.map((plugin, index) => {
+        console.log(
+          `Processing loaded plugin ${index}:`,
+          plugin.id,
+          plugin.manifest.name
+        );
+        return {
+          title: plugin.manifest.name,
+          description: `Launch ${plugin.manifest.name}`,
+          stat: "1.0",
+          gridCoord: [(index % 5) + 1, Math.floor(index / 5) + 1] as [
+            number,
+            number
+          ],
+          // Add icon path using the mapper for better visual appearance
+          iconPath: getIconPathForTitle(plugin.manifest.name),
+        };
+      });
+    } else {
+      // Fallback to manifests when no plugins are loaded
+      console.log("No loaded plugins, using manifests for icons");
+      const manifestEntries = Object.entries(manifestMap);
+      return manifestEntries.map(([pluginId, manifest], index) => {
+        console.log(`Processing manifest ${index}:`, pluginId, manifest.name);
+        return {
+          title: manifest.name,
+          description: `Launch ${manifest.name}`,
+          stat: "1.0",
+          gridCoord: [(index % 5) + 1, Math.floor(index / 5) + 1] as [
+            number,
+            number
+          ],
+          // Add icon path using the mapper for better visual appearance
+          iconPath: getIconPathForTitle(manifest.name),
+          // Store the plugin ID for launching
+          pluginId: pluginId,
+        };
+      });
+    }
   }, [plugins]);
 
   // Memoize the icon data with 3D mesh configuration
   const iconData = useMemo(() => {
-    // Use plugin icons if available, otherwise fall back to static icons
+    console.log(
+      "DesktopCanvas: Creating iconData from plugins:",
+      plugins.length
+    );
+    console.log("DesktopCanvas: pluginIconData length:", pluginIconData.length);
+
+    // Always prefer plugin icons over static icons - we should have icons from manifests now
     const baseIcons = pluginIconData.length > 0 ? pluginIconData : desktopIcons;
+    console.log(
+      "DesktopCanvas: Using baseIcons:",
+      baseIcons.map((i) => i.title)
+    );
 
     if (!enable3DMeshIcons) {
       return baseIcons;
@@ -242,7 +319,13 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     }
 
     return meshIcons;
-  }, [pluginIconData, enable3DMeshIcons, meshIconPercentage, randomSeed]);
+  }, [
+    pluginIconData,
+    plugins.length,
+    enable3DMeshIcons,
+    meshIconPercentage,
+    randomSeed,
+  ]);
 
   // Memoize onReady callback to prevent CSS3D renderer recreation
   const onReady = useCallback(() => setIsReady(true), []);
@@ -260,13 +343,45 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
   });
 
   /**
-   * Handle icon clicks - create new windows
+   * Handle icon clicks - launch plugins or create windows
    */
   const handleIconClick = useCallback(
     (title: string, content: React.ReactNode) => {
-      onWindowCreate(title, content);
+      // First try to find loaded plugin with matching title
+      const plugin = plugins?.find((p) => p.manifest.name === title);
+
+      if (plugin && onPluginLaunch) {
+        // Launch the actual loaded plugin
+        console.log(
+          `Launching loaded plugin: ${plugin.id} (${plugin.manifest.name})`
+        );
+        onPluginLaunch(plugin.id);
+      } else {
+        // Try to find manifest with matching title to get plugin ID
+        const manifestEntry = Object.entries(manifestMap).find(
+          ([_, manifest]) => manifest.name === title
+        );
+
+        if (manifestEntry && onPluginLaunch) {
+          const pluginId = manifestEntry[0];
+          console.log(`Launching plugin from manifest: ${pluginId} (${title})`);
+          onPluginLaunch(pluginId);
+        } else {
+          // Only create generic window if we have content and no plugin found
+          if (content) {
+            console.log(
+              `No plugin or manifest found for "${title}", creating generic window`
+            );
+            onWindowCreate(title, content);
+          } else {
+            console.log(
+              `No plugin found for "${title}" and no fallback content provided`
+            );
+          }
+        }
+      }
     },
-    [onWindowCreate]
+    [plugins, onPluginLaunch, onWindowCreate]
   );
 
   /**

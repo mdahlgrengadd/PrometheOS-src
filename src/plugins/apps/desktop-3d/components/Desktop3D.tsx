@@ -1,25 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-// Import existing DesktopIcons component
-import DesktopIcons from '../../../../components/DesktopIcons';
 // Import types from main application
 import { WindowState } from '../../../../types/window';
+// Import the real Plugin interface from main system
+import { Plugin } from '../../../types';
 import { useWindowStore } from '../stores/windowStore';
 import { WindowData } from '../types/Window';
 import { DesktopCanvas } from './DesktopCanvas';
 import { LayoutType } from './IconInstances';
 import { IconSize } from './LayoutControls';
 import Taskbar from './Taskbar';
-
-// Temporary Plugin interface to avoid import issues
-interface SimplePlugin {
-  id: string;
-  manifest: {
-    name: string;
-    frameless?: boolean;
-  };
-  render: () => React.ReactNode;
-}
 
 // Camera control options interface
 interface CameraControlOptions {
@@ -42,7 +32,7 @@ interface CameraControlOptions {
 interface Desktop3DProps {
   // Window management from main Desktop
   windows: WindowState[];
-  plugins: SimplePlugin[];
+  plugins: Plugin[];
   openWindow: (pluginId: string, initFromUrl?: string) => void;
   closeWindow: (id: string) => void;
   minimizeWindow: (id: string) => void;
@@ -140,14 +130,33 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
 
   // Convert main windows to 3D format when they change
   useEffect(() => {
+    console.log(
+      "Desktop3D: Converting windows, plugins available:",
+      plugins.length
+    );
+    console.log(
+      "Desktop3D: Plugin list:",
+      plugins.map((p) => ({ id: p.id, name: p.manifest?.name }))
+    );
+
     const converted3DWindows: WindowData[] = mainWindows
       .filter((w) => w.isOpen && !w.isMinimized)
       .map((w) => {
         const plugin = plugins.find((p) => p.id === w.id);
+
+        // Always use the window's pre-configured content (PluginWrapper handles loading)
+        console.log(`Desktop3D: Using window content for ${w.id} (${w.title})`);
+        console.log(
+          `Desktop3D: Window content type:`,
+          typeof w.content,
+          w.content
+        );
+        const content = w.content;
+
         return {
           id: w.id,
           title: w.title,
-          content: plugin ? plugin.render() : null,
+          content: content,
           position: {
             x: w.position.x,
             y: w.position.y,
@@ -175,16 +184,20 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
   /**
    * Create a new window with proper positioning constraints
    * Now uses the main app's window creation system
+   * NOTE: This should rarely be used since we primarily launch plugins
    */
   const createWindow = useCallback(
     (title: string, content: React.ReactNode) => {
-      // For now, try to match title to a plugin ID
-      // This is a simplified approach - in a real implementation you'd want
-      // a better mapping system
-      const possiblePluginId = title.toLowerCase().replace(/\s+/g, "-");
-      mainOpenWindow(possiblePluginId);
+      console.log(
+        `Desktop3D: createWindow called with title: ${title}, content:`,
+        content
+      );
+      // Don't create windows with custom content, only launch plugins
+      console.warn(
+        `Desktop3D: createWindow should not be used for plugin content. Title: ${title}`
+      );
     },
-    [mainOpenWindow]
+    []
   );
 
   /**

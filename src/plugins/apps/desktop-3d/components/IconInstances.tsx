@@ -1,12 +1,12 @@
-import { gsap } from "gsap";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import * as THREE from "three";
+import { gsap } from 'gsap';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import * as THREE from 'three';
 
-import { ScreenSizer, ScreenSpace, Text, useTexture } from "@react-three/drei";
-import { ThreeEvent, useFrame, useThree } from "@react-three/fiber";
+import { ScreenSizer, ScreenSpace, Text, useTexture } from '@react-three/drei';
+import { ThreeEvent, useFrame, useThree } from '@react-three/fiber';
 
-import { DesktopIconData, desktopIcons, MeshType } from "../data/iconData";
-import { getIconPathForTitle } from "../utils/iconMapper";
+import { DesktopIconData, desktopIcons, MeshType } from '../data/iconData';
+import { getIconPathForTitle } from '../utils/iconMapper';
 
 export type LayoutType = "table" | "sphere" | "helix" | "grid" | "columns";
 export type IconSize = "small" | "medium" | "large";
@@ -77,7 +77,9 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
   meshType = "dodecahedron",
   enableMeshRotation = true,
   iconData = desktopIcons,
-}) => {  const meshRef = useRef<THREE.InstancedMesh>(null);  const cameraGroupRef = useRef<THREE.Group>(null);
+}) => {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const cameraGroupRef = useRef<THREE.Group>(null);
   const hoveredRef = useRef<number | null>(null);
   const instancesRef = useRef<IconInstance[]>([]);
 
@@ -510,7 +512,8 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
    */
   useEffect(() => {
     animateToLayout(layout);
-  }, [layout, animateToLayout]);  /**
+  }, [layout, animateToLayout]);
+  /**
    * Initial animation on mount - use the current layout prop instead of forcing grid
    */
   useEffect(() => {
@@ -766,7 +769,9 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
       // Clear hover
       if (hoveredRef.current !== null) {
         const currentInstanceId = hoveredRef.current;
-        instances[currentInstanceId].isHovered = false;
+        if (instances[currentInstanceId]) {
+          instances[currentInstanceId].isHovered = false;
+        }
 
         // Check if scale-up is still in progress for this instance
         if (animationState.current[currentInstanceId]?.scaleUpInProgress) {
@@ -787,32 +792,13 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
   const handlePointerDown = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
       const instanceId = event.object.userData?.instanceId;
-      if (instanceId !== undefined) {
+      if (instanceId !== undefined && instances[instanceId]) {
         const instance = instances[instanceId];
         const element = instance.data;
 
-        // Create window content
-        const content = (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">
-              {element.description} ({element.title})
-            </h3>
-            <div className="space-y-2">
-              <p>
-                <strong>Symbol:</strong> {element.title}
-              </p>
-              <p>
-                <strong>Version:</strong> {element.stat}
-              </p>
-              <p>
-                <strong>Position:</strong> Row {element.gridCoord[1]}, Column{" "}
-                {element.gridCoord[0]}
-              </p>
-            </div>
-          </div>
-        );
-
-        onIconClick(`${element.description} (${element.title})`, content);
+        // Just pass the title - let the handler decide what content to use
+        // Don't create placeholder content since we want real plugin content
+        onIconClick(element.title, null);
       }
     },
     [instances, onIconClick]

@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useRef } from "react";
-import * as THREE from "three";
-import {
-  CSS3DObject,
-  CSS3DRenderer,
-} from "three/addons/renderers/CSS3DRenderer.js";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import * as THREE from 'three';
+import { CSS3DObject, CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
 
-import { WindowData } from "../types/Window";
-import { getWindowContent } from "./WindowContents";
+import { WindowData } from '../types/Window';
 
 interface WindowLayerProps {
   /** Array of window data to render */
@@ -62,7 +59,13 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
     draggedWindowId: null,
     dragOffset: { x: 0, y: 0 },
     lastMousePos: { x: 0, y: 0 },
-  });  /**
+  });
+
+  // Track portal containers for each window
+  const [portalContainers, setPortalContainers] = useState<
+    Map<string, Element>
+  >(new Map());
+  /**
    * Constrains window position within the viewport bounds
    * CSS3D positioning is center-based, so we need to account for that
    */
@@ -205,25 +208,29 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
       contentArea.style.fontSize = "14px";
       contentArea.style.lineHeight = "1.6";
 
-      // Get window content based on window title
-      const contentId = window.title.toLowerCase().replace(/\s+/g, "-");
-      const content = getWindowContent(contentId);
+      // Use the actual window content (PluginWrapper) - will be rendered via portal
+      if (window.content && React.isValidElement(window.content)) {
+        // Create a container div for React content
+        const reactContainer = document.createElement("div");
+        reactContainer.style.width = "100%";
+        reactContainer.style.height = "100%";
+        reactContainer.id = `window-content-${window.id}`; // Unique ID for portal targeting
+        contentArea.appendChild(reactContainer);
 
-      if (React.isValidElement(content)) {
-        // Render React content to HTML string (simplified approach)
-        contentArea.innerHTML = `
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold">${window.title}</h3>
-          <p>Window content for ${window.title}</p>
-        </div>
-      `;
+        // Register the container for portal rendering
+        setPortalContainers((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(window.id, reactContainer);
+          return newMap;
+        });
       } else {
+        // Fallback for windows without React content
         contentArea.innerHTML = `
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold">${window.title}</h3>
-          <p>Application content goes here...</p>
-        </div>
-      `;
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">${window.title}</h3>
+            <p>Loading ${window.title}...</p>
+          </div>
+        `;
       }
 
       // Assemble window
@@ -313,6 +320,12 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
 
     objectsToRemove.forEach((id) => {
       windowObjectsRef.current.delete(id);
+      // Remove portal container
+      setPortalContainers((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(id);
+        return newMap;
+      });
     });
 
     // Add or update windows
@@ -451,5 +464,22 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
     };
   }, [windows, onWindowDrag, constrainWindowPosition, renderCSS3D]);
 
-  return null; // All rendering is handled by CSS3D
+  // Render React content via portals to maintain context access
+  return (
+    <>
+      {windows.map((window) => {
+        const container = portalContainers.get(window.id);
+        if (
+          !container ||
+          !window.content ||
+          !React.isValidElement(window.content)
+        ) {
+          return null;
+        }
+
+        // Render the React content into the CSS3D container via portal
+        return createPortal(window.content, container, `window-${window.id}`);
+      })}
+    </>
+  );
 };
