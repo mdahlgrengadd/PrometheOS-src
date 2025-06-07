@@ -880,15 +880,16 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
           scale={[1, 1, 1]} // Explicit initial scale for GSAP animations
           color="#f8f8f8"
           fontSize={8} // Smaller font for camera-relative positioning
-          maxWidth={80}
-          lineHeight={1}
+          maxWidth={60} // Reduced from 80 to force better text wrapping
+          lineHeight={1.1} // Slightly increased for better readability with wrapped text
           letterSpacing={0.02}
-          textAlign="left"
+          textAlign="center" // Changed from "left" to "center" for better appearance
           font="https://fonts.gstatic.com/s/raleway/v14/1Ptrg8zYS_SKggPNwK4vaqI.woff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.75}
           outlineColor="#222222"
+          whiteSpace="normal" // Allow text wrapping
         >
           {instance.data.title}
         </Text>

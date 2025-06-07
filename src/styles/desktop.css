@@ -138,13 +138,17 @@
     white-space: normal; /* Allow text to wrap */
     overflow-wrap: break-word; /* Break words that are too long */
     word-break: break-word; /* Allow words to break if needed */
+    hyphens: auto; /* Add automatic hyphenation for better text flow */
     display: -webkit-box;
     -webkit-line-clamp: 3; /* Limit to 3 lines maximum */
     line-clamp: 3; /* Standard property for compatibility */
     -webkit-box-orient: vertical;
     max-height: 3.6em; /* Approximately 3 lines of text */
     overflow: hidden; /* Hide any text beyond the line limit */
-    padding: 0 4px; /* Add a small padding to prevent text touching edges */
+    padding: 0 2px; /* Reduced padding to allow more text space */
+    max-width: 86px; /* Constrain width to force wrapping of long text */
+    margin: 8px auto 0; /* Center the label and add top margin */
+    line-height: 1.2; /* Better line spacing for wrapped text */
   }
 
   /* Base tab bar style applies to all themes, specific themes can override */
