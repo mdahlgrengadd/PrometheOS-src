@@ -413,15 +413,43 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
           currentWidth !== expectedWidth ||
           currentHeight !== expectedHeight
         ) {
-          // Recreate window with new size
-          css3dScene.remove(existingObject);
-          const newObject = createCSS3DWindow(window);
-          css3dScene.add(newObject);
-          windowObjectsRef.current.set(window.id, newObject);
+          // Update existing window size instead of recreating
+          existingObject.element.style.width = `${expectedWidth}px`;
+          existingObject.element.style.height = `${expectedHeight}px`;
 
-          // Preserve minimized state visibility after recreation
-          if (window.isMinimized) {
-            newObject.element.style.visibility = "hidden";
+          // Update window styling for maximized state
+          if (window.isMaximized) {
+            existingObject.element.style.borderRadius = "0";
+            existingObject.element.style.border = "none";
+            existingObject.element.style.boxShadow = "none";
+            // Center the maximized window
+            const centerX = expectedWidth / 2;
+            const centerY = (expectedHeight + taskbarHeight) / 2;
+            existingObject.position.set(
+              centerX,
+              -centerY,
+              existingObject.position.z
+            );
+          } else {
+            existingObject.element.style.borderRadius = "8px";
+            existingObject.element.style.border =
+              "1px solid rgba(255, 255, 255, 0.1)";
+            existingObject.element.style.boxShadow =
+              "0 10px 30px rgba(0, 0, 0, 0.3)";
+            // Update position to stored position
+            existingObject.position.set(
+              window.position.x,
+              -window.position.y,
+              window.position.z
+            );
+          }
+
+          // Find and update the content container size
+          const contentContainer = existingObject.element.querySelector(
+            ".window-content"
+          ) as HTMLElement;
+          if (contentContainer) {
+            contentContainer.style.height = `${expectedHeight - 48}px`; // Subtract header height
           }
         }
       }

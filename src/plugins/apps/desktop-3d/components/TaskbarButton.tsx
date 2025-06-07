@@ -79,7 +79,7 @@ const TaskbarButton: React.FC<TaskbarButtonProps> = ({
         } ${className}`}
         title={tooltip}
       >
-        <Icon size={size} className="text-white" />
+        <Icon size={size} className="text-foreground" />
       </button>{" "}
       {children && showPopup && (
         <div

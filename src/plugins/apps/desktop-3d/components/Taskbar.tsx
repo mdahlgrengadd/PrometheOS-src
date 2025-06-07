@@ -1,10 +1,10 @@
-import { Clock, Search, Settings, Wifi } from "lucide-react";
-import React from "react";
+import { Clock, Search, Settings, Wifi } from 'lucide-react';
+import React from 'react';
 
-import { WindowData } from "../types/Window";
-import LayoutControls, { IconSize } from "./LayoutControls";
-import SearchPopup from "./SearchPopup";
-import TaskbarButton from "./TaskbarButton";
+import { WindowData } from '../types/Window';
+import LayoutControls, { IconSize } from './LayoutControls';
+import SearchPopup from './SearchPopup';
+import TaskbarButton from './TaskbarButton';
 
 // Camera control options interface
 interface CameraControlOptions {
@@ -87,7 +87,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
           <button
             key={window.id}
             onClick={() => onWindowRestore(window.id)}
-            className={`px-3 py-1 text-xs text-white rounded transition-all ${
+            className={`px-3 py-1 text-xs text-foreground rounded transition-all ${
               window.isMinimized
                 ? "bg-white/10 hover:bg-white/20"
                 : "bg-blue-500/30 hover:bg-blue-500/50"
@@ -98,7 +98,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
         ))}
       </div>{" "}
       {/* System Tray */}
-      <div className="flex items-center space-x-2 text-white">
+      <div className="flex items-center space-x-2 text-white/80">
         {" "}
         <TaskbarButton
           icon={Settings}
@@ -123,7 +123,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
           )}
         </TaskbarButton>
         <Wifi size={16} />
-        <span className="text-sm">{currentTime}</span>
+        <span className="text-sm text-white/80">{currentTime}</span>
       </div>
     </div>
   );
