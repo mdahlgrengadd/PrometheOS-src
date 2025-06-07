@@ -26,9 +26,30 @@ export const useWindowStore = create<WindowStore>()(
         highestZ: 1,
 
         registerWindow: (w) =>
-          set((s) => ({
-            windows: { ...s.windows, [w.id]: { ...w, zIndex: ++s.highestZ } },
-          })),
+          set((s) => {
+            const existingWindow = s.windows[w.id];
+            const newZIndex = ++s.highestZ;
+
+            // If window exists but is being re-registered with a new position,
+            // prioritize the new position (from getSmartPosition) over persisted position
+            if (existingWindow) {
+              return {
+                windows: {
+                  ...s.windows,
+                  [w.id]: {
+                    ...existingWindow,
+                    ...w, // New registration data takes precedence
+                    zIndex: newZIndex,
+                  },
+                },
+              };
+            } else {
+              // New window registration
+              return {
+                windows: { ...s.windows, [w.id]: { ...w, zIndex: newZIndex } },
+              };
+            }
+          }),
 
         setOpen: (id, open) =>
           set((s) => {

@@ -1,44 +1,35 @@
 import React, {
-  createContext,
-  lazy,
-  Suspense,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+    createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState
+} from 'react';
 
-import { useWindowStore } from "@/store/windowStore";
-import { createInitDataFromUrl } from "@/utils/url";
+import { useWindowStore } from '@/store/windowStore';
+import { createInitDataFromUrl } from '@/utils/url';
 
-import { manifest as aichatManifest } from "./apps/aichat/manifest";
+import { manifest as aichatManifest } from './apps/aichat/manifest';
 // Import manifests instead of full plugin implementations
-import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
-import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
-import { manifest as apiFlowEditorManifest } from "./apps/blueprints/manifest";
-import { manifest as browserManifest } from "./apps/browser/manifest";
-import { manifest as builderManifest } from "./apps/builder/manifest";
-import { manifest as calculatorManifest } from "./apps/calculator/manifest";
-import { manifest as chatManifest } from "./apps/chat/manifest";
-import { manifest as desktop3dManifest } from "./apps/desktop-3d/manifest";
-import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
-import { manifest as notepadManifest } from "./apps/notepad/manifest";
-import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
-import { manifest as pythonScribeManifest } from "./apps/pyserve/manifest";
-import { manifest as sessionManifest } from "./apps/session/manifest";
-import { manifest as settingsManifest } from "./apps/settings/manifest";
-import { manifest as webampManifest } from "./apps/webamp/manifest";
-import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
-import { eventBus } from "./EventBus";
-import { PluginManager } from "./PluginManager";
+import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
+import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
+import { manifest as apiFlowEditorManifest } from './apps/blueprints/manifest';
+import { manifest as browserManifest } from './apps/browser/manifest';
+import { manifest as builderManifest } from './apps/builder/manifest';
+import { manifest as calculatorManifest } from './apps/calculator/manifest';
+import { manifest as chatManifest } from './apps/chat/manifest';
+import { manifest as desktop3dManifest } from './apps/desktop-3d/manifest';
+import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
+import { manifest as notepadManifest } from './apps/notepad/manifest';
+import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
+import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
+import { manifest as sessionManifest } from './apps/session/manifest';
+import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as webampManifest } from './apps/webamp/manifest';
+import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { eventBus } from './EventBus';
+import { PluginManager } from './PluginManager';
 import {
-  getAllManifests,
-  installPlugin,
-  uninstallPlugin as removePluginFromRegistry,
-} from "./registry";
-import { Plugin, PluginInitData, PluginManifest } from "./types";
-import { workerPluginManager } from "./WorkerPluginManagerClient";
+    getAllManifests, installPlugin, uninstallPlugin as removePluginFromRegistry
+} from './registry';
+import { Plugin, PluginInitData, PluginManifest } from './types';
+import { workerPluginManager } from './WorkerPluginManagerClient';
 
 // Lazy loading factory for plugins
 const createLazyPlugin = (pluginId: string) => {
@@ -186,6 +177,36 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
+    // Position windows at center with small random offset for CSS3D coordinate system
+    const getSmartPosition = (windowSize: {
+      width: number;
+      height: number;
+    }) => {
+      // CSS3DObject positioning uses center-based coordinates where:
+      // - position.x/y represents the CENTER of the window
+      // - Orthographic camera: left=0, right=width, top=0, bottom=-height
+      // - Y coordinates get negated when applied to CSS3DObject (handled in WindowLayer)
+
+      const taskbarHeight = 48;
+      const availableWidth = window.innerWidth;
+      const availableHeight = window.innerHeight - taskbarHeight;
+
+      // Calculate center of available viewport space
+      const viewportCenterX = availableWidth / 2;
+      const viewportCenterY = availableHeight / 2;
+
+      // Small random offset to prevent perfect stacking
+      const randomOffset = 30;
+      const offsetX = (Math.random() - 0.5) * randomOffset;
+      const offsetY = (Math.random() - 0.5) * randomOffset;
+
+      // The window center should be at the viewport center
+      return {
+        x: viewportCenterX + offsetX,
+        y: viewportCenterY + offsetY,
+      };
+    };
+
     // Load plugins
     const loadPlugins = async () => {
       try {
@@ -211,10 +232,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                 isOpen: false,
                 isMinimized: false,
                 zIndex: 1,
-                position: {
-                  x: 100 + Math.random() * 100,
-                  y: 100 + Math.random() * 100,
-                },
+                position: getSmartPosition(size),
                 size,
                 isMaximized: false,
                 hideWindowChrome: manifest.hideWindowChrome,
@@ -242,10 +260,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
                   isOpen: false,
                   isMinimized: false,
                   zIndex: 1,
-                  position: {
-                    x: 100 + Math.random() * 100,
-                    y: 100 + Math.random() * 100,
-                  },
+                  position: getSmartPosition(size),
                   size,
                   isMaximized: false,
                   hideWindowChrome: manifest.hideWindowChrome,
@@ -467,22 +482,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
       // Call onOpen with initialization data
       plugin.onOpen?.(initData);
 
-      // Center the window on the screen before opening
-      const store = useWindowStore.getState();
-      const winState = store.windows[pluginId];
-      if (winState) {
-        const w =
-          typeof winState.size.width === "number"
-            ? winState.size.width
-            : parseInt(String(winState.size.width), 10) || 0;
-        const h =
-          typeof winState.size.height === "number"
-            ? winState.size.height
-            : parseInt(String(winState.size.height), 10) || 0;
-        const centerX = window.innerWidth / 2 - w / 2;
-        const centerY = window.innerHeight / 2 - h / 2;
-        store.move(pluginId, { x: centerX, y: centerY });
-      }
+      // Just use the registered position
 
       // Just use the store directly
       setOpen(pluginId, true);

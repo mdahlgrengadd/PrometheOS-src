@@ -266,9 +266,12 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
         const css3dObject = windowObjectsRef.current.get(window.id);
         if (!css3dObject) return;
 
+        // CSS3D positions are center-based, so we use them directly
         const currentX = css3dObject.position.x;
         const currentY = -css3dObject.position.y; // Convert world Y to screen Y
 
+        // Mouse coordinates are top-left based, but CSS3D expects center-based
+        // So we pass screen coordinates directly - the drag logic will handle the conversion
         startWindowDrag(e.clientX, e.clientY, currentX, currentY);
       }); // Create CSS3DObject
       const css3dObject = new CSS3DObject(windowElement); // Apply position constraints before setting position
@@ -400,20 +403,25 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
         dragState.draggedWindowId
       );
       if (css3dObject && window) {
+        // Calculate new position using mouse coordinates (which are consistent)
         const newX = e.clientX - dragState.dragOffset.x;
         const newY = e.clientY - dragState.dragOffset.y;
+
+        // Constrain the position (constrainWindowPosition expects center-based coordinates)
         const constrainedPosition = constrainWindowPosition(
           { x: newX, y: newY, z: css3dObject.position.z },
           window.size,
           window.isMaximized
         );
 
+        // Set CSS3D position (Y is negated for world coordinates)
         css3dObject.position.set(
           constrainedPosition.x,
           -constrainedPosition.y, // Convert to world coordinates
           css3dObject.position.z
         );
 
+        // Store screen coordinates for consistency
         dragState.lastMousePos = {
           x: constrainedPosition.x,
           y: constrainedPosition.y,

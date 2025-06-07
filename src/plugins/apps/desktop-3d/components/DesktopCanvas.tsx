@@ -1,3 +1,4 @@
+import { Perf } from 'r3f-perf';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { CSS3DRenderer } from 'three/addons/renderers/CSS3DRenderer.js';
@@ -230,38 +231,20 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
-  // Create icon data from plugins or manifests
+  // Create icon data from plugins and manifests combined
   const pluginIconData = useMemo(() => {
     console.log(
       "Creating plugin icon data from plugins:",
       plugins?.length || 0
     );
 
-    if (plugins && plugins.length > 0) {
-      // Use loaded plugins if available
-      return plugins.map((plugin, index) => {
-        console.log(
-          `Processing loaded plugin ${index}:`,
-          plugin.id,
-          plugin.manifest.name
-        );
-        return {
-          title: plugin.manifest.name,
-          description: `Launch ${plugin.manifest.name}`,
-          stat: "1.0",
-          gridCoord: [(index % 5) + 1, Math.floor(index / 5) + 1] as [
-            number,
-            number
-          ],
-          // Add icon path using the mapper for better visual appearance
-          iconPath: getIconPathForTitle(plugin.manifest.name),
-        };
-      });
-    } else {
-      // Fallback to manifests when no plugins are loaded
-      console.log("No loaded plugins, using manifests for icons");
-      const manifestEntries = Object.entries(manifestMap);
-      return manifestEntries.map(([pluginId, manifest], index) => {
+    // Always use manifests as the base - this ensures all plugins show as icons
+    console.log(
+      "Using manifests for all icons, loaded plugins will launch directly"
+    );
+    const manifestEntries = Object.entries(manifestMap);
+    const allPluginIcons = manifestEntries.map(
+      ([pluginId, manifest], index) => {
         console.log(`Processing manifest ${index}:`, pluginId, manifest.name);
         return {
           title: manifest.name,
@@ -276,8 +259,10 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
           // Store the plugin ID for launching
           pluginId: pluginId,
         };
-      });
-    }
+      }
+    );
+
+    return allPluginIcons;
   }, [plugins]);
 
   // Memoize the icon data with 3D mesh configuration
@@ -469,7 +454,11 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
         />
         <pointLight position={[-1000, -1000, 1000]} intensity={0.4} />
         {/* Camera controls */}
-        <CameraController controls={cameraControls} />{" "}
+        <CameraController controls={cameraControls} />
+
+        {/* Performance monitor in top right corner */}
+        <Perf position="top-right" />
+
         {/* Desktop icons as instanced meshes */}
         <IconInstances
           layout={currentLayout}
