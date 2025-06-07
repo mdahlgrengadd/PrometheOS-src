@@ -148,7 +148,7 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
       header.style.display = "flex";
       header.style.alignItems = "center";
       header.style.justifyContent = "space-between";
-      header.style.padding = "16px 20px";
+      header.style.padding = "4px 20px";
       header.style.background =
         "linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1))";
       header.style.borderBottom = "1px solid rgba(0, 0, 0, 0.1)";
@@ -216,7 +216,7 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
       // Window content area
       const contentArea = document.createElement("div");
       contentArea.style.padding = "0";
-      contentArea.style.height = "calc(100% - 48px)"; // Correct header height: 16px + 16px padding + 14px controls + 2px buffer
+      contentArea.style.height = "calc(100% - 24px)"; // Updated header height: 4px + 4px padding + 14px controls + 2px buffer
       contentArea.style.overflow = "auto";
       contentArea.style.color = "#374151";
       contentArea.style.fontSize = "14px";
