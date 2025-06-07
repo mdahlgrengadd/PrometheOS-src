@@ -140,7 +140,7 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
     );
 
     const converted3DWindows: WindowData[] = mainWindows
-      .filter((w) => w.isOpen && !w.isMinimized)
+      .filter((w) => w.isOpen)
       .map((w) => {
         const plugin = plugins.find((p) => p.id === w.id);
 
@@ -298,9 +298,21 @@ const Desktop3D: React.FC<Desktop3DProps> = ({
    */
   const handleWindowRestore = useCallback(
     (id: string) => {
-      mainHandleTabClick(id);
+      // Find the window in the current windows list
+      const window = mainWindows.find((w) => w.id === id);
+
+      if (window?.isMinimized) {
+        // For minimized windows, restore them
+        mainHandleTabClick(id);
+      } else if (window?.isOpen) {
+        // For open windows, minimize them
+        mainMinimizeWindow(id);
+      } else {
+        // For closed windows, open them
+        mainOpenWindow(id);
+      }
     },
-    [mainHandleTabClick]
+    [mainHandleTabClick, mainMinimizeWindow, mainOpenWindow, mainWindows]
   );
 
   /**

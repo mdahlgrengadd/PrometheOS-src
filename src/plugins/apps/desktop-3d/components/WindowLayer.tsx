@@ -365,16 +365,6 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
 
     // Add or update windows
     windows.forEach((window) => {
-      if (window.isMinimized) {
-        // Remove minimized windows from scene
-        const existingObject = windowObjectsRef.current.get(window.id);
-        if (existingObject) {
-          css3dScene.remove(existingObject);
-          windowObjectsRef.current.delete(window.id);
-        }
-        return;
-      }
-
       const existingObject = windowObjectsRef.current.get(window.id);
 
       if (!existingObject) {
@@ -382,14 +372,28 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
         const css3dObject = createCSS3DWindow(window);
         css3dScene.add(css3dObject);
         windowObjectsRef.current.set(window.id, css3dObject);
+
+        // Set initial visibility based on minimized state
+        if (window.isMinimized) {
+          css3dObject.element.style.visibility = "hidden";
+        }
       } else {
-        // Update existing window position if not being dragged
-        if (dragStateRef.current.draggedWindowId !== window.id) {
-          existingObject.position.set(
-            window.position.x,
-            -window.position.y,
-            window.position.z
-          );
+        // Update existing window
+
+        // Handle minimized state by hiding/showing the window
+        if (window.isMinimized) {
+          existingObject.element.style.visibility = "hidden";
+        } else {
+          existingObject.element.style.visibility = "visible";
+
+          // Update position if not being dragged and not minimized
+          if (dragStateRef.current.draggedWindowId !== window.id) {
+            existingObject.position.set(
+              window.position.x,
+              -window.position.y,
+              window.position.z
+            );
+          }
         }
 
         // Update window size for maximized state
@@ -414,6 +418,11 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
           const newObject = createCSS3DWindow(window);
           css3dScene.add(newObject);
           windowObjectsRef.current.set(window.id, newObject);
+
+          // Preserve minimized state visibility after recreation
+          if (window.isMinimized) {
+            newObject.element.style.visibility = "hidden";
+          }
         }
       }
     });
