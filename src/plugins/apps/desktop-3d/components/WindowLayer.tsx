@@ -201,8 +201,8 @@ export const WindowLayer: React.FC<WindowLayerProps> = ({
 
       // Window content area
       const contentArea = document.createElement("div");
-      contentArea.style.padding = "24px";
-      contentArea.style.height = "calc(100% - 73px)"; // Subtract header height
+      contentArea.style.padding = "0";
+      contentArea.style.height = "calc(100% - 48px)"; // Correct header height: 16px + 16px padding + 14px controls + 2px buffer
       contentArea.style.overflow = "auto";
       contentArea.style.color = "#374151";
       contentArea.style.fontSize = "14px";

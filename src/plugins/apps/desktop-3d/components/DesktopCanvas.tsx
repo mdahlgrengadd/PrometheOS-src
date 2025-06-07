@@ -263,7 +263,7 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     );
 
     return allPluginIcons;
-  }, [plugins]);
+  }, []);
 
   // Memoize the icon data with 3D mesh configuration
   const iconData = useMemo(() => {
@@ -304,13 +304,7 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     }
 
     return meshIcons;
-  }, [
-    pluginIconData,
-    plugins.length,
-    enable3DMeshIcons,
-    meshIconPercentage,
-    randomSeed,
-  ]);
+  }, [pluginIconData, enable3DMeshIcons, meshIconPercentage, randomSeed]);
 
   // Memoize onReady callback to prevent CSS3D renderer recreation
   const onReady = useCallback(() => setIsReady(true), []);
