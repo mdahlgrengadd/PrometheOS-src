@@ -1,39 +1,26 @@
-import { Folder } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { toast } from "sonner";
+import { Folder } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
-import { useApi } from "@/api/hooks/useApi";
-import { useFileSystemStore } from "@/store/fileSystem";
-import { useSelectionContainer } from "@air/react-drag-to-select";
+import { useApi } from '@/api/hooks/useApi';
+import { useFileSystemStore } from '@/store/fileSystem';
+import { useSelectionContainer } from '@air/react-drag-to-select';
 
-import { ideSettings } from "../../../../plugins/apps/builder/utils/esbuild-settings";
+import { ideSettings } from '../../../../plugins/apps/builder/utils/esbuild-settings';
 import {
-  ContextMenuPosition,
-  FileSystemItem,
-  TEXT_FILE_EXTENSIONS,
-  User,
-} from "../types/fileSystem";
+    ContextMenuPosition, FileSystemItem, TEXT_FILE_EXTENSIONS, User
+} from '../types/fileSystem';
 import {
-  createDesktopCopyWithUniqueName,
-  createDesktopShortcut,
-  createFileShortcut,
-  findFolderPath,
-  generateUniqueFileName,
-  getAppForFileExtension,
-} from "../utils/fileUtils";
-import ContextMenu from "./ContextMenu";
-import { NewItemDialog, RenameDialog } from "./Dialogs";
-import FileGrid from "./FileGrid";
-import Sidebar from "./Sidebar";
+    createDesktopCopyWithUniqueName, createDesktopShortcut, createFileShortcut, findFolderPath,
+    generateUniqueFileName, getAppForFileExtension
+} from '../utils/fileUtils';
+import ContextMenu from './ContextMenu';
+import { NewItemDialog, RenameDialog } from './Dialogs';
+import FileGrid from './FileGrid';
+import Sidebar from './Sidebar';
 // Component imports
-import TitleBar from "./TitleBar";
-import Toolbar from "./Toolbar";
+import TitleBar from './TitleBar';
+import Toolbar from './Toolbar';
 
 const FileExplorer: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string[]>(["root"]);
@@ -727,7 +714,7 @@ const FileExplorer: React.FC = () => {
 
   return (
     <div
-      className="h-screen flex flex-col bg-white"
+      className="h-screen flex flex-col bg-white relative"
       onClick={handleClickOutside}
     >
       {/* Title Bar

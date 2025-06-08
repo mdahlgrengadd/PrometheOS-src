@@ -1,5 +1,5 @@
-import { Edit3, Link, Trash2 } from "lucide-react";
-import React from "react";
+import { Edit3, Link, Trash2 } from 'lucide-react';
+import React from 'react';
 
 interface ContextMenuProps {
   position: { x: number; y: number };
@@ -22,7 +22,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 }) => {
   return (
     <div
-      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl py-2 z-50 min-w-48"
+      className="absolute bg-white border border-gray-200 rounded-lg shadow-xl py-2 z-50 min-w-48"
       style={{ left: position.x, top: position.y }}
     >
       <button
