@@ -13,7 +13,7 @@ export type IconSize = "small" | "medium" | "large";
 
 interface IconInstancesProps {
   /** Called when an icon is clicked (left click) */
-  onIconClick: (title: string, content: React.ReactNode) => void;
+  onIconClick: (iconData: DesktopIconData) => void;
   /** Called when an icon is right-clicked for context menu */
   onIconRightClick?: (
     event: { x: number; y: number },
@@ -948,7 +948,7 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
           );
         } else if (event.nativeEvent.button === 0) {
           // Left click - open icon
-          onIconClick(element.title, null);
+          onIconClick(element);
         }
       }
     },

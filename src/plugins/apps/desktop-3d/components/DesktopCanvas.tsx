@@ -433,9 +433,65 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
    * Handle icon clicks - launch plugins or create windows
    */
   const handleIconClick = useCallback(
-    (title: string, content: React.ReactNode) => {
-      // First try to find loaded plugin with matching title
-      const plugin = plugins?.find((p) => p.manifest.name === title);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (iconData: any) => {
+      // Check if this is a VFS icon with shortcut data (same logic as context menu)
+      if (iconData.isShortcut && iconData.shortcut) {
+        const shortcut = iconData.shortcut;
+        if (shortcut.target.startsWith("vfs://")) {
+          // Open file from VFS - delegate to main system
+          console.log(`Opening VFS file: ${shortcut.target}`);
+          onPluginLaunch?.("file-explorer", shortcut.target);
+        } else {
+          // Open plugin/app using the target from shortcut
+          console.log(
+            `Launching plugin from VFS shortcut: ${shortcut.target} (${shortcut.name})`
+          );
+          onPluginLaunch?.(shortcut.target);
+        }
+        return;
+      }
+
+      // Check for plugin ID from VFS data
+      if (iconData.pluginId) {
+        console.log(
+          `Launching plugin from VFS data: ${iconData.pluginId} (${iconData.title})`
+        );
+        onPluginLaunch?.(iconData.pluginId);
+        return;
+      }
+
+      // Check for .exe folder
+      if (
+        iconData.originalItem?.type === "folder" &&
+        iconData.originalItem.name.endsWith(".exe")
+      ) {
+        // .exe folder - open with app-preview
+        console.log(`Opening .exe folder: ${iconData.originalItem.name}`);
+        onPluginLaunch?.(
+          "app-preview",
+          `app://PublishedApps/${iconData.originalItem.name}`
+        );
+        return;
+      }
+
+      // Check for regular VFS files/folders
+      if (iconData.originalItem?.type === "file") {
+        // Regular file - open with file explorer
+        console.log(`Opening VFS file: ${iconData.originalItem.id}`);
+        onPluginLaunch?.("file-explorer", `vfs://${iconData.originalItem.id}`);
+        return;
+      }
+
+      if (iconData.originalItem?.type === "folder") {
+        // Regular folder - open file explorer
+        console.log(`Opening VFS folder: ${iconData.originalItem.id}`);
+        onPluginLaunch?.("file-explorer", `vfs://${iconData.originalItem.id}`);
+        return;
+      }
+
+      // Fallback: try to find loaded plugin with matching title (for static icons)
+      const plugin = plugins?.find((p) => p.manifest.name === iconData.title);
 
       if (plugin && onPluginLaunch) {
         // Launch the actual loaded plugin
@@ -446,25 +502,20 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
       } else {
         // Try to find manifest with matching title to get plugin ID
         const manifestEntry = Object.entries(manifestMap).find(
-          ([_, manifest]) => manifest.name === title
+          ([_, manifest]) => manifest.name === iconData.title
         );
 
         if (manifestEntry && onPluginLaunch) {
           const pluginId = manifestEntry[0];
-          console.log(`Launching plugin from manifest: ${pluginId} (${title})`);
+          console.log(
+            `Launching plugin from manifest: ${pluginId} (${iconData.title})`
+          );
           onPluginLaunch(pluginId);
         } else {
-          // Only create generic window if we have content and no plugin found
-          if (content) {
-            console.log(
-              `No plugin or manifest found for "${title}", creating generic window`
-            );
-            onWindowCreate(title, content);
-          } else {
-            console.log(
-              `No plugin found for "${title}" and no fallback content provided`
-            );
-          }
+          // No plugin found and no VFS data
+          console.log(
+            `No plugin found for "${iconData.title}" and no fallback content provided`
+          );
         }
       }
     },
