@@ -12,8 +12,13 @@ export type LayoutType = "table" | "sphere" | "helix" | "grid" | "columns";
 export type IconSize = "small" | "medium" | "large";
 
 interface IconInstancesProps {
-  /** Called when an icon is clicked */
+  /** Called when an icon is clicked (left click) */
   onIconClick: (title: string, content: React.ReactNode) => void;
+  /** Called when an icon is right-clicked for context menu */
+  onIconRightClick?: (
+    event: { x: number; y: number },
+    iconData: DesktopIconData
+  ) => void;
   /** Current layout configuration */
   layout: LayoutType;
   /** Desktop icon size */
@@ -68,6 +73,7 @@ interface IconInstance {
  */
 export const IconInstances: React.FC<IconInstancesProps> = ({
   onIconClick,
+  onIconRightClick,
   layout,
   iconSize = "large",
   maxRandomDelay = 0,
@@ -82,6 +88,8 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
   const cameraGroupRef = useRef<THREE.Group>(null);
   const hoveredRef = useRef<number | null>(null);
   const instancesRef = useRef<IconInstance[]>([]);
+  const lastIconDataRef = useRef<DesktopIconData[]>([]);
+  const isInitializedRef = useRef(false);
 
   // Helper function to get scale value based on icon size
   const getIconScale = useCallback((size: IconSize): number => {
@@ -173,39 +181,138 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
     );
   }, []);
   /**
-   * Create icon instances with initial random positions
+   * Create icon instances with stable management to prevent reinitialization
    */
   const instances = useMemo(() => {
-    const newInstances: IconInstance[] = [];
+    // Create a stable ID for each icon to track across changes
+    const getStableId = (icon: DesktopIconData): string => {
+      // Use combination of title and description for stable ID
+      return `${icon.title}_${icon.description}`;
+    };
 
-    for (let i = 0; i < iconData.length; i++) {
-      const iconDataItem = iconData[i];
+    const currentIconIds = iconData.map(getStableId);
+    const previousIconIds = lastIconDataRef.current.map(getStableId);
 
-      // Start with random positions behind camera for dramatic entrance
-      const startPos = new THREE.Vector3(
-        (Math.random() - 0.5) * 4000,
-        (Math.random() - 0.5) * 4000,
-        2000 + Math.random() * 2000
-      );
-      const instance: IconInstance = {
-        data: iconDataItem,
-        position: startPos.clone(),
-        targetPosition: startPos.clone(),
-        scale: new THREE.Vector3(0.1, 0.1, 0.1), // Start small
-        targetScale: new THREE.Vector3(1, 1, 1),
-        rotation: new THREE.Euler(0, 0, 0),
-        targetRotation: new THREE.Euler(0, 0, 0),
-        matrix: new THREE.Matrix4(),
-        isHovered: false,
-        tween: null,
-        scaleUpCompleted: false,
-      };
+    // If this is the first initialization, create all instances
+    if (!isInitializedRef.current) {
+      console.log("[IconInstances] Initial creation of instances");
+      const newInstances: IconInstance[] = [];
 
-      newInstances.push(instance);
+      for (let i = 0; i < iconData.length; i++) {
+        const iconDataItem = iconData[i];
+
+        // Start with random positions behind camera for dramatic entrance
+        const startPos = new THREE.Vector3(
+          (Math.random() - 0.5) * 4000,
+          (Math.random() - 0.5) * 4000,
+          2000 + Math.random() * 2000
+        );
+        const instance: IconInstance = {
+          data: iconDataItem,
+          position: startPos.clone(),
+          targetPosition: startPos.clone(),
+          scale: new THREE.Vector3(0.1, 0.1, 0.1), // Start small
+          targetScale: new THREE.Vector3(1, 1, 1),
+          rotation: new THREE.Euler(0, 0, 0),
+          targetRotation: new THREE.Euler(0, 0, 0),
+          matrix: new THREE.Matrix4(),
+          isHovered: false,
+          tween: null,
+          scaleUpCompleted: false,
+        };
+
+        newInstances.push(instance);
+      }
+
+      instancesRef.current = newInstances;
+      lastIconDataRef.current = [...iconData];
+      isInitializedRef.current = true;
+      return newInstances;
     }
 
-    instancesRef.current = newInstances;
-    return newInstances;
+    // Check if icon data actually changed
+    const hasChanges =
+      currentIconIds.length !== previousIconIds.length ||
+      currentIconIds.some((id, index) => id !== previousIconIds[index]);
+
+    if (!hasChanges) {
+      // No changes, return existing instances
+      return instancesRef.current;
+    }
+
+    console.log(
+      "[IconInstances] Detected icon changes, applying incremental updates"
+    );
+
+    // Create new instance array based on current iconData
+    const updatedInstances: IconInstance[] = [];
+    const existingInstancesMap = new Map<string, IconInstance>();
+
+    // Map existing instances by their stable IDs
+    instancesRef.current.forEach((instance, index) => {
+      const id = getStableId(lastIconDataRef.current[index]);
+      existingInstancesMap.set(id, instance);
+    });
+
+    // Process each current icon
+    iconData.forEach((iconDataItem, newIndex) => {
+      const stableId = getStableId(iconDataItem);
+      const existingInstance = existingInstancesMap.get(stableId);
+
+      if (existingInstance) {
+        // Reuse existing instance (preserves position and state)
+        existingInstance.data = iconDataItem; // Update data in case of changes
+        updatedInstances.push(existingInstance);
+        console.log(
+          `[IconInstances] Reusing existing instance for: ${iconDataItem.title}`
+        );
+      } else {
+        // Create new instance for added icon
+        console.log(
+          `[IconInstances] Creating new instance for: ${iconDataItem.title}`
+        );
+
+        // For new icons, start them at a position that won't disrupt the layout
+        // We'll animate them in smoothly from off-screen
+        const offScreenPos = new THREE.Vector3(
+          (Math.random() - 0.5) * 1000, // Less random spread
+          1000, // Start above the visible area
+          -500 // In front of camera but off-screen
+        );
+
+        const newInstance: IconInstance = {
+          data: iconDataItem,
+          position: offScreenPos.clone(),
+          targetPosition: offScreenPos.clone(), // Will be set by layout animation
+          scale: new THREE.Vector3(0.1, 0.1, 0.1), // Start small
+          targetScale: new THREE.Vector3(1, 1, 1),
+          rotation: new THREE.Euler(0, 0, 0),
+          targetRotation: new THREE.Euler(0, 0, 0),
+          matrix: new THREE.Matrix4(),
+          isHovered: false,
+          tween: null,
+          scaleUpCompleted: false,
+        };
+
+        updatedInstances.push(newInstance);
+
+        // Don't schedule individual animations here - let the layout system handle it
+      }
+    });
+
+    // Update refs
+    instancesRef.current = updatedInstances;
+    lastIconDataRef.current = [...iconData];
+
+    // Log removed icons for debugging
+    const removedIds = previousIconIds.filter(
+      (id) => !currentIconIds.includes(id)
+    );
+    if (removedIds.length > 0) {
+      console.log(`[IconInstances] Removed icons:`, removedIds);
+    }
+
+    return updatedInstances;
   }, [iconData]);
   /**
    * Text refs for animating labels
@@ -515,15 +622,48 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
   }, [layout, animateToLayout]);
   /**
    * Initial animation on mount - use the current layout prop instead of forcing grid
+   * Only runs once when component first mounts, not when iconData changes
    */
   useEffect(() => {
-    // Start with the current layout after brief delay (only on initial mount)
-    const timer = setTimeout(() => {
-      animateToLayout(layout);
-    }, 100);
+    // Only run the initial animation if this is the very first initialization
+    if (isInitializedRef.current && instancesRef.current.length > 0) {
+      console.log("[IconInstances] Running initial layout animation");
+      const timer = setTimeout(() => {
+        animateToLayout(layout);
+      }, 100);
 
-    return () => clearTimeout(timer);
-  }, [animateToLayout]); // Don't include layout here to avoid re-running on layout changes
+      return () => clearTimeout(timer);
+    }
+  }, []); // Empty dependency array - only runs once on mount
+
+  /**
+   * Detect when new icons are added and animate them to their layout positions
+   * This runs after animateToLayout is defined to avoid hoisting issues
+   */
+  useEffect(() => {
+    if (!isInitializedRef.current) return;
+
+    // Check if we have new icons that need to be animated to their layout positions
+    const newIconsToAnimate = instances.filter((instance) => {
+      // New icons will have positions far from their target positions
+      const distanceFromTarget = instance.position.distanceTo(
+        instance.targetPosition
+      );
+      return distanceFromTarget > 500; // If more than 500 units away, it's likely a new icon
+    });
+
+    if (newIconsToAnimate.length > 0) {
+      console.log(
+        `[IconInstances] Animating ${newIconsToAnimate.length} new icons to layout positions`
+      );
+
+      // Trigger layout animation for all icons, but new ones will have the most dramatic movement
+      setTimeout(() => {
+        animateToLayout(layout);
+      }, 50);
+    }
+  }, [instances, layout, animateToLayout]);
+
   // Cleanup any remaining animations when component unmounts
   useEffect(() => {
     // Store reference to the animations for cleanup
@@ -787,7 +927,7 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
     }
   });
   /**
-   * Handle click events
+   * Handle click events (both left and right clicks)
    */
   const handlePointerDown = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
@@ -796,12 +936,23 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
         const instance = instances[instanceId];
         const element = instance.data;
 
-        // Just pass the title - let the handler decide what content to use
-        // Don't create placeholder content since we want real plugin content
-        onIconClick(element.title, null);
+        // Check if this is a right click (button 2) or context menu event
+        if (event.nativeEvent.button === 2 && onIconRightClick) {
+          // Right click - show context menu
+          event.stopPropagation();
+          event.nativeEvent.preventDefault();
+
+          onIconRightClick(
+            { x: event.nativeEvent.clientX, y: event.nativeEvent.clientY },
+            element
+          );
+        } else if (event.nativeEvent.button === 0) {
+          // Left click - open icon
+          onIconClick(element.title, null);
+        }
       }
     },
-    [instances, onIconClick]
+    [instances, onIconClick, onIconRightClick]
   );
   return (
     <group ref={cameraGroupRef}>
@@ -839,6 +990,20 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
               // Set userData for raycasting identification
               event.object.userData = { instanceId: i };
               handlePointerDown(event);
+            }}
+            onContextMenu={(event) => {
+              // Handle right-click context menu
+              if (onIconRightClick) {
+                event.stopPropagation();
+                event.nativeEvent.preventDefault();
+                onIconRightClick(
+                  {
+                    x: event.nativeEvent.clientX,
+                    y: event.nativeEvent.clientY,
+                  },
+                  instance.data
+                );
+              }
             }}
             onPointerEnter={() => {
               document.body.style.cursor = "pointer";

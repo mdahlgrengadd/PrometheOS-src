@@ -26,10 +26,11 @@ import { manifest as settingsManifest } from '../../settings/manifest';
 import { manifest as webampManifest } from '../../webamp/manifest';
 import { manifest as wordEditorManifest } from '../../wordeditor/manifest';
 import { applyRandom3DMesh, desktopIcons } from '../data/iconData';
-import { useDualRenderer } from '../hooks/useDualRenderer';
+import { useDualRenderer, useVFSDesktopIcons } from '../hooks';
 import { useWindowStore } from '../stores/windowStore';
 import { WindowData } from '../types/Window';
 import { getIconPathForTitle } from '../utils/iconMapper';
+import { DesktopContextMenu } from './DesktopContextMenu';
 import { IconInstances, IconSize, LayoutType } from './IconInstances';
 import { WindowLayer } from './WindowLayer';
 
@@ -232,6 +233,17 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
 
+  // VFS integration for desktop icons
+  const { vfsDesktopIcons } = useVFSDesktopIcons();
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    visible: boolean;
+  } | null>(null);
+
   // Create icon data from plugins and manifests combined
   const pluginIconData = useMemo(() => {
     console.log(
@@ -274,8 +286,21 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     );
     console.log("DesktopCanvas: pluginIconData length:", pluginIconData.length);
 
-    // Always prefer plugin icons over static icons - we should have icons from manifests now
-    const baseIcons = pluginIconData.length > 0 ? pluginIconData : desktopIcons;
+    // Prefer VFS desktop icons first, then plugin icons, then fallback to static icons
+    let baseIcons;
+    if (vfsDesktopIcons.length > 0) {
+      // Use VFS desktop icons (from /Desktop folder)
+      console.log("DesktopCanvas: Using VFS desktop icons");
+      baseIcons = vfsDesktopIcons;
+    } else if (pluginIconData.length > 0) {
+      // Fallback to plugin manifest icons
+      console.log("DesktopCanvas: Using plugin manifest icons");
+      baseIcons = pluginIconData;
+    } else {
+      // Final fallback to static icons
+      console.log("DesktopCanvas: Using static desktop icons");
+      baseIcons = desktopIcons;
+    }
     console.log(
       "DesktopCanvas: Using baseIcons:",
       baseIcons.map((i) => i.title)
@@ -305,7 +330,13 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     }
 
     return meshIcons;
-  }, [pluginIconData, enable3DMeshIcons, meshIconPercentage, randomSeed]);
+  }, [
+    vfsDesktopIcons,
+    pluginIconData,
+    enable3DMeshIcons,
+    meshIconPercentage,
+    randomSeed,
+  ]);
 
   // Memoize onReady callback to prevent CSS3D renderer recreation
   const onReady = useCallback(() => setIsReady(true), []);
@@ -321,6 +352,82 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
     containerRef,
     onReady,
   });
+
+  /**
+   * Handle icon right-clicks for context menu
+   */
+  const handleIconRightClick = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (event: { x: number; y: number }, iconData: any) => {
+      setContextMenu({
+        x: event.x,
+        y: event.y,
+        item: iconData,
+        visible: true,
+      });
+    },
+    []
+  );
+
+  /**
+   * Handle context menu close
+   */
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  /**
+   * Handle context menu open action
+   */
+  const handleContextMenuOpen = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (item: any) => {
+      // Use the same logic as handleIconClick
+      if (item.isShortcut && item.shortcut) {
+        const shortcut = item.shortcut;
+        if (shortcut.target.startsWith("vfs://")) {
+          // Open file from VFS - delegate to main system
+          onPluginLaunch?.("file-explorer", shortcut.target);
+        } else {
+          // Open plugin/app
+          onPluginLaunch?.(shortcut.target);
+        }
+      } else if (item.pluginId) {
+        // Plugin shortcut
+        onPluginLaunch?.(item.pluginId);
+      } else if (
+        item.originalItem?.type === "folder" &&
+        item.originalItem.name.endsWith(".exe")
+      ) {
+        // .exe folder - open with app-preview
+        onPluginLaunch?.(
+          "app-preview",
+          `app://PublishedApps/${item.originalItem.name}`
+        );
+      } else if (item.originalItem?.type === "file") {
+        // Regular file - open with file explorer
+        onPluginLaunch?.("file-explorer", `vfs://${item.originalItem.id}`);
+      } else if (item.originalItem?.type === "folder") {
+        // Regular folder - open file explorer
+        onPluginLaunch?.("file-explorer", `vfs://${item.originalItem.id}`);
+      } else {
+        // Fallback - try to find plugin by title
+        const plugin = plugins?.find((p) => p.manifest.name === item.title);
+        if (plugin && onPluginLaunch) {
+          onPluginLaunch(plugin.id);
+        } else {
+          // Try manifest lookup
+          const manifestEntry = Object.entries(manifestMap).find(
+            ([_, manifest]) => manifest.name === item.title
+          );
+          if (manifestEntry && onPluginLaunch) {
+            onPluginLaunch(manifestEntry[0]);
+          }
+        }
+      }
+    },
+    [plugins, onPluginLaunch]
+  );
 
   /**
    * Handle icon clicks - launch plugins or create windows
@@ -462,6 +569,7 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
           layout={currentLayout}
           iconSize={iconSize}
           onIconClick={handleIconClick}
+          onIconRightClick={handleIconRightClick}
           maxRandomDelay={animationRandomness.maxRandomDelay}
           speedVariation={animationRandomness.speedVariation}
           animationDuration={2.0}
@@ -483,6 +591,17 @@ export const DesktopCanvas: React.FC<DesktopCanvasProps> = ({
           onWindowMaximize={onWindowMaximize}
           onWindowFocus={onWindowFocus}
           renderCSS3D={renderCSS3D}
+        />
+      )}
+      {/* Context Menu */}
+      {contextMenu && (
+        <DesktopContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          item={contextMenu.item}
+          visible={contextMenu.visible}
+          onClose={handleContextMenuClose}
+          onOpen={handleContextMenuOpen}
         />
       )}
     </div>

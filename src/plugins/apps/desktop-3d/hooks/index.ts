@@ -4,3 +4,5 @@ export {
   type DualRendererOptions,
   type DualRendererReturn,
 } from "./useDualRenderer";
+
+export { useVFSDesktopIcons } from "./useVFSDesktopIcons";
