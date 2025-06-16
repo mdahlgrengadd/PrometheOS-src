@@ -1,7 +1,0 @@
-{
-  "name": "Session",
-  "description": "Session management application",
-  "target": "session",
-  "iconType": "plugin",
-  "icon": "session"
-}

@@ -184,6 +184,9 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
    * Create icon instances with stable management to prevent reinitialization
    */
   const instances = useMemo(() => {
+    console.log("[IconInstances] Processing iconData:", iconData.length, "icons");
+    console.log("[IconInstances] Icon titles:", iconData.map(icon => icon.title));
+    
     // Create a stable ID for each icon to track across changes
     const getStableId = (icon: DesktopIconData): string => {
       // Use combination of title and description for stable ID
@@ -195,7 +198,7 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
 
     // If this is the first initialization, create all instances
     if (!isInitializedRef.current) {
-      console.log("[IconInstances] Initial creation of instances");
+      console.log("[IconInstances] Initial creation of", iconData.length, "instances");
       const newInstances: IconInstance[] = [];
 
       for (let i = 0; i < iconData.length; i++) {
@@ -312,21 +315,38 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
       console.log(`[IconInstances] Removed icons:`, removedIds);
     }
 
+    console.log("[IconInstances] Final instances count:", updatedInstances.length);
+    console.log("[IconInstances] Final instance titles:", updatedInstances.map(i => i.data.title));
+
     return updatedInstances;
   }, [iconData]);
   /**
-   * Text refs for animating labels
+   * Text refs for animating labels - ensure the refs array matches current instances length
    */
-  const textRefs = useRef<Array<React.RefObject<THREE.Object3D>>>(
-    instances.map(() => React.createRef<THREE.Object3D>())
-  );
-
+  const textRefs = useRef<Array<React.RefObject<THREE.Object3D>>>([]);
+  
   /**
-   * Icon plane refs for animating individual icon planes
+   * Icon plane refs for animating individual icon planes - ensure the refs array matches current instances length
    */
-  const iconPlaneRefs = useRef<Array<React.RefObject<THREE.Mesh>>>(
-    instances.map(() => React.createRef<THREE.Mesh>())
-  );
+  const iconPlaneRefs = useRef<Array<React.RefObject<THREE.Mesh>>>([]);
+
+  // Update refs arrays to match current instances length
+  useEffect(() => {
+    while (textRefs.current.length < instances.length) {
+      textRefs.current.push(React.createRef<THREE.Object3D>());
+    }
+    while (iconPlaneRefs.current.length < instances.length) {
+      iconPlaneRefs.current.push(React.createRef<THREE.Mesh>());
+    }
+    
+    // Trim arrays if needed
+    if (textRefs.current.length > instances.length) {
+      textRefs.current = textRefs.current.slice(0, instances.length);
+    }
+    if (iconPlaneRefs.current.length > instances.length) {
+      iconPlaneRefs.current = iconPlaneRefs.current.slice(0, instances.length);
+    }
+  }, [instances.length]);
 
   /**
    * Calculate target positions for the specified layout
@@ -960,7 +980,7 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
       {/* Instanced mesh for all icons - keeping for potential future use but not for interaction */}{" "}
       <instancedMesh
         ref={meshRef}
-        args={[undefined, undefined, iconData.length]}
+        args={[undefined, undefined, Math.max(instances.length, 1)]} // Use actual instances length, minimum 1
         visible={false} // Make completely invisible since we use individual planes for interaction
       >
         {/* Box geometry for all instances - smaller for camera-relative positioning */}
@@ -1022,7 +1042,9 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
                 <planeGeometry args={[35, 35]} />
                 <meshBasicMaterial
                   map={
-                    Array.isArray(iconTextures) ? iconTextures[i] : iconTextures
+                    Array.isArray(iconTextures) 
+                      ? (iconTextures[i] || iconTextures[0]) // Fallback to first texture if index out of bounds
+                      : iconTextures
                   }
                   transparent
                   alphaTest={0.1}
@@ -1039,7 +1061,7 @@ export const IconInstances: React.FC<IconInstancesProps> = ({
           ref={textRefs.current[i]}
           position={[
             instance.position.x,
-            instance.position.y + 25, // Closer to icons for camera-relative positioning
+            instance.position.y - 25, // Position text BELOW the icon instead of above
             instance.position.z + 8,
           ]}
           scale={[1, 1, 1]} // Explicit initial scale for GSAP animations

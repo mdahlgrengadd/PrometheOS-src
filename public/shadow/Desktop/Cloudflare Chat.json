@@ -1,7 +1,0 @@
-{
-  "name": "Cloudflare Chat",
-  "description": "Real-time chat via Durable Objects",
-  "target": "chat",
-  "iconType": "plugin",
-  "icon": "chat"
-}

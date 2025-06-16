@@ -1,7 +1,0 @@
-{
-  "name": "Settings",
-  "description": "System settings application",
-  "target": "settings",
-  "iconType": "plugin",
-  "icon": "settings"
-}

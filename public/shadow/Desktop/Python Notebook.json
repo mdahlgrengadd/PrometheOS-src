@@ -1,7 +1,0 @@
-{
-  "name": "Python Notebook",
-  "description": "Jupyter-style Python notebook with Pyodide integration",
-  "target": "pyodide-test",
-  "iconType": "plugin",
-  "icon": "pyodide-test"
-}
