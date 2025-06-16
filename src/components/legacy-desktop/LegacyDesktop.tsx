@@ -9,6 +9,7 @@ import { usePlugins } from "../../plugins/PluginContext";
 import AppWindow from "./AppWindow";
 import DesktopIcons from "./DesktopIcons";
 import Taskbar from "./Taskbar";
+import { centerToTopLeft, topLeftToCenter } from "./utils/positionUtils";
 
 const LegacyDesktop = () => {
   // Open apps from URL after all plugins/windows are registered
@@ -107,9 +108,17 @@ const LegacyDesktop = () => {
 
   const updateWindowPosition = useCallback(
     (id: string, position: { x: number; y: number }) => {
-      move(id, position);
+      // Convert top-left position back to center-based for storage
+      const window = windows.find(w => w.id === id);
+      if (window) {
+        const centerPosition = topLeftToCenter(position, window.size);
+        move(id, centerPosition);
+      } else {
+        // Fallback if window not found
+        move(id, position);
+      }
     },
-    [move]
+    [move, windows]
   );
 
   const handleTabClick = useCallback(
@@ -217,14 +226,16 @@ const LegacyDesktop = () => {
           const plugin = loadedPlugins.find((p) => p.id === w.id);
           // If frameless, render only the plugin content
           if (plugin?.manifest.frameless) {
+            // Convert center-based position to top-left for frameless windows
+            const topLeftPosition = centerToTopLeft(w.position, w.size);
             // Render plugin content without window container, positioned using stored state
             return (
               <div
                 key={w.id}
                 style={{
                   position: "absolute",
-                  top: w.position.y,
-                  left: w.position.x,
+                  top: topLeftPosition.y,
+                  left: topLeftPosition.x,
                   width:
                     typeof w.size.width === "number"
                       ? w.size.width

@@ -4,6 +4,7 @@ import { useWindowStore } from '@/store/windowStore';
 import { WindowState } from '@/types/window';
 
 import { WindowShell } from '../shelley-wm/WindowShell';
+import { centerToTopLeft, topLeftToCenter } from './utils/positionUtils';
 
 interface WindowProps {
   window: WindowState;
@@ -56,14 +57,22 @@ const AppWindow: React.FC<WindowProps> = ({
     resize(window.id, newSize);
   };
 
+  // Handle drag stop - pass position directly to parent
+  const handleDragStop = (position: { x: number; y: number }) => {
+    onDragStop(position);
+  };
+
   if (!window.isOpen) return null;
+
+  // Convert center-based position to top-left for WindowShell
+  const topLeftPosition = centerToTopLeft(window.position, window.size);
 
   return (
     <WindowShell
       id={window.id}
       title={window.title}
       zIndex={window.zIndex}
-      position={window.position}
+      position={topLeftPosition}
       size={window.size}
       isMaximized={isMaximized}
       isOpen={window.isOpen}
@@ -73,7 +82,7 @@ const AppWindow: React.FC<WindowProps> = ({
       onMinimize={onMinimize}
       onMaximize={onMaximize}
       onFocus={handleFocus}
-      onDragEnd={onDragStop}
+      onDragEnd={handleDragStop}
       onResize={handleResize}
       hideWindowChrome={window.hideWindowChrome}
     >
