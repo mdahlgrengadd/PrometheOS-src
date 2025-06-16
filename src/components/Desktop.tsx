@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useTheme } from '@/lib/ThemeProvider';
 import { useWindowStore } from '@/store/windowStore';
@@ -8,11 +8,21 @@ import { getAppsToLaunchFromUrl, getPluginInitFromUrl } from '@/utils/url';
 // Import Desktop3D component
 import Desktop3D from '../plugins/apps/desktop-3d/components/Desktop3D';
 import { usePlugins } from '../plugins/PluginContext';
-import AppWindow from './AppWindow';
-import DesktopIcons from './DesktopIcons';
-import Taskbar from './Taskbar';
+import LegacyDesktop from './legacy-desktop/LegacyDesktop';
 
 const Desktop = () => {
+  // Desktop environment preference (3D or Legacy)
+  const [use3DDesktop, setUse3DDesktop] = useState(() => {
+    const saved = localStorage.getItem('desktop-environment');
+    return saved !== 'legacy'; // Default to 3D unless explicitly set to legacy
+  });
+
+  // Save preference when changed
+  const toggleDesktopEnvironment = useCallback(() => {
+    const newValue = !use3DDesktop;
+    setUse3DDesktop(newValue);
+    localStorage.setItem('desktop-environment', newValue ? '3d' : 'legacy');
+  }, [use3DDesktop]);
   // Open apps from URL after all plugins/windows are registered
   useEffect(() => {
     // Handle app opening with initialization data
@@ -151,18 +161,34 @@ const Desktop = () => {
   // Use Desktop3D as the main desktop environment
   return (
     <div className="desktop">
-      <Desktop3D
-        windows={windows}
-        plugins={loadedPlugins}
-        openWindow={openWindow}
-        closeWindow={closeWindow}
-        minimizeWindow={minimizeWindow}
-        maximizeWindow={maximizeWindow}
-        focusWindow={focusWindow}
-        handleDragStop={updateWindowPosition}
-        handleTabClick={handleTabClick}
-        use3DBackground={false}
-      />
+      {/* Desktop Environment Toggle */}
+      <div className="absolute top-2 right-2 z-50">
+        <button
+          onClick={toggleDesktopEnvironment}
+          className="px-3 py-1 bg-black/20 backdrop-blur-sm text-white rounded-md hover:bg-black/30 transition-colors text-sm"
+          title={`Switch to ${use3DDesktop ? 'Legacy' : '3D'} Desktop`}
+        >
+          {use3DDesktop ? '3D' : '2D'}
+        </button>
+      </div>
+
+      {/* Render appropriate desktop environment */}
+      {use3DDesktop ? (
+        <Desktop3D
+          windows={windows}
+          plugins={loadedPlugins}
+          openWindow={openWindow}
+          closeWindow={closeWindow}
+          minimizeWindow={minimizeWindow}
+          maximizeWindow={maximizeWindow}
+          focusWindow={focusWindow}
+          handleDragStop={updateWindowPosition}
+          handleTabClick={handleTabClick}
+          use3DBackground={false}
+        />
+      ) : (
+        <LegacyDesktop />
+      )}
     </div>
   );
 };

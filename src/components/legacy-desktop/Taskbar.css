@@ -1,0 +1,40 @@
+/* Modern running app button styling with shadow, hover, and active states */
+
+.taskbar-app-btn.minimized,
+.taskbar-app-btn.minimized:hover,
+.taskbar-app-btn.minimized:active {
+  box-shadow: none !important;
+  filter: grayscale(1) brightness(0.92) !important;
+  opacity: 0.6 !important;
+  background-color: #a7b7da !important; /* lighter muted blue */
+  color: #404349 !important;
+  border: 1.5px dashed #4a5a7a !important;
+}
+
+.taskbar-app-btn.minimized .truncate {
+  opacity: 0.5 !important;
+}
+/* Make running app buttons always look modern, regardless of theme */
+.taskbar-app-btn {
+  @apply flex items-center px-2 py-2 font-medium text-white text-xs transition-colors duration-150;
+
+  border: none !important;
+
+}
+.taskbar-app-btn:hover {
+  background-color: #4096e366 !important; /* #4096e3/40 */
+}
+.taskbar-app-btn-active {
+  background-color: #4096e399 !important; /* #4096e3/60 */
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+/* WinXP Custom Styles scoped */
+.taskbar-scope .font-italic {
+  font-style: italic;
+}
+
