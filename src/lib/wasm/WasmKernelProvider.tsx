@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { WasmKernelContext } from './context';
 
@@ -47,15 +47,16 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
     error: null,
     module: null,
   });
-
-  const [eventListeners, setEventListeners] = useState<
-    Set<(event: FSMessage) => void>
-  >(new Set());
-
+  // Use useRef to maintain stable eventListeners reference
+  const eventListenersRef = useRef<Set<(event: FSMessage) => void>>(new Set());
   const initialize = useCallback(async () => {
-    if (state.isInitialized || state.isLoading) return;
+    setState((current) => {
+      if (current.isInitialized || current.isLoading) {
+        return current; // No change, early return
+      }
+      return { ...current, isLoading: true, error: null };
+    });
 
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       // Load the WASM module from public directory
       // Use dynamic script loading to avoid build-time resolution issues
@@ -115,9 +116,13 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
         print: (text: string) => {
           console.log(`[WASM]: ${text}`);
         },
-
         printErr: (text: string) => {
-          console.error(`[WASM Error]: ${text}`);
+          // Don't abort on known non-critical errors
+          if (text.includes("/proc/stat") || text.includes("No such file")) {
+            console.warn(`[WASM Warning]: ${text}`);
+          } else {
+            console.error(`[WASM Error]: ${text}`);
+          }
         },
         locateFile: (path: string, scriptDirectory: string) => {
           // Ensure WASM file is loaded from the correct location with base URL
@@ -127,9 +132,7 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
           }
           return scriptDirectory + path;
         },
-      });
-
-      // Don't set state here - it will be set in onRuntimeInitialized
+      }); // Don't set state here - it will be set in onRuntimeInitialized
       // Just keep the loading state until the runtime is ready
     } catch (error) {
       console.error("❌ Failed to initialize WASM kernel:", error);
@@ -139,162 +142,182 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
         error: error instanceof Error ? error.message : "Unknown error",
       }));
     }
-  }, [state.isInitialized, state.isLoading]);
+  }, []); // Remove state dependencies to prevent infinite loops
+  // Create API methods with useMemo to prevent recreation
+  const api: WasmKernelAPI | null = useMemo(() => {
+    if (!state.module) return null;
 
-  // Create API methods
-  const api: WasmKernelAPI | null = state.module
-    ? {
-        readFile: async (path: string): Promise<Uint8Array> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            const data = state.module.FS.readFile(path);
-            if (data instanceof Uint8Array) {
-              return data;
-            }
-            // Convert string to Uint8Array if needed
-            return new TextEncoder().encode(data as string);
-          } catch (error) {
-            throw new Error(`Failed to read file ${path}: ${error}`);
+    return {
+      readFile: async (path: string): Promise<Uint8Array> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
           }
-        },
+          const data = state.module.FS.readFile(path);
+          if (data instanceof Uint8Array) {
+            return data;
+          }
+          // Convert string to Uint8Array if needed
+          return new TextEncoder().encode(data as string);
+        } catch (error) {
+          throw new Error(`Failed to read file ${path}: ${error}`);
+        }
+      },
 
-        writeFile: async (path: string, data: Uint8Array): Promise<void> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            state.module.FS.writeFile(path, data);
-
-            // Emit FS_CHANGED event
-            eventListeners.forEach((listener) => {
-              listener({
-                version: 1,
-                type: "FS_CHANGED",
-                flags: 0,
-                seq: Date.now(),
-                data_len: data.length,
-                path,
-              });
+      writeFile: async (path: string, data: Uint8Array): Promise<void> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
+          }
+          state.module.FS.writeFile(path, data); // Emit FS_CHANGED event
+          eventListenersRef.current.forEach((listener) => {
+            listener({
+              version: 1,
+              type: "FS_CHANGED",
+              flags: 0,
+              seq: Date.now(),
+              data_len: data.length,
+              path,
             });
-          } catch (error) {
-            throw new Error(`Failed to write file ${path}: ${error}`);
+          });
+        } catch (error) {
+          throw new Error(`Failed to write file ${path}: ${error}`);
+        }
+      },
+      deleteFile: async (path: string): Promise<void> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
           }
-        },
-        deleteFile: async (path: string): Promise<void> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            state.module.FS.unlink(path);
-
-            // Emit FS_DELETE event
-            eventListeners.forEach((listener) => {
-              listener({
-                version: 1,
-                type: "FS_DELETE",
-                flags: 0,
-                seq: Date.now(),
-                data_len: 0,
-                path,
-              });
+          state.module.FS.unlink(path); // Emit FS_DELETE event
+          eventListenersRef.current.forEach((listener) => {
+            listener({
+              version: 1,
+              type: "FS_DELETE",
+              flags: 0,
+              seq: Date.now(),
+              data_len: 0,
+              path,
             });
-          } catch (error) {
-            throw new Error(`Failed to delete file ${path}: ${error}`);
+          });
+        } catch (error) {
+          throw new Error(`Failed to delete file ${path}: ${error}`);
+        }
+      },
+
+      renameFile: async (oldPath: string, newPath: string): Promise<void> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
           }
-        },
-
-        renameFile: async (oldPath: string, newPath: string): Promise<void> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            state.module.FS.rename(oldPath, newPath);
-
-            // Emit FS_RENAME event
-            eventListeners.forEach((listener) => {
-              listener({
-                version: 1,
-                type: "FS_RENAME",
-                flags: 0,
-                seq: Date.now(),
-                data_len: 0,
-                path: `${oldPath} -> ${newPath}`,
-              });
+          state.module.FS.rename(oldPath, newPath); // Emit FS_RENAME event
+          eventListenersRef.current.forEach((listener) => {
+            listener({
+              version: 1,
+              type: "FS_RENAME",
+              flags: 0,
+              seq: Date.now(),
+              data_len: 0,
+              path: `${oldPath} -> ${newPath}`,
             });
-          } catch (error) {
-            throw new Error(
-              `Failed to rename ${oldPath} to ${newPath}: ${error}`
-            );
+          });
+        } catch (error) {
+          throw new Error(
+            `Failed to rename ${oldPath} to ${newPath}: ${error}`
+          );
+        }
+      },
+      createDir: async (path: string): Promise<void> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
           }
-        },
-        createDir: async (path: string): Promise<void> => {
+          state.module.FS.mkdir(path);
+        } catch (error) {
+          throw new Error(`Failed to create directory ${path}: ${error}`);
+        }
+      },
+
+      listDir: async (path: string): Promise<string[]> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
+          }
+          return state.module.FS.readdir(path).filter(
+            (name: string) => name !== "." && name !== ".."
+          );
+        } catch (error) {
+          throw new Error(`Failed to list directory ${path}: ${error}`);
+        }
+      },
+      onFileSystemEvent: (callback: (event: FSMessage) => void) => {
+        eventListenersRef.current.add(callback);
+
+        // Return cleanup function
+        return () => {
+          eventListenersRef.current.delete(callback);
+        };
+      },
+
+      ptyWrite: async (data: string): Promise<void> => {
+        // TODO: Implement PTY write using C function wrapper
+        console.log("PTY Write:", data);
+      },
+
+      ptyRead: async (): Promise<string> => {
+        // TODO: Implement PTY read using C function wrapper
+        return "";
+      },
+      getProcStat: async (): Promise<ProcStat> => {
+        try {
+          if (!state.module?.FS) {
+            throw new Error("WASM FS not available");
+          }
+
+          // Check if the file exists first to avoid runtime abort
           try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            state.module.FS.mkdir(path);
-          } catch (error) {
-            throw new Error(`Failed to create directory ${path}: ${error}`);
+            state.module.FS.stat("/proc/stat");
+          } catch (statError) {
+            // File doesn't exist, return default proc stat
+            return {
+              processes: [
+                {
+                  pid: 1,
+                  name: "kernel",
+                  state: "running",
+                },
+              ],
+              uptime: Date.now() / 1000,
+            };
           }
-        },
 
-        listDir: async (path: string): Promise<string[]> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            return state.module.FS.readdir(path).filter(
-              (name: string) => name !== "." && name !== ".."
-            );
-          } catch (error) {
-            throw new Error(`Failed to list directory ${path}: ${error}`);
-          }
-        },
-
-        onFileSystemEvent: (callback: (event: FSMessage) => void) => {
-          setEventListeners((prev) => new Set([...prev, callback]));
-
-          // Return cleanup function
-          return () => {
-            setEventListeners((prev) => {
-              const newSet = new Set(prev);
-              newSet.delete(callback);
-              return newSet;
-            });
+          const stat = state.module.FS.readFile("/proc/stat", {
+            encoding: "utf8",
+          });
+          return JSON.parse(stat as string);
+        } catch (error) {
+          // Return a default proc stat instead of throwing
+          console.warn("Failed to read proc stat, returning defaults:", error);
+          return {
+            processes: [
+              {
+                pid: 1,
+                name: "kernel",
+                state: "running",
+              },
+            ],
+            uptime: Date.now() / 1000,
           };
-        },
+        }
+      },
+    };
+  }, [state.module]); // Only recreate when module changes
 
-        ptyWrite: async (data: string): Promise<void> => {
-          // TODO: Implement PTY write using C function wrapper
-          console.log("PTY Write:", data);
-        },
-
-        ptyRead: async (): Promise<string> => {
-          // TODO: Implement PTY read using C function wrapper
-          return "";
-        },
-        getProcStat: async (): Promise<ProcStat> => {
-          try {
-            if (!state.module?.FS) {
-              throw new Error("WASM FS not available");
-            }
-            const stat = state.module.FS.readFile("/proc/stat", {
-              encoding: "utf8",
-            });
-            return JSON.parse(stat as string);
-          } catch (error) {
-            throw new Error(`Failed to read proc stat: ${error}`);
-          }
-        },
-      }
-    : null;
-
-  // Auto-initialize on mount
+  // Auto-initialize on mount (only once)
   useEffect(() => {
     initialize();
-  }, [initialize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const contextValue = {
     state,

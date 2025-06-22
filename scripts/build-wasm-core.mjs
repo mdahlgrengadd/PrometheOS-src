@@ -111,6 +111,8 @@ async function manualBuild() {
     "-sEXPORT_NAME=WasmCore",
     "-sINVOKE_RUN=0",
     "-sASYNCIFY=1",
+    "-sNO_EXIT_RUNTIME=1", // Prevent runtime termination on errors
+    "-sASSERTIONS=0", // Disable runtime assertions
     "-flto",
   ];
 

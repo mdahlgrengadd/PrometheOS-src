@@ -172,17 +172,21 @@ const WasmKernelDemoComponent: React.FC<{ initData?: PluginInitData }> = ({
     testProcStat,
     isRunningTests,
   ]);
-
   // Listen for filesystem events
   React.useEffect(() => {
     if (!api) return;
 
     const unsubscribe = api.onFileSystemEvent((event) => {
-      addTestResult(`📡 FS Event: ${event.type} on ${event.path}`);
+      setTestResults((prev) => [
+        ...prev,
+        `${new Date().toLocaleTimeString()}: 📡 FS Event: ${event.type} on ${
+          event.path
+        }`,
+      ]);
     });
 
     return unsubscribe;
-  }, [api, addTestResult]);
+  }, [api]); // Only depend on api
 
   const getStatusIcon = () => {
     if (state.isLoading) return <Loader2 className="h-4 w-4 animate-spin" />;
@@ -293,13 +297,13 @@ const WasmKernelDemoComponent: React.FC<{ initData?: PluginInitData }> = ({
             <CardTitle className="flex items-center gap-2">
               {getStatusIcon()}
               WASM Kernel Status
-            </CardTitle>
-            <CardDescription>
-              Current status:{" "}
+            </CardTitle>{" "}
+            <div className="text-sm text-muted-foreground flex items-center gap-2">
+              <span>Current status:</span>
               <Badge variant={state.isInitialized ? "default" : "secondary"}>
                 {getStatusText()}
               </Badge>
-            </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -411,31 +415,31 @@ const WasmKernelDemoComponent: React.FC<{ initData?: PluginInitData }> = ({
               <Info className="h-4 w-4" />
               About WASM Kernel Demo
             </CardTitle>
-          </CardHeader>
+          </CardHeader>{" "}
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
               This demo showcases a minimal C → WebAssembly kernel with:
             </p>
-            <ul className="text-sm space-y-1 ml-4">
-              <li>
+            <div className="text-sm space-y-1 ml-4">
+              <div>
                 • <strong>Emscripten WasmFS</strong> - Virtual file system
-              </li>
-              <li>
+              </div>
+              <div>
                 • <strong>POSIX I/O</strong> - Standard file operations
-              </li>
-              <li>
+              </div>
+              <div>
                 • <strong>Event Bus ABI</strong> - Inter-component communication
-              </li>
-              <li>
+              </div>
+              <div>
                 • <strong>Crash-safe writes</strong> - Atomic file operations
-              </li>
-              <li>
+              </div>
+              <div>
                 • <strong>PTY Support</strong> - Pseudo-terminal interface
-              </li>
-              <li>
+              </div>
+              <div>
                 • <strong>Process Table</strong> - Process management
-              </li>
-            </ul>
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground mt-2">
               Target size: ≤250kB gzipped. Built with modern Emscripten
               toolchain.
