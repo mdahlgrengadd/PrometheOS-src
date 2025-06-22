@@ -1,20 +1,15 @@
-import React from "react";
+import React from 'react';
 
-import { PluginManifest } from "../../types";
+import { PluginManifest } from '../../types';
 
 export const manifest: PluginManifest = {
   id: "zetawriter",
   name: "ZetaWriter",
   version: "1.0.0",
-  description:
-    "A powerful LibreOffice-based word processor with advanced editing features",
-  author: "Desktop System",
-  icon: (
+  description: "A powerful LibreOffice-based word processor with advanced editing features",
+  author: "Desktop System",  icon: (
     <img
-      src={
-        import.meta.env.BASE_URL +
-        "/icons/34772_beos_paper_pen_write_pen_paper_beos_write.png"
-      }
+      src={import.meta.env.BASE_URL + "/icons/34772_beos_paper_pen_write_pen_paper_beos_write.png"}
       className="h-8 w-8"
       alt="ZetaWriter"
     />

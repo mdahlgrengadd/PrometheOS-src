@@ -13,21 +13,18 @@ const DIST_SHADOW_DIR = path.resolve(__dirname, "../dist/shadow");
 const PUBLIC_SHADOW_DIR = path.resolve(__dirname, "../public/shadow");
 
 // Read base URL from Vite config
-let BASE_URL = "/";
+let BASE_URL = '/';
 try {
-  const { loadConfigFromFile } = await import("vite");
+  const { loadConfigFromFile } = await import('vite');
   const config = await loadConfigFromFile(
-    { command: "build", mode: "production" },
-    path.resolve(__dirname, "../vite.config.ts")
+    { command: 'build', mode: 'production' },
+    path.resolve(__dirname, '../vite.config.ts')
   );
   if (config?.config?.base) {
     BASE_URL = config.config.base;
   }
 } catch (error) {
-  console.warn(
-    'Could not load base URL from vite config, using default "/":',
-    error.message
-  );
+  console.warn('Could not load base URL from vite config, using default "/":', error.message);
 }
 
 /**
@@ -46,13 +43,12 @@ try {
 function fileToFsItem(filePath, root) {
   const rel = path.relative(root, filePath).replace(/\\/g, "/");
   // Use the base URL from Vite config, ensuring proper path concatenation
-  const baseUrl = BASE_URL.endsWith("/") ? BASE_URL.slice(0, -1) : BASE_URL;
+  const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
   return {
     id: rel,
     name: path.basename(filePath),
     type: "file",
-    contentPath: `${baseUrl}/shadow/${rel}`,
-  };
+    contentPath: `${baseUrl}/shadow/${rel}`,  };
 }
 
 /**
@@ -63,96 +59,76 @@ async function generateDesktopShortcuts() {
   try {
     // Import the plugin registry to get all available plugins
     const registryPath = path.resolve(__dirname, "../src/plugins/registry.tsx");
-
+    
     // Read the registry file content to extract plugin manifests
     const registryContent = await fs.readFile(registryPath, "utf8");
-
+    
     // Extract manifest imports to get plugin IDs
-    const manifestImports = registryContent.match(
-      /import { manifest as \w+Manifest } from ["']\.\/apps\/([^"']+)\/manifest["']/g
-    );
-
+    const manifestImports = registryContent.match(/import { manifest as \w+Manifest } from ["']\.\/apps\/([^"']+)\/manifest["']/g);
+    
     if (!manifestImports) {
       console.log("⚠ No plugin manifests found in registry");
       return;
     }
-
-    const pluginIds = manifestImports
-      .map((importLine) => {
-        const match = importLine.match(/\.\/apps\/([^"']+)\/manifest/);
-        return match ? match[1] : null;
-      })
-      .filter(Boolean);
-
-    console.log(
-      `Found ${pluginIds.length} plugins to create shortcuts for:`,
-      pluginIds
-    );
-
+    
+    const pluginIds = manifestImports.map(importLine => {
+      const match = importLine.match(/\.\/apps\/([^"']+)\/manifest/);
+      return match ? match[1] : null;
+    }).filter(Boolean);
+    
+    console.log(`Found ${pluginIds.length} plugins to create shortcuts for:`, pluginIds);
+    
     // Ensure Desktop directory exists in dist/shadow
     const desktopDir = path.join(DIST_SHADOW_DIR, "Desktop");
     await fs.mkdir(desktopDir, { recursive: true });
-
+    
     // Also ensure Downloads directory exists
     const downloadsDir = path.join(DIST_SHADOW_DIR, "Downloads");
     await fs.mkdir(downloadsDir, { recursive: true });
-
+    
     // Generate shortcuts for each plugin
     for (const pluginId of pluginIds) {
       try {
         // Try to load the manifest to get the real name and description
-        const manifestPath = path.resolve(
-          __dirname,
-          `../src/plugins/apps/${pluginId}/manifest.tsx`
-        );
+        const manifestPath = path.resolve(__dirname, `../src/plugins/apps/${pluginId}/manifest.tsx`);
         let pluginName = pluginId.charAt(0).toUpperCase() + pluginId.slice(1);
         let description = `${pluginName} application`;
-
+        
         try {
           const manifestContent = await fs.readFile(manifestPath, "utf8");
-
+          
           // Extract name and description from manifest
           const nameMatch = manifestContent.match(/name:\s*["']([^"']+)["']/);
-          const descMatch = manifestContent.match(
-            /description:\s*["']([^"']+)["']/
-          );
-
+          const descMatch = manifestContent.match(/description:\s*["']([^"']+)["']/);
+          
           if (nameMatch) pluginName = nameMatch[1];
           if (descMatch) description = descMatch[1];
         } catch (e) {
-          console.log(
-            `⚠ Could not read manifest for ${pluginId}, using defaults`
-          );
+          console.log(`⚠ Could not read manifest for ${pluginId}, using defaults`);
         }
-
+        
         // Create shortcut object
         const shortcut = {
           name: pluginName,
           description: description,
           target: pluginId,
           iconType: "plugin",
-          icon: pluginId,
+          icon: pluginId
         };
-
+        
         // Write to both Desktop and Downloads
         const desktopShortcut = path.join(desktopDir, `${pluginName}.json`);
         const downloadsShortcut = path.join(downloadsDir, `${pluginName}.json`);
-
+        
         await fs.writeFile(desktopShortcut, JSON.stringify(shortcut, null, 2));
-        await fs.writeFile(
-          downloadsShortcut,
-          JSON.stringify(shortcut, null, 2)
-        );
-
+        await fs.writeFile(downloadsShortcut, JSON.stringify(shortcut, null, 2));
+        
         console.log(`✓ Created shortcuts for ${pluginName}`);
       } catch (error) {
-        console.error(
-          `✗ Failed to create shortcut for ${pluginId}:`,
-          error.message
-        );
+        console.error(`✗ Failed to create shortcut for ${pluginId}:`, error.message);
       }
     }
-
+    
     console.log("✓ Desktop shortcuts generation completed");
   } catch (error) {
     console.error("✗ Failed to generate desktop shortcuts:", error);
@@ -206,8 +182,7 @@ async function setupShadowEnvironment() {
       try {
         await fs.access(cliJsPath);
         await fs.rm(cliJsPath, { force: true });
-        console.log("✓ Removed loose-envify cli.js to prevent symlink issues");
-      } catch {
+        console.log("✓ Removed loose-envify cli.js to prevent symlink issues");      } catch {
         // File doesn't exist, which is fine
       }
     } catch {
