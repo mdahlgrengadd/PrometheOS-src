@@ -1,0 +1,148 @@
+# Generated OpenAPI spec for WASM Desktop Filesystem
+# Generated at: 2025-06-22T13:35:23.286Z
+# Source: src/core/include/fs.h
+
+openapi: 3.0.3
+info:
+  title: WASM Desktop Filesystem API
+  description: Event-driven filesystem operations for browser-based desktop
+  version: 1.0.0
+  contact:
+    name: WASM Core Team
+
+servers:
+  - url: /api/v1
+    description: Local WASM kernel
+
+paths:
+  /fs/events:
+    post:
+      summary: Send filesystem event
+      description: Post a filesystem operation event to the kernel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FSMessage'
+      responses:
+        '200':
+          description: Event processed successfully
+        '400':
+          description: Invalid message format
+        '500':
+          description: Kernel error
+
+  /fs/events/stream:
+    get:
+      summary: Stream filesystem events
+      description: Server-sent events stream of filesystem changes
+      responses:
+        '200':
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+components:
+  schemas:
+    FSMessage:
+      type: object
+      required:
+        - version
+        - type
+        - path
+      properties:
+        version:
+          type: integer
+          description: ABI version
+          example: 1
+        type:
+          type: integer
+          description: Message type
+          enum: [1, 2, 3, 4, 5]
+        flags:
+          type: integer
+          description: Operation flags
+          example: 0
+        seq:
+          type: integer
+          description: Sequence number
+          example: 1
+        data_len:
+          type: integer
+          description: Length of data payload
+          example: 0
+        path:
+          type: string
+          maxLength: 19
+          description: Filesystem path (truncated if > 19 chars)
+          example: "/home/file.txt"
+        data:
+          type: string
+          description: Optional data payload
+          example: ""
+
+    FSMessageType:
+      type: integer
+      description: Filesystem message types
+      enum: [1, 2, 3, 4, 5]
+      x-enum-varnames: ["FS_READ", "FS_WRITE", "FS_RENAME", "FS_DELETE", "FS_CHANGED"]
+      x-enum-descriptions:
+        1: "Read data from filesystem"
+        2: "Write data to filesystem with crash-safe semantics"
+        3: "Atomically rename a file or directory"
+        4: "Delete a file or directory"
+        5: "Notification that filesystem has changed"
+
+    FSEvent:
+      type: object
+      description: Filesystem change event
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+        message:
+          $ref: '#/components/schemas/FSMessage'
+
+  examples:
+    WriteFile:
+      summary: Write file example
+      value:
+        version: 1
+        type: 2
+        flags: 0
+        seq: 1
+        data_len: 13
+        path: "/home/test.txt"
+        data: "Hello, World!"
+
+    ReadFile:
+      summary: Read file example  
+      value:
+        version: 1
+        type: 1
+        flags: 0
+        seq: 2
+        data_len: 0
+        path: "/home/test.txt"
+        data: ""
+
+    FileChanged:
+      summary: File changed notification
+      value:
+        version: 1
+        type: 5
+        flags: 0
+        seq: 3
+        data_len: 0
+        path: "/home/test.txt"
+        data: ""
+
+tags:
+  - name: filesystem
+    description: Filesystem operations
+  - name: events
+    description: Event streaming
