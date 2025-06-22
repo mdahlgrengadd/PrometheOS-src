@@ -21,6 +21,7 @@ import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as terminalManifest } from './apps/terminal/manifest';
 import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
 import { manifest as webampManifest } from './apps/webamp/manifest';
 import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
@@ -65,6 +66,7 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   "desktop-3d": () =>
     import("./apps/desktop-3d/index.tsx").then((m) => m.default),
   "wasm-kernel": () => import("./apps/wasm-kernel").then((m) => m.default),
+  terminal: () => import("./apps/terminal").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -132,6 +134,7 @@ const manifestMap: Record<string, PluginManifest> = {
   pyserve: pythonScribeManifest,
   "desktop-3d": desktop3dManifest,
   "wasm-kernel": wasmKernelManifest,
+  terminal: terminalManifest,
 };
 
 // Debug: Log available plugins

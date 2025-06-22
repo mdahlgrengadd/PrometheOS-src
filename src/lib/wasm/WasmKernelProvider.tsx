@@ -258,15 +258,73 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
           eventListenersRef.current.delete(callback);
         };
       },
-
       ptyWrite: async (data: string): Promise<void> => {
-        // TODO: Implement PTY write using C function wrapper
-        console.log("PTY Write:", data);
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          // Use ccall to call the WASM PTY write function
+          const result = state.module.ccall(
+            "wasm_pty_write_input",
+            "number",
+            ["string", "number"],
+            [data, data.length]
+          );
+
+          if (result < 0) {
+            throw new Error("PTY write failed");
+          }
+        } catch (error) {
+          console.error("PTY write error:", error);
+          throw error;
+        }
       },
 
       ptyRead: async (): Promise<string> => {
-        // TODO: Implement PTY read using C function wrapper
-        return "";
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          // Check if there's data available first
+          const hasData = state.module.ccall(
+            "wasm_pty_has_output",
+            "number",
+            [],
+            []
+          );
+
+          if (!hasData) {
+            return "";
+          }
+
+          // Allocate buffer for reading
+          const bufferSize = 1024;
+          const buffer = state.module._malloc(bufferSize);
+
+          try {
+            const bytesRead = state.module.ccall(
+              "wasm_pty_read_output",
+              "number",
+              ["number", "number"],
+              [buffer, bufferSize]
+            );
+
+            if (bytesRead > 0) {
+              // Convert buffer to string
+              const result = state.module.UTF8ToString(buffer, bytesRead);
+              return result;
+            }
+
+            return "";
+          } finally {
+            state.module._free(buffer);
+          }
+        } catch (error) {
+          console.error("PTY read error:", error);
+          return "";
+        }
       },
       getProcStat: async (): Promise<ProcStat> => {
         try {
@@ -308,6 +366,254 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
             ],
             uptime: Date.now() / 1000,
           };
+        }
+      },
+      ptySetMode: async (mode: number): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall("wasm_pty_set_mode", "void", ["number"], [mode]);
+        } catch (error) {
+          console.error("PTY set mode error:", error);
+          throw error;
+        }
+      },
+
+      ptyGetMode: async (): Promise<number> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          return state.module.ccall(
+            "wasm_pty_get_mode",
+            "number",
+            [],
+            []
+          ) as number;
+        } catch (error) {
+          console.error("PTY get mode error:", error);
+          throw error;
+        }
+      },
+
+      ptyFlush: async (): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall("wasm_pty_flush", "void", [], []);
+        } catch (error) {
+          console.error("PTY flush error:", error);
+          throw error;
+        }
+      },
+
+      ptyHasData: async (): Promise<boolean> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          const result = state.module.ccall(
+            "wasm_pty_has_output",
+            "number",
+            [],
+            []
+          );
+          return result !== 0;
+        } catch (error) {
+          console.error("PTY has data error:", error);
+          return false;
+        }
+      },
+
+      ptyGetScreen: async (): Promise<string> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          const ptr = state.module.ccall(
+            "wasm_pty_get_screen",
+            "number",
+            [],
+            []
+          ) as number;
+          if (ptr === 0) {
+            return "";
+          }
+          return state.module.UTF8ToString(ptr);
+        } catch (error) {
+          console.error("PTY get screen error:", error);
+          return "";
+        }
+      },
+
+      shellExecute: async (command: string): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall(
+            "wasm_shell_execute",
+            "void",
+            ["string"],
+            [command]
+          );
+        } catch (error) {
+          console.error("Shell execute error:", error);
+          throw error;
+        }
+      },
+
+      shellGetEnv: async (name: string): Promise<string | null> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          const ptr = state.module.ccall(
+            "wasm_shell_get_env",
+            "number",
+            ["string"],
+            [name]
+          ) as number;
+          if (ptr === 0) {
+            return null;
+          }
+          return state.module.UTF8ToString(ptr);
+        } catch (error) {
+          console.error("Shell get env error:", error);
+          return null;
+        }
+      },
+      shellSetEnv: async (name: string, value: string): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall(
+            "wasm_shell_set_env",
+            "void",
+            ["string", "string"],
+            [name, value]
+          );
+        } catch (error) {
+          console.error("Shell set env error:", error);
+          throw error;
+        }
+      },
+
+      shellPrompt: async (): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall("wasm_shell_prompt", "void", [], []);
+        } catch (error) {
+          console.error("Shell prompt error:", error);
+          throw error;
+        }
+      },
+
+      terminalClear: async (): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall("wasm_terminal_clear", "void", [], []);
+        } catch (error) {
+          console.error("Terminal clear error:", error);
+          throw error;
+        }
+      },
+
+      terminalPutString: async (text: string): Promise<void> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          state.module.ccall(
+            "wasm_terminal_put_string",
+            "void",
+            ["string"],
+            [text]
+          );
+        } catch (error) {
+          console.error("Terminal put string error:", error);
+          throw error;
+        }
+      },
+
+      terminalGetDimensions: async (): Promise<{
+        width: number;
+        height: number;
+      }> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          const width = state.module.ccall(
+            "get_term_width",
+            "number",
+            [],
+            []
+          ) as number;
+          const height = state.module.ccall(
+            "get_term_height",
+            "number",
+            [],
+            []
+          ) as number;
+          return { width, height };
+        } catch (error) {
+          console.error("Terminal get dimensions error:", error);
+          return { width: 80, height: 24 };
+        }
+      },
+
+      getPtyModeConstants: async (): Promise<{
+        RAW: number;
+        ECHO: number;
+        CANON: number;
+      }> => {
+        if (!state.module) {
+          throw new Error("WASM module not available");
+        }
+
+        try {
+          const RAW = state.module.ccall(
+            "get_pty_mode_raw",
+            "number",
+            [],
+            []
+          ) as number;
+          const ECHO = state.module.ccall(
+            "get_pty_mode_echo",
+            "number",
+            [],
+            []
+          ) as number;
+          const CANON = state.module.ccall(
+            "get_pty_mode_canon",
+            "number",
+            [],
+            []
+          ) as number;
+          return { RAW, ECHO, CANON };
+        } catch (error) {
+          console.error("Get PTY mode constants error:", error);
+          return { RAW: 1, ECHO: 2, CANON: 4 };
         }
       },
     };

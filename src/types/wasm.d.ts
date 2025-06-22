@@ -10,8 +10,16 @@ export interface EmscriptenModule {
     returnType: string,
     argTypes: string[]
   ) => (...args: unknown[]) => unknown;
+  ccall: (
+    name: string,
+    returnType: string,
+    argTypes: string[],
+    args: unknown[]
+  ) => unknown;
   getValue: (ptr: number, type: string) => number;
   setValue: (ptr: number, value: number, type: string) => void;
+  UTF8ToString: (ptr: number, maxBytesToRead?: number) => string;
+  stringToUTF8: (str: string, outPtr: number, maxBytesToWrite: number) => void;
   _malloc: (size: number) => number;
   _free: (ptr: number) => void;
   HEAPU8: Uint8Array;

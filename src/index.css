@@ -9,6 +9,9 @@
 @import './styles/windowsxp-ui.css';
 @import './styles/window-fixes.css';
 
+/* Import xterm.js CSS */
+@import '@xterm/xterm/css/xterm.css';
+
 
 @tailwind base;
 @tailwind components;

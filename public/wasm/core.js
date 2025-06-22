@@ -2290,6 +2290,8 @@ var tempI64;
       return (...args) => ccall(ident, returnType, argTypes, args, opts);
     };
 
+
+
   var FS_createPath = FS.createPath;
 
 
@@ -2354,12 +2356,30 @@ var wasmImports = {
 var wasmExports = createWasm();
 var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports['__wasm_call_ctors'])();
 var _main = Module['_main'] = (a0, a1) => (_main = Module['_main'] = wasmExports['main'])(a0, a1);
+var _free = Module['_free'] = (a0) => (_free = Module['_free'] = wasmExports['free'])(a0);
+var _wasm_pty_write_input = Module['_wasm_pty_write_input'] = (a0, a1) => (_wasm_pty_write_input = Module['_wasm_pty_write_input'] = wasmExports['wasm_pty_write_input'])(a0, a1);
+var _wasm_pty_read_output = Module['_wasm_pty_read_output'] = (a0, a1) => (_wasm_pty_read_output = Module['_wasm_pty_read_output'] = wasmExports['wasm_pty_read_output'])(a0, a1);
+var _wasm_pty_has_output = Module['_wasm_pty_has_output'] = () => (_wasm_pty_has_output = Module['_wasm_pty_has_output'] = wasmExports['wasm_pty_has_output'])();
+var _wasm_pty_get_screen = Module['_wasm_pty_get_screen'] = () => (_wasm_pty_get_screen = Module['_wasm_pty_get_screen'] = wasmExports['wasm_pty_get_screen'])();
+var _wasm_pty_set_mode = Module['_wasm_pty_set_mode'] = (a0) => (_wasm_pty_set_mode = Module['_wasm_pty_set_mode'] = wasmExports['wasm_pty_set_mode'])(a0);
+var _wasm_pty_get_mode = Module['_wasm_pty_get_mode'] = () => (_wasm_pty_get_mode = Module['_wasm_pty_get_mode'] = wasmExports['wasm_pty_get_mode'])();
+var _wasm_pty_flush = Module['_wasm_pty_flush'] = () => (_wasm_pty_flush = Module['_wasm_pty_flush'] = wasmExports['wasm_pty_flush'])();
+var _wasm_shell_execute = Module['_wasm_shell_execute'] = (a0) => (_wasm_shell_execute = Module['_wasm_shell_execute'] = wasmExports['wasm_shell_execute'])(a0);
+var _wasm_shell_get_env = Module['_wasm_shell_get_env'] = (a0) => (_wasm_shell_get_env = Module['_wasm_shell_get_env'] = wasmExports['wasm_shell_get_env'])(a0);
+var _wasm_shell_set_env = Module['_wasm_shell_set_env'] = (a0, a1) => (_wasm_shell_set_env = Module['_wasm_shell_set_env'] = wasmExports['wasm_shell_set_env'])(a0, a1);
+var _wasm_shell_prompt = Module['_wasm_shell_prompt'] = () => (_wasm_shell_prompt = Module['_wasm_shell_prompt'] = wasmExports['wasm_shell_prompt'])();
+var _wasm_terminal_clear = Module['_wasm_terminal_clear'] = () => (_wasm_terminal_clear = Module['_wasm_terminal_clear'] = wasmExports['wasm_terminal_clear'])();
+var _wasm_terminal_put_string = Module['_wasm_terminal_put_string'] = (a0) => (_wasm_terminal_put_string = Module['_wasm_terminal_put_string'] = wasmExports['wasm_terminal_put_string'])(a0);
+var _get_pty_mode_raw = Module['_get_pty_mode_raw'] = () => (_get_pty_mode_raw = Module['_get_pty_mode_raw'] = wasmExports['get_pty_mode_raw'])();
+var _get_pty_mode_echo = Module['_get_pty_mode_echo'] = () => (_get_pty_mode_echo = Module['_get_pty_mode_echo'] = wasmExports['get_pty_mode_echo'])();
+var _get_pty_mode_canon = Module['_get_pty_mode_canon'] = () => (_get_pty_mode_canon = Module['_get_pty_mode_canon'] = wasmExports['get_pty_mode_canon'])();
+var _get_term_width = Module['_get_term_width'] = () => (_get_term_width = Module['_get_term_width'] = wasmExports['get_term_width'])();
+var _get_term_height = Module['_get_term_height'] = () => (_get_term_height = Module['_get_term_height'] = wasmExports['get_term_height'])();
+var _malloc = Module['_malloc'] = (a0) => (_malloc = Module['_malloc'] = wasmExports['malloc'])(a0);
 var _emscripten_proxy_execute_queue = (a0) => (_emscripten_proxy_execute_queue = wasmExports['emscripten_proxy_execute_queue'])(a0);
 var _emscripten_proxy_finish = (a0) => (_emscripten_proxy_finish = wasmExports['emscripten_proxy_finish'])(a0);
 var __emscripten_timeout = (a0, a1) => (__emscripten_timeout = wasmExports['_emscripten_timeout'])(a0, a1);
 var _emscripten_builtin_memalign = (a0, a1) => (_emscripten_builtin_memalign = wasmExports['emscripten_builtin_memalign'])(a0, a1);
-var _malloc = (a0) => (_malloc = wasmExports['malloc'])(a0);
-var _free = (a0) => (_free = wasmExports['free'])(a0);
 var __emscripten_tempret_set = (a0) => (__emscripten_tempret_set = wasmExports['_emscripten_tempret_set'])(a0);
 var __emscripten_stack_restore = (a0) => (__emscripten_stack_restore = wasmExports['_emscripten_stack_restore'])(a0);
 var __emscripten_stack_alloc = (a0) => (__emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'])(a0);
@@ -2407,12 +2427,13 @@ var _wasmfs_create_memory_backend = () => (_wasmfs_create_memory_backend = wasmE
 var __wasmfs_node_record_dirent = (a0, a1, a2) => (__wasmfs_node_record_dirent = wasmExports['_wasmfs_node_record_dirent'])(a0, a1, a2);
 var __wasmfs_opfs_record_entry = (a0, a1, a2) => (__wasmfs_opfs_record_entry = wasmExports['_wasmfs_opfs_record_entry'])(a0, a1, a2);
 var _wasmfs_create_file = (a0, a1, a2) => (_wasmfs_create_file = wasmExports['wasmfs_create_file'])(a0, a1, a2);
+var dynCall_jiji = Module['dynCall_jiji'] = (a0, a1, a2, a3, a4) => (dynCall_jiji = Module['dynCall_jiji'] = wasmExports['dynCall_jiji'])(a0, a1, a2, a3, a4);
+var dynCall_iiii = Module['dynCall_iiii'] = (a0, a1, a2, a3) => (dynCall_iiii = Module['dynCall_iiii'] = wasmExports['dynCall_iiii'])(a0, a1, a2, a3);
+var dynCall_ii = Module['dynCall_ii'] = (a0, a1) => (dynCall_ii = Module['dynCall_ii'] = wasmExports['dynCall_ii'])(a0, a1);
+var dynCall_iidiiii = Module['dynCall_iidiiii'] = (a0, a1, a2, a3, a4, a5, a6) => (dynCall_iidiiii = Module['dynCall_iidiiii'] = wasmExports['dynCall_iidiiii'])(a0, a1, a2, a3, a4, a5, a6);
+var dynCall_vii = Module['dynCall_vii'] = (a0, a1, a2) => (dynCall_vii = Module['dynCall_vii'] = wasmExports['dynCall_vii'])(a0, a1, a2);
 var dynCall_vi = Module['dynCall_vi'] = (a0, a1) => (dynCall_vi = Module['dynCall_vi'] = wasmExports['dynCall_vi'])(a0, a1);
 var dynCall_iii = Module['dynCall_iii'] = (a0, a1, a2) => (dynCall_iii = Module['dynCall_iii'] = wasmExports['dynCall_iii'])(a0, a1, a2);
-var dynCall_ii = Module['dynCall_ii'] = (a0, a1) => (dynCall_ii = Module['dynCall_ii'] = wasmExports['dynCall_ii'])(a0, a1);
-var dynCall_iiii = Module['dynCall_iiii'] = (a0, a1, a2, a3) => (dynCall_iiii = Module['dynCall_iiii'] = wasmExports['dynCall_iiii'])(a0, a1, a2, a3);
-var dynCall_jiji = Module['dynCall_jiji'] = (a0, a1, a2, a3, a4) => (dynCall_jiji = Module['dynCall_jiji'] = wasmExports['dynCall_jiji'])(a0, a1, a2, a3, a4);
-var dynCall_vii = Module['dynCall_vii'] = (a0, a1, a2) => (dynCall_vii = Module['dynCall_vii'] = wasmExports['dynCall_vii'])(a0, a1, a2);
 var dynCall_v = Module['dynCall_v'] = (a0) => (dynCall_v = Module['dynCall_v'] = wasmExports['dynCall_v'])(a0);
 var dynCall_ji = Module['dynCall_ji'] = (a0, a1) => (dynCall_ji = Module['dynCall_ji'] = wasmExports['dynCall_ji'])(a0, a1);
 var dynCall_iiiij = Module['dynCall_iiiij'] = (a0, a1, a2, a3, a4, a5) => (dynCall_iiiij = Module['dynCall_iiiij'] = wasmExports['dynCall_iiiij'])(a0, a1, a2, a3, a4, a5);
@@ -2435,6 +2456,8 @@ Module['removeRunDependency'] = removeRunDependency;
 Module['callMain'] = callMain;
 Module['ccall'] = ccall;
 Module['cwrap'] = cwrap;
+Module['UTF8ToString'] = UTF8ToString;
+Module['stringToUTF8'] = stringToUTF8;
 Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
 Module['FS_unlink'] = FS_unlink;
 Module['FS_createPath'] = FS_createPath;

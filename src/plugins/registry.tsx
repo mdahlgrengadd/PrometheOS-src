@@ -15,6 +15,7 @@ import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as terminalManifest } from './apps/terminal/manifest';
 import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
 import { manifest as webampManifest } from './apps/webamp/manifest';
 import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
@@ -27,6 +28,7 @@ export const staticPlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,
   wasmKernelManifest,
+  terminalManifest,
   aichatManifest,
   appPreviewManifest,
   audioPlayerManifest,

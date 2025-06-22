@@ -33,9 +33,7 @@ int main()
         return 1;
     }
 
-    printf("Kernel initialized successfully\n");
-
-    // Main loop - process events forever
+    printf("Kernel initialized successfully\n"); // Main loop - process events forever
     for (;;)
     {
         bus_msg_t msg;
@@ -58,6 +56,9 @@ int main()
                 break;
             }
         }
+
+        // Process PTY input/output
+        pty_process_input();
 
         // Yield to other threads
         emscripten_sleep(1);

@@ -1,0 +1,7 @@
+{
+  "name": "Terminal",
+  "description": "Full-featured terminal emulator using xterm.js with WASM PTY integration",
+  "target": "terminal",
+  "iconType": "plugin",
+  "icon": "terminal"
+}

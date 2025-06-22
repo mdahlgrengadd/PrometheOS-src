@@ -41,6 +41,9 @@ async function buildWasmCore() {
       "pty.o",
       "bus.o",
       "proc.o",
+      "terminal.o",
+      "shell.o",
+      "wasm_api.o",
     ];
     const cleanOlderThan = Date.now() - 5 * 60 * 1000; // 5 minutes
 
@@ -101,8 +104,8 @@ async function manualBuild() {
   const LDFLAGS = [
     "-sWASMFS=1",
     "-sFORCE_FILESYSTEM=1",
-    '-sEXPORTED_FUNCTIONS=["_main"]',
-    '-sEXPORTED_RUNTIME_METHODS=["FS","callMain","ccall","cwrap"]',
+    '-sEXPORTED_FUNCTIONS=["_main","_malloc","_free","_wasm_pty_write_input","_wasm_pty_read_output","_wasm_pty_has_output","_wasm_pty_get_screen","_wasm_pty_set_mode","_wasm_pty_get_mode","_wasm_pty_flush","_wasm_shell_execute","_wasm_shell_get_env","_wasm_shell_set_env","_wasm_terminal_clear","_wasm_terminal_put_string","_get_pty_mode_raw","_get_pty_mode_echo","_get_pty_mode_canon","_get_term_width","_get_term_height"]',
+    '-sEXPORTED_RUNTIME_METHODS=["FS","callMain","ccall","cwrap","UTF8ToString","stringToUTF8"]',
     "-sALLOW_MEMORY_GROWTH=1",
     "-sINITIAL_MEMORY=1MB",
     "-sSTACK_SIZE=64KB",
@@ -116,7 +119,16 @@ async function manualBuild() {
     "-flto",
   ];
 
-  const sources = ["main.c", "fs.c", "pty.c", "bus.c", "proc.c"];
+  const sources = [
+    "main.c",
+    "fs.c",
+    "pty.c",
+    "bus.c",
+    "proc.c",
+    "terminal.c",
+    "shell.c",
+    "wasm_api.c",
+  ];
 
   console.log("Manual build: compiling objects...");
   for (const src of sources) {

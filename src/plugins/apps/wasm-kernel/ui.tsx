@@ -15,6 +15,7 @@ import {
 import { useWasmKernel } from '@/hooks/useWasmKernel';
 
 import { Plugin, PluginInitData } from '../../../plugins/types';
+import { Terminal as TerminalComponent } from './components/Terminal';
 import { manifest } from './manifest';
 
 const WasmKernelDemoComponent: React.FC<{ initData?: PluginInitData }> = ({
@@ -446,6 +447,9 @@ const WasmKernelDemoComponent: React.FC<{ initData?: PluginInitData }> = ({
             </p>
           </CardContent>
         </Card>
+
+        {/* Enhanced Terminal Component */}
+        <TerminalComponent className="w-full" />
       </div>
     </div>
   );

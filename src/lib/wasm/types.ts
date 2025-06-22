@@ -39,10 +39,31 @@ export interface WasmKernelAPI {
 
   // Event System
   onFileSystemEvent: (callback: (event: FSMessage) => void) => () => void;
-
   // PTY Operations
   ptyWrite: (data: string) => Promise<void>;
   ptyRead: () => Promise<string>;
+  ptySetMode: (mode: number) => Promise<void>;
+  ptyGetMode: () => Promise<number>;
+  ptyFlush: () => Promise<void>;
+  ptyHasData: () => Promise<boolean>;
+  ptyGetScreen: () => Promise<string>;
+  // Shell Operations
+  shellExecute: (command: string) => Promise<void>;
+  shellGetEnv: (name: string) => Promise<string | null>;
+  shellSetEnv: (name: string, value: string) => Promise<void>;
+  shellPrompt: () => Promise<void>;
+
+  // Terminal Operations
+  terminalClear: () => Promise<void>;
+  terminalPutString: (text: string) => Promise<void>;
+  terminalGetDimensions: () => Promise<{ width: number; height: number }>;
+
+  // PTY Mode Constants
+  getPtyModeConstants: () => Promise<{
+    RAW: number;
+    ECHO: number;
+    CANON: number;
+  }>;
 
   // Process Operations
   getProcStat: () => Promise<ProcStat>;
