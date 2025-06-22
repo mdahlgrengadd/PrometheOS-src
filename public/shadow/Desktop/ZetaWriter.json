@@ -1,0 +1,7 @@
+{
+  "name": "ZetaWriter",
+  "description": "LibreOffice-based word processor with advanced editing features",
+  "target": "zetawriter",
+  "iconType": "plugin",
+  "icon": "zetawriter"
+}

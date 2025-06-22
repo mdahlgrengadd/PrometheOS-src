@@ -17,6 +17,7 @@ import { manifest as sessionManifest } from "./apps/session/manifest";
 import { manifest as settingsManifest } from "./apps/settings/manifest";
 import { manifest as webampManifest } from "./apps/webamp/manifest";
 import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
+import { manifest as zetawriterManifest } from "./apps/zetawriter/manifest";
 import {
   addDynamicManifest,
   loadDynamicManifests,
@@ -35,6 +36,7 @@ export const staticPlugins: PluginManifest[] = [
   builderManifest,
   settingsManifest,
   wordEditorManifest,
+  zetawriterManifest,
   webampManifest,
   desktop3dManifest,
 

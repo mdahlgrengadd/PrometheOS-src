@@ -2,7 +2,7 @@ import "./index.css";
 
 import React, { useEffect, useRef } from "react";
 
-import { ControlBar } from "@/components/ControlBar";
+import { ControlBar } from "./components/ControlBar";
 
 declare global {
   interface Window {

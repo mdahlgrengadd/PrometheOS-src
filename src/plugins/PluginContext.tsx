@@ -23,6 +23,7 @@ import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
 import { manifest as webampManifest } from './apps/webamp/manifest';
 import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
+import { manifest as zetawriterManifest } from './apps/zetawriter/manifest';
 import { eventBus } from './EventBus';
 import { PluginManager } from './PluginManager';
 import {
@@ -49,8 +50,8 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
   hybride: () => import("./apps/builder").then((m) => m.default),
-  settings: () => import("./apps/settings").then((m) => m.default),
-  wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
+  settings: () => import("./apps/settings").then((m) => m.default),  wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
+  zetawriter: () => import("./apps/zetawriter").then((m) => m.default),
   audioplayer: () => import("./apps/audioplayer").then((m) => m.default),
   webamp: () => import("./apps/webamp").then((m) => m.default),
   aichat: () => import("./apps/aichat/index.tsx").then((m) => m.default),
@@ -117,6 +118,7 @@ const manifestMap: Record<string, PluginManifest> = {
   hybride: builderManifest,
   settings: settingsManifest,
   wordeditor: wordEditorManifest,
+  zetawriter: zetawriterManifest,
   audioplayer: audioPlayerManifest,
   webamp: webampManifest,
   aichat: aichatManifest,
