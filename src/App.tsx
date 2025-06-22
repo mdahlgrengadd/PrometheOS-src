@@ -1,15 +1,16 @@
-import "./App.css";
+import './App.css';
 
-import React, { lazy, Suspense } from "react";
-import { HashRouter as Router, Route, Routes } from "react-router-dom";
+import React, { lazy, Suspense } from 'react';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 
-import DialogListener from "@/components/DialogListener";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/lib/ThemeProvider";
+import DialogListener from '@/components/DialogListener';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/lib/ThemeProvider';
+import { WasmKernelProvider } from '@/lib/wasm/WasmKernelProvider';
 
-import { WindowDndContext } from "./components/shelley-wm/WindowDndContext";
-import { useViewMode } from "./hooks/useViewMode";
+import { WindowDndContext } from './components/shelley-wm/WindowDndContext';
+import { useViewMode } from './hooks/useViewMode';
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/index"));
@@ -18,7 +19,9 @@ const MobileIndex = lazy(() => import("./pages/MobileIndex"));
 function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <WindowDndContext>{children}</WindowDndContext>
+      <WasmKernelProvider>
+        <WindowDndContext>{children}</WindowDndContext>
+      </WasmKernelProvider>
     </ThemeProvider>
   );
 }

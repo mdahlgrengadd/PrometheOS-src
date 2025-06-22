@@ -4,11 +4,11 @@ export interface WasmCoreModule {
   // Memory management
   _malloc(size: number): number;
   _free(ptr: number): void;
-  
+
   // String utilities
   stringToUTF8(str: string, outPtr: number, maxBytesToWrite: number): void;
   UTF8ToString(ptr: number, maxBytesToRead?: number): string;
-  
+
   // Core functions exported from WASM
   _main(): number;
   _bus_send_message(msgPtr: number, responsePtr: number): number;
@@ -16,7 +16,7 @@ export interface WasmCoreModule {
   _fs_read(fd: number, bufPtr: number, count: number): number;
   _fs_write(fd: number, bufPtr: number, count: number): number;
   _fs_close(fd: number): number;
-  
+
   // Memory views
   HEAP8: Int8Array;
   HEAP16: Int16Array;
@@ -58,7 +58,7 @@ export enum MessageType {
   MSG_PROC_LIST = 19,
   MSG_TTY_READ = 32,
   MSG_TTY_WRITE = 33,
-  MSG_TTY_IOCTL = 34
+  MSG_TTY_IOCTL = 34,
 }
 
 // File flags matching C definitions
@@ -69,19 +69,22 @@ export enum FileFlags {
   O_CREAT = 0x0040,
   O_EXCL = 0x0080,
   O_TRUNC = 0x0200,
-  O_APPEND = 0x0400
+  O_APPEND = 0x0400,
 }
 
 // High-level JavaScript API wrapper
 export class WasmCore {
   private module: WasmCoreModule;
-  
+
   constructor(module: WasmCoreModule) {
     this.module = module;
   }
-  
+
   // File system operations
-  async openFile(path: string, flags: FileFlags = FileFlags.O_RDONLY): Promise<number> {
+  async openFile(
+    path: string,
+    flags: FileFlags = FileFlags.O_RDONLY
+  ): Promise<number> {
     const pathPtr = this.allocateString(path);
     try {
       const fd = this.module._fs_open(pathPtr, flags, 0o644);
@@ -90,7 +93,7 @@ export class WasmCore {
       this.module._free(pathPtr);
     }
   }
-  
+
   async readFile(fd: number, size: number): Promise<string> {
     const bufPtr = this.module._malloc(size);
     try {
@@ -103,7 +106,7 @@ export class WasmCore {
       this.module._free(bufPtr);
     }
   }
-  
+
   async writeFile(fd: number, data: string): Promise<number> {
     const dataPtr = this.allocateString(data);
     try {
@@ -112,11 +115,11 @@ export class WasmCore {
       this.module._free(dataPtr);
     }
   }
-  
+
   async closeFile(fd: number): Promise<void> {
     this.module._fs_close(fd);
   }
-  
+
   // Utility methods
   private allocateString(str: string): number {
     const len = str.length * 3 + 1; // Worst case for UTF-8
@@ -130,12 +133,12 @@ export class WasmCore {
 export async function loadWasmCore(): Promise<WasmCore> {
   // Dynamic import to avoid bundling the WASM module
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const WasmCoreFactory = await import('/wasm/wasm-core.js') as any;
+  const WasmCoreFactory = (await import("/wasm/wasm-core.js")) as any;
   const module = await WasmCoreFactory.default();
-  
+
   // Initialize the core system
   module._main();
-  
+
   return new WasmCore(module);
 }
 

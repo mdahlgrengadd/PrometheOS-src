@@ -122,7 +122,11 @@ src/core/
 ├── core.js            # JavaScript glue code (~125KB)
 └── *.o                # Intermediate object files
 
-dist/wasm/             # Distribution files
+public/wasm/           # Static assets for serving
+├── core.wasm          # Final WASM binary
+└── core.js            # Final JS glue code
+
+dist/wasm/             # Distribution files (copied during build)
 ├── core.wasm          # Final WASM binary
 └── core.js            # Final JS glue code
 

@@ -1,75 +1,76 @@
 #!/usr/bin/env node
 
 // Generate OpenAPI spec from fs.h enum definitions
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FS_HEADER = path.resolve(__dirname, '../src/core/include/fs.h');
-const OUTPUT_FILE = path.resolve(__dirname, '../openapi/desktop.yaml');
+const FS_HEADER = path.resolve(__dirname, "../src/core/include/fs.h");
+const OUTPUT_FILE = path.resolve(__dirname, "../openapi/desktop.yaml");
 
 async function generateOpenAPI() {
   try {
     // Read fs.h header file
-    const headerContent = await fs.readFile(FS_HEADER, 'utf8');
-    
+    const headerContent = await fs.readFile(FS_HEADER, "utf8");
+
     // Extract enum values for fs_msg_type_t
-    const enumMatch = headerContent.match(/typedef enum\s*{([^}]+)}\s*fs_msg_type_t;/s);
+    const enumMatch = headerContent.match(
+      /typedef enum\s*{([^}]+)}\s*fs_msg_type_t;/s
+    );
     if (!enumMatch) {
-      throw new Error('Could not find fs_msg_type_t enum in fs.h');
+      throw new Error("Could not find fs_msg_type_t enum in fs.h");
     }
-    
+
     const enumContent = enumMatch[1];
     const messages = [];
-    
+
     // Parse enum values
-    const lines = enumContent.split('\n');
+    const lines = enumContent.split("\n");
     for (const line of lines) {
       const match = line.trim().match(/^(\w+)\s*=\s*(\d+)/);
       if (match) {
         messages.push({
           name: match[1],
           value: parseInt(match[2]),
-          description: getMessageDescription(match[1])
+          description: getMessageDescription(match[1]),
         });
       }
     }
-    
+
     // Generate OpenAPI YAML
     const openApiSpec = generateYAML(messages);
-    
+
     // Ensure output directory exists
     await fs.mkdir(path.dirname(OUTPUT_FILE), { recursive: true });
-    
+
     // Write output file
     await fs.writeFile(OUTPUT_FILE, openApiSpec);
-    
+
     console.log(`✓ Generated OpenAPI spec: ${OUTPUT_FILE}`);
     console.log(`✓ Found ${messages.length} message types`);
-    
   } catch (error) {
-    console.error('✗ Failed to generate OpenAPI spec:', error.message);
+    console.error("✗ Failed to generate OpenAPI spec:", error.message);
     process.exit(1);
   }
 }
 
 function getMessageDescription(msgType) {
   const descriptions = {
-    'FS_READ': 'Read data from filesystem',
-    'FS_WRITE': 'Write data to filesystem with crash-safe semantics',
-    'FS_RENAME': 'Atomically rename a file or directory',
-    'FS_DELETE': 'Delete a file or directory',
-    'FS_CHANGED': 'Notification that filesystem has changed'
+    FS_READ: "Read data from filesystem",
+    FS_WRITE: "Write data to filesystem with crash-safe semantics",
+    FS_RENAME: "Atomically rename a file or directory",
+    FS_DELETE: "Delete a file or directory",
+    FS_CHANGED: "Notification that filesystem has changed",
   };
   return descriptions[msgType] || `Filesystem operation: ${msgType}`;
 }
 
 function generateYAML(messages) {
   const timestamp = new Date().toISOString();
-  
+
   return `# Generated OpenAPI spec for WASM Desktop Filesystem
 # Generated at: ${timestamp}
 # Source: src/core/include/fs.h
@@ -133,7 +134,7 @@ components:
         type:
           type: integer
           description: Message type
-          enum: [${messages.map(m => m.value).join(', ')}]
+          enum: [${messages.map((m) => m.value).join(", ")}]
         flags:
           type: integer
           description: Operation flags
@@ -159,10 +160,10 @@ components:
     FSMessageType:
       type: integer
       description: Filesystem message types
-      enum: [${messages.map(m => m.value).join(', ')}]
-      x-enum-varnames: [${messages.map(m => `"${m.name}"`).join(', ')}]
+      enum: [${messages.map((m) => m.value).join(", ")}]
+      x-enum-varnames: [${messages.map((m) => `"${m.name}"`).join(", ")}]
       x-enum-descriptions:
-${messages.map(m => `        ${m.value}: "${m.description}"`).join('\n')}
+${messages.map((m) => `        ${m.value}: "${m.description}"`).join("\n")}
 
     FSEvent:
       type: object
