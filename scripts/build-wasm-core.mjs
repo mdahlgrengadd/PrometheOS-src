@@ -82,8 +82,11 @@ async function buildWasmCore() {
     await fs.mkdir(path.join(PUBLIC_DIR, "wasm"), { recursive: true });
     await fs.copyFile(wasmFile, path.join(PUBLIC_DIR, "wasm", "core.wasm"));
     await fs.copyFile(jsFile, path.join(PUBLIC_DIR, "wasm", "core.js"));
-
     console.log("✓ Installed to public/wasm/");
+
+    // Create shadow link file for WASM kernel plugin
+    await createWasmKernelShadowLink();
+
     console.log("✓ WASM kernel build completed successfully");
   } catch (error) {
     console.error("✗ WASM kernel build failed:", error.message);
@@ -97,14 +100,16 @@ async function manualBuild() {
   const CFLAGS = ["-O3", "-flto", "-DNDEBUG", "-Wall", "-Wextra", "-I."];
   const LDFLAGS = [
     "-sWASMFS=1",
+    "-sFORCE_FILESYSTEM=1",
     '-sEXPORTED_FUNCTIONS=["_main"]',
-    '-sEXPORTED_RUNTIME_METHODS=["FS","callMain"]',
+    '-sEXPORTED_RUNTIME_METHODS=["FS","callMain","ccall","cwrap"]',
     "-sALLOW_MEMORY_GROWTH=1",
     "-sINITIAL_MEMORY=1MB",
     "-sSTACK_SIZE=64KB",
     "-sNO_DYNAMIC_EXECUTION=1",
     "-sMODULARIZE=1",
     "-sEXPORT_NAME=WasmCore",
+    "-sINVOKE_RUN=0",
     "-sASYNCIFY=1",
     "-flto",
   ];
@@ -135,6 +140,64 @@ async function generateAPI() {
     await generateOpenAPI();
   } catch (error) {
     console.warn("⚠ Failed to generate OpenAPI spec:", error.message);
+  }
+}
+
+// Create shadow link file for WASM kernel plugin
+async function createWasmKernelShadowLink() {
+  try {
+    console.log("Creating WASM kernel shadow links...");
+
+    const PUBLIC_DIR = path.resolve(__dirname, "../public");
+    const SHADOW_DIR = path.join(PUBLIC_DIR, "shadow");
+
+    // Ensure shadow directories exist
+    await fs.mkdir(path.join(SHADOW_DIR, "Desktop"), { recursive: true });
+    await fs.mkdir(path.join(SHADOW_DIR, "Downloads"), { recursive: true }); // Create desktop shortcut for WASM kernel
+    const desktopShortcut = {
+      name: "WASM Kernel Demo",
+      description:
+        "WebAssembly kernel demonstration with POSIX I/O, PTY, and process table",
+      target: "wasm-kernel",
+      iconType: "plugin",
+      icon: "wasm-kernel",
+    };
+
+    const desktopShortcutPath = path.join(
+      SHADOW_DIR,
+      "Desktop",
+      "WASM Kernel Demo.json"
+    );
+    await fs.writeFile(
+      desktopShortcutPath,
+      JSON.stringify(desktopShortcut, null, 2)
+    );
+    console.log("✓ Created desktop shortcut:", desktopShortcutPath);
+
+    // Create downloads shortcut for WASM files
+    const downloadsShortcut = {
+      name: "WASM Kernel Files",
+      description: "WASM kernel binary files and documentation",
+      target: "file-explorer",
+      iconType: "plugin",
+      icon: "file-explorer",
+      path: "/wasm/",
+    };
+
+    const downloadsShortcutPath = path.join(
+      SHADOW_DIR,
+      "Downloads",
+      "WASM Kernel Files.json"
+    );
+    await fs.writeFile(
+      downloadsShortcutPath,
+      JSON.stringify(downloadsShortcut, null, 2)
+    );
+    console.log("✓ Created downloads shortcut:", downloadsShortcutPath);
+
+    console.log("✓ WASM kernel shadow shortcuts created successfully");
+  } catch (error) {
+    console.warn("⚠ Failed to create shadow links:", error.message);
   }
 }
 

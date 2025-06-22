@@ -21,6 +21,7 @@ import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
 import { manifest as webampManifest } from './apps/webamp/manifest';
 import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
 import { manifest as zetawriterManifest } from './apps/zetawriter/manifest';
@@ -50,7 +51,8 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   calculator: () => import("./apps/calculator").then((m) => m.default),
   browser: () => import("./apps/browser").then((m) => m.default),
   hybride: () => import("./apps/builder").then((m) => m.default),
-  settings: () => import("./apps/settings").then((m) => m.default),  wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
+  settings: () => import("./apps/settings").then((m) => m.default),
+  wordeditor: () => import("./apps/wordeditor").then((m) => m.default),
   zetawriter: () => import("./apps/zetawriter").then((m) => m.default),
   audioplayer: () => import("./apps/audioplayer").then((m) => m.default),
   webamp: () => import("./apps/webamp").then((m) => m.default),
@@ -62,6 +64,7 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   pyserve: () => import("./apps/pyserve").then((m) => m.default),
   "desktop-3d": () =>
     import("./apps/desktop-3d/index.tsx").then((m) => m.default),
+  "wasm-kernel": () => import("./apps/wasm-kernel").then((m) => m.default),
 };
 
 // Create a wrapper component that renders the plugin
@@ -128,6 +131,7 @@ const manifestMap: Record<string, PluginManifest> = {
   "pyodide-test": pyodideTestManifest,
   pyserve: pythonScribeManifest,
   "desktop-3d": desktop3dManifest,
+  "wasm-kernel": wasmKernelManifest,
 };
 
 // Debug: Log available plugins

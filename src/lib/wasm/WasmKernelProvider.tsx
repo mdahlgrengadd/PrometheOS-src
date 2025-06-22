@@ -71,15 +71,44 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
       const WasmCore = await loadWasmModule(wasmModuleUrl.href); // Initialize the WASM module
       const wasmModule = await WasmCore({
         onRuntimeInitialized: function () {
-          console.log("🚀 WASM Kernel initialized successfully");
+          console.log("🚀 WASM Kernel runtime initialized");
+
+          // Verify FS is available
+          if (!this.FS) {
+            console.error("❌ FS object not available on WASM module");
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              error: "WASM FS API not available - build configuration issue",
+            }));
+            return;
+          }
+
+          console.log("✅ FS API confirmed available:", typeof this.FS);
 
           // Mount filesystems and start kernel
           try {
             // Use 'this' to refer to the module in the callback
             (this as EmscriptenModule).callMain();
             console.log("✅ WASM Kernel main loop started");
+
+            // Update state with the fully initialized module
+            setState((prev) => ({
+              ...prev,
+              isInitialized: true,
+              isLoading: false,
+              module: this as EmscriptenModule,
+            }));
           } catch (error) {
             console.error("❌ Failed to start kernel main loop:", error);
+            setState((prev) => ({
+              ...prev,
+              isLoading: false,
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to start kernel",
+            }));
           }
         },
 
@@ -99,12 +128,9 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
           return scriptDirectory + path;
         },
       });
-      setState((prev) => ({
-        ...prev,
-        isInitialized: true,
-        isLoading: false,
-        module: wasmModule,
-      }));
+
+      // Don't set state here - it will be set in onRuntimeInitialized
+      // Just keep the loading state until the runtime is ready
     } catch (error) {
       console.error("❌ Failed to initialize WASM kernel:", error);
       setState((prev) => ({
@@ -120,7 +146,10 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
     ? {
         readFile: async (path: string): Promise<Uint8Array> => {
           try {
-            const data = state.module!.FS.readFile(path);
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            const data = state.module.FS.readFile(path);
             if (data instanceof Uint8Array) {
               return data;
             }
@@ -133,7 +162,10 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
 
         writeFile: async (path: string, data: Uint8Array): Promise<void> => {
           try {
-            state.module!.FS.writeFile(path, data);
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            state.module.FS.writeFile(path, data);
 
             // Emit FS_CHANGED event
             eventListeners.forEach((listener) => {
@@ -150,10 +182,12 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
             throw new Error(`Failed to write file ${path}: ${error}`);
           }
         },
-
         deleteFile: async (path: string): Promise<void> => {
           try {
-            state.module!.FS.unlink(path);
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            state.module.FS.unlink(path);
 
             // Emit FS_DELETE event
             eventListeners.forEach((listener) => {
@@ -173,7 +207,10 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
 
         renameFile: async (oldPath: string, newPath: string): Promise<void> => {
           try {
-            state.module!.FS.rename(oldPath, newPath);
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            state.module.FS.rename(oldPath, newPath);
 
             // Emit FS_RENAME event
             eventListeners.forEach((listener) => {
@@ -192,10 +229,12 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
             );
           }
         },
-
         createDir: async (path: string): Promise<void> => {
           try {
-            state.module!.FS.mkdir(path);
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            state.module.FS.mkdir(path);
           } catch (error) {
             throw new Error(`Failed to create directory ${path}: ${error}`);
           }
@@ -203,9 +242,12 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
 
         listDir: async (path: string): Promise<string[]> => {
           try {
-            return state
-              .module!.FS.readdir(path)
-              .filter((name: string) => name !== "." && name !== "..");
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            return state.module.FS.readdir(path).filter(
+              (name: string) => name !== "." && name !== ".."
+            );
           } catch (error) {
             throw new Error(`Failed to list directory ${path}: ${error}`);
           }
@@ -233,10 +275,12 @@ export const WasmKernelProvider: React.FC<WasmKernelProviderProps> = ({
           // TODO: Implement PTY read using C function wrapper
           return "";
         },
-
         getProcStat: async (): Promise<ProcStat> => {
           try {
-            const stat = state.module!.FS.readFile("/proc/stat", {
+            if (!state.module?.FS) {
+              throw new Error("WASM FS not available");
+            }
+            const stat = state.module.FS.readFile("/proc/stat", {
               encoding: "utf8",
             });
             return JSON.parse(stat as string);

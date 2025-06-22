@@ -56,16 +56,34 @@ export const WasmKernelDemo: React.FC = () => {
     }
   };
 
+  const testPtyOperations = async () => {
+    if (!api) return;
+
+    try {
+      addTestResult("🖥️ Testing PTY operations...");
+
+      // Test PTY write
+      await api.ptyWrite("echo 'Hello PTY'\n");
+      addTestResult("✅ PTY write command sent");
+
+      // Test PTY read (basic implementation)
+      const output = await api.ptyRead();
+      addTestResult(`✅ PTY output: "${output}"`);
+    } catch (error) {
+      addTestResult(`❌ PTY test failed: ${error}`);
+    }
+  };
+
   const testProcStat = async () => {
     if (!api) return;
 
     try {
+      addTestResult("📊 Testing process statistics...");
+
       const procStat = await api.getProcStat();
-      addTestResult(
-        `📊 Process statistics: ${JSON.stringify(procStat, null, 2)}`
-      );
+      addTestResult(`✅ Process stats: ${JSON.stringify(procStat)}`);
     } catch (error) {
-      addTestResult(`❌ Proc stat error: ${error}`);
+      addTestResult(`⚠️ ProcStat not available: ${error}`);
     }
   };
 

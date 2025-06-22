@@ -15,6 +15,7 @@ import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
 import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
 import { manifest as sessionManifest } from './apps/session/manifest';
 import { manifest as settingsManifest } from './apps/settings/manifest';
+import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
 import { manifest as webampManifest } from './apps/webamp/manifest';
 import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
 import { manifest as zetawriterManifest } from './apps/zetawriter/manifest';
@@ -25,6 +26,7 @@ import { PluginManifest } from './types';
 export const staticPlugins: PluginManifest[] = [
   notepadManifest,
   calculatorManifest,
+  wasmKernelManifest,
   aichatManifest,
   appPreviewManifest,
   audioPlayerManifest,

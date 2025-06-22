@@ -1,0 +1,7 @@
+{
+  "name": "WASM Kernel Demo",
+  "description": "WebAssembly kernel demonstration with POSIX I/O, PTY, and process table",
+  "target": "wasm-kernel",
+  "iconType": "plugin",
+  "icon": "wasm-kernel"
+}

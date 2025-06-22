@@ -285,6 +285,32 @@ if (typeof WebAssembly != 'object') {
   err('no native wasm support detected');
 }
 
+// include: base64Utils.js
+// Converts a string of base64 into a byte array (Uint8Array).
+function intArrayFromBase64(s) {
+  if (typeof ENVIRONMENT_IS_NODE != 'undefined' && ENVIRONMENT_IS_NODE) {
+    var buf = Buffer.from(s, 'base64');
+    return new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
+  }
+
+  var decoded = atob(s);
+  var bytes = new Uint8Array(decoded.length);
+  for (var i = 0 ; i < decoded.length ; ++i) {
+    bytes[i] = decoded.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// If filename is a base64 data URI, parses and returns data (Buffer on node,
+// Uint8Array otherwise). If filename is not a base64 data URI, returns undefined.
+function tryParseAsDataURI(filename) {
+  if (!isDataURI(filename)) {
+    return;
+  }
+
+  return intArrayFromBase64(filename.slice(dataURIPrefix.length));
+}
+// end include: base64Utils.js
 // Wasm globals
 
 var wasmMemory;
@@ -1285,6 +1311,55 @@ function dbg(...args) {
       stringToUTF8(s, fileNameBuffer, len);
     };
 
+  var __wasmfs_jsimpl_alloc_file = (backend, file) => {
+      assert(wasmFS$backends[backend]);
+      return wasmFS$backends[backend].allocFile(file);
+    };
+
+  var __wasmfs_jsimpl_free_file = (backend, file) => {
+      assert(wasmFS$backends[backend]);
+      return wasmFS$backends[backend].freeFile(file);
+    };
+
+  var __wasmfs_jsimpl_get_size = (backend, file) => {
+      assert(wasmFS$backends[backend]);
+      return wasmFS$backends[backend].getSize(file);
+    };
+
+  var convertI32PairToI53Checked = (lo, hi) => {
+      assert(lo == (lo >>> 0) || lo == (lo|0)); // lo should either be a i32 or a u32
+      assert(hi === (hi|0));                    // hi should be a i32
+      return ((hi + 0x200000) >>> 0 < 0x400001 - !!lo) ? (lo >>> 0) + hi * 4294967296 : NaN;
+    };
+  function __wasmfs_jsimpl_read(backend,file,buffer,length,offset_low, offset_high) {
+    var offset = convertI32PairToI53Checked(offset_low, offset_high);
+  
+    
+      assert(wasmFS$backends[backend]);
+      if (!wasmFS$backends[backend].read) {
+        return -28;
+      }
+      return wasmFS$backends[backend].read(file, buffer, length, offset);
+    ;
+  }
+
+  var __wasmfs_jsimpl_set_size = (backend, file, size) => {
+      assert(wasmFS$backends[backend]);
+      return wasmFS$backends[backend].setSize(file, size);
+    };
+
+  function __wasmfs_jsimpl_write(backend,file,buffer,length,offset_low, offset_high) {
+    var offset = convertI32PairToI53Checked(offset_low, offset_high);
+  
+    
+      assert(wasmFS$backends[backend]);
+      if (!wasmFS$backends[backend].write) {
+        return -28;
+      }
+      return wasmFS$backends[backend].write(file, buffer, length, offset);
+    ;
+  }
+
   var FS_stdin_getChar_buffer = [];
   
   
@@ -1494,6 +1569,723 @@ function dbg(...args) {
     };
 
 
+
+  var MEMFS = {
+  createBackend(opts) {
+        return _wasmfs_create_memory_backend();
+      },
+  };
+  
+  
+  
+  
+  var PATH = {
+  isAbs:(path) => path.charAt(0) === '/',
+  splitPath:(filename) => {
+        var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
+        return splitPathRe.exec(filename).slice(1);
+      },
+  normalizeArray:(parts, allowAboveRoot) => {
+        // if the path tries to go above the root, `up` ends up > 0
+        var up = 0;
+        for (var i = parts.length - 1; i >= 0; i--) {
+          var last = parts[i];
+          if (last === '.') {
+            parts.splice(i, 1);
+          } else if (last === '..') {
+            parts.splice(i, 1);
+            up++;
+          } else if (up) {
+            parts.splice(i, 1);
+            up--;
+          }
+        }
+        // if the path is allowed to go above the root, restore leading ..s
+        if (allowAboveRoot) {
+          for (; up; up--) {
+            parts.unshift('..');
+          }
+        }
+        return parts;
+      },
+  normalize:(path) => {
+        var isAbsolute = PATH.isAbs(path),
+            trailingSlash = path.substr(-1) === '/';
+        // Normalize the path
+        path = PATH.normalizeArray(path.split('/').filter((p) => !!p), !isAbsolute).join('/');
+        if (!path && !isAbsolute) {
+          path = '.';
+        }
+        if (path && trailingSlash) {
+          path += '/';
+        }
+        return (isAbsolute ? '/' : '') + path;
+      },
+  dirname:(path) => {
+        var result = PATH.splitPath(path),
+            root = result[0],
+            dir = result[1];
+        if (!root && !dir) {
+          // No dirname whatsoever
+          return '.';
+        }
+        if (dir) {
+          // It has a dirname, strip trailing slash
+          dir = dir.substr(0, dir.length - 1);
+        }
+        return root + dir;
+      },
+  basename:(path) => {
+        // EMSCRIPTEN return '/'' for '/', not an empty string
+        if (path === '/') return '/';
+        path = PATH.normalize(path);
+        path = path.replace(/\/$/, "");
+        var lastSlash = path.lastIndexOf('/');
+        if (lastSlash === -1) return path;
+        return path.substr(lastSlash+1);
+      },
+  join:(...paths) => PATH.normalize(paths.join('/')),
+  join2:(l, r) => PATH.normalize(l + '/' + r),
+  };
+  
+  
+  
+  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
+  var stringToUTF8OnStack = (str) => {
+      var size = lengthBytesUTF8(str) + 1;
+      var ret = stackAlloc(size);
+      stringToUTF8(str, ret, size);
+      return ret;
+    };
+  
+  
+  var withStackSave = (f) => {
+      var stack = stackSave();
+      var ret = f();
+      stackRestore(stack);
+      return ret;
+    };
+  
+  var readI53FromI64 = (ptr) => {
+      return HEAPU32[((ptr)>>2)] + HEAP32[(((ptr)+(4))>>2)] * 4294967296;
+    };
+  
+  var readI53FromU64 = (ptr) => {
+      return HEAPU32[((ptr)>>2)] + HEAPU32[(((ptr)+(4))>>2)] * 4294967296;
+    };
+  
+  
+  
+  var FS_mknod = (path, mode, dev) => FS.handleError(withStackSave(() => {
+      var pathBuffer = stringToUTF8OnStack(path);
+      return __wasmfs_mknod(pathBuffer, mode, dev);
+    }));
+  var FS_create = (path, mode = 438 /* 0666 */) => {
+      mode &= 4095;
+      mode |= 32768;
+      return FS_mknod(path, mode, 0);
+    };
+  
+  
+  
+  var FS_writeFile = (path, data) => {
+      var sp = stackSave();
+      var pathBuffer = stringToUTF8OnStack(path);
+      if (typeof data == 'string') {
+        var buf = new Uint8Array(lengthBytesUTF8(data) + 1);
+        var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
+        data = buf.slice(0, actualNumBytes);
+      }
+      var dataBuffer = _malloc(data.length);
+      assert(dataBuffer);
+      for (var i = 0; i < data.length; i++) {
+        HEAP8[(dataBuffer)+(i)] = data[i];
+      }
+      var ret = __wasmfs_write_file(pathBuffer, dataBuffer, data.length);
+      _free(dataBuffer);
+      stackRestore(sp);
+      return ret;
+    };
+  var FS_createDataFile = (parent, name, fileData, canRead, canWrite, canOwn) => {
+      var pathName = name ? parent + '/' + name : parent;
+      var mode = FS_getMode(canRead, canWrite);
+  
+      if (!wasmFSPreloadingFlushed) {
+        // WasmFS code in the wasm is not ready to be called yet. Cache the
+        // files we want to create here in JS, and WasmFS will read them
+        // later.
+        wasmFSPreloadedFiles.push({pathName, fileData, mode});
+      } else {
+        // WasmFS is already running, so create the file normally.
+        FS_create(pathName, mode);
+        FS_writeFile(pathName, fileData);
+      }
+    };
+  
+  /** @param {boolean=} noRunDep */
+  var asyncLoad = (url, onload, onerror, noRunDep) => {
+      var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : '';
+      readAsync(url).then(
+        (arrayBuffer) => {
+          assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
+          onload(new Uint8Array(arrayBuffer));
+          if (dep) removeRunDependency(dep);
+        },
+        (err) => {
+          if (onerror) {
+            onerror();
+          } else {
+            throw `Loading data file "${url}" failed.`;
+          }
+        }
+      );
+      if (dep) addRunDependency(dep);
+    };
+  
+  
+  
+  var PATH_FS = {
+  resolve:(...args) => {
+        var resolvedPath = '',
+          resolvedAbsolute = false;
+        for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+          var path = (i >= 0) ? args[i] : FS.cwd();
+          // Skip empty and invalid entries
+          if (typeof path != 'string') {
+            throw new TypeError('Arguments to path.resolve must be strings');
+          } else if (!path) {
+            return ''; // an invalid portion invalidates the whole thing
+          }
+          resolvedPath = path + '/' + resolvedPath;
+          resolvedAbsolute = PATH.isAbs(path);
+        }
+        // At this point the path should be resolved to a full absolute path, but
+        // handle relative paths to be safe (might happen when process.cwd() fails)
+        resolvedPath = PATH.normalizeArray(resolvedPath.split('/').filter((p) => !!p), !resolvedAbsolute).join('/');
+        return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+      },
+  relative:(from, to) => {
+        from = PATH_FS.resolve(from).substr(1);
+        to = PATH_FS.resolve(to).substr(1);
+        function trim(arr) {
+          var start = 0;
+          for (; start < arr.length; start++) {
+            if (arr[start] !== '') break;
+          }
+          var end = arr.length - 1;
+          for (; end >= 0; end--) {
+            if (arr[end] !== '') break;
+          }
+          if (start > end) return [];
+          return arr.slice(start, end - start + 1);
+        }
+        var fromParts = trim(from.split('/'));
+        var toParts = trim(to.split('/'));
+        var length = Math.min(fromParts.length, toParts.length);
+        var samePartsLength = length;
+        for (var i = 0; i < length; i++) {
+          if (fromParts[i] !== toParts[i]) {
+            samePartsLength = i;
+            break;
+          }
+        }
+        var outputParts = [];
+        for (var i = samePartsLength; i < fromParts.length; i++) {
+          outputParts.push('..');
+        }
+        outputParts = outputParts.concat(toParts.slice(samePartsLength));
+        return outputParts.join('/');
+      },
+  };
+  
+  
+  var preloadPlugins = Module['preloadPlugins'] || [];
+  var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
+      // Ensure plugins are ready.
+      if (typeof Browser != 'undefined') Browser.init();
+  
+      var handled = false;
+      preloadPlugins.forEach((plugin) => {
+        if (handled) return;
+        if (plugin['canHandle'](fullname)) {
+          plugin['handle'](byteArray, fullname, finish, onerror);
+          handled = true;
+        }
+      });
+      return handled;
+    };
+  var FS_createPreloadedFile = (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
+      // TODO we should allow people to just pass in a complete filename instead
+      // of parent and name being that we just join them anyways
+      var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
+      var dep = getUniqueRunDependency(`cp ${fullname}`); // might have several active requests for the same fullname
+      function processData(byteArray) {
+        function finish(byteArray) {
+          preFinish?.();
+          if (!dontCreateFile) {
+            FS_createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
+          }
+          onload?.();
+          removeRunDependency(dep);
+        }
+        if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
+          onerror?.();
+          removeRunDependency(dep);
+        })) {
+          return;
+        }
+        finish(byteArray);
+      }
+      addRunDependency(dep);
+      if (typeof url == 'string') {
+        asyncLoad(url, processData, onerror);
+      } else {
+        processData(url);
+      }
+    };
+  
+  var FS_getMode = (canRead, canWrite) => {
+      var mode = 0;
+      if (canRead) mode |= 292 | 73;
+      if (canWrite) mode |= 146;
+      return mode;
+    };
+  
+  
+  var FS_modeStringToFlags = (str) => {
+      var flagModes = {
+        'r': 0,
+        'r+': 2,
+        'w': 512 | 64 | 1,
+        'w+': 512 | 64 | 2,
+        'a': 1024 | 64 | 1,
+        'a+': 1024 | 64 | 2,
+      };
+      var flags = flagModes[str];
+      if (typeof flags == 'undefined') {
+        throw new Error(`Unknown file open mode: ${str}`);
+      }
+      return flags;
+    };
+  
+  
+  
+  var FS_mkdir = (path, mode = 511 /* 0777 */) => FS.handleError(withStackSave(() => {
+      var buffer = stringToUTF8OnStack(path);
+      return __wasmfs_mkdir(buffer, mode);
+    }));
+  
+  
+    /**
+     * @param {number=} mode Optionally, the mode to create in. Uses mkdir's
+     *                       default if not set.
+     */
+  var FS_mkdirTree = (path, mode) => {
+      var dirs = path.split('/');
+      var d = '';
+      for (var i = 0; i < dirs.length; ++i) {
+        if (!dirs[i]) continue;
+        d += '/' + dirs[i];
+        try {
+          FS_mkdir(d, mode);
+        } catch(e) {
+          if (e.errno != 20) throw e;
+        }
+      }
+    };
+  
+  
+  var FS_unlink = (path) => withStackSave(() => {
+      var buffer = stringToUTF8OnStack(path);
+      return __wasmfs_unlink(buffer);
+    });
+  
+  
+  
+  
+  var wasmFS$backends = {
+  };
+  
+  var wasmFSDevices = {
+  };
+  
+  var wasmFSDeviceStreams = {
+  };
+  
+  var FS = {
+  init() {
+        FS.ensureErrnoError();
+      },
+  ErrnoError:null,
+  handleError(returnValue) {
+        // Assume errors correspond to negative returnValues
+        // since some functions like _wasmfs_open() return positive
+        // numbers on success (some callers of this function may need to negate the parameter).
+        if (returnValue < 0) {
+          throw new FS.ErrnoError(-returnValue);
+        }
+  
+        return returnValue;
+      },
+  ensureErrnoError() {
+        if (FS.ErrnoError) return;
+        FS.ErrnoError = /** @this{Object} */ function ErrnoError(code) {
+          this.errno = code;
+          this.message = 'FS error';
+          this.name = "ErrnoError";
+        }
+        FS.ErrnoError.prototype = new Error();
+        FS.ErrnoError.prototype.constructor = FS.ErrnoError;
+      },
+  createDataFile(parent, name, fileData, canRead, canWrite, canOwn) {
+        FS_createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
+      },
+  createPath(parent, path, canRead, canWrite) {
+        // Cache file path directory names.
+        var parts = path.split('/').reverse();
+        while (parts.length) {
+          var part = parts.pop();
+          if (!part) continue;
+          var current = PATH.join2(parent, part);
+          if (!wasmFSPreloadingFlushed) {
+            wasmFSPreloadedDirs.push({parentPath: parent, childName: part});
+          } else {
+            FS.mkdir(current);
+          }
+          parent = current;
+        }
+        return current;
+      },
+  createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) {
+        return FS_createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish);
+      },
+  readFile(path, opts = {}) {
+        opts.encoding = opts.encoding || 'binary';
+        if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
+          throw new Error('Invalid encoding type "' + opts.encoding + '"');
+        }
+  
+        // Copy the file into a JS buffer on the heap.
+        var sp = stackSave();
+        var buf = __wasmfs_read_file(stringToUTF8OnStack(path));
+        stackRestore(sp);
+  
+        // The signed integer length resides in the first 8 bytes of the buffer.
+        var length = readI53FromI64(buf);
+  
+        // Default return type is binary.
+        // The buffer contents exist 8 bytes after the returned pointer.
+        var ret = new Uint8Array(HEAPU8.subarray(buf + 8, buf + 8 + length));
+        if (opts.encoding === 'utf8') {
+          ret = UTF8ArrayToString(ret);
+        }
+  
+        return ret;
+      },
+  cwd:() => UTF8ToString(__wasmfs_get_cwd()),
+  analyzePath(path) {
+        // TODO: Consider simplifying this API, which for now matches the JS FS.
+        var exists = !!FS.findObject(path);
+        return {
+          exists,
+          object: {
+            contents: exists ? FS.readFile(path) : null
+          }
+        };
+      },
+  mkdir:(path, mode) => FS_mkdir(path, mode),
+  mkdirTree:(path, mode) => FS_mkdirTree(path, mode),
+  rmdir:(path) => FS.handleError(
+        withStackSave(() => __wasmfs_rmdir(stringToUTF8OnStack(path)))
+      ),
+  open:(path, flags, mode) => withStackSave(() => {
+        flags = typeof flags == 'string' ? FS_modeStringToFlags(flags) : flags;
+        mode = typeof mode == 'undefined' ? 438 /* 0666 */ : mode;
+        var buffer = stringToUTF8OnStack(path);
+        var fd = FS.handleError(__wasmfs_open(buffer, flags, mode));
+        return { fd : fd };
+      }),
+  create:(path, mode) => FS_create(path, mode),
+  close:(stream) => FS.handleError(-__wasmfs_close(stream.fd)),
+  unlink:(path) => FS_unlink(path),
+  chdir:(path) => withStackSave(() => {
+        var buffer = stringToUTF8OnStack(path);
+        return __wasmfs_chdir(buffer);
+      }),
+  read(stream, buffer, offset, length, position) {
+        var seeking = typeof position != 'undefined';
+  
+        var dataBuffer = _malloc(length);
+  
+        var bytesRead;
+        if (seeking) {
+          bytesRead = __wasmfs_pread(stream.fd, dataBuffer, length, position);
+        } else {
+          bytesRead = __wasmfs_read(stream.fd, dataBuffer, length);
+        }
+        bytesRead = FS.handleError(bytesRead);
+  
+        for (var i = 0; i < length; i++) {
+          buffer[offset + i] = HEAP8[(dataBuffer)+(i)]
+        }
+  
+        _free(dataBuffer);
+        return bytesRead;
+      },
+  write(stream, buffer, offset, length, position, canOwn) {
+        var seeking = typeof position != 'undefined';
+  
+        var dataBuffer = _malloc(length);
+        for (var i = 0; i < length; i++) {
+          HEAP8[(dataBuffer)+(i)] = buffer[offset + i];
+        }
+  
+        var bytesRead;
+        if (seeking) {
+          bytesRead = __wasmfs_pwrite(stream.fd, dataBuffer, length, position);
+        } else {
+          bytesRead = __wasmfs_write(stream.fd, dataBuffer, length);
+        }
+        bytesRead = FS.handleError(bytesRead);
+        _free(dataBuffer);
+  
+        return bytesRead;
+      },
+  allocate(stream, offset, length) {
+        return FS.handleError(__wasmfs_allocate(stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0), length>>>0,(tempDouble = length,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+      },
+  writeFile:(path, data) => FS_writeFile(path, data),
+  mmap:(stream, length, offset, prot, flags) => {
+        var buf = FS.handleError(__wasmfs_mmap(length, prot, flags, stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+        return { ptr: buf, allocated: true };
+      },
+  msync:(stream, bufferPtr, offset, length, mmapFlags) => {
+        assert(offset === 0);
+        // TODO: assert that stream has the fd corresponding to the mapped buffer (bufferPtr).
+        return FS.handleError(__wasmfs_msync(bufferPtr, length, mmapFlags));
+      },
+  munmap:(addr, length) => (
+        FS.handleError(__wasmfs_munmap(addr, length))
+      ),
+  symlink:(target, linkpath) => withStackSave(() => (
+        __wasmfs_symlink(stringToUTF8OnStack(target), stringToUTF8OnStack(linkpath))
+      )),
+  readlink(path) {
+        var readBuffer = FS.handleError(withStackSave(() => __wasmfs_readlink(stringToUTF8OnStack(path))));
+        return UTF8ToString(readBuffer);
+      },
+  statBufToObject(statBuf) {
+        // i53/u53 are enough for times and ino in practice.
+        return {
+            dev: HEAPU32[((statBuf)>>2)],
+            mode: HEAPU32[(((statBuf)+(4))>>2)],
+            nlink: HEAPU32[(((statBuf)+(8))>>2)],
+            uid: HEAPU32[(((statBuf)+(12))>>2)],
+            gid: HEAPU32[(((statBuf)+(16))>>2)],
+            rdev: HEAPU32[(((statBuf)+(20))>>2)],
+            size: readI53FromI64((statBuf)+(24)),
+            blksize: HEAPU32[(((statBuf)+(32))>>2)],
+            blocks: HEAPU32[(((statBuf)+(36))>>2)],
+            atime: readI53FromI64((statBuf)+(40)),
+            mtime: readI53FromI64((statBuf)+(56)),
+            ctime: readI53FromI64((statBuf)+(72)),
+            ino: readI53FromU64((statBuf)+(88))
+        }
+      },
+  stat(path) {
+        var statBuf = _malloc(96);
+        FS.handleError(withStackSave(() =>
+          __wasmfs_stat(stringToUTF8OnStack(path), statBuf)
+        ));
+        var stats = FS.statBufToObject(statBuf);
+        _free(statBuf);
+  
+        return stats;
+      },
+  lstat(path) {
+        var statBuf = _malloc(96);
+        FS.handleError(withStackSave(() =>
+          __wasmfs_lstat(stringToUTF8OnStack(path), statBuf)
+        ));
+        var stats = FS.statBufToObject(statBuf);
+        _free(statBuf);
+  
+        return stats;
+      },
+  chmod(path, mode) {
+        return FS.handleError(withStackSave(() => {
+          var buffer = stringToUTF8OnStack(path);
+          return __wasmfs_chmod(buffer, mode);
+        }));
+      },
+  lchmod(path, mode) {
+        return FS.handleError(withStackSave(() => {
+          var buffer = stringToUTF8OnStack(path);
+          return __wasmfs_lchmod(buffer, mode);
+        }));
+      },
+  fchmod(fd, mode) {
+        return FS.handleError(__wasmfs_fchmod(fd, mode));
+      },
+  utime:(path, atime, mtime) => (
+        FS.handleError(withStackSave(() => (
+          __wasmfs_utime(stringToUTF8OnStack(path), atime, mtime)
+        )))
+      ),
+  truncate(path, len) {
+        return FS.handleError(withStackSave(() => (__wasmfs_truncate(stringToUTF8OnStack(path), len>>>0,(tempDouble = len,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)))));
+      },
+  ftruncate(fd, len) {
+        return FS.handleError(__wasmfs_ftruncate(fd, len>>>0,(tempDouble = len,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+      },
+  findObject(path) {
+        var result = withStackSave(() => __wasmfs_identify(stringToUTF8OnStack(path)));
+        if (result == 44) {
+          return null;
+        }
+        return {
+          isFolder: result == 31,
+          isDevice: false, // TODO: wasmfs support for devices
+        };
+      },
+  readdir:(path) => withStackSave(() => {
+        var pathBuffer = stringToUTF8OnStack(path);
+        var entries = [];
+        var state = __wasmfs_readdir_start(pathBuffer);
+        if (!state) {
+          // TODO: The old FS threw an ErrnoError here.
+          throw new Error("No such directory");
+        }
+        var entry;
+        while (entry = __wasmfs_readdir_get(state)) {
+          entries.push(UTF8ToString(entry));
+        }
+        __wasmfs_readdir_finish(state);
+        return entries;
+      }),
+  mount:(type, opts, mountpoint) => {
+        if (typeof type == 'string') {
+          // The filesystem was not included, and instead we have an error
+          // message stored in the variable.
+          throw type;
+        }
+        var backendPointer = type.createBackend(opts);
+        return FS.handleError(withStackSave(() => __wasmfs_mount(stringToUTF8OnStack(mountpoint), backendPointer)));
+      },
+  unmount:(mountpoint) => (
+        FS.handleError(withStackSave(() => __wasmfs_unmount(stringToUTF8OnStack(mountpoint))))
+      ),
+  mknod:(path, mode, dev) => FS_mknod(path, mode, dev),
+  makedev:(ma, mi) => ((ma) << 8 | (mi)),
+  registerDevice(dev, ops) {
+        var backendPointer = _wasmfs_create_jsimpl_backend();
+        var definedOps = {
+          userRead: ops.read,
+          userWrite: ops.write,
+  
+          allocFile: (file) => {
+            wasmFSDeviceStreams[file] = {}
+          },
+          freeFile: (file) => {
+            wasmFSDeviceStreams[file] = undefined;
+          },
+          getSize: (file) => {},
+          // Devices cannot be resized.
+          setSize: (file, size) => 0,
+          read: (file, buffer, length, offset) => {
+            var bufferArray = Module.HEAP8.subarray(buffer, buffer + length);
+            try {
+              var bytesRead = definedOps.userRead(wasmFSDeviceStreams[file], bufferArray, 0, length, offset);
+            } catch (e) {
+              return -e.errno;
+            }
+            Module.HEAP8.set(bufferArray, buffer);
+            return bytesRead;
+          },
+          write: (file, buffer, length, offset) => {
+            var bufferArray = Module.HEAP8.subarray(buffer, buffer + length);
+            try {
+              var bytesWritten = definedOps.userWrite(wasmFSDeviceStreams[file], bufferArray, 0, length, offset);
+            } catch (e) {
+              return -e.errno;
+            }
+            Module.HEAP8.set(bufferArray, buffer);
+            return bytesWritten;
+          },
+        };
+  
+        wasmFS$backends[backendPointer] = definedOps;
+        wasmFSDevices[dev] = backendPointer;
+      },
+  createDevice(parent, name, input, output) {
+        if (typeof parent != 'string') {
+          // The old API allowed parents to be objects, which do not exist in WasmFS.
+          throw new Error("Only string paths are accepted");
+        }
+        var path = PATH.join2(parent, name);
+        var mode = FS_getMode(!!input, !!output);
+        FS.createDevice.major ??= 64;
+        var dev = FS.makedev(FS.createDevice.major++, 0);
+        // Create a fake device with a set of stream ops to emulate
+        // the old API's createDevice().
+        FS.registerDevice(dev, {
+          read(stream, buffer, offset, length, pos /* ignored */) {
+            var bytesRead = 0;
+            for (var i = 0; i < length; i++) {
+              var result;
+              try {
+                result = input();
+              } catch (e) {
+                throw new FS.ErrnoError(29);
+              }
+              if (result === undefined && bytesRead === 0) {
+                throw new FS.ErrnoError(6);
+              }
+              if (result === null || result === undefined) break;
+              bytesRead++;
+              buffer[offset+i] = result;
+            }
+            return bytesRead;
+          },
+          write(stream, buffer, offset, length, pos) {
+            for (var i = 0; i < length; i++) {
+              try {
+                output(buffer[offset+i]);
+              } catch (e) {
+                throw new FS.ErrnoError(29);
+              }
+            }
+            return i;
+          }
+        });
+        return FS.mkdev(path, mode, dev);
+      },
+  mkdev(path, mode, dev) {
+        if (typeof dev === 'undefined') {
+          dev = mode;
+          mode = 438 /* 0666 */;
+        }
+  
+        var deviceBackend = wasmFSDevices[dev];
+        if (!deviceBackend) {
+          throw new Error("Invalid device ID.");
+        }
+  
+        return FS.handleError(withStackSave(() => (
+          _wasmfs_create_file(stringToUTF8OnStack(path), mode, deviceBackend)
+        )));
+      },
+  rename(oldPath, newPath) {
+        return FS.handleError(withStackSave(() => {
+          var oldPathBuffer = stringToUTF8OnStack(oldPath);
+          var newPathBuffer = stringToUTF8OnStack(newPath);
+          return __wasmfs_rename(oldPathBuffer, newPathBuffer);
+        }));
+      },
+  llseek(stream, offset, whence) {
+        return FS.handleError(__wasmfs_llseek(stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0), whence));
+      },
+  };
 
   var runAndAbortIfError = (func) => {
       try {
@@ -1782,337 +2574,121 @@ function dbg(...args) {
       },
   };
 
-  var MEMFS = {
-  createBackend(opts) {
-        return _wasmfs_create_memory_backend();
-      },
-  };
+
+  var getCFunc = (ident) => {
+      var func = Module['_' + ident]; // closure exported function
+      assert(func, 'Cannot call unknown function ' + ident + ', make sure it is exported');
+      return func;
+    };
+  
+  var writeArrayToMemory = (array, buffer) => {
+      assert(array.length >= 0, 'writeArrayToMemory array must have a length (should be an array or typed array)')
+      HEAP8.set(array, buffer);
+    };
   
   
   
   
-  var PATH = {
-  isAbs:(path) => path.charAt(0) === '/',
-  splitPath:(filename) => {
-        var splitPathRe = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-        return splitPathRe.exec(filename).slice(1);
-      },
-  normalizeArray:(parts, allowAboveRoot) => {
-        // if the path tries to go above the root, `up` ends up > 0
-        var up = 0;
-        for (var i = parts.length - 1; i >= 0; i--) {
-          var last = parts[i];
-          if (last === '.') {
-            parts.splice(i, 1);
-          } else if (last === '..') {
-            parts.splice(i, 1);
-            up++;
-          } else if (up) {
-            parts.splice(i, 1);
-            up--;
+  
+  
+  
+  
+    /**
+     * @param {string|null=} returnType
+     * @param {Array=} argTypes
+     * @param {Arguments|Array=} args
+     * @param {Object=} opts
+     */
+  var ccall = (ident, returnType, argTypes, args, opts) => {
+      // For fast lookup of conversion functions
+      var toC = {
+        'string': (str) => {
+          var ret = 0;
+          if (str !== null && str !== undefined && str !== 0) { // null string
+            ret = stringToUTF8OnStack(str);
           }
-        }
-        // if the path is allowed to go above the root, restore leading ..s
-        if (allowAboveRoot) {
-          for (; up; up--) {
-            parts.unshift('..');
-          }
-        }
-        return parts;
-      },
-  normalize:(path) => {
-        var isAbsolute = PATH.isAbs(path),
-            trailingSlash = path.substr(-1) === '/';
-        // Normalize the path
-        path = PATH.normalizeArray(path.split('/').filter((p) => !!p), !isAbsolute).join('/');
-        if (!path && !isAbsolute) {
-          path = '.';
-        }
-        if (path && trailingSlash) {
-          path += '/';
-        }
-        return (isAbsolute ? '/' : '') + path;
-      },
-  dirname:(path) => {
-        var result = PATH.splitPath(path),
-            root = result[0],
-            dir = result[1];
-        if (!root && !dir) {
-          // No dirname whatsoever
-          return '.';
-        }
-        if (dir) {
-          // It has a dirname, strip trailing slash
-          dir = dir.substr(0, dir.length - 1);
-        }
-        return root + dir;
-      },
-  basename:(path) => {
-        // EMSCRIPTEN return '/'' for '/', not an empty string
-        if (path === '/') return '/';
-        path = PATH.normalize(path);
-        path = path.replace(/\/$/, "");
-        var lastSlash = path.lastIndexOf('/');
-        if (lastSlash === -1) return path;
-        return path.substr(lastSlash+1);
-      },
-  join:(...paths) => PATH.normalize(paths.join('/')),
-  join2:(l, r) => PATH.normalize(l + '/' + r),
-  };
-  
-  
-  
-  var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
-  var stringToUTF8OnStack = (str) => {
-      var size = lengthBytesUTF8(str) + 1;
-      var ret = stackAlloc(size);
-      stringToUTF8(str, ret, size);
-      return ret;
-    };
-  
-  
-  var withStackSave = (f) => {
-      var stack = stackSave();
-      var ret = f();
-      stackRestore(stack);
-      return ret;
-    };
-  
-  var readI53FromI64 = (ptr) => {
-      return HEAPU32[((ptr)>>2)] + HEAP32[(((ptr)+(4))>>2)] * 4294967296;
-    };
-  
-  var readI53FromU64 = (ptr) => {
-      return HEAPU32[((ptr)>>2)] + HEAPU32[(((ptr)+(4))>>2)] * 4294967296;
-    };
-  
-  
-  
-  var FS_mknod = (path, mode, dev) => FS.handleError(withStackSave(() => {
-      var pathBuffer = stringToUTF8OnStack(path);
-      return __wasmfs_mknod(pathBuffer, mode, dev);
-    }));
-  var FS_create = (path, mode = 438 /* 0666 */) => {
-      mode &= 4095;
-      mode |= 32768;
-      return FS_mknod(path, mode, 0);
-    };
-  
-  
-  
-  var FS_writeFile = (path, data) => {
-      var sp = stackSave();
-      var pathBuffer = stringToUTF8OnStack(path);
-      if (typeof data == 'string') {
-        var buf = new Uint8Array(lengthBytesUTF8(data) + 1);
-        var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
-        data = buf.slice(0, actualNumBytes);
-      }
-      var dataBuffer = _malloc(data.length);
-      assert(dataBuffer);
-      for (var i = 0; i < data.length; i++) {
-        HEAP8[(dataBuffer)+(i)] = data[i];
-      }
-      var ret = __wasmfs_write_file(pathBuffer, dataBuffer, data.length);
-      _free(dataBuffer);
-      stackRestore(sp);
-      return ret;
-    };
-  var FS_createDataFile = (parent, name, fileData, canRead, canWrite, canOwn) => {
-      var pathName = name ? parent + '/' + name : parent;
-      var mode = FS_getMode(canRead, canWrite);
-  
-      if (!wasmFSPreloadingFlushed) {
-        // WasmFS code in the wasm is not ready to be called yet. Cache the
-        // files we want to create here in JS, and WasmFS will read them
-        // later.
-        wasmFSPreloadedFiles.push({pathName, fileData, mode});
-      } else {
-        // WasmFS is already running, so create the file normally.
-        FS_create(pathName, mode);
-        FS_writeFile(pathName, fileData);
-      }
-    };
-  
-  /** @param {boolean=} noRunDep */
-  var asyncLoad = (url, onload, onerror, noRunDep) => {
-      var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : '';
-      readAsync(url).then(
-        (arrayBuffer) => {
-          assert(arrayBuffer, `Loading data file "${url}" failed (no arrayBuffer).`);
-          onload(new Uint8Array(arrayBuffer));
-          if (dep) removeRunDependency(dep);
+          return ret;
         },
-        (err) => {
-          if (onerror) {
-            onerror();
-          } else {
-            throw `Loading data file "${url}" failed.`;
-          }
+        'array': (arr) => {
+          var ret = stackAlloc(arr.length);
+          writeArrayToMemory(arr, ret);
+          return ret;
         }
-      );
-      if (dep) addRunDependency(dep);
-    };
+      };
   
-  
-  
-  var PATH_FS = {
-  resolve:(...args) => {
-        var resolvedPath = '',
-          resolvedAbsolute = false;
-        for (var i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-          var path = (i >= 0) ? args[i] : FS.cwd();
-          // Skip empty and invalid entries
-          if (typeof path != 'string') {
-            throw new TypeError('Arguments to path.resolve must be strings');
-          } else if (!path) {
-            return ''; // an invalid portion invalidates the whole thing
-          }
-          resolvedPath = path + '/' + resolvedPath;
-          resolvedAbsolute = PATH.isAbs(path);
+      function convertReturnValue(ret) {
+        if (returnType === 'string') {
+          return UTF8ToString(ret);
         }
-        // At this point the path should be resolved to a full absolute path, but
-        // handle relative paths to be safe (might happen when process.cwd() fails)
-        resolvedPath = PATH.normalizeArray(resolvedPath.split('/').filter((p) => !!p), !resolvedAbsolute).join('/');
-        return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-      },
-  relative:(from, to) => {
-        from = PATH_FS.resolve(from).substr(1);
-        to = PATH_FS.resolve(to).substr(1);
-        function trim(arr) {
-          var start = 0;
-          for (; start < arr.length; start++) {
-            if (arr[start] !== '') break;
-          }
-          var end = arr.length - 1;
-          for (; end >= 0; end--) {
-            if (arr[end] !== '') break;
-          }
-          if (start > end) return [];
-          return arr.slice(start, end - start + 1);
-        }
-        var fromParts = trim(from.split('/'));
-        var toParts = trim(to.split('/'));
-        var length = Math.min(fromParts.length, toParts.length);
-        var samePartsLength = length;
-        for (var i = 0; i < length; i++) {
-          if (fromParts[i] !== toParts[i]) {
-            samePartsLength = i;
-            break;
-          }
-        }
-        var outputParts = [];
-        for (var i = samePartsLength; i < fromParts.length; i++) {
-          outputParts.push('..');
-        }
-        outputParts = outputParts.concat(toParts.slice(samePartsLength));
-        return outputParts.join('/');
-      },
-  };
-  
-  
-  var preloadPlugins = Module['preloadPlugins'] || [];
-  var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
-      // Ensure plugins are ready.
-      if (typeof Browser != 'undefined') Browser.init();
-  
-      var handled = false;
-      preloadPlugins.forEach((plugin) => {
-        if (handled) return;
-        if (plugin['canHandle'](fullname)) {
-          plugin['handle'](byteArray, fullname, finish, onerror);
-          handled = true;
-        }
-      });
-      return handled;
-    };
-  var FS_createPreloadedFile = (parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) => {
-      // TODO we should allow people to just pass in a complete filename instead
-      // of parent and name being that we just join them anyways
-      var fullname = name ? PATH_FS.resolve(PATH.join2(parent, name)) : parent;
-      var dep = getUniqueRunDependency(`cp ${fullname}`); // might have several active requests for the same fullname
-      function processData(byteArray) {
-        function finish(byteArray) {
-          preFinish?.();
-          if (!dontCreateFile) {
-            FS_createDataFile(parent, name, byteArray, canRead, canWrite, canOwn);
-          }
-          onload?.();
-          removeRunDependency(dep);
-        }
-        if (FS_handledByPreloadPlugin(byteArray, fullname, finish, () => {
-          onerror?.();
-          removeRunDependency(dep);
-        })) {
-          return;
-        }
-        finish(byteArray);
+        if (returnType === 'boolean') return Boolean(ret);
+        return ret;
       }
-      addRunDependency(dep);
-      if (typeof url == 'string') {
-        asyncLoad(url, processData, onerror);
-      } else {
-        processData(url);
-      }
-    };
   
-  var FS_getMode = (canRead, canWrite) => {
-      var mode = 0;
-      if (canRead) mode |= 292 | 73;
-      if (canWrite) mode |= 146;
-      return mode;
-    };
-  
-  
-  var FS = {
-  init() {
-        FS.ensureErrnoError();
-      },
-  ErrnoError:null,
-  handleError(returnValue) {
-        // Assume errors correspond to negative returnValues
-        // since some functions like _wasmfs_open() return positive
-        // numbers on success (some callers of this function may need to negate the parameter).
-        if (returnValue < 0) {
-          throw new FS.ErrnoError(-returnValue);
-        }
-  
-        return returnValue;
-      },
-  ensureErrnoError() {
-        if (FS.ErrnoError) return;
-        FS.ErrnoError = /** @this{Object} */ function ErrnoError(code) {
-          this.errno = code;
-          this.message = 'FS error';
-          this.name = "ErrnoError";
-        }
-        FS.ErrnoError.prototype = new Error();
-        FS.ErrnoError.prototype.constructor = FS.ErrnoError;
-      },
-  createDataFile(parent, name, fileData, canRead, canWrite, canOwn) {
-        FS_createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
-      },
-  createPath(parent, path, canRead, canWrite) {
-        // Cache file path directory names.
-        var parts = path.split('/').reverse();
-        while (parts.length) {
-          var part = parts.pop();
-          if (!part) continue;
-          var current = PATH.join2(parent, part);
-          if (!wasmFSPreloadingFlushed) {
-            wasmFSPreloadedDirs.push({parentPath: parent, childName: part});
+      var func = getCFunc(ident);
+      var cArgs = [];
+      var stack = 0;
+      assert(returnType !== 'array', 'Return type should not be "array".');
+      if (args) {
+        for (var i = 0; i < args.length; i++) {
+          var converter = toC[argTypes[i]];
+          if (converter) {
+            if (stack === 0) stack = stackSave();
+            cArgs[i] = converter(args[i]);
           } else {
-            FS.mkdir(current);
+            cArgs[i] = args[i];
           }
-          parent = current;
         }
-        return current;
-      },
-  createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish) {
-        return FS_createPreloadedFile(parent, name, url, canRead, canWrite, onload, onerror, dontCreateFile, canOwn, preFinish);
-      },
-  cwd:() => UTF8ToString(__wasmfs_get_cwd()),
-  };
+      }
+      // Data for a previous async operation that was in flight before us.
+      var previousAsync = Asyncify.currData;
+      var ret = func(...cArgs);
+      function onDone(ret) {
+        runtimeKeepalivePop();
+        if (stack !== 0) stackRestore(stack);
+        return convertReturnValue(ret);
+      }
+    var asyncMode = opts?.async;
+  
+      // Keep the runtime alive through all calls. Note that this call might not be
+      // async, but for simplicity we push and pop in all calls.
+      runtimeKeepalivePush();
+      if (Asyncify.currData != previousAsync) {
+        // A change in async operation happened. If there was already an async
+        // operation in flight before us, that is an error: we should not start
+        // another async operation while one is active, and we should not stop one
+        // either. The only valid combination is to have no change in the async
+        // data (so we either had one in flight and left it alone, or we didn't have
+        // one), or to have nothing in flight and to start one.
+        assert(!(previousAsync && Asyncify.currData), 'We cannot start an async operation when one is already flight');
+        assert(!(previousAsync && !Asyncify.currData), 'We cannot stop an async operation in flight');
+        // This is a new async operation. The wasm is paused and has unwound its stack.
+        // We need to return a Promise that resolves the return value
+        // once the stack is rewound and execution finishes.
+        assert(asyncMode, 'The call to ' + ident + ' is running asynchronously. If this was intended, add the async option to the ccall/cwrap call.');
+        return Asyncify.whenDone().then(onDone);
+      }
+  
+      ret = onDone(ret);
+      // If this is an async ccall, ensure we return a promise
+      if (asyncMode) return Promise.resolve(ret);
+      return ret;
+    };
+
+  
+  
+    /**
+     * @param {string=} returnType
+     * @param {Array=} argTypes
+     * @param {Object=} opts
+     */
+  var cwrap = (ident, returnType, argTypes, opts) => {
+      return (...args) => ccall(ident, returnType, argTypes, args, opts);
+    };
+
+  var FS_createPath = FS.createPath;
+
+
+
 
   FS.init();
   ;
@@ -2147,6 +2723,18 @@ var wasmImports = {
   /** @export */
   _wasmfs_get_preloaded_path_name: __wasmfs_get_preloaded_path_name,
   /** @export */
+  _wasmfs_jsimpl_alloc_file: __wasmfs_jsimpl_alloc_file,
+  /** @export */
+  _wasmfs_jsimpl_free_file: __wasmfs_jsimpl_free_file,
+  /** @export */
+  _wasmfs_jsimpl_get_size: __wasmfs_jsimpl_get_size,
+  /** @export */
+  _wasmfs_jsimpl_read: __wasmfs_jsimpl_read,
+  /** @export */
+  _wasmfs_jsimpl_set_size: __wasmfs_jsimpl_set_size,
+  /** @export */
+  _wasmfs_jsimpl_write: __wasmfs_jsimpl_write,
+  /** @export */
   _wasmfs_stdin_get_char: __wasmfs_stdin_get_char,
   /** @export */
   emscripten_date_now: _emscripten_date_now,
@@ -2170,6 +2758,7 @@ var _fflush = createExportWrapper('fflush', 1);
 var _emscripten_proxy_execute_queue = createExportWrapper('emscripten_proxy_execute_queue', 1);
 var _emscripten_proxy_finish = createExportWrapper('emscripten_proxy_finish', 1);
 var __emscripten_timeout = createExportWrapper('_emscripten_timeout', 2);
+var _emscripten_builtin_memalign = createExportWrapper('emscripten_builtin_memalign', 2);
 var _malloc = createExportWrapper('malloc', 1);
 var _free = createExportWrapper('free', 1);
 var __emscripten_tempret_set = createExportWrapper('_emscripten_tempret_set', 1);
@@ -2182,19 +2771,54 @@ var __emscripten_stack_alloc = (a0) => (__emscripten_stack_alloc = wasmExports['
 var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
 var ___cxa_increment_exception_refcount = createExportWrapper('__cxa_increment_exception_refcount', 1);
 var __wasmfs_fetch_get_file_path = createExportWrapper('_wasmfs_fetch_get_file_path', 1);
+var __wasmfs_read_file = createExportWrapper('_wasmfs_read_file', 1);
 var __wasmfs_write_file = createExportWrapper('_wasmfs_write_file', 3);
+var __wasmfs_mkdir = createExportWrapper('_wasmfs_mkdir', 2);
+var __wasmfs_rmdir = createExportWrapper('_wasmfs_rmdir', 1);
+var __wasmfs_open = createExportWrapper('_wasmfs_open', 3);
+var __wasmfs_allocate = createExportWrapper('_wasmfs_allocate', 5);
 var __wasmfs_mknod = createExportWrapper('_wasmfs_mknod', 3);
+var __wasmfs_unlink = createExportWrapper('_wasmfs_unlink', 1);
+var __wasmfs_chdir = createExportWrapper('_wasmfs_chdir', 1);
+var __wasmfs_symlink = createExportWrapper('_wasmfs_symlink', 2);
+var __wasmfs_readlink = createExportWrapper('_wasmfs_readlink', 1);
+var __wasmfs_write = createExportWrapper('_wasmfs_write', 3);
+var __wasmfs_pwrite = createExportWrapper('_wasmfs_pwrite', 5);
+var __wasmfs_chmod = createExportWrapper('_wasmfs_chmod', 2);
+var __wasmfs_fchmod = createExportWrapper('_wasmfs_fchmod', 2);
+var __wasmfs_lchmod = createExportWrapper('_wasmfs_lchmod', 2);
+var __wasmfs_llseek = createExportWrapper('_wasmfs_llseek', 4);
+var __wasmfs_rename = createExportWrapper('_wasmfs_rename', 2);
+var __wasmfs_read = createExportWrapper('_wasmfs_read', 3);
+var __wasmfs_pread = createExportWrapper('_wasmfs_pread', 5);
+var __wasmfs_truncate = createExportWrapper('_wasmfs_truncate', 3);
+var __wasmfs_ftruncate = createExportWrapper('_wasmfs_ftruncate', 3);
+var __wasmfs_close = createExportWrapper('_wasmfs_close', 1);
+var __wasmfs_mmap = createExportWrapper('_wasmfs_mmap', 6);
+var __wasmfs_msync = createExportWrapper('_wasmfs_msync', 3);
+var __wasmfs_munmap = createExportWrapper('_wasmfs_munmap', 2);
+var __wasmfs_utime = createExportWrapper('_wasmfs_utime', 3);
+var __wasmfs_stat = createExportWrapper('_wasmfs_stat', 2);
+var __wasmfs_lstat = createExportWrapper('_wasmfs_lstat', 2);
+var __wasmfs_mount = createExportWrapper('_wasmfs_mount', 2);
+var __wasmfs_unmount = createExportWrapper('_wasmfs_unmount', 1);
+var __wasmfs_identify = createExportWrapper('_wasmfs_identify', 1);
+var __wasmfs_readdir_start = createExportWrapper('_wasmfs_readdir_start', 1);
+var __wasmfs_readdir_get = createExportWrapper('_wasmfs_readdir_get', 1);
+var __wasmfs_readdir_finish = createExportWrapper('_wasmfs_readdir_finish', 1);
 var __wasmfs_get_cwd = createExportWrapper('_wasmfs_get_cwd', 0);
+var _wasmfs_create_jsimpl_backend = createExportWrapper('wasmfs_create_jsimpl_backend', 0);
 var _wasmfs_create_memory_backend = createExportWrapper('wasmfs_create_memory_backend', 0);
 var __wasmfs_node_record_dirent = createExportWrapper('_wasmfs_node_record_dirent', 3);
 var __wasmfs_opfs_record_entry = createExportWrapper('_wasmfs_opfs_record_entry', 3);
+var _wasmfs_create_file = createExportWrapper('wasmfs_create_file', 3);
 var _wasmfs_flush = createExportWrapper('wasmfs_flush', 0);
 var dynCall_iiii = Module['dynCall_iiii'] = createExportWrapper('dynCall_iiii', 4);
 var dynCall_vi = Module['dynCall_vi'] = createExportWrapper('dynCall_vi', 2);
+var dynCall_iii = Module['dynCall_iii'] = createExportWrapper('dynCall_iii', 3);
 var dynCall_ii = Module['dynCall_ii'] = createExportWrapper('dynCall_ii', 2);
 var dynCall_jiji = Module['dynCall_jiji'] = createExportWrapper('dynCall_jiji', 5);
 var dynCall_vii = Module['dynCall_vii'] = createExportWrapper('dynCall_vii', 3);
-var dynCall_iii = Module['dynCall_iii'] = createExportWrapper('dynCall_iii', 3);
 var dynCall_v = Module['dynCall_v'] = createExportWrapper('dynCall_v', 1);
 var dynCall_ji = Module['dynCall_ji'] = createExportWrapper('dynCall_ji', 2);
 var dynCall_iiiij = Module['dynCall_iiiij'] = createExportWrapper('dynCall_iiiij', 6);
@@ -2212,8 +2836,16 @@ var _asyncify_stop_rewind = createExportWrapper('asyncify_stop_rewind', 0);
 // include: postamble.js
 // === Auto-generated postamble setup entry stuff ===
 
+Module['addRunDependency'] = addRunDependency;
+Module['removeRunDependency'] = removeRunDependency;
 Module['callMain'] = callMain;
+Module['ccall'] = ccall;
+Module['cwrap'] = cwrap;
+Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
+Module['FS_unlink'] = FS_unlink;
+Module['FS_createPath'] = FS_createPath;
 Module['FS'] = FS;
+Module['FS_createDataFile'] = FS_createDataFile;
 var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -2221,7 +2853,6 @@ var missingLibrarySymbols = [
   'writeI53ToU64Clamped',
   'writeI53ToU64Signaling',
   'convertI32PairToI53',
-  'convertI32PairToI53Checked',
   'convertU32PairToI53',
   'getTempRet0',
   'setTempRet0',
@@ -2250,9 +2881,6 @@ var missingLibrarySymbols = [
   'STACK_ALIGN',
   'POINTER_SIZE',
   'ASSERTIONS',
-  'getCFunc',
-  'ccall',
-  'cwrap',
   'uleb128Encode',
   'generateFuncType',
   'convertJsFunctionToWasm',
@@ -2276,7 +2904,6 @@ var missingLibrarySymbols = [
   'stringToUTF32',
   'lengthBytesUTF32',
   'stringToNewUTF8',
-  'writeArrayToMemory',
   'registerKeyEventCallback',
   'maybeCStringToJsString',
   'findEventTarget',
@@ -2344,10 +2971,6 @@ var missingLibrarySymbols = [
   'ydayFromDate',
   'arraySum',
   'addDays',
-  'FS_modeStringToFlags',
-  'FS_unlink',
-  'FS_mkdir',
-  'FS_mkdirTree',
   'wasmfsNodeConvertNodeCode',
   'wasmfsTry',
   'wasmfsNodeFixStat',
@@ -2397,8 +3020,6 @@ var unexportedSymbols = [
   'addOnPreMain',
   'addOnExit',
   'addOnPostRun',
-  'addRunDependency',
-  'removeRunDependency',
   'out',
   'err',
   'abort',
@@ -2408,6 +3029,7 @@ var unexportedSymbols = [
   'checkStackCookie',
   'readI53FromI64',
   'readI53FromU64',
+  'convertI32PairToI53Checked',
   'stackSave',
   'stackRestore',
   'stackAlloc',
@@ -2434,6 +3056,7 @@ var unexportedSymbols = [
   'alignMemory',
   'wasmTable',
   'noExitRuntime',
+  'getCFunc',
   'sigToWasmTypes',
   'freeTableIndexes',
   'functionsInTableMap',
@@ -2450,6 +3073,7 @@ var unexportedSymbols = [
   'intArrayFromString',
   'UTF16Decoder',
   'stringToUTF8OnStack',
+  'writeArrayToMemory',
   'JSEvents',
   'specialHTMLTargets',
   'findCanvasEventTarget',
@@ -2472,11 +3096,10 @@ var unexportedSymbols = [
   'MONTH_DAYS_REGULAR_CUMULATIVE',
   'MONTH_DAYS_LEAP_CUMULATIVE',
   'preloadPlugins',
-  'FS_createPreloadedFile',
+  'FS_modeStringToFlags',
   'FS_getMode',
   'FS_stdin_getChar_buffer',
   'FS_stdin_getChar',
-  'FS_createPath',
   'FS_createDevice',
   'FS_readFile',
   'MEMFS',
@@ -2485,10 +3108,11 @@ var unexportedSymbols = [
   'wasmFSPreloadingFlushed',
   'wasmFSDevices',
   'wasmFSDeviceStreams',
-  'FS_createDataFile',
   'FS_mknod',
   'FS_create',
   'FS_writeFile',
+  'FS_mkdir',
+  'FS_mkdirTree',
   'wasmFS$JSMemoryFiles',
   'wasmFS$backends',
   'wasmfsNodeIsWindows',
@@ -2646,7 +3270,7 @@ if (Module['preInit']) {
 }
 
 // shouldRunNow refers to calling main(), not run().
-var shouldRunNow = true;
+var shouldRunNow = false;
 
 if (Module['noInitialRun']) shouldRunNow = false;
 

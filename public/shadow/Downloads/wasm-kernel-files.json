@@ -1,0 +1,7 @@
+{
+  "type": "file",
+  "name": "WASM Kernel Files",
+  "iconUrl": "/icons/34684_aim_be_be_aim.png",
+  "url": "/wasm/",
+  "description": "WASM kernel binary files and documentation"
+}

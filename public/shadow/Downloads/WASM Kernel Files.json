@@ -1,0 +1,8 @@
+{
+  "name": "WASM Kernel Files",
+  "description": "WASM kernel binary files and documentation",
+  "target": "file-explorer",
+  "iconType": "plugin",
+  "icon": "file-explorer",
+  "path": "/wasm/"
+}
