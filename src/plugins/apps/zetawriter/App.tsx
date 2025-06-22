@@ -46,64 +46,62 @@ const App: React.FC = () => {
       };
       document.body.appendChild(preSofficeScript);
     }
-
     return () => {
       // Cleanup on unmount - but don't remove scripts as they're shared
     };
   }, []); // Empty dependency array to run only once
+
   return (
-    <div id="app" className="min-h-screen bg-background">
-      <div className="container mx-auto max-w-7xl p-0">
-        <div className="mt-6 mb-4">
-          <h1 className="text-3xl font-bold">ZetaJS: Word Editor React</h1>
-        </div>{" "}
-        <div className="mt-4 space-y-4 border border-border rounded-lg p-4">
-          <ControlBar ref={controlBarRef} id="controlbar" />
+    <div
+      id="app"
+      className="h-screen w-full bg-background flex flex-col overflow-hidden"
+    >
+      <ControlBar ref={controlBarRef} id="controlbar" />
 
-          <div id="canvasCell" className="w-full">
-            <div className="canvas-container relative">
-              <div id="loadingInfo" className="loading-info">
-                <div className="spinner"></div>
-                <h2 className="text-2xl font-semibold">
-                  ZetaOffice is loading...
-                </h2>
-              </div>{" "}
-              <canvas
-                id="qtcanvas"
-                contentEditable="true"
-                onContextMenu={(e) => e.preventDefault()}
-                onKeyDown={(e) => e.preventDefault()}
-                style={{
-                  width: "100%",
-                  visibility: "hidden",
-                }}
-                className="qt-canvas"
-              />
-            </div>
+      <div id="canvasCell" className="flex-1 w-full overflow-hidden">
+        <div className="canvas-container relative h-full w-full">
+          <div
+            id="loadingInfo"
+            className="loading-info absolute inset-0 flex flex-col items-center justify-center z-10"
+          >
+            <div className="spinner"></div>
+            <h2 className="text-2xl font-semibold">ZetaOffice is loading...</h2>
           </div>
-
-          {/* Hidden elements for pre_soffice.js compatibility */}
-          <div style={{ display: "none" }}>
-            <div id="controlCell"></div>
-            <label id="lblUpload">
-              <input
-                accept=".odt"
-                className="file-input"
-                type="file"
-                id="btnUpload"
-                onChange={() => window.btnUploadFunc?.()}
-                disabled
-              />
-            </label>
-            <button
-              id="btnReload"
-              onClick={() => window.btnReloadFunc?.()}
-              disabled
-            >
-              Reload file
-            </button>
-          </div>
+          <canvas
+            id="qtcanvas"
+            contentEditable="true"
+            onContextMenu={(e) => e.preventDefault()}
+            onKeyDown={(e) => e.preventDefault()}
+            style={{
+              width: "100%",
+              height: "100%",
+              visibility: "hidden",
+            }}
+            className="qt-canvas absolute inset-0"
+          />
         </div>
+      </div>
+
+      {/* Hidden elements for pre_soffice.js compatibility */}
+      <div style={{ display: "none" }}>
+        <div id="controlCell"></div>
+        <label id="lblUpload">
+          <input
+            accept=".odt"
+            className="file-input"
+            type="file"
+            id="btnUpload"
+            onChange={() => window.btnUploadFunc?.()}
+            disabled
+          />
+        </label>
+        <button
+          id="btnReload"
+          onClick={() => window.btnReloadFunc?.()}
+          disabled
+        >
+          Reload file
+        </button>
       </div>
     </div>
   );

@@ -1,15 +1,16 @@
-import { componentTagger } from 'lovable-tagger';
-import path from 'path';
-import * as sass from 'sass';
-import { defineConfig } from 'vite';
-import comlink from 'vite-plugin-comlink';
+import { componentTagger } from "lovable-tagger";
+import path from "path";
+import * as sass from "sass";
+import { defineConfig } from "vite";
+import comlink from "vite-plugin-comlink";
 
-import react from '@vitejs/plugin-react-swc';
+import react from "@vitejs/plugin-react-swc";
 
-import shadowFsPlugin from './vite.shadowfs';
+import shadowFsPlugin from "./vite.shadowfs";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({  server: {
+export default defineConfig(({ mode }) => ({
+  server: {
     host: "::",
     port: 8080,
     headers: {

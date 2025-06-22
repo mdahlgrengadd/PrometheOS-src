@@ -1,9 +1,10 @@
-import React from 'react';
+import "./index.css";
 
-import { Plugin, PluginInitData } from '../../types';
-import App from './App';
-import './index.css';
-import { manifest } from './manifest';
+import React from "react";
+
+import { Plugin, PluginInitData } from "../../types";
+import App from "./App";
+import { manifest } from "./manifest";
 
 // ZetaWriter Plugin Component
 const ZetaWriterComponent: React.FC<{ initData?: PluginInitData }> = ({
