@@ -1,7 +1,7 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-import { eventBus } from "@/plugins/EventBus";
-import { virtualFs } from "@/utils/virtual-fs";
+import { eventBus } from '@/plugins/EventBus';
+import { virtualFs } from '@/utils/virtual-fs';
 
 import type { FileSystemItem } from "@/plugins/apps/file-explorer/types/fileSystem";
 
@@ -39,11 +39,15 @@ interface FileSystemStore {
   fs: FileSystemItem;
   init: () => Promise<void>;
   forceReload: () => Promise<void>;
-  addItems: (path: string[], items: FileSystemItem[]) => void;
-  renameItem: (path: string[], id: string, newName: string) => void;
-  deleteItem: (path: string[], id: string) => void;
-  moveItem: (fromPath: string[], id: string, toPath: string[]) => void;
-  updateFileContent: (path: string[], id: string, content: string) => void;
+  addItems: (path: string[], items: FileSystemItem[]) => Promise<void>;
+  renameItem: (path: string[], id: string, newName: string) => Promise<void>;
+  deleteItem: (path: string[], id: string) => Promise<void>;
+  moveItem: (fromPath: string[], id: string, toPath: string[]) => Promise<void>;
+  updateFileContent: (
+    path: string[],
+    id: string,
+    content: string
+  ) => Promise<void>;
 }
 
 export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
@@ -61,10 +65,14 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     await virtualFs.forceReloadFromShadow();
     set({ fs: virtualFs.getRootFileSystemItem() });
   },
-
   // Add new items under a given path
-  addItems: (path, items) => {
-    virtualFs.addItems(path, items);
+  addItems: async (path, items) => {
+    // Try using WASM VFS if available, fallback to in-memory
+    if (virtualFs.isWasmBackendEnabled()) {
+      await virtualFs.addItemsAsync(path, items);
+    } else {
+      virtualFs.addItems(path, items);
+    }
     const newFs = virtualFs.getRootFileSystemItem();
     set({ fs: newFs });
 
@@ -72,30 +80,42 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
     eventBus.emit("vfs:itemsAdded", { path, items });
     console.log("[VFS Store] Emitted vfs:itemsAdded event for path:", path);
   },
-
   // Rename an item under a given path
-  renameItem: (path, id, newName) => {
-    virtualFs.renameItem(path, id, newName);
+  renameItem: async (path, id, newName) => {
+    // Try using WASM VFS if available, fallback to in-memory
+    if (virtualFs.isWasmBackendEnabled()) {
+      await virtualFs.renameItemAsync(path, id, newName);
+    } else {
+      virtualFs.renameItem(path, id, newName);
+    }
     set({ fs: virtualFs.getRootFileSystemItem() });
 
     // Emit event for components to react to changes
     eventBus.emit("vfs:itemRenamed", { path, id, newName });
     console.log("[VFS Store] Emitted vfs:itemRenamed event for path:", path);
   },
-
   // Delete an item under a given path
-  deleteItem: (path, id) => {
-    virtualFs.deleteItem(path, id);
+  deleteItem: async (path, id) => {
+    // Try using WASM VFS if available, fallback to in-memory
+    if (virtualFs.isWasmBackendEnabled()) {
+      await virtualFs.deleteItemAsync(path, id);
+    } else {
+      virtualFs.deleteItem(path, id);
+    }
     set({ fs: virtualFs.getRootFileSystemItem() });
 
     // Emit event for components to react to changes
     eventBus.emit("vfs:itemDeleted", { path, id });
     console.log("[VFS Store] Emitted vfs:itemDeleted event for path:", path);
   },
-
   // Move a single item from one folder path to another
-  moveItem: (fromPath, id, toPath) => {
-    virtualFs.moveItem(fromPath, id, toPath);
+  moveItem: async (fromPath, id, toPath) => {
+    // Try using WASM VFS if available, fallback to in-memory
+    if (virtualFs.isWasmBackendEnabled()) {
+      await virtualFs.moveItemAsync(fromPath, id, toPath);
+    } else {
+      virtualFs.moveItem(fromPath, id, toPath);
+    }
     set({ fs: virtualFs.getRootFileSystemItem() });
 
     // Emit event for components to react to changes
@@ -107,10 +127,14 @@ export const useFileSystemStore = create<FileSystemStore>((set, get) => ({
       toPath
     );
   },
-
   // Update the content of a file without having to delete and re-create it
-  updateFileContent: (path, id, content) => {
-    virtualFs.updateFileContent(path, id, content);
+  updateFileContent: async (path, id, content) => {
+    // Try using WASM VFS if available, fallback to in-memory
+    if (virtualFs.isWasmBackendEnabled()) {
+      await virtualFs.updateFileContentAsync(path, id, content);
+    } else {
+      virtualFs.updateFileContent(path, id, content);
+    }
     set({ fs: virtualFs.getRootFileSystemItem() });
 
     // Emit event for components to react to changes

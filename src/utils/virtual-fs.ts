@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FileSystemItem } from "../plugins/apps/builder/types";
+import { wasmVFSBridge } from './wasm-vfs-bridge';
 
-// A unified in-memory virtual file system
+// A unified virtual file system that can use either memory or WASM backend
 export class VirtualFS {
   private root: FileSystemItem[] = [];
   private initialized = false;
   private initPromise: Promise<void> | null = null;
+  private useWasmBackend = false;
 
   constructor(initialData?: FileSystemItem[]) {
     if (initialData) {
@@ -14,9 +16,154 @@ export class VirtualFS {
     }
   }
 
+  // Enable WASM backend for persistent storage
+  async enableWasmBackend(wasmApi: any): Promise<void> {
+    console.log("[VirtualFS] Enabling WASM backend...");
+    console.log("[VirtualFS] Current VFS state:", {
+      initialized: this.initialized,
+      rootItems: this.root.length,
+      rootItemNames: this.root.map((item) => item.name),
+    });
+
+    try {
+      await wasmVFSBridge.initialize(wasmApi);
+      this.useWasmBackend = true;
+
+      console.log("[VirtualFS] WASM bridge initialized, starting sync...");
+
+      // Sync existing in-memory data to WASM
+      await this.syncToWasm();
+
+      console.log("✅ VirtualFS WASM backend enabled and synced");
+    } catch (error) {
+      console.error("❌ Failed to enable WASM backend:", error);
+      this.useWasmBackend = false;
+      throw error; // Re-throw to see the error in the calling code
+    }
+  }
+
+  // Sync in-memory data to WASM filesystem
+  private async syncToWasm(): Promise<void> {
+    if (!this.useWasmBackend) {
+      console.log("[VirtualFS] Sync skipped - WASM backend not enabled");
+      return;
+    }
+
+    console.log("[VirtualFS] Starting sync to WASM filesystem...");
+    console.log("[VirtualFS] Root items to sync:", this.root.length);
+    console.log(
+      "[VirtualFS] Root items details:",
+      this.root.map((item) => ({
+        name: item.name,
+        type: item.type,
+        id: item.id,
+        hasChildren: !!(item.children && item.children.length > 0),
+        childrenCount: item.children?.length || 0,
+      }))
+    );
+
+    // Map VFS directories to WASM filesystem paths
+    const pathMapping: { [key: string]: string } = {
+      Desktop: "/home/user/Desktop",
+      Documents: "/home/user/Documents",
+      Downloads: "/home/user/Downloads",
+      documents: "/home/user/documents",
+      downloads: "/home/user/downloads",
+    };
+
+    for (const item of this.root) {
+      console.log(
+        `[VirtualFS] Processing sync for: ${item.name} (${item.type})`
+      );
+
+      // Use mapped path if available, otherwise use root
+      const targetPath = pathMapping[item.name] || `/home/user/${item.name}`;
+      const parentPath = targetPath.substring(0, targetPath.lastIndexOf("/"));
+      const targetName = targetPath.split("/").pop() || item.name;
+
+      console.log(
+        `[VirtualFS] Mapping ${item.name} to ${targetPath} (parent: ${parentPath}, name: ${targetName})`
+      );
+
+      try {
+        await this.syncItemToWasm(item, parentPath, targetName);
+        console.log(`[VirtualFS] ✅ Successfully synced ${item.name}`);
+      } catch (error) {
+        console.error(`[VirtualFS] ❌ Failed to sync ${item.name}:`, error);
+      }
+    }
+
+    console.log("[VirtualFS] Sync to WASM completed");
+  }
+
+  // Recursively sync an item to WASM
+  private async syncItemToWasm(
+    item: FileSystemItem,
+    parentPath: string,
+    customName?: string
+  ): Promise<void> {
+    const itemName = customName || item.name;
+    const fullPath = `${parentPath}/${itemName}`.replace(/\/+/g, "/");
+    console.log(`[VirtualFS] Syncing ${item.type}: ${fullPath}`);
+
+    try {
+      if (item.type === "folder") {
+        console.log(`[VirtualFS] Creating directory: ${fullPath}`);
+        await wasmVFSBridge.createDirectory(fullPath);
+        console.log(`[VirtualFS] ✅ Directory created: ${fullPath}`);
+
+        if (item.children && item.children.length > 0) {
+          console.log(
+            `[VirtualFS] Syncing ${item.children.length} children of ${fullPath}`
+          );
+          for (const child of item.children) {
+            console.log(
+              `[VirtualFS] Syncing child: ${child.name} (${child.type})`
+            );
+            await this.syncItemToWasm(child, fullPath);
+          }
+          console.log(`[VirtualFS] ✅ All children synced for ${fullPath}`);
+        } else {
+          console.log(`[VirtualFS] No children to sync for ${fullPath}`);
+        }
+      } else if (item.type === "file" && item.content) {
+        console.log(
+          `[VirtualFS] Writing file ${fullPath} (${item.content.length} chars)`
+        );
+        const success = await wasmVFSBridge.writeFile(fullPath, item.content);
+        console.log(`[VirtualFS] File write result for ${fullPath}:`, success);
+      } else {
+        console.log(
+          `[VirtualFS] Skipping item ${fullPath} (type: ${
+            item.type
+          }, hasContent: ${!!item.content})`
+        );
+      }
+    } catch (error) {
+      console.error(`[VirtualFS] Error syncing ${fullPath}:`, error);
+      throw error;
+    }
+  }
+
   // Get the current state of initialization
   isInitialized(): boolean {
     return this.initialized;
+  }
+
+  // Check if WASM backend is enabled
+  isWasmBackendEnabled(): boolean {
+    return this.useWasmBackend;
+  }
+
+  // Manually trigger a sync to WASM (useful for debugging or re-syncing after changes)
+  async manualSyncToWasm(): Promise<void> {
+    if (!this.useWasmBackend) {
+      console.log("[VirtualFS] Manual sync skipped - WASM backend not enabled");
+      return;
+    }
+
+    console.log("[VirtualFS] Manual sync requested...");
+    await this.syncToWasm();
   }
 
   // Initialize once from shadow folder - subsequent calls return existing data
@@ -63,24 +210,72 @@ export class VirtualFS {
     return rootItem;
   }
 
-  // Read a file by path (e.g. 'src/app.jsx')
+  // Read a file by path (e.g. 'src/app.jsx') - WASM aware
   readFile(path: string): string | undefined {
+    if (this.useWasmBackend) {
+      // For WASM backend, we'll need an async version
+      console.warn(
+        "readFile called on WASM backend - use readFileAsync instead"
+      );
+    }
+
     const file = this.findItemByPath(path);
     return file && file.type === "file" ? file.content : undefined;
   }
 
-  // Write a file by path
+  // Async version for WASM backend
+  async readFileAsync(path: string): Promise<string | undefined> {
+    if (this.useWasmBackend) {
+      return await wasmVFSBridge.readFile(path);
+    }
+
+    return this.readFile(path);
+  }
+
+  // Write a file by path - WASM aware
   writeFile(path: string, content: string): void {
+    if (this.useWasmBackend) {
+      // For WASM backend, we'll need an async version
+      console.warn(
+        "writeFile called on WASM backend - use writeFileAsync instead"
+      );
+      wasmVFSBridge.writeFile(path, content).catch(console.error);
+      return;
+    }
+
     const file = this.findItemByPath(path);
     if (file && file.type === "file") {
       file.content = content;
     }
   }
 
-  // List directory contents
+  // Async version for WASM backend
+  async writeFileAsync(path: string, content: string): Promise<boolean> {
+    if (this.useWasmBackend) {
+      return await wasmVFSBridge.writeFile(path, content);
+    }
+
+    this.writeFile(path, content);
+    return true;
+  }
+
+  // List directory contents - WASM aware
   listDir(path: string): FileSystemItem[] {
+    if (this.useWasmBackend) {
+      console.warn("listDir called on WASM backend - use listDirAsync instead");
+    }
+
     const dir = this.findItemByPath(path);
     return dir && dir.type === "folder" && dir.children ? dir.children : [];
+  }
+
+  // Async version for WASM backend
+  async listDirAsync(path: string): Promise<FileSystemItem[]> {
+    if (this.useWasmBackend) {
+      return await wasmVFSBridge.listDirectory(path);
+    }
+
+    return this.listDir(path);
   }
 
   // Delete a file or folder (not implemented)
@@ -137,6 +332,36 @@ export class VirtualFS {
     }
   }
 
+  // Async version for WASM backend
+  public async addItemsAsync(
+    path: string[],
+    items: FileSystemItem[]
+  ): Promise<void> {
+    if (this.useWasmBackend) {
+      const basePath = this.vfsPathToWasmPath(path);
+
+      for (const item of items) {
+        const itemPath = `${basePath}/${item.name}`.replace(/\/+/g, "/");
+
+        if (item.type === "folder") {
+          await wasmVFSBridge.createDirectory(itemPath);
+
+          // Recursively add children
+          if (item.children) {
+            for (const child of item.children) {
+              await this.syncItemToWasm(child, itemPath);
+            }
+          }
+        } else if (item.type === "file" && item.content) {
+          await wasmVFSBridge.writeFile(itemPath, item.content);
+        }
+      }
+    }
+
+    // Always update in-memory structure
+    this.addItems(path, items);
+  }
+
   // Rename an item at a specific path
   public renameItem(path: string[], id: string, newName: string): void {
     const target = this.findItemByPathArray(path);
@@ -148,12 +373,62 @@ export class VirtualFS {
     }
   }
 
+  // Async version for WASM backend
+  public async renameItemAsync(
+    path: string[],
+    id: string,
+    newName: string
+  ): Promise<void> {
+    if (this.useWasmBackend) {
+      const target = this.findItemByPathArray(path);
+      if (target && target.type === "folder" && target.children) {
+        const item = target.children.find((c) => c.id === id);
+        if (item) {
+          const basePath = this.vfsPathToWasmPath(path);
+          const oldPath = `${basePath}/${item.name}`.replace(/\/+/g, "/");
+          const newPath = `${basePath}/${newName}`.replace(/\/+/g, "/");
+
+          // For now, we'll implement this as delete + create
+          // A proper rename operation would be better but requires more WASM API
+          if (item.type === "file" && item.content) {
+            await wasmVFSBridge.writeFile(newPath, item.content);
+            await wasmVFSBridge.delete(oldPath);
+          } else if (item.type === "folder") {
+            // For folders, we'd need recursive copy + delete
+            console.warn("Folder rename in WASM not fully implemented");
+          }
+        }
+      }
+    }
+
+    // Always update in-memory structure
+    this.renameItem(path, id, newName);
+  }
+
   // Delete an item at a specific path
   public deleteItem(path: string[], id: string): void {
     const target = this.findItemByPathArray(path);
     if (target && target.type === "folder" && target.children) {
       target.children = target.children.filter((c) => c.id !== id);
     }
+  }
+
+  // Async version for WASM backend
+  public async deleteItemAsync(path: string[], id: string): Promise<void> {
+    if (this.useWasmBackend) {
+      const target = this.findItemByPathArray(path);
+      if (target && target.type === "folder" && target.children) {
+        const item = target.children.find((c) => c.id === id);
+        if (item) {
+          const basePath = this.vfsPathToWasmPath(path);
+          const itemPath = `${basePath}/${item.name}`.replace(/\/+/g, "/");
+          await wasmVFSBridge.delete(itemPath);
+        }
+      }
+    }
+
+    // Always update in-memory structure
+    this.deleteItem(path, id);
   }
 
   // Move an item from one path to another
@@ -176,6 +451,46 @@ export class VirtualFS {
     }
   }
 
+  // Async version for WASM backend
+  public async moveItemAsync(
+    fromPath: string[],
+    id: string,
+    toPath: string[]
+  ): Promise<void> {
+    if (this.useWasmBackend) {
+      const source = this.findItemByPathArray(fromPath);
+      const destination = this.findItemByPathArray(toPath);
+
+      if (
+        source &&
+        source.type === "folder" &&
+        source.children &&
+        destination &&
+        destination.type === "folder"
+      ) {
+        const item = source.children.find((c) => c.id === id);
+        if (item) {
+          const fromBasePath = this.vfsPathToWasmPath(fromPath);
+          const toBasePath = this.vfsPathToWasmPath(toPath);
+          const oldPath = `${fromBasePath}/${item.name}`.replace(/\/+/g, "/");
+          const newPath = `${toBasePath}/${item.name}`.replace(/\/+/g, "/");
+
+          // For now, implement as copy + delete
+          if (item.type === "file" && item.content) {
+            await wasmVFSBridge.writeFile(newPath, item.content);
+            await wasmVFSBridge.delete(oldPath);
+          } else if (item.type === "folder") {
+            // For folders, we'd need recursive copy + delete
+            console.warn("Folder move in WASM not fully implemented");
+          }
+        }
+      }
+    }
+
+    // Always update in-memory structure
+    this.moveItem(fromPath, id, toPath);
+  }
+
   // Update file content at a specific path
   public updateFileContent(path: string[], id: string, content: string): void {
     const target = this.findItemByPathArray(path);
@@ -187,7 +502,38 @@ export class VirtualFS {
     }
   }
 
-  // Helper: find item by path array (used by Zustand store)
+  // Async version for WASM backend
+  public async updateFileContentAsync(
+    path: string[],
+    id: string,
+    content: string
+  ): Promise<void> {
+    if (this.useWasmBackend) {
+      const target = this.findItemByPathArray(path);
+      if (target && target.type === "folder" && target.children) {
+        const file = target.children.find((c) => c.id === id);
+        if (file && file.type === "file") {
+          const basePath = this.vfsPathToWasmPath(path);
+          const filePath = `${basePath}/${file.name}`.replace(/\/+/g, "/");
+          await wasmVFSBridge.writeFile(filePath, content);
+        }
+      }
+    }
+
+    // Always update in-memory structure
+    this.updateFileContent(path, id, content);
+  }
+
+  // Helper to convert VFS path array to WASM filesystem path
+  private vfsPathToWasmPath(path: string[]): string {
+    if (path.length <= 1) return "/home/user";
+
+    const vfsPath = path.slice(1).join("/");
+    if (vfsPath === "Desktop") return "/home/user/Desktop";
+    if (vfsPath === "Documents") return "/home/user/Documents";
+    if (vfsPath === "Downloads") return "/home/user/Downloads";
+    return `/home/user/${vfsPath}`;
+  }
   private findItemByPathArray(path: string[]): FileSystemItem | undefined {
     if (path.length === 1 && path[0] === "root") {
       const rootItem: FileSystemItem = {

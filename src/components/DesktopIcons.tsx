@@ -1,21 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { DesktopShortcut, FileSystemItem } from '@/plugins/apps/file-explorer/types/fileSystem';
 import {
-  DesktopShortcut,
-  FileSystemItem,
-} from "@/plugins/apps/file-explorer/types/fileSystem";
-import {
-  createDesktopCopy,
-  createDesktopCopyWithUniqueName,
-  generateUniqueFileName,
-  getAppForFileExtension,
-  getFileIcon,
-} from "@/plugins/apps/file-explorer/utils/fileUtils";
-import { eventBus } from "@/plugins/EventBus";
-import { useFileSystemStore } from "@/store/fileSystem";
-import { getAppLaunchUrl } from "@/utils/url";
+    createDesktopCopy, createDesktopCopyWithUniqueName, generateUniqueFileName,
+    getAppForFileExtension, getFileIcon
+} from '@/plugins/apps/file-explorer/utils/fileUtils';
+import { eventBus } from '@/plugins/EventBus';
+import { useFileSystemStore } from '@/store/fileSystem';
+import { getAppLaunchUrl } from '@/utils/url';
 
-import { usePlugins } from "../plugins/PluginContext";
+import { usePlugins } from '../plugins/PluginContext';
 
 interface DesktopIconsProps {
   openWindow: (id: string, initFromUrl?: string) => void;
@@ -66,7 +60,6 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           (item.id === "Desktop" || item.id === "desktop") &&
           item.type === "folder"
       );
-
       if (!hasDesktop) {
         console.log("[DesktopIcons] Desktop folder not found, creating it...");
         const desktopFolder: FileSystemItem = {
@@ -75,7 +68,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           type: "folder",
           children: [],
         };
-        addItems(["root"], [desktopFolder]);
+        await addItems(["root"], [desktopFolder]);
       }
 
       console.log("[DesktopIcons] VFS initialized");
@@ -234,29 +227,31 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       items.map((item) => ({ id: item.id, name: item.name, type: item.type }))
     );
     return items;
-  }, [desktopFolder, refreshTrigger]);
-
+  }, [desktopFolder]);
   // Helper function to get shortcut icon
-  const getShortcutIcon = (shortcut: DesktopShortcut): React.ReactNode => {
-    if (shortcut.iconType === "plugin" && shortcut.icon) {
-      // Get icon from plugin manifest
-      const plugin = loadedPlugins.find((p) => p.id === shortcut.icon);
-      return plugin?.manifest.icon || getDefaultIcon(shortcut.name);
-    } else if (shortcut.iconType === "url" && shortcut.icon) {
-      // Use image URL
-      return (
-        <img src={shortcut.icon} className="w-8 h-8" alt={shortcut.name} />
-      );
-    } else if (shortcut.iconType === "file" && shortcut.icon) {
-      // Use file from public folder or VFS
-      const iconSrc = shortcut.icon.startsWith("/")
-        ? shortcut.icon
-        : `/icons/${shortcut.icon}`;
-      return <img src={iconSrc} className="w-8 h-8" alt={shortcut.name} />;
-    } else {
-      return getDefaultIcon(shortcut.name);
-    }
-  };
+  const getShortcutIcon = useCallback(
+    (shortcut: DesktopShortcut): React.ReactNode => {
+      if (shortcut.iconType === "plugin" && shortcut.icon) {
+        // Get icon from plugin manifest
+        const plugin = loadedPlugins.find((p) => p.id === shortcut.icon);
+        return plugin?.manifest.icon || getDefaultIcon(shortcut.name);
+      } else if (shortcut.iconType === "url" && shortcut.icon) {
+        // Use image URL
+        return (
+          <img src={shortcut.icon} className="w-8 h-8" alt={shortcut.name} />
+        );
+      } else if (shortcut.iconType === "file" && shortcut.icon) {
+        // Use file from public folder or VFS
+        const iconSrc = shortcut.icon.startsWith("/")
+          ? shortcut.icon
+          : `/icons/${shortcut.icon}`;
+        return <img src={iconSrc} className="w-8 h-8" alt={shortcut.name} />;
+      } else {
+        return getDefaultIcon(shortcut.name);
+      }
+    },
+    [loadedPlugins]
+  );
 
   const getDefaultIcon = (name: string) => (
     <div className="h-8 w-8 bg-blue-500 rounded flex items-center justify-center text-white text-xs">
@@ -318,7 +313,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
 
     console.log("[DesktopIcons] Final processed items count:", items.length);
     return items;
-  }, [desktopItems, loadedPlugins, refreshTrigger]);
+  }, [desktopItems, getShortcutIcon]);
 
   // Handle double-click on desktop items
   const handleItemDoubleClick = async (item: ProcessedDesktopItem) => {
@@ -447,9 +442,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
     }
     setContextMenu(null);
   };
-
   // Delete item from desktop
-  const deleteFromDesktop = (item: ProcessedDesktopItem) => {
+  const deleteFromDesktop = async (item: ProcessedDesktopItem) => {
     // Determine the correct Desktop path
     const desktopPath =
       desktopFolder?.id === "Desktop"
@@ -460,7 +454,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       desktopPath
     );
 
-    deleteItem(desktopPath, item.id);
+    await deleteItem(desktopPath, item.id);
     console.log(`[DesktopIcons] Deleted ${item.displayName} from desktop`);
     setContextMenu(null);
   };
@@ -590,10 +584,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           const desktopItem = createDesktopCopyWithUniqueName(
             draggedItem,
             desktopItems
-          );
-
-          // Add to Desktop folder using correct path
-          addItems(desktopPath, [desktopItem]);
+          ); // Add to Desktop folder using correct path
+          await addItems(desktopPath, [desktopItem]);
           console.log(
             `[DesktopIcons] Copied ${draggedItem.name} to desktop as ${desktopItem.name} using path:`,
             desktopPath
@@ -658,7 +650,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           found.item,
           desktopItems
         );
-        addItems(desktopPath, [desktopItem]);
+        await addItems(desktopPath, [desktopItem]);
         console.log(
           `[DesktopIcons] Copied ${found.item.name} to desktop as ${desktopItem.name} using fallback method`
         );
@@ -723,10 +715,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
           console.log(
             `[DesktopIcons] Generated unique name: ${file.name} -> ${uniqueName}`
           );
-        }
-
-        // Add files directly to Desktop folder using correct path
-        addItems(desktopPath, newFiles);
+        } // Add files directly to Desktop folder using correct path
+        await addItems(desktopPath, newFiles);
         console.log(
           `[DesktopIcons] Added ${newFiles.length} file(s) to desktop using path:`,
           desktopPath
@@ -746,9 +736,8 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
     setRefreshTrigger((prev) => prev + 1);
     console.log("[DesktopIcons] VFS force refreshed");
   };
-
   // Create default desktop shortcuts
-  const createDefaultShortcuts = () => {
+  const createDefaultShortcuts = async () => {
     console.log("[DesktopIcons] Creating default desktop shortcuts...");
 
     const shortcuts = [
@@ -790,16 +779,14 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       size: JSON.stringify(shortcut, null, 2).length,
     }));
 
-    addItems(["root", "Desktop"], shortcutFiles);
+    await addItems(["root", "Desktop"], shortcutFiles);
     console.log(
       "[DesktopIcons] Created",
       shortcutFiles.length,
       "default shortcuts"
     );
-  };
-
-  // Test function to create a test file directly
-  const createTestFile = () => {
+  }; // Test function to create a test file directly
+  const createTestFile = async () => {
     console.log("[DesktopIcons] Creating test file...");
     const desktopPath =
       desktopFolder?.id === "Desktop"
@@ -814,8 +801,85 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
       content: "This is a test file!",
     };
 
-    addItems(desktopPath, [testFile]);
+    await addItems(desktopPath, [testFile]);
     console.log("[DesktopIcons] Created test file using path:", desktopPath);
+  };
+  // Test WASM VFS integration
+  const testWasmVFS = async () => {
+    console.log("[DesktopIcons] Testing WASM VFS integration...");
+
+    // Import virtualFs to check status
+    const { virtualFs } = await import("@/utils/virtual-fs");
+
+    console.log("WASM backend enabled:", virtualFs.isWasmBackendEnabled());
+    console.log("VFS initialized:", virtualFs.isInitialized());
+
+    // Get current VFS state
+    const rootFS = virtualFs.getRootFileSystemItem();
+    console.log("Current VFS root:", rootFS);
+    console.log(
+      "Root children:",
+      rootFS.children?.map((item) => ({
+        name: item.name,
+        type: item.type,
+        hasChildren: !!(item.children && item.children.length > 0),
+      }))
+    );
+
+    if (virtualFs.isWasmBackendEnabled()) {
+      console.log("✅ WASM VFS is enabled");
+
+      // Try manual sync
+      console.log("🔄 Triggering manual sync...");
+      try {
+        await virtualFs.manualSyncToWasm();
+        console.log("✅ Manual sync completed");
+      } catch (error) {
+        console.error("❌ Manual sync failed:", error);
+      }
+
+      // Now try creating a test file
+      const testContent = `WASM VFS Test File
+Created at: ${new Date().toISOString()}
+This file should appear in both desktop and terminal!`;
+
+      try {
+        console.log("📝 Creating test file in WASM...");
+        const success = await virtualFs.writeFileAsync(
+          "/home/user/Desktop/wasm-test.txt",
+          testContent
+        );
+        console.log("WASM file write result:", success);
+
+        // Also add to in-memory VFS for UI consistency
+        const testFile: FileSystemItem = {
+          id: `wasm_test_${Date.now()}`,
+          name: "wasm-test.txt",
+          type: "file",
+          size: testContent.length,
+          content: testContent,
+        };
+
+        const desktopPath = ["root", "Desktop"];
+        await addItems(desktopPath, [testFile]);
+
+        console.log("✅ Test file created in both WASM and memory VFS");
+      } catch (error) {
+        console.error("❌ Failed to write WASM test file:", error);
+      }
+    } else {
+      console.log("❌ WASM VFS is not enabled");
+
+      // Try to see why it's not enabled
+      console.log("🔍 Checking WASM kernel state...");
+      try {
+        const { useWasmKernel } = await import("@/hooks/useWasmKernel");
+        // We can't call the hook here, but we can check other things
+        console.log("WASM kernel hook imported successfully");
+      } catch (error) {
+        console.error("Failed to import WASM kernel hook:", error);
+      }
+    }
   };
 
   // Mouse event handlers for debugging
@@ -893,7 +957,7 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
               ?.filter((item) => item.type === "folder")
               .map((f) => f.id)
               .join(", ")}
-          </div>
+          </div>{" "}
           <div className="mt-2 space-x-2">
             <button
               onClick={handleForceRefresh}
@@ -912,6 +976,12 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
               className="px-2 py-1 bg-purple-500 text-white rounded text-xs"
             >
               Create Test File
+            </button>
+            <button
+              onClick={testWasmVFS}
+              className="px-2 py-1 bg-orange-500 text-white rounded text-xs"
+            >
+              Test WASM VFS
             </button>
           </div>
         </div>
@@ -969,10 +1039,12 @@ const DesktopIcons: React.FC<DesktopIconsProps> = ({ openWindow }) => {
             }}
           >
             Open Desktop Folder
-          </div>
+          </div>{" "}
           <div
             className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-            onClick={() => deleteFromDesktop(contextMenu.item)}
+            onClick={() => {
+              deleteFromDesktop(contextMenu.item);
+            }}
           >
             Delete
           </div>

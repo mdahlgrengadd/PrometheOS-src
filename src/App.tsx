@@ -6,6 +6,7 @@ import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import DialogListener from '@/components/DialogListener';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
+import WasmVFSInitializer from '@/components/WasmVFSInitializer';
 import { ThemeProvider } from '@/lib/ThemeProvider';
 import { WasmKernelProvider } from '@/lib/wasm/WasmKernelProvider';
 
@@ -31,7 +32,9 @@ function App() {
 
   return (
     <AppProviders>
+      {" "}
       <Router>
+        <WasmVFSInitializer />
         <Suspense
           fallback={
             <div
