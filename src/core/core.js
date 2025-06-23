@@ -1,9 +1,7 @@
-
 var WasmCore = (() => {
   var _scriptName = typeof document != 'undefined' ? document.currentScript?.src : undefined;
-  if (typeof __filename != 'undefined') _scriptName = _scriptName || __filename;
   return (
-function(moduleArg = {}) {
+async function(moduleArg = {}) {
   var moduleRtn;
 
 // include: shell.js
@@ -22,13 +20,6 @@ function(moduleArg = {}) {
 // can continue to use Module afterwards as well.
 var Module = moduleArg;
 
-// Set up the promise that indicates the Module is initialized
-var readyPromiseResolve, readyPromiseReject;
-var readyPromise = new Promise((resolve, reject) => {
-  readyPromiseResolve = resolve;
-  readyPromiseReject = reject;
-});
-
 // Determine the runtime environment we are in. You can customize this by
 // setting the ENVIRONMENT setting at compile time (see settings.js).
 
@@ -37,33 +28,25 @@ var ENVIRONMENT_IS_WEB = typeof window == 'object';
 var ENVIRONMENT_IS_WORKER = typeof WorkerGlobalScope != 'undefined';
 // N.b. Electron.js environment is simultaneously a NODE-environment, but
 // also a web environment.
-var ENVIRONMENT_IS_NODE = typeof process == 'object' && typeof process.versions == 'object' && typeof process.versions.node == 'string' && process.type != 'renderer';
+var ENVIRONMENT_IS_NODE = typeof process == 'object' && process.versions?.node && process.type != 'renderer';
 var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIRONMENT_IS_WORKER;
-
-if (ENVIRONMENT_IS_NODE) {
-  // `require()` is no-op in an ESM module, use `createRequire()` to construct
-  // the require()` function.  This is only necessary for multi-environment
-  // builds, `-sENVIRONMENT=node` emits a static import declaration instead.
-  // TODO: Swap all `require()`'s with `import()`'s?
-
-}
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
 
-
-// Sometimes an existing Module object exists with properties
-// meant to overwrite the default module functionality. Here
-// we collect those properties and reapply _after_ we configure
-// the current environment's defaults to avoid having to be so
-// defensive during initialization.
-var moduleOverrides = Object.assign({}, Module);
 
 var arguments_ = [];
 var thisProgram = './this.program';
 var quit_ = (status, toThrow) => {
   throw toThrow;
 };
+
+if (typeof __filename != 'undefined') { // Node
+  _scriptName = __filename;
+} else
+if (ENVIRONMENT_IS_WORKER) {
+  _scriptName = self.location.href;
+}
 
 // `/` should be present at the end if `scriptDirectory` is not empty
 var scriptDirectory = '';
@@ -82,37 +65,29 @@ if (ENVIRONMENT_IS_NODE) {
   // These modules will usually be used on Node.js. Load them eagerly to avoid
   // the complexity of lazy-loading.
   var fs = require('fs');
-  var nodePath = require('path');
 
   scriptDirectory = __dirname + '/';
 
 // include: node_shell_read.js
 readBinary = (filename) => {
-  // We need to re-wrap `file://` strings to URLs. Normalizing isn't
-  // necessary in that case, the path should already be absolute.
-  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
+  // We need to re-wrap `file://` strings to URLs.
+  filename = isFileURI(filename) ? new URL(filename) : filename;
   var ret = fs.readFileSync(filename);
   return ret;
 };
 
-readAsync = (filename, binary = true) => {
+readAsync = async (filename, binary = true) => {
   // See the comment in the `readBinary` function.
-  filename = isFileURI(filename) ? new URL(filename) : nodePath.normalize(filename);
-  return new Promise((resolve, reject) => {
-    fs.readFile(filename, binary ? undefined : 'utf8', (err, data) => {
-      if (err) reject(err);
-      else resolve(binary ? data.buffer : data);
-    });
-  });
+  filename = isFileURI(filename) ? new URL(filename) : filename;
+  var ret = fs.readFileSync(filename, binary ? undefined : 'utf8');
+  return ret;
 };
 // end include: node_shell_read.js
-  if (!Module['thisProgram'] && process.argv.length > 1) {
+  if (process.argv.length > 1) {
     thisProgram = process.argv[1].replace(/\\/g, '/');
   }
 
   arguments_ = process.argv.slice(2);
-
-  // MODULARIZE will export the module in the proper place outside, we don't need to export here
 
   quit_ = (status, toThrow) => {
     process.exitCode = status;
@@ -125,26 +100,11 @@ readAsync = (filename, binary = true) => {
 // Node.js workers are detected as a combination of ENVIRONMENT_IS_WORKER and
 // ENVIRONMENT_IS_NODE.
 if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
-  if (ENVIRONMENT_IS_WORKER) { // Check worker, not web, since window could be polyfilled
-    scriptDirectory = self.location.href;
-  } else if (typeof document != 'undefined' && document.currentScript) { // web
-    scriptDirectory = document.currentScript.src;
-  }
-  // When MODULARIZE, this JS may be executed later, after document.currentScript
-  // is gone, so we saved it, and we use it here instead of any other info.
-  if (_scriptName) {
-    scriptDirectory = _scriptName;
-  }
-  // blob urls look like blob:http://site.com/etc/etc and we cannot infer anything from them.
-  // otherwise, slice off the final part of the url to find the script directory.
-  // if scriptDirectory does not contain a slash, lastIndexOf will return -1,
-  // and scriptDirectory will correctly be replaced with an empty string.
-  // If scriptDirectory contains a query (starting with ?) or a fragment (starting with #),
-  // they are removed because they could contain a slash.
-  if (scriptDirectory.startsWith('blob:')) {
-    scriptDirectory = '';
-  } else {
-    scriptDirectory = scriptDirectory.substr(0, scriptDirectory.replace(/[?#].*/, '').lastIndexOf('/')+1);
+  try {
+    scriptDirectory = new URL('.', _scriptName).href; // includes trailing slash
+  } catch {
+    // Must be a `blob:` or `data:` URL (e.g. `blob:http://site.com/etc/etc`), we cannot
+    // infer anything from them.
   }
 
   {
@@ -159,7 +119,7 @@ if (ENVIRONMENT_IS_WORKER) {
     };
   }
 
-  readAsync = (url) => {
+  readAsync = async (url) => {
     // Fetch has some additional restrictions over XHR, like it can't be used on a file:// url.
     // See https://github.com/github/fetch/pull/92#issuecomment-140665932
     // Cordova or Electron apps are typically loaded from a file:// url.
@@ -180,13 +140,11 @@ if (ENVIRONMENT_IS_WORKER) {
         xhr.send(null);
       });
     }
-    return fetch(url, { credentials: 'same-origin' })
-      .then((response) => {
-        if (response.ok) {
-          return response.arrayBuffer();
-        }
-        return Promise.reject(new Error(response.status + ' : ' + response.url));
-      })
+    var response = await fetch(url, { credentials: 'same-origin' });
+    if (response.ok) {
+      return response.arrayBuffer();
+    }
+    throw new Error(response.status + ' : ' + response.url);
   };
 // end include: web_or_worker_shell_read.js
   }
@@ -194,25 +152,9 @@ if (ENVIRONMENT_IS_WORKER) {
 {
 }
 
-var out = Module['print'] || console.log.bind(console);
-var err = Module['printErr'] || console.error.bind(console);
+var out = console.log.bind(console);
+var err = console.error.bind(console);
 
-// Merge back in the overrides
-Object.assign(Module, moduleOverrides);
-// Free the object hierarchy contained in the overrides, this lets the GC
-// reclaim data used.
-moduleOverrides = null;
-
-// Emit code to handle expected values on the Module object. This applies Module.x
-// to the proper local x. This has two benefits: first, we only emit it if it is
-// expected to arrive, and second, by using a local everywhere else that can be
-// minified.
-
-if (Module['arguments']) arguments_ = Module['arguments'];
-
-if (Module['thisProgram']) thisProgram = Module['thisProgram'];
-
-// perform assertions in shell.js after we set up out() and err(), as otherwise if an assertion fails it cannot print the message
 // end include: shell.js
 
 // include: preamble.js
@@ -226,37 +168,9 @@ if (Module['thisProgram']) thisProgram = Module['thisProgram'];
 // An online HTML version (which may be of a different version of Emscripten)
 //    is up at http://kripken.github.io/emscripten-site/docs/api_reference/preamble.js.html
 
-var wasmBinary = Module['wasmBinary'];
+var wasmBinary;
 
-// include: base64Utils.js
-// Converts a string of base64 into a byte array (Uint8Array).
-function intArrayFromBase64(s) {
-  if (typeof ENVIRONMENT_IS_NODE != 'undefined' && ENVIRONMENT_IS_NODE) {
-    var buf = Buffer.from(s, 'base64');
-    return new Uint8Array(buf.buffer, buf.byteOffset, buf.length);
-  }
-
-  var decoded = atob(s);
-  var bytes = new Uint8Array(decoded.length);
-  for (var i = 0 ; i < decoded.length ; ++i) {
-    bytes[i] = decoded.charCodeAt(i);
-  }
-  return bytes;
-}
-
-// If filename is a base64 data URI, parses and returns data (Buffer on node,
-// Uint8Array otherwise). If filename is not a base64 data URI, returns undefined.
-function tryParseAsDataURI(filename) {
-  if (!isDataURI(filename)) {
-    return;
-  }
-
-  return intArrayFromBase64(filename.slice(dataURIPrefix.length));
-}
-// end include: base64Utils.js
 // Wasm globals
-
-var wasmMemory;
 
 //========================================
 // Runtime essentials
@@ -285,9 +199,26 @@ function assert(condition, text) {
   }
 }
 
+/**
+ * Indicates whether filename is delivered via file protocol (as opposed to http/https)
+ * @noinline
+ */
+var isFileURI = (filename) => filename.startsWith('file://');
+
+// include: runtime_common.js
+// include: runtime_stack_check.js
+// end include: runtime_stack_check.js
+// include: runtime_exceptions.js
+// end include: runtime_exceptions.js
+// include: runtime_debug.js
+// end include: runtime_debug.js
+var readyPromiseResolve, readyPromiseReject;
+
 // Memory management
 
-var HEAP,
+var wasmMemory;
+
+var
 /** @type {!Int8Array} */
   HEAP8,
 /** @type {!Uint8Array} */
@@ -305,30 +236,35 @@ var HEAP,
 /** @type {!Float64Array} */
   HEAPF64;
 
-// include: runtime_shared.js
-function updateMemoryViews() {
-  var b = wasmMemory.buffer;
-  Module['HEAP8'] = HEAP8 = new Int8Array(b);
-  Module['HEAP16'] = HEAP16 = new Int16Array(b);
-  Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
-  Module['HEAPU16'] = HEAPU16 = new Uint16Array(b);
-  Module['HEAP32'] = HEAP32 = new Int32Array(b);
-  Module['HEAPU32'] = HEAPU32 = new Uint32Array(b);
-  Module['HEAPF32'] = HEAPF32 = new Float32Array(b);
-  Module['HEAPF64'] = HEAPF64 = new Float64Array(b);
-}
-
-// end include: runtime_shared.js
-// include: runtime_stack_check.js
-// end include: runtime_stack_check.js
-var __ATPRERUN__  = []; // functions called before the runtime is initialized
-var __ATINIT__    = []; // functions called during startup
-var __ATMAIN__    = []; // functions called when main() is to be run
-var __ATEXIT__    = []; // functions called during shutdown
-var __ATPOSTRUN__ = []; // functions called after the main() is called
+// BigInt64Array type is not correctly defined in closure
+var
+/** not-@type {!BigInt64Array} */
+  HEAP64,
+/* BigUint64Array type is not correctly defined in closure
+/** not-@type {!BigUint64Array} */
+  HEAPU64;
 
 var runtimeInitialized = false;
 
+
+
+function updateMemoryViews() {
+  var b = wasmMemory.buffer;
+  HEAP8 = new Int8Array(b);
+  HEAP16 = new Int16Array(b);
+  HEAPU8 = new Uint8Array(b);
+  HEAPU16 = new Uint16Array(b);
+  HEAP32 = new Int32Array(b);
+  HEAPU32 = new Uint32Array(b);
+  HEAPF32 = new Float32Array(b);
+  HEAPF64 = new Float64Array(b);
+  HEAP64 = new BigInt64Array(b);
+  HEAPU64 = new BigUint64Array(b);
+}
+
+// include: memoryprofiler.js
+// end include: memoryprofiler.js
+// end include: runtime_common.js
 function preRun() {
   if (Module['preRun']) {
     if (typeof Module['preRun'] == 'function') Module['preRun'] = [Module['preRun']];
@@ -336,22 +272,27 @@ function preRun() {
       addOnPreRun(Module['preRun'].shift());
     }
   }
-  callRuntimeCallbacks(__ATPRERUN__);
+  // Begin ATPRERUNS hooks
+  callRuntimeCallbacks(onPreRuns);
+  // End ATPRERUNS hooks
 }
 
 function initRuntime() {
   runtimeInitialized = true;
 
-  
-  callRuntimeCallbacks(__ATINIT__);
+  // No ATINITS hooks
+
+  wasmExports['__wasm_call_ctors']();
+
+  // No ATPOSTCTORS hooks
 }
 
 function preMain() {
-  
-  callRuntimeCallbacks(__ATMAIN__);
+  // No ATMAINS hooks
 }
 
 function postRun() {
+   // PThreads reuse the runtime from the main thread.
 
   if (Module['postRun']) {
     if (typeof Module['postRun'] == 'function') Module['postRun'] = [Module['postRun']];
@@ -360,38 +301,11 @@ function postRun() {
     }
   }
 
-  callRuntimeCallbacks(__ATPOSTRUN__);
+  // Begin ATPOSTRUNS hooks
+  callRuntimeCallbacks(onPostRuns);
+  // End ATPOSTRUNS hooks
 }
 
-function addOnPreRun(cb) {
-  __ATPRERUN__.unshift(cb);
-}
-
-function addOnInit(cb) {
-  __ATINIT__.unshift(cb);
-}
-
-function addOnPreMain(cb) {
-  __ATMAIN__.unshift(cb);
-}
-
-function addOnExit(cb) {
-}
-
-function addOnPostRun(cb) {
-  __ATPOSTRUN__.unshift(cb);
-}
-
-// include: runtime_math.js
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/imul
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/fround
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc
-
-// end include: runtime_math.js
 // A counter of dependencies for calling run(). If we need to
 // do asynchronous work before running, increment this and
 // decrement it. Incrementing must happen in a place like
@@ -400,12 +314,7 @@ function addOnPostRun(cb) {
 // it happens right before run - run will be postponed until
 // the dependencies are met.
 var runDependencies = 0;
-var runDependencyWatcher = null;
 var dependenciesFulfilled = null; // overridden to take different actions when all run dependencies are fulfilled
-
-function getUniqueRunDependency(id) {
-  return id;
-}
 
 function addRunDependency(id) {
   runDependencies++;
@@ -420,10 +329,6 @@ function removeRunDependency(id) {
   Module['monitorRunDependencies']?.(runDependencies);
 
   if (runDependencies == 0) {
-    if (runDependencyWatcher !== null) {
-      clearInterval(runDependencyWatcher);
-      runDependencyWatcher = null;
-    }
     if (dependenciesFulfilled) {
       var callback = dependenciesFulfilled;
       dependenciesFulfilled = null;
@@ -461,42 +366,18 @@ function abort(what) {
   /** @suppress {checkTypes} */
   var e = new WebAssembly.RuntimeError(what);
 
-  readyPromiseReject(e);
+  readyPromiseReject?.(e);
   // Throw the error whether or not MODULARIZE is set because abort is used
   // in code paths apart from instantiation where an exception is expected
   // to be thrown when abort is called.
   throw e;
 }
 
-// include: memoryprofiler.js
-// end include: memoryprofiler.js
-// include: URIUtils.js
-// Prefix of data URIs emitted by SINGLE_FILE and related options.
-var dataURIPrefix = 'data:application/octet-stream;base64,';
-
-/**
- * Indicates whether filename is a base64 data URI.
- * @noinline
- */
-var isDataURI = (filename) => filename.startsWith(dataURIPrefix);
-
-/**
- * Indicates whether filename is delivered via file protocol (as opposed to http/https)
- * @noinline
- */
-var isFileURI = (filename) => filename.startsWith('file://');
-// end include: URIUtils.js
-// include: runtime_exceptions.js
-// end include: runtime_exceptions.js
-function findWasmBinary() {
-    var f = 'core.wasm';
-    if (!isDataURI(f)) {
-      return locateFile(f);
-    }
-    return f;
-}
-
 var wasmBinaryFile;
+
+function findWasmBinary() {
+    return locateFile('core.wasm');
+}
 
 function getBinarySync(file) {
   if (file == wasmBinaryFile && wasmBinary) {
@@ -508,66 +389,59 @@ function getBinarySync(file) {
   throw 'both async and sync fetching of the wasm failed';
 }
 
-function getBinaryPromise(binaryFile) {
+async function getWasmBinary(binaryFile) {
   // If we don't have the binary yet, load it asynchronously using readAsync.
-  if (!wasmBinary
-      ) {
+  if (!wasmBinary) {
     // Fetch the binary using readAsync
-    return readAsync(binaryFile).then(
-      (response) => new Uint8Array(/** @type{!ArrayBuffer} */(response)),
-      // Fall back to getBinarySync if readAsync fails
-      () => getBinarySync(binaryFile)
-    );
+    try {
+      var response = await readAsync(binaryFile);
+      return new Uint8Array(response);
+    } catch {
+      // Fall back to getBinarySync below;
+    }
   }
 
   // Otherwise, getBinarySync should be able to get it synchronously
-  return Promise.resolve().then(() => getBinarySync(binaryFile));
+  return getBinarySync(binaryFile);
 }
 
-function instantiateArrayBuffer(binaryFile, imports, receiver) {
-  return getBinaryPromise(binaryFile).then((binary) => {
-    return WebAssembly.instantiate(binary, imports);
-  }).then(receiver, (reason) => {
+async function instantiateArrayBuffer(binaryFile, imports) {
+  try {
+    var binary = await getWasmBinary(binaryFile);
+    var instance = await WebAssembly.instantiate(binary, imports);
+    return instance;
+  } catch (reason) {
     err(`failed to asynchronously prepare wasm: ${reason}`);
 
     abort(reason);
-  });
+  }
 }
 
-function instantiateAsync(binary, binaryFile, imports, callback) {
-  if (!binary &&
-      typeof WebAssembly.instantiateStreaming == 'function' &&
-      !isDataURI(binaryFile) &&
+async function instantiateAsync(binary, binaryFile, imports) {
+  if (!binary && typeof WebAssembly.instantiateStreaming == 'function'
       // Don't use streaming for file:// delivered objects in a webview, fetch them synchronously.
-      !isFileURI(binaryFile) &&
+      && !isFileURI(binaryFile)
       // Avoid instantiateStreaming() on Node.js environment for now, as while
       // Node.js v18.1.0 implements it, it does not have a full fetch()
       // implementation yet.
       //
       // Reference:
       //   https://github.com/emscripten-core/emscripten/pull/16917
-      !ENVIRONMENT_IS_NODE &&
-      typeof fetch == 'function') {
-    return fetch(binaryFile, { credentials: 'same-origin' }).then((response) => {
-      // Suppress closure warning here since the upstream definition for
-      // instantiateStreaming only allows Promise<Repsponse> rather than
-      // an actual Response.
-      // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure is fixed.
-      /** @suppress {checkTypes} */
-      var result = WebAssembly.instantiateStreaming(response, imports);
-
-      return result.then(
-        callback,
-        function(reason) {
-          // We expect the most common failure cause to be a bad MIME type for the binary,
-          // in which case falling back to ArrayBuffer instantiation should work.
-          err(`wasm streaming compile failed: ${reason}`);
-          err('falling back to ArrayBuffer instantiation');
-          return instantiateArrayBuffer(binaryFile, imports, callback);
-        });
-    });
+      && !ENVIRONMENT_IS_NODE
+     ) {
+    try {
+      var response = fetch(binaryFile, { credentials: 'same-origin' });
+      var instantiationResult = await WebAssembly.instantiateStreaming(response, imports);
+      return instantiationResult;
+    } catch (reason) {
+      // We expect the most common failure cause to be a bad MIME type for the binary,
+      // in which case falling back to ArrayBuffer instantiation should work.
+      err(`wasm streaming compile failed: ${reason}`);
+      err('falling back to ArrayBuffer instantiation');
+      // fall back of instantiateArrayBuffer below
+    };
   }
-  return instantiateArrayBuffer(binaryFile, imports, callback);
+  return instantiateArrayBuffer(binaryFile, imports);
 }
 
 function getWasmImports() {
@@ -580,8 +454,7 @@ function getWasmImports() {
 
 // Create the wasm instance.
 // Receives the wasm imports, returns the exports.
-function createWasm() {
-  var info = getWasmImports();
+async function createWasm() {
   // Load the wasm module and create an instance of using native support in the JS engine.
   // handle a generated wasm instance, receiving its exports and
   // performing other necessary setup
@@ -597,8 +470,7 @@ function createWasm() {
     
     updateMemoryViews();
 
-    addOnInit(wasmExports['__wasm_call_ctors']);
-
+    assignWasmExports(wasmExports);
     removeRunDependency('wasm-instantiate');
     return wasmExports;
   }
@@ -611,8 +483,10 @@ function createWasm() {
     // receiveInstance() will swap in the exports (to Module.asm) so they can be called
     // TODO: Due to Closure regression https://github.com/google/closure-compiler/issues/3193, the above line no longer optimizes out down to the following line.
     // When the regression is fixed, can restore the above PTHREADS-enabled path.
-    receiveInstance(result['instance']);
+    return receiveInstance(result['instance']);
   }
+
+  var info = getWasmImports();
 
   // User shell pages can write their own Module.instantiateWasm = function(imports, successCallback) callback
   // to manually instantiate the Wasm module themselves. This allows pages to
@@ -621,30 +495,22 @@ function createWasm() {
   // Also pthreads and wasm workers initialize the wasm instance through this
   // path.
   if (Module['instantiateWasm']) {
-    try {
-      return Module['instantiateWasm'](info, receiveInstance);
-    } catch(e) {
-      err(`Module.instantiateWasm callback failed with error: ${e}`);
-        // If instantiation fails, reject the module ready promise.
-        readyPromiseReject(e);
-    }
+    return new Promise((resolve, reject) => {
+        Module['instantiateWasm'](info, (mod, inst) => {
+          resolve(receiveInstance(mod, inst));
+        });
+    });
   }
 
   wasmBinaryFile ??= findWasmBinary();
-
-  // If instantiation fails, reject the module ready promise.
-  instantiateAsync(wasmBinary, wasmBinaryFile, info, receiveInstantiationResult).catch(readyPromiseReject);
-  return {}; // no exports yet; we'll fill them in later
+  var result = await instantiateAsync(wasmBinary, wasmBinaryFile, info);
+  var exports = receiveInstantiationResult(result);
+  return exports;
 }
 
-// Globals used by JS i64 conversions (see makeSetValue)
-var tempDouble;
-var tempI64;
-
-// include: runtime_debug.js
-// end include: runtime_debug.js
-// === Body ===
 // end include: preamble.js
+
+// Begin JS library code
 
 
   class ExitStatus {
@@ -661,6 +527,29 @@ var tempI64;
         callbacks.shift()(Module);
       }
     };
+  var onPostRuns = [];
+  var addOnPostRun = (cb) => onPostRuns.push(cb);
+
+  var onPreRuns = [];
+  var addOnPreRun = (cb) => onPreRuns.push(cb);
+
+
+  var dynCalls = {
+  };
+  var dynCallLegacy = (sig, ptr, args) => {
+      sig = sig.replace(/p/g, 'i')
+      var f = dynCalls[sig];
+      return f(ptr, ...args);
+    };
+  var dynCall = (sig, ptr, args = [], promising = false) => {
+      var rtn = dynCallLegacy(sig, ptr, args);
+  
+      function convert(rtn) {
+        return rtn;
+      }
+  
+      return convert(rtn);
+    };
 
   
     /**
@@ -674,7 +563,7 @@ var tempI64;
       case 'i8': return HEAP8[ptr];
       case 'i16': return HEAP16[((ptr)>>1)];
       case 'i32': return HEAP32[((ptr)>>2)];
-      case 'i64': abort('to do getValue(i64) use WASM_BIGINT');
+      case 'i64': return HEAP64[((ptr)>>3)];
       case 'float': return HEAPF32[((ptr)>>2)];
       case 'double': return HEAPF64[((ptr)>>3)];
       case '*': return HEAPU32[((ptr)>>2)];
@@ -682,7 +571,7 @@ var tempI64;
     }
   }
 
-  var noExitRuntime = Module['noExitRuntime'] || true;
+  var noExitRuntime = true;
 
   
     /**
@@ -697,7 +586,7 @@ var tempI64;
       case 'i8': HEAP8[ptr] = value; break;
       case 'i16': HEAP16[((ptr)>>1)] = value; break;
       case 'i32': HEAP32[((ptr)>>2)] = value; break;
-      case 'i64': abort('to do setValue(i64) use WASM_BIGINT');
+      case 'i64': HEAP64[((ptr)>>3)] = BigInt(value); break;
       case 'float': HEAPF32[((ptr)>>2)] = value; break;
       case 'double': HEAPF64[((ptr)>>3)] = value; break;
       case '*': HEAPU32[((ptr)>>2)] = value; break;
@@ -709,11 +598,8 @@ var tempI64;
 
   var stackSave = () => _emscripten_stack_get_current();
 
-  var __abort_js = () => {
+  var __abort_js = () =>
       abort('');
-    };
-
-  var __emscripten_memcpy_js = (dest, src, num) => HEAPU8.copyWithin(dest, src, src + num);
 
   var runtimeKeepaliveCounter = 0;
   var __emscripten_runtime_keepalive_clear = () => {
@@ -864,18 +750,10 @@ var tempI64;
       var startIdx = outIdx;
       var endIdx = outIdx + maxBytesToWrite - 1; // -1 for string null terminator.
       for (var i = 0; i < str.length; ++i) {
-        // Gotcha: charCodeAt returns a 16-bit word that is a UTF-16 encoded code
-        // unit, not a Unicode code point of the character! So decode
-        // UTF16->UTF32->UTF8.
-        // See http://unicode.org/faq/utf_bom.html#utf16-3
         // For UTF8 byte structure, see http://en.wikipedia.org/wiki/UTF-8#Description
         // and https://www.ietf.org/rfc/rfc2279.txt
         // and https://tools.ietf.org/html/rfc3629
-        var u = str.charCodeAt(i); // possibly a lead surrogate
-        if (u >= 0xD800 && u <= 0xDFFF) {
-          var u1 = str.charCodeAt(++i);
-          u = 0x10000 + ((u & 0x3FF) << 10) | (u1 & 0x3FF);
-        }
+        var u = str.codePointAt(i);
         if (u <= 0x7F) {
           if (outIdx >= endIdx) break;
           heap[outIdx++] = u;
@@ -894,6 +772,9 @@ var tempI64;
           heap[outIdx++] = 0x80 | ((u >> 12) & 63);
           heap[outIdx++] = 0x80 | ((u >> 6) & 63);
           heap[outIdx++] = 0x80 | (u & 63);
+          // Gotcha: if codePoint is over 0xFFFF, it is represented as a surrogate pair in UTF-16.
+          // We need to manually skip over the second code unit for correct iteration.
+          i++;
         }
       }
       // Null-terminate the pointer to the buffer.
@@ -921,13 +802,14 @@ var tempI64;
       return wasmFS$backends[backend].getSize(file);
     };
 
-  var convertI32PairToI53Checked = (lo, hi) => {
-      return ((hi + 0x200000) >>> 0 < 0x400001 - !!lo) ? (lo >>> 0) + hi * 4294967296 : NaN;
-    };
-  function __wasmfs_jsimpl_read(backend,file,buffer,length,offset_low, offset_high) {
-    var offset = convertI32PairToI53Checked(offset_low, offset_high);
+  var INT53_MAX = 9007199254740992;
   
-    
+  var INT53_MIN = -9007199254740992;
+  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
+  function __wasmfs_jsimpl_read(backend, file, buffer, length, offset) {
+    offset = bigintToI53Checked(offset);
+  
+  
       if (!wasmFS$backends[backend].read) {
         return -28;
       }
@@ -935,14 +817,18 @@ var tempI64;
     ;
   }
 
-  var __wasmfs_jsimpl_set_size = (backend, file, size) => {
-      return wasmFS$backends[backend].setSize(file, size);
-    };
-
-  function __wasmfs_jsimpl_write(backend,file,buffer,length,offset_low, offset_high) {
-    var offset = convertI32PairToI53Checked(offset_low, offset_high);
+  function __wasmfs_jsimpl_set_size(backend, file, size) {
+    size = bigintToI53Checked(size);
   
-    
+  
+      return wasmFS$backends[backend].setSize(file, size);
+    ;
+  }
+
+  function __wasmfs_jsimpl_write(backend, file, buffer, length, offset) {
+    offset = bigintToI53Checked(offset);
+  
+  
       if (!wasmFS$backends[backend].write) {
         return -28;
       }
@@ -954,13 +840,13 @@ var tempI64;
   
   
   /** @type {function(string, boolean=, number=)} */
-  function intArrayFromString(stringy, dontAddNull, length) {
-    var len = length > 0 ? length : lengthBytesUTF8(stringy)+1;
-    var u8array = new Array(len);
-    var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
-    if (dontAddNull) u8array.length = numBytesWritten;
-    return u8array;
-  }
+  var intArrayFromString = (stringy, dontAddNull, length) => {
+      var len = length > 0 ? length : lengthBytesUTF8(stringy)+1;
+      var u8array = new Array(len);
+      var numBytesWritten = stringToUTF8Array(stringy, u8array, 0, u8array.length);
+      if (dontAddNull) u8array.length = numBytesWritten;
+      return u8array;
+    };
   var FS_stdin_getChar = () => {
       if (!FS_stdin_getChar_buffer.length) {
         var result = null;
@@ -1041,6 +927,7 @@ var tempI64;
       // so that undefined/NaN means Infinity)
       while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
   
+      // When using conditional TextDecoder, skip it for short strings as the overhead of the native call is not worth it.
       if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
         return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
       }
@@ -1177,47 +1064,22 @@ var tempI64;
         callUserCallback(func);
       }, timeout);
     };
-  var _emscripten_sleep = (ms) => {
-      // emscripten_sleep() does not return a value, but we still need a |return|
-      // here for stack switching support (ASYNCIFY=2). In that mode this function
-      // returns a Promise instead of nothing, and that Promise is what tells the
-      // wasm VM to pause the stack.
-      return Asyncify.handleSleep((wakeUp) => safeSetTimeout(wakeUp, ms));
-    };
+  var _emscripten_sleep = (ms) => Asyncify.handleSleep((wakeUp) => safeSetTimeout(wakeUp, ms));
   _emscripten_sleep.isAsync = true;
 
 
   var initRandomFill = () => {
-      if (typeof crypto == 'object' && typeof crypto['getRandomValues'] == 'function') {
-        // for modern web browsers
-        return (view) => crypto.getRandomValues(view);
-      } else
+      // This block is not needed on v19+ since crypto.getRandomValues is builtin
       if (ENVIRONMENT_IS_NODE) {
-        // for nodejs with or without crypto support included
-        try {
-          var crypto_module = require('crypto');
-          var randomFillSync = crypto_module['randomFillSync'];
-          if (randomFillSync) {
-            // nodejs with LTS crypto support
-            return (view) => crypto_module['randomFillSync'](view);
-          }
-          // very old nodejs with the original crypto API
-          var randomBytes = crypto_module['randomBytes'];
-          return (view) => (
-            view.set(randomBytes(view.byteLength)),
-            // Return the original view to match modern native implementations.
-            view
-          );
-        } catch (e) {
-          // nodejs doesn't have crypto support
-        }
+        var nodeCrypto = require('crypto');
+        return (view) => nodeCrypto.randomFillSync(view);
       }
-      // we couldn't find a proper implementation, as Math.random() is not suitable for /dev/random, see emscripten-core/emscripten/pull/7096
-      abort('initRandomDevice');
+  
+      return (view) => crypto.getRandomValues(view);
     };
   var randomFill = (view) => {
       // Lazily init on the first invocation.
-      return (randomFill = initRandomFill())(view);
+      (randomFill = initRandomFill())(view);
     };
   var _random_get = (buffer, size) => {
       randomFill(HEAPU8.subarray(buffer, buffer + size));
@@ -1266,7 +1128,7 @@ var tempI64;
       },
   normalize:(path) => {
         var isAbsolute = PATH.isAbs(path),
-            trailingSlash = path.substr(-1) === '/';
+            trailingSlash = path.slice(-1) === '/';
         // Normalize the path
         path = PATH.normalizeArray(path.split('/').filter((p) => !!p), !isAbsolute).join('/');
         if (!path && !isAbsolute) {
@@ -1287,19 +1149,11 @@ var tempI64;
         }
         if (dir) {
           // It has a dirname, strip trailing slash
-          dir = dir.substr(0, dir.length - 1);
+          dir = dir.slice(0, -1);
         }
         return root + dir;
       },
-  basename:(path) => {
-        // EMSCRIPTEN return '/'' for '/', not an empty string
-        if (path === '/') return '/';
-        path = PATH.normalize(path);
-        path = path.replace(/\/$/, "");
-        var lastSlash = path.lastIndexOf('/');
-        if (lastSlash === -1) return path;
-        return path.substr(lastSlash+1);
-      },
+  basename:(path) => path && path.match(/([^\/]+|\/)\/*$/)[1],
   join:(...paths) => PATH.normalize(paths.join('/')),
   join2:(l, r) => PATH.normalize(l + '/' + r),
   };
@@ -1336,7 +1190,7 @@ var tempI64;
       var pathBuffer = stringToUTF8OnStack(path);
       return __wasmfs_mknod(pathBuffer, mode, dev);
     }));
-  var FS_create = (path, mode = 438 /* 0666 */) => {
+  var FS_create = (path, mode = 0o666) => {
       mode &= 4095;
       mode |= 32768;
       return FS_mknod(path, mode, 0);
@@ -1344,19 +1198,19 @@ var tempI64;
   
   
   
+  
+  
   var FS_writeFile = (path, data) => {
       var sp = stackSave();
       var pathBuffer = stringToUTF8OnStack(path);
+      var len = typeof data == 'string' ? lengthBytesUTF8(data) + 1 : data.length;
+      var dataBuffer = _malloc(len);
       if (typeof data == 'string') {
-        var buf = new Uint8Array(lengthBytesUTF8(data) + 1);
-        var actualNumBytes = stringToUTF8Array(data, buf, 0, buf.length);
-        data = buf.slice(0, actualNumBytes);
+        len = stringToUTF8(data, dataBuffer, len);
+      } else {
+        HEAPU8.set(data, dataBuffer);
       }
-      var dataBuffer = _malloc(data.length);
-      for (var i = 0; i < data.length; i++) {
-        HEAP8[(dataBuffer)+(i)] = data[i];
-      }
-      var ret = __wasmfs_write_file(pathBuffer, dataBuffer, data.length);
+      var ret = __wasmfs_write_file(pathBuffer, dataBuffer, len);
       _free(dataBuffer);
       stackRestore(sp);
       return ret;
@@ -1377,24 +1231,11 @@ var tempI64;
       }
     };
   
-  /** @param {boolean=} noRunDep */
-  var asyncLoad = (url, onload, onerror, noRunDep) => {
-      var dep = !noRunDep ? getUniqueRunDependency(`al ${url}`) : '';
-      readAsync(url).then(
-        (arrayBuffer) => {
-          onload(new Uint8Array(arrayBuffer));
-          if (dep) removeRunDependency(dep);
-        },
-        (err) => {
-          if (onerror) {
-            onerror();
-          } else {
-            throw `Loading data file "${url}" failed.`;
-          }
-        }
-      );
-      if (dep) addRunDependency(dep);
+  var asyncLoad = async (url) => {
+      var arrayBuffer = await readAsync(url);
+      return new Uint8Array(arrayBuffer);
     };
+  asyncLoad.isAsync = true;
   
   
   
@@ -1419,8 +1260,8 @@ var tempI64;
         return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
       },
   relative:(from, to) => {
-        from = PATH_FS.resolve(from).substr(1);
-        to = PATH_FS.resolve(to).substr(1);
+        from = PATH_FS.resolve(from).slice(1);
+        to = PATH_FS.resolve(to).slice(1);
         function trim(arr) {
           var start = 0;
           for (; start < arr.length; start++) {
@@ -1453,7 +1294,11 @@ var tempI64;
   };
   
   
-  var preloadPlugins = Module['preloadPlugins'] || [];
+  var getUniqueRunDependency = (id) => {
+      return id;
+    };
+  
+  var preloadPlugins = [];
   var FS_handledByPreloadPlugin = (byteArray, fullname, finish, onerror) => {
       // Ensure plugins are ready.
       if (typeof Browser != 'undefined') Browser.init();
@@ -1492,7 +1337,7 @@ var tempI64;
       }
       addRunDependency(dep);
       if (typeof url == 'string') {
-        asyncLoad(url, processData, onerror);
+        asyncLoad(url).then(processData, onerror);
       } else {
         processData(url);
       }
@@ -1524,7 +1369,7 @@ var tempI64;
   
   
   
-  var FS_mkdir = (path, mode = 511 /* 0777 */) => FS.handleError(withStackSave(() => {
+  var FS_mkdir = (path, mode = 0o777) => FS.handleError(withStackSave(() => {
       var buffer = stringToUTF8OnStack(path);
       return __wasmfs_mkdir(buffer, mode);
     }));
@@ -1537,9 +1382,10 @@ var tempI64;
   var FS_mkdirTree = (path, mode) => {
       var dirs = path.split('/');
       var d = '';
-      for (var i = 0; i < dirs.length; ++i) {
-        if (!dirs[i]) continue;
-        d += '/' + dirs[i];
+      for (var dir of dirs) {
+        if (!dir) continue;
+        if (d || PATH.isAbs(path)) d += '/';
+        d += dir;
         try {
           FS_mkdir(d, mode);
         } catch(e) {
@@ -1567,10 +1413,14 @@ var tempI64;
   };
   
   var FS = {
-  init() {
-        FS.ensureErrnoError();
+  ErrnoError:class extends Error {
+        name = 'ErrnoError';
+        message = 'FS error';
+        constructor(code) {
+          super();
+          this.errno = code
+        }
       },
-  ErrnoError:null,
   handleError(returnValue) {
         // Assume errors correspond to negative returnValues
         // since some functions like _wasmfs_open() return positive
@@ -1580,16 +1430,6 @@ var tempI64;
         }
   
         return returnValue;
-      },
-  ensureErrnoError() {
-        if (FS.ErrnoError) return;
-        FS.ErrnoError = /** @this{Object} */ function ErrnoError(code) {
-          this.errno = code;
-          this.message = 'FS error';
-          this.name = "ErrnoError";
-        }
-        FS.ErrnoError.prototype = new Error();
-        FS.ErrnoError.prototype.constructor = FS.ErrnoError;
       },
   createDataFile(parent, name, fileData, canRead, canWrite, canOwn) {
         FS_createDataFile(parent, name, fileData, canRead, canWrite, canOwn);
@@ -1604,7 +1444,11 @@ var tempI64;
           if (!wasmFSPreloadingFlushed) {
             wasmFSPreloadedDirs.push({parentPath: parent, childName: part});
           } else {
-            FS.mkdir(current);
+            try {
+              FS.mkdir(current);
+            } catch (e) {
+              if (e.errno != 20) throw e;
+            }
           }
           parent = current;
         }
@@ -1616,25 +1460,22 @@ var tempI64;
   readFile(path, opts = {}) {
         opts.encoding = opts.encoding || 'binary';
         if (opts.encoding !== 'utf8' && opts.encoding !== 'binary') {
-          throw new Error('Invalid encoding type "' + opts.encoding + '"');
+          throw new Error(`Invalid encoding type "${opts.encoding}"`);
         }
   
+        var buf, length;
         // Copy the file into a JS buffer on the heap.
-        var sp = stackSave();
-        var buf = __wasmfs_read_file(stringToUTF8OnStack(path));
-        stackRestore(sp);
-  
-        // The signed integer length resides in the first 8 bytes of the buffer.
-        var length = readI53FromI64(buf);
+        withStackSave(() => {
+          var bufPtr = stackAlloc(4);
+          var sizePtr = stackAlloc(4);
+          FS.handleError(-__wasmfs_read_file(stringToUTF8OnStack(path), bufPtr, sizePtr));
+          buf = HEAPU32[((bufPtr)>>2)];
+          length = readI53FromI64(sizePtr);
+        });
   
         // Default return type is binary.
         // The buffer contents exist 8 bytes after the returned pointer.
-        var ret = new Uint8Array(HEAPU8.subarray(buf + 8, buf + 8 + length));
-        if (opts.encoding === 'utf8') {
-          ret = UTF8ArrayToString(ret);
-        }
-  
-        return ret;
+        return opts.encoding === 'utf8' ? UTF8ToString(buf, length) : HEAPU8.slice(buf, buf + length);
       },
   cwd:() => UTF8ToString(__wasmfs_get_cwd()),
   analyzePath(path) {
@@ -1652,9 +1493,8 @@ var tempI64;
   rmdir:(path) => FS.handleError(
         withStackSave(() => __wasmfs_rmdir(stringToUTF8OnStack(path)))
       ),
-  open:(path, flags, mode) => withStackSave(() => {
+  open:(path, flags, mode = 0o666) => withStackSave(() => {
         flags = typeof flags == 'string' ? FS_modeStringToFlags(flags) : flags;
-        mode = typeof mode == 'undefined' ? 438 /* 0666 */ : mode;
         var buffer = stringToUTF8OnStack(path);
         var fd = FS.handleError(__wasmfs_open(buffer, flags, mode));
         return { fd : fd };
@@ -1662,10 +1502,7 @@ var tempI64;
   create:(path, mode) => FS_create(path, mode),
   close:(stream) => FS.handleError(-__wasmfs_close(stream.fd)),
   unlink:(path) => FS_unlink(path),
-  chdir:(path) => withStackSave(() => {
-        var buffer = stringToUTF8OnStack(path);
-        return __wasmfs_chdir(buffer);
-      }),
+  chdir:(path) => withStackSave(() => __wasmfs_chdir(stringToUTF8OnStack(path))),
   read(stream, buffer, offset, length, position) {
         var seeking = typeof position != 'undefined';
   
@@ -1673,18 +1510,16 @@ var tempI64;
   
         var bytesRead;
         if (seeking) {
-          bytesRead = __wasmfs_pread(stream.fd, dataBuffer, length, position);
+          bytesRead = __wasmfs_pread(stream.fd, dataBuffer, length, BigInt(position));
         } else {
           bytesRead = __wasmfs_read(stream.fd, dataBuffer, length);
         }
-        bytesRead = FS.handleError(bytesRead);
-  
-        for (var i = 0; i < length; i++) {
-          buffer[offset + i] = HEAP8[(dataBuffer)+(i)]
+        if (bytesRead > 0) {
+          buffer.set(HEAPU8.subarray(dataBuffer, dataBuffer + bytesRead), offset);
         }
   
         _free(dataBuffer);
-        return bytesRead;
+        return FS.handleError(bytesRead);
       },
   write(stream, buffer, offset, length, position, canOwn) {
         var seeking = typeof position != 'undefined';
@@ -1696,21 +1531,16 @@ var tempI64;
   
         var bytesRead;
         if (seeking) {
-          bytesRead = __wasmfs_pwrite(stream.fd, dataBuffer, length, position);
+          bytesRead = __wasmfs_pwrite(stream.fd, dataBuffer, length, BigInt(position));
         } else {
           bytesRead = __wasmfs_write(stream.fd, dataBuffer, length);
         }
-        bytesRead = FS.handleError(bytesRead);
         _free(dataBuffer);
-  
-        return bytesRead;
-      },
-  allocate(stream, offset, length) {
-        return FS.handleError(__wasmfs_allocate(stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0), length>>>0,(tempDouble = length,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+        return FS.handleError(bytesRead);
       },
   writeFile:(path, data) => FS_writeFile(path, data),
   mmap:(stream, length, offset, prot, flags) => {
-        var buf = FS.handleError(__wasmfs_mmap(length, prot, flags, stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+        var buf = FS.handleError(__wasmfs_mmap(length, prot, flags, stream.fd, BigInt(offset)));
         return { ptr: buf, allocated: true };
       },
   msync:(stream, bufferPtr, offset, length, mmapFlags) => {
@@ -1725,8 +1555,12 @@ var tempI64;
         __wasmfs_symlink(stringToUTF8OnStack(target), stringToUTF8OnStack(linkpath))
       )),
   readlink(path) {
-        var readBuffer = FS.handleError(withStackSave(() => __wasmfs_readlink(stringToUTF8OnStack(path))));
-        return UTF8ToString(readBuffer);
+        return withStackSave(() => {
+          var bufPtr = stackAlloc(4);
+          FS.handleError(__wasmfs_readlink(stringToUTF8OnStack(path), bufPtr));
+          var readBuffer = HEAPU32[((bufPtr)>>2)];
+          return UTF8ToString(readBuffer);
+        });
       },
   statBufToObject(statBuf) {
         // i53/u53 are enough for times and ino in practice.
@@ -1747,24 +1581,18 @@ var tempI64;
         }
       },
   stat(path) {
-        var statBuf = _malloc(96);
-        FS.handleError(withStackSave(() =>
-          __wasmfs_stat(stringToUTF8OnStack(path), statBuf)
-        ));
-        var stats = FS.statBufToObject(statBuf);
-        _free(statBuf);
-  
-        return stats;
+        return withStackSave(() => {
+          var statBuf = stackAlloc(96);
+          FS.handleError(__wasmfs_stat(stringToUTF8OnStack(path), statBuf));
+          return FS.statBufToObject(statBuf);
+        });
       },
   lstat(path) {
-        var statBuf = _malloc(96);
-        FS.handleError(withStackSave(() =>
-          __wasmfs_lstat(stringToUTF8OnStack(path), statBuf)
-        ));
-        var stats = FS.statBufToObject(statBuf);
-        _free(statBuf);
-  
-        return stats;
+        return withStackSave(() => {
+          var statBuf = stackAlloc(96);
+          FS.handleError(__wasmfs_lstat(stringToUTF8OnStack(path), statBuf));
+          return FS.statBufToObject(statBuf);
+        });
       },
   chmod(path, mode) {
         return FS.handleError(withStackSave(() => {
@@ -1787,10 +1615,10 @@ var tempI64;
         )))
       ),
   truncate(path, len) {
-        return FS.handleError(withStackSave(() => (__wasmfs_truncate(stringToUTF8OnStack(path), len>>>0,(tempDouble = len,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)))));
+        return FS.handleError(withStackSave(() => (__wasmfs_truncate(stringToUTF8OnStack(path), BigInt(len)))));
       },
   ftruncate(fd, len) {
-        return FS.handleError(__wasmfs_ftruncate(fd, len>>>0,(tempDouble = len,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0)));
+        return FS.handleError(__wasmfs_ftruncate(fd, BigInt(len)));
       },
   findObject(path) {
         var result = withStackSave(() => __wasmfs_identify(stringToUTF8OnStack(path)));
@@ -1822,7 +1650,7 @@ var tempI64;
         return FS.handleError(withStackSave(() => __wasmfs_mount(stringToUTF8OnStack(mountpoint), backendPointer)));
       },
   unmount:(mountpoint) => (
-        FS.handleError(withStackSave(() => __wasmfs_unmount(stringToUTF8OnStack(mountpoint))))
+        FS.handleError(withStackSave(() => _wasmfs_unmount(stringToUTF8OnStack(mountpoint))))
       ),
   mknod:(path, mode, dev) => FS_mknod(path, mode, dev),
   makedev:(ma, mi) => ((ma) << 8 | (mi)),
@@ -1842,23 +1670,23 @@ var tempI64;
           // Devices cannot be resized.
           setSize: (file, size) => 0,
           read: (file, buffer, length, offset) => {
-            var bufferArray = Module.HEAP8.subarray(buffer, buffer + length);
+            var bufferArray = HEAP8.subarray(buffer, buffer + length);
             try {
               var bytesRead = definedOps.userRead(wasmFSDeviceStreams[file], bufferArray, 0, length, offset);
             } catch (e) {
               return -e.errno;
             }
-            Module.HEAP8.set(bufferArray, buffer);
+            HEAP8.set(bufferArray, buffer);
             return bytesRead;
           },
           write: (file, buffer, length, offset) => {
-            var bufferArray = Module.HEAP8.subarray(buffer, buffer + length);
+            var bufferArray = HEAP8.subarray(buffer, buffer + length);
             try {
               var bytesWritten = definedOps.userWrite(wasmFSDeviceStreams[file], bufferArray, 0, length, offset);
             } catch (e) {
               return -e.errno;
             }
-            Module.HEAP8.set(bufferArray, buffer);
+            HEAP8.set(bufferArray, buffer);
             return bytesWritten;
           },
         };
@@ -1912,7 +1740,7 @@ var tempI64;
   mkdev(path, mode, dev) {
         if (typeof dev === 'undefined') {
           dev = mode;
-          mode = 438 /* 0666 */;
+          mode = 0o666;
         }
   
         var deviceBackend = wasmFSDevices[dev];
@@ -1932,7 +1760,7 @@ var tempI64;
         }));
       },
   llseek(stream, offset, whence) {
-        return FS.handleError(__wasmfs_llseek(stream.fd, offset>>>0,(tempDouble = offset,(+(Math.abs(tempDouble))) >= 1.0 ? (tempDouble > 0.0 ? (+(Math.floor((tempDouble)/4294967296.0)))>>>0 : (~~((+(Math.ceil((tempDouble - +(((~~(tempDouble)))>>>0))/4294967296.0)))))>>>0) : 0), whence));
+        return FS.handleError(__wasmfs_llseek(stream.fd, BigInt(offset), whence));
       },
   };
 
@@ -1983,22 +1811,29 @@ var tempI64;
           }
         }
       },
+  instrumentFunction(original) {
+        var wrapper = (...args) => {
+          Asyncify.exportCallStack.push(original);
+          try {
+            return original(...args);
+          } finally {
+            if (!ABORT) {
+              var top = Asyncify.exportCallStack.pop();
+              Asyncify.maybeStopUnwind();
+            }
+          }
+        };
+        Asyncify.funcWrappers.set(original, wrapper);
+        return wrapper;
+      },
   instrumentWasmExports(exports) {
         var ret = {};
         for (let [x, original] of Object.entries(exports)) {
           if (typeof original == 'function') {
-            ret[x] = (...args) => {
-              Asyncify.exportCallStack.push(x);
-              try {
-                return original(...args);
-              } finally {
-                if (!ABORT) {
-                  var y = Asyncify.exportCallStack.pop();
-                  Asyncify.maybeStopUnwind();
-                }
-              }
-            };
-          } else {
+            var wrapper = Asyncify.instrumentFunction(original);
+            ret[x] = wrapper;
+  
+         } else {
             ret[x] = original;
           }
         }
@@ -2015,21 +1850,19 @@ var tempI64;
   currData:null,
   handleSleepReturnValue:0,
   exportCallStack:[],
-  callStackNameToId:{
-  },
-  callStackIdToName:{
-  },
+  callstackFuncToId:new Map,
+  callStackIdToFunc:new Map,
+  funcWrappers:new Map,
   callStackId:0,
   asyncPromiseHandlers:null,
   sleepCallbacks:[],
-  getCallStackId(funcName) {
-        var id = Asyncify.callStackNameToId[funcName];
-        if (id === undefined) {
-          id = Asyncify.callStackId++;
-          Asyncify.callStackNameToId[funcName] = id;
-          Asyncify.callStackIdToName[id] = funcName;
+  getCallStackId(func) {
+        if (!Asyncify.callstackFuncToId.has(func)) {
+          var id = Asyncify.callStackId++;
+          Asyncify.callstackFuncToId.set(func, id);
+          Asyncify.callStackIdToFunc.set(id, func);
         }
-        return id;
+        return Asyncify.callstackFuncToId.get(func);
       },
   maybeStopUnwind() {
         if (Asyncify.currData &&
@@ -2058,7 +1891,7 @@ var tempI64;
         // An asyncify data structure has three fields:
         //  0  current stack pos
         //  4  max stack pos
-        //  8  id of function at bottom of the call stack (callStackIdToName[id] == name of js function)
+        //  8  id of function at bottom of the call stack (callStackIdToFunc[id] == wasm func)
         //
         // The Asyncify ABI only interprets the first two fields, the rest is for the runtime.
         // We also embed a stack in the same memory region here, right next to the structure.
@@ -2077,18 +1910,14 @@ var tempI64;
         var rewindId = Asyncify.getCallStackId(bottomOfCallStack);
         HEAP32[(((ptr)+(8))>>2)] = rewindId;
       },
-  getDataRewindFuncName(ptr) {
+  getDataRewindFunc(ptr) {
         var id = HEAP32[(((ptr)+(8))>>2)];
-        var name = Asyncify.callStackIdToName[id];
-        return name;
-      },
-  getDataRewindFunc(name) {
-        var func = wasmExports[name];
+        var func = Asyncify.callStackIdToFunc.get(id);
         return func;
       },
   doRewind(ptr) {
-        var name = Asyncify.getDataRewindFuncName(ptr);
-        var func = Asyncify.getDataRewindFunc(name);
+        var original = Asyncify.getDataRewindFunc(ptr);
+        var func = Asyncify.funcWrappers.get(original);
         // Once we have rewound and the stack we no longer need to artificially
         // keep the runtime alive.
         
@@ -2176,12 +2005,10 @@ var tempI64;
         }
         return Asyncify.handleSleepReturnValue;
       },
-  handleAsync(startAsync) {
-        return Asyncify.handleSleep((wakeUp) => {
-          // TODO: add error handling as a second param when handleSleep implements it.
-          startAsync().then(wakeUp);
-        });
-      },
+  handleAsync:(startAsync) => Asyncify.handleSleep((wakeUp) => {
+        // TODO: add error handling as a second param when handleSleep implements it.
+        startAsync().then(wakeUp);
+      }),
   };
 
 
@@ -2296,14 +2123,235 @@ var tempI64;
 
 
 
+// End JS library code
 
-  FS.init();
-  ;
+// include: postlibrary.js
+// This file is included after the automatically-generated JS library code
+// but before the wasm module is created.
+
+{
+
+  // Begin ATMODULES hooks
+  if (Module['noExitRuntime']) noExitRuntime = Module['noExitRuntime'];
+if (Module['preloadPlugins']) preloadPlugins = Module['preloadPlugins'];
+if (Module['print']) out = Module['print'];
+if (Module['printErr']) err = Module['printErr'];
+if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
+  // End ATMODULES hooks
+
+  if (Module['arguments']) arguments_ = Module['arguments'];
+  if (Module['thisProgram']) thisProgram = Module['thisProgram'];
+
+}
+
+// Begin runtime exports
+  Module['addRunDependency'] = addRunDependency;
+  Module['removeRunDependency'] = removeRunDependency;
+  Module['callMain'] = callMain;
+  Module['ccall'] = ccall;
+  Module['cwrap'] = cwrap;
+  Module['UTF8ToString'] = UTF8ToString;
+  Module['stringToUTF8'] = stringToUTF8;
+  Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
+  Module['FS_unlink'] = FS_unlink;
+  Module['FS_createPath'] = FS_createPath;
+  Module['FS'] = FS;
+  Module['FS_createDataFile'] = FS_createDataFile;
+  // End runtime exports
+  // Begin JS library exports
+  // End JS library exports
+
+// end include: postlibrary.js
+
+
+// Imports from the Wasm binary.
+var _main,
+  _free,
+  _wasm_pty_write_input,
+  _wasm_pty_read_output,
+  _wasm_pty_has_output,
+  _wasm_pty_get_screen,
+  _wasm_pty_set_mode,
+  _wasm_pty_get_mode,
+  _wasm_pty_flush,
+  _wasm_shell_execute,
+  _wasm_shell_get_env,
+  _wasm_shell_set_env,
+  _wasm_shell_prompt,
+  _wasm_terminal_clear,
+  _wasm_terminal_put_string,
+  _get_pty_mode_raw,
+  _get_pty_mode_echo,
+  _get_pty_mode_canon,
+  _get_term_width,
+  _get_term_height,
+  _malloc,
+  _emscripten_proxy_execute_queue,
+  _emscripten_proxy_finish,
+  __emscripten_timeout,
+  _emscripten_builtin_memalign,
+  __emscripten_stack_restore,
+  __emscripten_stack_alloc,
+  _emscripten_stack_get_current,
+  ___cxa_increment_exception_refcount,
+  __wasmfs_fetch_get_file_url,
+  __wasmfs_fetch_get_chunk_size,
+  __wasmfs_read_file,
+  __wasmfs_write_file,
+  __wasmfs_mkdir,
+  __wasmfs_rmdir,
+  __wasmfs_open,
+  __wasmfs_mknod,
+  __wasmfs_unlink,
+  __wasmfs_chdir,
+  __wasmfs_symlink,
+  __wasmfs_readlink,
+  __wasmfs_write,
+  __wasmfs_pwrite,
+  __wasmfs_chmod,
+  __wasmfs_fchmod,
+  __wasmfs_lchmod,
+  __wasmfs_llseek,
+  __wasmfs_rename,
+  __wasmfs_read,
+  __wasmfs_pread,
+  __wasmfs_truncate,
+  __wasmfs_ftruncate,
+  __wasmfs_close,
+  __wasmfs_mmap,
+  __wasmfs_msync,
+  __wasmfs_munmap,
+  __wasmfs_utime,
+  __wasmfs_stat,
+  __wasmfs_lstat,
+  __wasmfs_mount,
+  __wasmfs_identify,
+  __wasmfs_readdir_start,
+  __wasmfs_readdir_get,
+  __wasmfs_readdir_finish,
+  __wasmfs_get_cwd,
+  _wasmfs_create_jsimpl_backend,
+  _wasmfs_create_memory_backend,
+  __wasmfs_node_record_dirent,
+  __wasmfs_opfs_record_entry,
+  _wasmfs_create_file,
+  _wasmfs_unmount,
+  dynCall_jiji,
+  dynCall_iiii,
+  dynCall_ii,
+  dynCall_iidiiii,
+  dynCall_vii,
+  dynCall_iii,
+  dynCall_vi,
+  dynCall_v,
+  dynCall_ji,
+  dynCall_iiiij,
+  dynCall_iij,
+  dynCall_viii,
+  dynCall_viiiiii,
+  dynCall_viiiii,
+  dynCall_viiii,
+  _asyncify_start_unwind,
+  _asyncify_stop_unwind,
+  _asyncify_start_rewind,
+  _asyncify_stop_rewind;
+
+
+function assignWasmExports(wasmExports) {
+  Module['_main'] = _main = wasmExports['main'];
+  Module['_free'] = _free = wasmExports['free'];
+  Module['_wasm_pty_write_input'] = _wasm_pty_write_input = wasmExports['wasm_pty_write_input'];
+  Module['_wasm_pty_read_output'] = _wasm_pty_read_output = wasmExports['wasm_pty_read_output'];
+  Module['_wasm_pty_has_output'] = _wasm_pty_has_output = wasmExports['wasm_pty_has_output'];
+  Module['_wasm_pty_get_screen'] = _wasm_pty_get_screen = wasmExports['wasm_pty_get_screen'];
+  Module['_wasm_pty_set_mode'] = _wasm_pty_set_mode = wasmExports['wasm_pty_set_mode'];
+  Module['_wasm_pty_get_mode'] = _wasm_pty_get_mode = wasmExports['wasm_pty_get_mode'];
+  Module['_wasm_pty_flush'] = _wasm_pty_flush = wasmExports['wasm_pty_flush'];
+  Module['_wasm_shell_execute'] = _wasm_shell_execute = wasmExports['wasm_shell_execute'];
+  Module['_wasm_shell_get_env'] = _wasm_shell_get_env = wasmExports['wasm_shell_get_env'];
+  Module['_wasm_shell_set_env'] = _wasm_shell_set_env = wasmExports['wasm_shell_set_env'];
+  Module['_wasm_shell_prompt'] = _wasm_shell_prompt = wasmExports['wasm_shell_prompt'];
+  Module['_wasm_terminal_clear'] = _wasm_terminal_clear = wasmExports['wasm_terminal_clear'];
+  Module['_wasm_terminal_put_string'] = _wasm_terminal_put_string = wasmExports['wasm_terminal_put_string'];
+  Module['_get_pty_mode_raw'] = _get_pty_mode_raw = wasmExports['get_pty_mode_raw'];
+  Module['_get_pty_mode_echo'] = _get_pty_mode_echo = wasmExports['get_pty_mode_echo'];
+  Module['_get_pty_mode_canon'] = _get_pty_mode_canon = wasmExports['get_pty_mode_canon'];
+  Module['_get_term_width'] = _get_term_width = wasmExports['get_term_width'];
+  Module['_get_term_height'] = _get_term_height = wasmExports['get_term_height'];
+  Module['_malloc'] = _malloc = wasmExports['malloc'];
+  _emscripten_proxy_execute_queue = wasmExports['emscripten_proxy_execute_queue'];
+  _emscripten_proxy_finish = wasmExports['emscripten_proxy_finish'];
+  __emscripten_timeout = wasmExports['_emscripten_timeout'];
+  _emscripten_builtin_memalign = wasmExports['emscripten_builtin_memalign'];
+  __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
+  __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'];
+  _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'];
+  ___cxa_increment_exception_refcount = wasmExports['__cxa_increment_exception_refcount'];
+  __wasmfs_fetch_get_file_url = wasmExports['_wasmfs_fetch_get_file_url'];
+  __wasmfs_fetch_get_chunk_size = wasmExports['_wasmfs_fetch_get_chunk_size'];
+  __wasmfs_read_file = wasmExports['_wasmfs_read_file'];
+  __wasmfs_write_file = wasmExports['_wasmfs_write_file'];
+  __wasmfs_mkdir = wasmExports['_wasmfs_mkdir'];
+  __wasmfs_rmdir = wasmExports['_wasmfs_rmdir'];
+  __wasmfs_open = wasmExports['_wasmfs_open'];
+  __wasmfs_mknod = wasmExports['_wasmfs_mknod'];
+  __wasmfs_unlink = wasmExports['_wasmfs_unlink'];
+  __wasmfs_chdir = wasmExports['_wasmfs_chdir'];
+  __wasmfs_symlink = wasmExports['_wasmfs_symlink'];
+  __wasmfs_readlink = wasmExports['_wasmfs_readlink'];
+  __wasmfs_write = wasmExports['_wasmfs_write'];
+  __wasmfs_pwrite = wasmExports['_wasmfs_pwrite'];
+  __wasmfs_chmod = wasmExports['_wasmfs_chmod'];
+  __wasmfs_fchmod = wasmExports['_wasmfs_fchmod'];
+  __wasmfs_lchmod = wasmExports['_wasmfs_lchmod'];
+  __wasmfs_llseek = wasmExports['_wasmfs_llseek'];
+  __wasmfs_rename = wasmExports['_wasmfs_rename'];
+  __wasmfs_read = wasmExports['_wasmfs_read'];
+  __wasmfs_pread = wasmExports['_wasmfs_pread'];
+  __wasmfs_truncate = wasmExports['_wasmfs_truncate'];
+  __wasmfs_ftruncate = wasmExports['_wasmfs_ftruncate'];
+  __wasmfs_close = wasmExports['_wasmfs_close'];
+  __wasmfs_mmap = wasmExports['_wasmfs_mmap'];
+  __wasmfs_msync = wasmExports['_wasmfs_msync'];
+  __wasmfs_munmap = wasmExports['_wasmfs_munmap'];
+  __wasmfs_utime = wasmExports['_wasmfs_utime'];
+  __wasmfs_stat = wasmExports['_wasmfs_stat'];
+  __wasmfs_lstat = wasmExports['_wasmfs_lstat'];
+  __wasmfs_mount = wasmExports['_wasmfs_mount'];
+  __wasmfs_identify = wasmExports['_wasmfs_identify'];
+  __wasmfs_readdir_start = wasmExports['_wasmfs_readdir_start'];
+  __wasmfs_readdir_get = wasmExports['_wasmfs_readdir_get'];
+  __wasmfs_readdir_finish = wasmExports['_wasmfs_readdir_finish'];
+  __wasmfs_get_cwd = wasmExports['_wasmfs_get_cwd'];
+  _wasmfs_create_jsimpl_backend = wasmExports['wasmfs_create_jsimpl_backend'];
+  _wasmfs_create_memory_backend = wasmExports['wasmfs_create_memory_backend'];
+  __wasmfs_node_record_dirent = wasmExports['_wasmfs_node_record_dirent'];
+  __wasmfs_opfs_record_entry = wasmExports['_wasmfs_opfs_record_entry'];
+  _wasmfs_create_file = wasmExports['wasmfs_create_file'];
+  _wasmfs_unmount = wasmExports['wasmfs_unmount'];
+  dynCalls['jiji'] = dynCall_jiji = wasmExports['dynCall_jiji'];
+  dynCalls['iiii'] = dynCall_iiii = wasmExports['dynCall_iiii'];
+  dynCalls['ii'] = dynCall_ii = wasmExports['dynCall_ii'];
+  dynCalls['iidiiii'] = dynCall_iidiiii = wasmExports['dynCall_iidiiii'];
+  dynCalls['vii'] = dynCall_vii = wasmExports['dynCall_vii'];
+  dynCalls['iii'] = dynCall_iii = wasmExports['dynCall_iii'];
+  dynCalls['vi'] = dynCall_vi = wasmExports['dynCall_vi'];
+  dynCalls['v'] = dynCall_v = wasmExports['dynCall_v'];
+  dynCalls['ji'] = dynCall_ji = wasmExports['dynCall_ji'];
+  dynCalls['iiiij'] = dynCall_iiiij = wasmExports['dynCall_iiiij'];
+  dynCalls['iij'] = dynCall_iij = wasmExports['dynCall_iij'];
+  dynCalls['viii'] = dynCall_viii = wasmExports['dynCall_viii'];
+  dynCalls['viiiiii'] = dynCall_viiiiii = wasmExports['dynCall_viiiiii'];
+  dynCalls['viiiii'] = dynCall_viiiii = wasmExports['dynCall_viiiii'];
+  dynCalls['viiii'] = dynCall_viiii = wasmExports['dynCall_viiii'];
+  _asyncify_start_unwind = wasmExports['asyncify_start_unwind'];
+  _asyncify_stop_unwind = wasmExports['asyncify_stop_unwind'];
+  _asyncify_start_rewind = wasmExports['asyncify_start_rewind'];
+  _asyncify_stop_rewind = wasmExports['asyncify_stop_rewind'];
+}
 var wasmImports = {
   /** @export */
   _abort_js: __abort_js,
-  /** @export */
-  _emscripten_memcpy_js: __emscripten_memcpy_js,
   /** @export */
   _emscripten_runtime_keepalive_clear: __emscripten_runtime_keepalive_clear,
   /** @export */
@@ -2353,125 +2401,11 @@ var wasmImports = {
   /** @export */
   random_get: _random_get
 };
-var wasmExports = createWasm();
-var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports['__wasm_call_ctors'])();
-var _main = Module['_main'] = (a0, a1) => (_main = Module['_main'] = wasmExports['main'])(a0, a1);
-var _free = Module['_free'] = (a0) => (_free = Module['_free'] = wasmExports['free'])(a0);
-var _wasm_pty_write_input = Module['_wasm_pty_write_input'] = (a0, a1) => (_wasm_pty_write_input = Module['_wasm_pty_write_input'] = wasmExports['wasm_pty_write_input'])(a0, a1);
-var _wasm_pty_read_output = Module['_wasm_pty_read_output'] = (a0, a1) => (_wasm_pty_read_output = Module['_wasm_pty_read_output'] = wasmExports['wasm_pty_read_output'])(a0, a1);
-var _wasm_pty_has_output = Module['_wasm_pty_has_output'] = () => (_wasm_pty_has_output = Module['_wasm_pty_has_output'] = wasmExports['wasm_pty_has_output'])();
-var _wasm_pty_get_screen = Module['_wasm_pty_get_screen'] = () => (_wasm_pty_get_screen = Module['_wasm_pty_get_screen'] = wasmExports['wasm_pty_get_screen'])();
-var _wasm_pty_set_mode = Module['_wasm_pty_set_mode'] = (a0) => (_wasm_pty_set_mode = Module['_wasm_pty_set_mode'] = wasmExports['wasm_pty_set_mode'])(a0);
-var _wasm_pty_get_mode = Module['_wasm_pty_get_mode'] = () => (_wasm_pty_get_mode = Module['_wasm_pty_get_mode'] = wasmExports['wasm_pty_get_mode'])();
-var _wasm_pty_flush = Module['_wasm_pty_flush'] = () => (_wasm_pty_flush = Module['_wasm_pty_flush'] = wasmExports['wasm_pty_flush'])();
-var _wasm_shell_execute = Module['_wasm_shell_execute'] = (a0) => (_wasm_shell_execute = Module['_wasm_shell_execute'] = wasmExports['wasm_shell_execute'])(a0);
-var _wasm_shell_get_env = Module['_wasm_shell_get_env'] = (a0) => (_wasm_shell_get_env = Module['_wasm_shell_get_env'] = wasmExports['wasm_shell_get_env'])(a0);
-var _wasm_shell_set_env = Module['_wasm_shell_set_env'] = (a0, a1) => (_wasm_shell_set_env = Module['_wasm_shell_set_env'] = wasmExports['wasm_shell_set_env'])(a0, a1);
-var _wasm_shell_prompt = Module['_wasm_shell_prompt'] = () => (_wasm_shell_prompt = Module['_wasm_shell_prompt'] = wasmExports['wasm_shell_prompt'])();
-var _wasm_terminal_clear = Module['_wasm_terminal_clear'] = () => (_wasm_terminal_clear = Module['_wasm_terminal_clear'] = wasmExports['wasm_terminal_clear'])();
-var _wasm_terminal_put_string = Module['_wasm_terminal_put_string'] = (a0) => (_wasm_terminal_put_string = Module['_wasm_terminal_put_string'] = wasmExports['wasm_terminal_put_string'])(a0);
-var _get_pty_mode_raw = Module['_get_pty_mode_raw'] = () => (_get_pty_mode_raw = Module['_get_pty_mode_raw'] = wasmExports['get_pty_mode_raw'])();
-var _get_pty_mode_echo = Module['_get_pty_mode_echo'] = () => (_get_pty_mode_echo = Module['_get_pty_mode_echo'] = wasmExports['get_pty_mode_echo'])();
-var _get_pty_mode_canon = Module['_get_pty_mode_canon'] = () => (_get_pty_mode_canon = Module['_get_pty_mode_canon'] = wasmExports['get_pty_mode_canon'])();
-var _get_term_width = Module['_get_term_width'] = () => (_get_term_width = Module['_get_term_width'] = wasmExports['get_term_width'])();
-var _get_term_height = Module['_get_term_height'] = () => (_get_term_height = Module['_get_term_height'] = wasmExports['get_term_height'])();
-var _malloc = Module['_malloc'] = (a0) => (_malloc = Module['_malloc'] = wasmExports['malloc'])(a0);
-var _emscripten_proxy_execute_queue = (a0) => (_emscripten_proxy_execute_queue = wasmExports['emscripten_proxy_execute_queue'])(a0);
-var _emscripten_proxy_finish = (a0) => (_emscripten_proxy_finish = wasmExports['emscripten_proxy_finish'])(a0);
-var __emscripten_timeout = (a0, a1) => (__emscripten_timeout = wasmExports['_emscripten_timeout'])(a0, a1);
-var _emscripten_builtin_memalign = (a0, a1) => (_emscripten_builtin_memalign = wasmExports['emscripten_builtin_memalign'])(a0, a1);
-var __emscripten_tempret_set = (a0) => (__emscripten_tempret_set = wasmExports['_emscripten_tempret_set'])(a0);
-var __emscripten_stack_restore = (a0) => (__emscripten_stack_restore = wasmExports['_emscripten_stack_restore'])(a0);
-var __emscripten_stack_alloc = (a0) => (__emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'])(a0);
-var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'])();
-var ___cxa_increment_exception_refcount = (a0) => (___cxa_increment_exception_refcount = wasmExports['__cxa_increment_exception_refcount'])(a0);
-var __wasmfs_fetch_get_file_path = (a0) => (__wasmfs_fetch_get_file_path = wasmExports['_wasmfs_fetch_get_file_path'])(a0);
-var __wasmfs_read_file = (a0) => (__wasmfs_read_file = wasmExports['_wasmfs_read_file'])(a0);
-var __wasmfs_write_file = (a0, a1, a2) => (__wasmfs_write_file = wasmExports['_wasmfs_write_file'])(a0, a1, a2);
-var __wasmfs_mkdir = (a0, a1) => (__wasmfs_mkdir = wasmExports['_wasmfs_mkdir'])(a0, a1);
-var __wasmfs_rmdir = (a0) => (__wasmfs_rmdir = wasmExports['_wasmfs_rmdir'])(a0);
-var __wasmfs_open = (a0, a1, a2) => (__wasmfs_open = wasmExports['_wasmfs_open'])(a0, a1, a2);
-var __wasmfs_allocate = (a0, a1, a2, a3, a4) => (__wasmfs_allocate = wasmExports['_wasmfs_allocate'])(a0, a1, a2, a3, a4);
-var __wasmfs_mknod = (a0, a1, a2) => (__wasmfs_mknod = wasmExports['_wasmfs_mknod'])(a0, a1, a2);
-var __wasmfs_unlink = (a0) => (__wasmfs_unlink = wasmExports['_wasmfs_unlink'])(a0);
-var __wasmfs_chdir = (a0) => (__wasmfs_chdir = wasmExports['_wasmfs_chdir'])(a0);
-var __wasmfs_symlink = (a0, a1) => (__wasmfs_symlink = wasmExports['_wasmfs_symlink'])(a0, a1);
-var __wasmfs_readlink = (a0) => (__wasmfs_readlink = wasmExports['_wasmfs_readlink'])(a0);
-var __wasmfs_write = (a0, a1, a2) => (__wasmfs_write = wasmExports['_wasmfs_write'])(a0, a1, a2);
-var __wasmfs_pwrite = (a0, a1, a2, a3, a4) => (__wasmfs_pwrite = wasmExports['_wasmfs_pwrite'])(a0, a1, a2, a3, a4);
-var __wasmfs_chmod = (a0, a1) => (__wasmfs_chmod = wasmExports['_wasmfs_chmod'])(a0, a1);
-var __wasmfs_fchmod = (a0, a1) => (__wasmfs_fchmod = wasmExports['_wasmfs_fchmod'])(a0, a1);
-var __wasmfs_lchmod = (a0, a1) => (__wasmfs_lchmod = wasmExports['_wasmfs_lchmod'])(a0, a1);
-var __wasmfs_llseek = (a0, a1, a2, a3) => (__wasmfs_llseek = wasmExports['_wasmfs_llseek'])(a0, a1, a2, a3);
-var __wasmfs_rename = (a0, a1) => (__wasmfs_rename = wasmExports['_wasmfs_rename'])(a0, a1);
-var __wasmfs_read = (a0, a1, a2) => (__wasmfs_read = wasmExports['_wasmfs_read'])(a0, a1, a2);
-var __wasmfs_pread = (a0, a1, a2, a3, a4) => (__wasmfs_pread = wasmExports['_wasmfs_pread'])(a0, a1, a2, a3, a4);
-var __wasmfs_truncate = (a0, a1, a2) => (__wasmfs_truncate = wasmExports['_wasmfs_truncate'])(a0, a1, a2);
-var __wasmfs_ftruncate = (a0, a1, a2) => (__wasmfs_ftruncate = wasmExports['_wasmfs_ftruncate'])(a0, a1, a2);
-var __wasmfs_close = (a0) => (__wasmfs_close = wasmExports['_wasmfs_close'])(a0);
-var __wasmfs_mmap = (a0, a1, a2, a3, a4, a5) => (__wasmfs_mmap = wasmExports['_wasmfs_mmap'])(a0, a1, a2, a3, a4, a5);
-var __wasmfs_msync = (a0, a1, a2) => (__wasmfs_msync = wasmExports['_wasmfs_msync'])(a0, a1, a2);
-var __wasmfs_munmap = (a0, a1) => (__wasmfs_munmap = wasmExports['_wasmfs_munmap'])(a0, a1);
-var __wasmfs_utime = (a0, a1, a2) => (__wasmfs_utime = wasmExports['_wasmfs_utime'])(a0, a1, a2);
-var __wasmfs_stat = (a0, a1) => (__wasmfs_stat = wasmExports['_wasmfs_stat'])(a0, a1);
-var __wasmfs_lstat = (a0, a1) => (__wasmfs_lstat = wasmExports['_wasmfs_lstat'])(a0, a1);
-var __wasmfs_mount = (a0, a1) => (__wasmfs_mount = wasmExports['_wasmfs_mount'])(a0, a1);
-var __wasmfs_unmount = (a0) => (__wasmfs_unmount = wasmExports['_wasmfs_unmount'])(a0);
-var __wasmfs_identify = (a0) => (__wasmfs_identify = wasmExports['_wasmfs_identify'])(a0);
-var __wasmfs_readdir_start = (a0) => (__wasmfs_readdir_start = wasmExports['_wasmfs_readdir_start'])(a0);
-var __wasmfs_readdir_get = (a0) => (__wasmfs_readdir_get = wasmExports['_wasmfs_readdir_get'])(a0);
-var __wasmfs_readdir_finish = (a0) => (__wasmfs_readdir_finish = wasmExports['_wasmfs_readdir_finish'])(a0);
-var __wasmfs_get_cwd = () => (__wasmfs_get_cwd = wasmExports['_wasmfs_get_cwd'])();
-var _wasmfs_create_jsimpl_backend = () => (_wasmfs_create_jsimpl_backend = wasmExports['wasmfs_create_jsimpl_backend'])();
-var _wasmfs_create_memory_backend = () => (_wasmfs_create_memory_backend = wasmExports['wasmfs_create_memory_backend'])();
-var __wasmfs_node_record_dirent = (a0, a1, a2) => (__wasmfs_node_record_dirent = wasmExports['_wasmfs_node_record_dirent'])(a0, a1, a2);
-var __wasmfs_opfs_record_entry = (a0, a1, a2) => (__wasmfs_opfs_record_entry = wasmExports['_wasmfs_opfs_record_entry'])(a0, a1, a2);
-var _wasmfs_create_file = (a0, a1, a2) => (_wasmfs_create_file = wasmExports['wasmfs_create_file'])(a0, a1, a2);
-var dynCall_jiji = Module['dynCall_jiji'] = (a0, a1, a2, a3, a4) => (dynCall_jiji = Module['dynCall_jiji'] = wasmExports['dynCall_jiji'])(a0, a1, a2, a3, a4);
-var dynCall_iiii = Module['dynCall_iiii'] = (a0, a1, a2, a3) => (dynCall_iiii = Module['dynCall_iiii'] = wasmExports['dynCall_iiii'])(a0, a1, a2, a3);
-var dynCall_ii = Module['dynCall_ii'] = (a0, a1) => (dynCall_ii = Module['dynCall_ii'] = wasmExports['dynCall_ii'])(a0, a1);
-var dynCall_iidiiii = Module['dynCall_iidiiii'] = (a0, a1, a2, a3, a4, a5, a6) => (dynCall_iidiiii = Module['dynCall_iidiiii'] = wasmExports['dynCall_iidiiii'])(a0, a1, a2, a3, a4, a5, a6);
-var dynCall_vii = Module['dynCall_vii'] = (a0, a1, a2) => (dynCall_vii = Module['dynCall_vii'] = wasmExports['dynCall_vii'])(a0, a1, a2);
-var dynCall_vi = Module['dynCall_vi'] = (a0, a1) => (dynCall_vi = Module['dynCall_vi'] = wasmExports['dynCall_vi'])(a0, a1);
-var dynCall_iii = Module['dynCall_iii'] = (a0, a1, a2) => (dynCall_iii = Module['dynCall_iii'] = wasmExports['dynCall_iii'])(a0, a1, a2);
-var dynCall_v = Module['dynCall_v'] = (a0) => (dynCall_v = Module['dynCall_v'] = wasmExports['dynCall_v'])(a0);
-var dynCall_ji = Module['dynCall_ji'] = (a0, a1) => (dynCall_ji = Module['dynCall_ji'] = wasmExports['dynCall_ji'])(a0, a1);
-var dynCall_iiiij = Module['dynCall_iiiij'] = (a0, a1, a2, a3, a4, a5) => (dynCall_iiiij = Module['dynCall_iiiij'] = wasmExports['dynCall_iiiij'])(a0, a1, a2, a3, a4, a5);
-var dynCall_iij = Module['dynCall_iij'] = (a0, a1, a2, a3) => (dynCall_iij = Module['dynCall_iij'] = wasmExports['dynCall_iij'])(a0, a1, a2, a3);
-var dynCall_viii = Module['dynCall_viii'] = (a0, a1, a2, a3) => (dynCall_viii = Module['dynCall_viii'] = wasmExports['dynCall_viii'])(a0, a1, a2, a3);
-var dynCall_viiiiii = Module['dynCall_viiiiii'] = (a0, a1, a2, a3, a4, a5, a6) => (dynCall_viiiiii = Module['dynCall_viiiiii'] = wasmExports['dynCall_viiiiii'])(a0, a1, a2, a3, a4, a5, a6);
-var dynCall_viiiii = Module['dynCall_viiiii'] = (a0, a1, a2, a3, a4, a5) => (dynCall_viiiii = Module['dynCall_viiiii'] = wasmExports['dynCall_viiiii'])(a0, a1, a2, a3, a4, a5);
-var dynCall_viiii = Module['dynCall_viiii'] = (a0, a1, a2, a3, a4) => (dynCall_viiii = Module['dynCall_viiii'] = wasmExports['dynCall_viiii'])(a0, a1, a2, a3, a4);
-var _asyncify_start_unwind = (a0) => (_asyncify_start_unwind = wasmExports['asyncify_start_unwind'])(a0);
-var _asyncify_stop_unwind = () => (_asyncify_stop_unwind = wasmExports['asyncify_stop_unwind'])();
-var _asyncify_start_rewind = (a0) => (_asyncify_start_rewind = wasmExports['asyncify_start_rewind'])(a0);
-var _asyncify_stop_rewind = () => (_asyncify_stop_rewind = wasmExports['asyncify_stop_rewind'])();
+var wasmExports = await createWasm();
 
 
 // include: postamble.js
 // === Auto-generated postamble setup entry stuff ===
-
-Module['addRunDependency'] = addRunDependency;
-Module['removeRunDependency'] = removeRunDependency;
-Module['callMain'] = callMain;
-Module['ccall'] = ccall;
-Module['cwrap'] = cwrap;
-Module['UTF8ToString'] = UTF8ToString;
-Module['stringToUTF8'] = stringToUTF8;
-Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
-Module['FS_unlink'] = FS_unlink;
-Module['FS_createPath'] = FS_createPath;
-Module['FS'] = FS;
-Module['FS_createDataFile'] = FS_createDataFile;
-
-
-var calledRun;
-
-dependenciesFulfilled = function runCaller() {
-  // If run has never been called, and we should call run (INVOKE_RUN is true, and Module.noInitialRun is not false)
-  if (!calledRun) run();
-  if (!calledRun) dependenciesFulfilled = runCaller; // try this again later, after new deps are fulfilled
-};
 
 function callMain() {
 
@@ -2487,8 +2421,7 @@ function callMain() {
     // if we're not running an evented main loop, it's time to exit
     exitJS(ret, /* implicit = */ true);
     return ret;
-  }
-  catch (e) {
+  } catch (e) {
     return handleException(e);
   }
 }
@@ -2496,6 +2429,7 @@ function callMain() {
 function run() {
 
   if (runDependencies > 0) {
+    dependenciesFulfilled = run;
     return;
   }
 
@@ -2503,14 +2437,13 @@ function run() {
 
   // a preRun added a dependency, run will be called later
   if (runDependencies > 0) {
+    dependenciesFulfilled = run;
     return;
   }
 
   function doRun() {
     // run may have just been called through dependencies being fulfilled just in this very frame,
     // or while the async setStatus time below was happening
-    if (calledRun) return;
-    calledRun = true;
     Module['calledRun'] = true;
 
     if (ABORT) return;
@@ -2519,10 +2452,11 @@ function run() {
 
     preMain();
 
-    readyPromiseResolve(Module);
+    readyPromiseResolve?.(Module);
     Module['onRuntimeInitialized']?.();
 
-    if (shouldRunNow) callMain();
+    var noInitialRun = Module['noInitialRun'] || true;
+    if (!noInitialRun) callMain();
 
     postRun();
   }
@@ -2539,18 +2473,16 @@ function run() {
   }
 }
 
-if (Module['preInit']) {
-  if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
-  while (Module['preInit'].length > 0) {
-    Module['preInit'].pop()();
+function preInit() {
+  if (Module['preInit']) {
+    if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
+    while (Module['preInit'].length > 0) {
+      Module['preInit'].shift()();
+    }
   }
 }
 
-// shouldRunNow refers to calling main(), not run().
-var shouldRunNow = false;
-
-if (Module['noInitialRun']) shouldRunNow = false;
-
+preInit();
 run();
 
 // end include: postamble.js
@@ -2562,7 +2494,15 @@ run();
 // We assign to the `moduleRtn` global here and configure closure to see
 // this as and extern so it won't get minified.
 
-moduleRtn = readyPromise;
+if (runtimeInitialized)  {
+  moduleRtn = Module;
+} else {
+  // Set up the promise that indicates the Module is initialized
+  moduleRtn = new Promise((resolve, reject) => {
+    readyPromiseResolve = resolve;
+    readyPromiseReject = reject;
+  });
+}
 
 // end include: postamble_modularize.js
 
@@ -2572,7 +2512,10 @@ moduleRtn = readyPromise;
 }
 );
 })();
-if (typeof exports === 'object' && typeof module === 'object')
+if (typeof exports === 'object' && typeof module === 'object') {
   module.exports = WasmCore;
-else if (typeof define === 'function' && define['amd'])
+  // This default export looks redundant, but it allows TS to import this
+  // commonjs style module.
+  module.exports.default = WasmCore;
+} else if (typeof define === 'function' && define['amd'])
   define([], () => WasmCore);
