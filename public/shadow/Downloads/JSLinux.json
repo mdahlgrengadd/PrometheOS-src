@@ -1,0 +1,7 @@
+{
+  "name": "JSLinux",
+  "description": "A JavaScript-based Linux emulator running RISC-V and x86 systems",
+  "target": "jslinux",
+  "iconType": "plugin",
+  "icon": "jslinux"
+}

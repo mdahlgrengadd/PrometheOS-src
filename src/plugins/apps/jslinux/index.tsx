@@ -1,2 +1,3 @@
-import JSLinuxPlugin from './ui';
+import JSLinuxPlugin from "./ui";
+
 export default JSLinuxPlugin;

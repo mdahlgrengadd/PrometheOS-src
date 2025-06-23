@@ -1,27 +1,32 @@
-import { manifest as aichatManifest } from './apps/aichat/manifest';
-import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
-import { manifest as appPreviewManifest } from './apps/app-preview/manifest';
-import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
-import { manifest as apiFlowEditorManifest } from './apps/blueprints/manifest';
-import { manifest as browserManifest } from './apps/browser/manifest';
-import { manifest as builderManifest } from './apps/builder/manifest';
-import { manifest as calculatorManifest } from './apps/calculator/manifest';
-import { manifest as chatManifest } from './apps/chat/manifest';
-import { manifest as desktop3dManifest } from './apps/desktop-3d/manifest';
-import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
+import { manifest as aichatManifest } from "./apps/aichat/manifest";
+import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
+import { manifest as appPreviewManifest } from "./apps/app-preview/manifest";
+import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
+import { manifest as apiFlowEditorManifest } from "./apps/blueprints/manifest";
+import { manifest as browserManifest } from "./apps/browser/manifest";
+import { manifest as builderManifest } from "./apps/builder/manifest";
+import { manifest as calculatorManifest } from "./apps/calculator/manifest";
+import { manifest as chatManifest } from "./apps/chat/manifest";
+import { manifest as desktop3dManifest } from "./apps/desktop-3d/manifest";
+import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
+import { manifest as jslinuxManifest } from "./apps/jslinux/manifest";
 // Import all plugin manifests
-import { manifest as notepadManifest } from './apps/notepad/manifest';
-import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
-import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
-import { manifest as sessionManifest } from './apps/session/manifest';
-import { manifest as settingsManifest } from './apps/settings/manifest';
-import { manifest as terminalManifest } from './apps/terminal/manifest';
-import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
-import { manifest as webampManifest } from './apps/webamp/manifest';
-import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
-import { manifest as zetawriterManifest } from './apps/zetawriter/manifest';
-import { addDynamicManifest, loadDynamicManifests, removeDynamicManifest } from './dynamicRegistry';
-import { PluginManifest } from './types';
+import { manifest as notepadManifest } from "./apps/notepad/manifest";
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+import { manifest as pythonScribeManifest } from "./apps/pyserve/manifest";
+import { manifest as sessionManifest } from "./apps/session/manifest";
+import { manifest as settingsManifest } from "./apps/settings/manifest";
+import { manifest as terminalManifest } from "./apps/terminal/manifest";
+import { manifest as wasmKernelManifest } from "./apps/wasm-kernel/manifest";
+import { manifest as webampManifest } from "./apps/webamp/manifest";
+import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
+import { manifest as zetawriterManifest } from "./apps/zetawriter/manifest";
+import {
+  addDynamicManifest,
+  loadDynamicManifests,
+  removeDynamicManifest,
+} from "./dynamicRegistry";
+import { PluginManifest } from "./types";
 
 // Static plugins list - keep this unchanged
 export const staticPlugins: PluginManifest[] = [
@@ -45,6 +50,7 @@ export const staticPlugins: PluginManifest[] = [
   sessionManifest,
   chatManifest,
   fileExplorerManifest,
+  jslinuxManifest,
   pyodideTestManifest,
   pythonScribeManifest,
 ];

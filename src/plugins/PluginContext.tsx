@@ -1,38 +1,48 @@
 import React, {
-    createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState
-} from 'react';
+  createContext,
+  lazy,
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import { useWindowStore } from '@/store/windowStore';
-import { createInitDataFromUrl } from '@/utils/url';
+import { useWindowStore } from "@/store/windowStore";
+import { createInitDataFromUrl } from "@/utils/url";
 
-import { manifest as aichatManifest } from './apps/aichat/manifest';
+import { manifest as aichatManifest } from "./apps/aichat/manifest";
 // Import manifests instead of full plugin implementations
-import { manifest as apiExplorerManifest } from './apps/api-explorer/manifest';
-import { manifest as audioPlayerManifest } from './apps/audioplayer/manifest';
-import { manifest as apiFlowEditorManifest } from './apps/blueprints/manifest';
-import { manifest as browserManifest } from './apps/browser/manifest';
-import { manifest as builderManifest } from './apps/builder/manifest';
-import { manifest as calculatorManifest } from './apps/calculator/manifest';
-import { manifest as chatManifest } from './apps/chat/manifest';
-import { manifest as desktop3dManifest } from './apps/desktop-3d/manifest';
-import { manifest as fileExplorerManifest } from './apps/file-explorer/manifest';
-import { manifest as notepadManifest } from './apps/notepad/manifest';
-import { manifest as pyodideTestManifest } from './apps/pyodide-test/manifest';
-import { manifest as pythonScribeManifest } from './apps/pyserve/manifest';
-import { manifest as sessionManifest } from './apps/session/manifest';
-import { manifest as settingsManifest } from './apps/settings/manifest';
-import { manifest as terminalManifest } from './apps/terminal/manifest';
-import { manifest as wasmKernelManifest } from './apps/wasm-kernel/manifest';
-import { manifest as webampManifest } from './apps/webamp/manifest';
-import { manifest as wordEditorManifest } from './apps/wordeditor/manifest';
-import { manifest as zetawriterManifest } from './apps/zetawriter/manifest';
-import { eventBus } from './EventBus';
-import { PluginManager } from './PluginManager';
+import { manifest as apiExplorerManifest } from "./apps/api-explorer/manifest";
+import { manifest as audioPlayerManifest } from "./apps/audioplayer/manifest";
+import { manifest as apiFlowEditorManifest } from "./apps/blueprints/manifest";
+import { manifest as browserManifest } from "./apps/browser/manifest";
+import { manifest as builderManifest } from "./apps/builder/manifest";
+import { manifest as calculatorManifest } from "./apps/calculator/manifest";
+import { manifest as chatManifest } from "./apps/chat/manifest";
+import { manifest as desktop3dManifest } from "./apps/desktop-3d/manifest";
+import { manifest as fileExplorerManifest } from "./apps/file-explorer/manifest";
+import { manifest as jslinuxManifest } from "./apps/jslinux/manifest";
+import { manifest as notepadManifest } from "./apps/notepad/manifest";
+import { manifest as pyodideTestManifest } from "./apps/pyodide-test/manifest";
+import { manifest as pythonScribeManifest } from "./apps/pyserve/manifest";
+import { manifest as sessionManifest } from "./apps/session/manifest";
+import { manifest as settingsManifest } from "./apps/settings/manifest";
+import { manifest as terminalManifest } from "./apps/terminal/manifest";
+import { manifest as wasmKernelManifest } from "./apps/wasm-kernel/manifest";
+import { manifest as webampManifest } from "./apps/webamp/manifest";
+import { manifest as wordEditorManifest } from "./apps/wordeditor/manifest";
+import { manifest as zetawriterManifest } from "./apps/zetawriter/manifest";
+import { eventBus } from "./EventBus";
+import { PluginManager } from "./PluginManager";
 import {
-    getAllManifests, installPlugin, uninstallPlugin as removePluginFromRegistry
-} from './registry';
-import { Plugin, PluginInitData, PluginManifest } from './types';
-import { workerPluginManager } from './WorkerPluginManagerClient';
+  getAllManifests,
+  installPlugin,
+  uninstallPlugin as removePluginFromRegistry,
+} from "./registry";
+import { Plugin, PluginInitData, PluginManifest } from "./types";
+import { workerPluginManager } from "./WorkerPluginManagerClient";
 
 // Lazy loading factory for plugins
 const createLazyPlugin = (pluginId: string) => {
@@ -61,6 +71,7 @@ const pluginLoaders: Record<string, () => Promise<Plugin>> = {
   session: () => import("./apps/session").then((m) => m.default),
   chat: () => import("./apps/chat").then((m) => m.default),
   "file-explorer": () => import("./apps/file-explorer").then((m) => m.default),
+  jslinux: () => import("./apps/jslinux").then((m) => m.default),
   "pyodide-test": () => import("./apps/pyodide-test").then((m) => m.default),
   pyserve: () => import("./apps/pyserve").then((m) => m.default),
   "desktop-3d": () =>
@@ -681,7 +692,7 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const usePlugins = () => {
   const context = useContext(PluginContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("usePlugins must be used within a PluginProvider");
   }
   return context;
