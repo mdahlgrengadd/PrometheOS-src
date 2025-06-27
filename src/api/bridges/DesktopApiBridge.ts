@@ -3,7 +3,7 @@
  * This runs in the main thread and communicates with the Pyodide worker
  */
 
-import { eventBus } from "../../plugins/EventBus";
+import { eventBus } from "../core/EventBus";
 
 export interface DesktopApiBridge {
   listComponents(): string[];

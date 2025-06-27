@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-import { useApi } from '@/api/hooks/useApi';
-import { eventBus } from '@/plugins/EventBus';
+import { eventBus } from "@/api/core/EventBus";
+import { useApi } from "@/api/hooks/useApi";
 
-import { IMacro, IMacroContextValue, IMacroStep } from '../core/types';
-import { macroService } from '../services/MacroService';
+import { IMacro, IMacroContextValue, IMacroStep } from "../core/types";
+import { macroService } from "../services/MacroService";
 
 // Create the Macro context with default values
 const MacroContext = createContext<IMacroContextValue>({

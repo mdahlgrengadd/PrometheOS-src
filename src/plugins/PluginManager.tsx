@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { eventBus } from "./EventBus";
+import { eventBus } from "../api/core/EventBus";
 import { Plugin, PluginManifest } from "./types";
 
 /**

@@ -8,11 +8,11 @@ import React, {
   useState,
 } from "react";
 
-import { eventBus } from "../../plugins/EventBus";
 import {
   setGlobalApiContext,
   setupGlobalHybridApiBridge,
 } from "../bridges/HybridDesktopApiBridge";
+import { eventBus } from "../core/EventBus";
 import {
   IActionResult,
   IApiComponent,

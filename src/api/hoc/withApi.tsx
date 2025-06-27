@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { eventBus } from "../../plugins/EventBus";
 import { useApi } from "../context/ApiContext";
+import { eventBus } from "../core/EventBus";
 import { ApiComponentProps, IApiComponent } from "../core/types";
 
 // Registry for component registration status, helps prevent duplicate work
@@ -223,7 +223,7 @@ export function withApi<P extends object>(
             },
           });
         }
-      }, [props]);      // Setup component registration once on mount with cleanup on unmount
+      }, [props]); // Setup component registration once on mount with cleanup on unmount
       // Using empty deps array to ensure this only runs on mount/unmount
       useEffect(() => {
         const id = uniqueId.current;
@@ -253,7 +253,9 @@ export function withApi<P extends object>(
         } else if (componentRegistry.isMounted(id)) {
           // Component is already mounted, just mark our ref as registered
           isRegisteredRef.current = true;
-          console.log(`[API] Component ${id} already registered, skipping duplicate registration`);
+          console.log(
+            `[API] Component ${id} already registered, skipping duplicate registration`
+          );
         }
 
         // Return cleanup function - use captured variables to prevent closure issues

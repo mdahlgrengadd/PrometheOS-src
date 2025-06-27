@@ -1,8 +1,7 @@
 import { toast as sonnerToast } from "sonner";
 
-import { toast as radialToast } from "../../hooks/use-toast";
-import { eventBus } from "../../plugins/EventBus";
 import { registerApiActionHandler } from "../context/ApiContext";
+import { eventBus } from "../core/EventBus";
 import { IApiComponent, IApiContextValue } from "../core/types";
 
 // Define the consolidated system API component
@@ -572,7 +571,7 @@ export function registerSystemApi(apiContext: IApiContextValue) {
       if (engine === "sonner") {
         sonnerToast(messageStr);
       } else {
-        radialToast({ title: messageStr });
+        sonnerToast(messageStr);
       }
       return {
         success: true,

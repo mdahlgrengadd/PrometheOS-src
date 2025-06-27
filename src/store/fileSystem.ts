@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { eventBus } from "@/plugins/EventBus";
+import { eventBus } from "@/api/core/EventBus";
 import { virtualFs } from "@/utils/virtual-fs";
 
 import type { FileSystemItem } from "@/plugins/apps/file-explorer/types/fileSystem";

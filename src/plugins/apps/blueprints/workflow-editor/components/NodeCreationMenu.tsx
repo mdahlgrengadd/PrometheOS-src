@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 
 import { Node } from "@xyflow/react";
 
+import { eventBus } from "../../../../../api/core/EventBus";
 import { IApiComponent } from "../../../../../api/core/types";
 import { useApi } from "../../../../../api/hooks/useApi";
 import { useDataPin, useExecPin } from "../../../../../hooks/usePin";
-import { eventBus } from "../../../../../plugins/EventBus";
 import { ApiComponentService } from "../services/ApiComponentService";
 import { ApiAppNodeData, Pin, PinDataType, PinType } from "../types/flowTypes";
 import { DataTypeConversionNodeData } from "./DataTypeConversionNode";

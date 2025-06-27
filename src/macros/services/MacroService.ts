@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
-import { IActionResult } from '@/api/core/types';
-import { eventBus } from '@/plugins/EventBus';
+import { eventBus } from "@/api/core/EventBus";
+import { IActionResult } from "@/api/core/types";
 
-import { IMacro, IMacroExecutionResult, IMacroStep } from '../core/types';
+import { IMacro, IMacroExecutionResult, IMacroStep } from "../core/types";
 
 /**
  * Service for recording, storing, and executing macros

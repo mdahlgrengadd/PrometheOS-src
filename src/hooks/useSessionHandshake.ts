@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { eventBus } from '../plugins/EventBus';
+import { eventBus } from "../api/core/EventBus";
 import {
-    decodeShortCode, generatePinCode, generateShortCode, lookupShortCodeByPin
-} from '../utils/sessionUtils';
-import { toast } from './use-toast';
-import { useWebRTCSession } from './useWebRTCSession';
-import { useWebRTCStatus } from './useWebRTCStatus';
+  decodeShortCode,
+  generatePinCode,
+  generateShortCode,
+  lookupShortCodeByPin,
+} from "../utils/sessionUtils";
+import { toast } from "./use-toast";
+import { useWebRTCSession } from "./useWebRTCSession";
+import { useWebRTCStatus } from "./useWebRTCStatus";
 
 let isApplyingRemote = false;
 

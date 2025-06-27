@@ -1,12 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import { useWindowStore } from '@/store/windowStore';
+import { useWindowStore } from "@/store/windowStore";
 
-import { eventBus } from '../../EventBus';
-import { Plugin } from '../../types';
+import { eventBus } from "../../../api/core/EventBus";
+import { Plugin } from "../../types";
 // Define the plugin manifest
-import { manifest } from './manifest';
-import { WebampInstance, WebampOptions, WebampState, WebampTrack } from './types';
+import { manifest } from "./manifest";
+import {
+  WebampInstance,
+  WebampOptions,
+  WebampState,
+  WebampTrack,
+} from "./types";
 
 // CSS preload helper
 const preloadWebampCSS = () => {

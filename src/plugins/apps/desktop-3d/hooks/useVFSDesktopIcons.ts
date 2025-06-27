@@ -1,11 +1,14 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { useFileSystemStore } from '../../../../store/fileSystem';
-import { eventBus } from '../../../EventBus';
-import { usePlugins } from '../../../PluginContext';
-import { DesktopShortcut, FileSystemItem } from '../../file-explorer/types/fileSystem';
-import { DesktopIconData } from '../data/iconData';
-import { getIconPathForTitle } from '../utils/iconMapper';
+import { eventBus } from "../../../../api/core/EventBus";
+import { useFileSystemStore } from "../../../../store/fileSystem";
+import { usePlugins } from "../../../PluginContext";
+import {
+  DesktopShortcut,
+  FileSystemItem,
+} from "../../file-explorer/types/fileSystem";
+import { DesktopIconData } from "../data/iconData";
+import { getIconPathForTitle } from "../utils/iconMapper";
 
 interface VFSDesktopItem extends DesktopIconData {
   id: string;

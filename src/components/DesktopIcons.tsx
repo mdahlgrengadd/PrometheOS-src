@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { eventBus } from "@/api/core/EventBus";
 import {
   DesktopShortcut,
   FileSystemItem,
@@ -11,7 +12,6 @@ import {
   getAppForFileExtension,
   getFileIcon,
 } from "@/plugins/apps/file-explorer/utils/fileUtils";
-import { eventBus } from "@/plugins/EventBus";
 import { useFileSystemStore } from "@/store/fileSystem";
 import { getAppLaunchUrl } from "@/utils/url";
 
