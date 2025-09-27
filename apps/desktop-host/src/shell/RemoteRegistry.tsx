@@ -1,5 +1,5 @@
 // Remote Registry - Manages Module Federation remotes
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 interface RemoteConfig {
   name: string;
@@ -36,8 +36,14 @@ export const RemoteRegistry: React.FC<{ children: React.ReactNode }> = ({ childr
   const [remotes, setRemotes] = useState<Map<string, RemoteConfig>>(
     new Map(DEFAULT_REMOTES.map(remote => [remote.name, remote]))
   );
+  const loadedComponentsRef = useRef<Map<string, React.ComponentType>>(new Map());
 
   const loadRemote = async (name: string): Promise<React.ComponentType | null> => {
+    // Serve from cache if already loaded
+    const cached = loadedComponentsRef.current.get(name);
+    if (cached) {
+      return cached;
+    }
     const remote = remotes.get(name);
     if (!remote) {
       console.error(`[RemoteRegistry] Remote ${name} not found`);
@@ -62,12 +68,12 @@ export const RemoteRegistry: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!Component) {
         throw new Error(`Remote ${name} does not export a default component`);
       }
-
-      // Update remote status
+      // Cache and update status (only if not already ready)
+      loadedComponentsRef.current.set(name, Component);
       setRemotes(prev => {
         const updated = new Map(prev);
         const config = updated.get(name);
-        if (config) {
+        if (config && config.status !== 'ready') {
           updated.set(name, { ...config, status: 'ready' });
         }
         return updated;

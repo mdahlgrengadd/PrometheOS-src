@@ -5,9 +5,13 @@ import { RemoteWindowRenderer } from './RemoteWindowRenderer';
 import { DesktopBackground } from './DesktopBackground';
 
 export const DesktopShell: React.FC = () => {
-  const openWindows = useWindowStore((s) => s.openWindows);
+  // Get windows and filter for open ones
+  const windows = useWindowStore((s) => s.windows);
+  const openWindows = Object.values(windows).filter(w => w.isOpen);
 
   console.log('[DesktopShell] Rendering with', openWindows.length, 'open windows');
+  console.log('[DesktopShell] All windows:', Object.keys(windows));
+  console.log('[DesktopShell] Open windows:', openWindows.map(w => ({ id: w.id, isOpen: w.isOpen, title: w.title })));
 
   return (
     <div className="desktop-shell w-full h-full relative overflow-hidden bg-blue-500">

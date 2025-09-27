@@ -1,5 +1,5 @@
 // Remote Window Renderer - Renders Module Federation remotes in windows
-import React, { Suspense } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { RemoteErrorBoundary } from '../core/ErrorBoundary';
 import { useRemoteRegistry } from './RemoteRegistry';
 import { WindowState } from '../types/window';
@@ -11,16 +11,22 @@ interface RemoteWindowRendererProps {
 export const RemoteWindowRenderer: React.FC<RemoteWindowRendererProps> = ({ window }) => {
   const { loadRemote } = useRemoteRegistry();
 
-  // Create a dynamic remote component loader
-  const RemoteComponent = React.lazy(async () => {
-    try {
-      const Component = await loadRemote(window.id);
-      return Component ? { default: Component } : { default: () => <div>Remote not found</div> };
-    } catch (error) {
-      console.error(`Failed to load remote ${window.id}:`, error);
-      return { default: () => <div>Failed to load remote</div> };
-    }
-  });
+  console.log(`[RemoteWindowRenderer] Rendering window: ${window.id}, isOpen: ${window.isOpen}`);
+
+  // Create a dynamic remote component loader (memoized per window.id)
+  const RemoteComponent = useMemo(() => {
+    return React.lazy(async () => {
+      try {
+        console.log(`[RemoteWindowRenderer] Loading remote component for: ${window.id}`);
+        const Component = await loadRemote(window.id);
+        console.log(`[RemoteWindowRenderer] Remote component loaded for ${window.id}:`, !!Component);
+        return Component ? { default: Component } : { default: () => <div>Remote not found</div> };
+      } catch (error) {
+        console.error(`[RemoteWindowRenderer] Failed to load remote ${window.id}:`, error);
+        return { default: () => <div>Failed to load remote</div> };
+      }
+    });
+  }, [loadRemote, window.id]);
 
   const windowStyle: React.CSSProperties = window.isMaximized
     ? {

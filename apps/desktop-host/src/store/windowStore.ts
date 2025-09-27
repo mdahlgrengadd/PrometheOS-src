@@ -255,6 +255,8 @@ export const useWindowStore = create<WindowStore>()(
               return;
             }
 
+            console.log('[WindowStore] Rehydrating state:', rehydratedState);
+
             if (rehydratedState && rehydratedState.windows) {
               // Find the highest z-index among persisted windows
               const highestPersistedZ = findHighestZIndex(
@@ -263,7 +265,18 @@ export const useWindowStore = create<WindowStore>()(
 
               // Set the highestZ to be at least the highest persisted z-index
               rehydratedState.highestZ = Math.max(1, highestPersistedZ);
+
+              // Force all windows to be closed on rehydration to prevent persistence conflicts
+              Object.keys(rehydratedState.windows).forEach(id => {
+                if (rehydratedState.windows[id]) {
+                  rehydratedState.windows[id].isOpen = false;
+                }
+              });
+              
+              console.log('[WindowStore] Reset all windows to closed state on rehydration');
             }
+
+            // No additional state changes here to avoid referencing set()
           };
         },
       }
