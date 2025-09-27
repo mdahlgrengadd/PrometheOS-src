@@ -1,16 +1,40 @@
-const ModuleFederationPlugin = require('@module-federation/webpack');
+const { ModuleFederationPlugin } = require('@module-federation/enhanced');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   mode: 'development',
   entry: './src/index.ts',
+  
+  devServer: {
+    port: 3003,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
+
+  output: {
+    publicPath: 'http://localhost:3003/',
+  },
+
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    alias: {
+      '@': require('path').resolve(__dirname, 'src'),
+    },
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: {
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true,
+            compilerOptions: {
+              jsx: 'react-jsx',
+            },
+          },
+        },
         exclude: /node_modules/,
       },
       {
@@ -18,17 +42,7 @@ module.exports = {
         use: [
           'style-loader',
           'css-loader',
-          {
-            loader: 'postcss-loader',
-            options: {
-              postcssOptions: {
-                plugins: [
-                  require('tailwindcss'),
-                  require('autoprefixer'),
-                ],
-              },
-            },
-          },
+          'postcss-loader',
         ],
       },
     ],
@@ -43,13 +57,27 @@ module.exports = {
       shared: {
         react: {
           singleton: true,
-          requiredVersion: '^18.3.1',
+          eager: true,
+          strictVersion: false,
+          requiredVersion: false,
         },
         'react-dom': {
           singleton: true,
-          requiredVersion: '^18.3.1',
+          eager: true,
+          strictVersion: false,
+          requiredVersion: false,
+        },
+        'react/jsx-runtime': {
+          singleton: true,
+          eager: true,
+          strictVersion: false,
+          requiredVersion: false,
         },
       },
+    }),
+    
+    new HtmlWebpackPlugin({
+      template: './public/index.html',
     }),
   ],
 };

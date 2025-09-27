@@ -22,6 +22,9 @@ module.exports = {
 
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    alias: {
+      '@shared/ui-kit$': path.resolve(__dirname, '../../packages/shared-ui-kit/src/index.ts'),
+    },
   },
 
   module: {
@@ -43,16 +46,29 @@ module.exports = {
       name: 'notepad',
       filename: 'remoteEntry.js',
       exposes: {
-        './App': './src/App.tsx',
+        './App': './src/bootstrap.tsx',
+      },
+      remotes: {
+        shared_ui_kit: 'shared_ui_kit@http://localhost:3003/remoteEntry.js',
       },
       shared: {
         react: {
           singleton: true,
-          requiredVersion: '^18.2.0',
+          strictVersion: false,
+          requiredVersion: false,
+          eager: true,
         },
         'react-dom': {
           singleton: true,
-          requiredVersion: '^18.2.0',
+          strictVersion: false,
+          requiredVersion: false,
+          eager: true,
+        },
+        'react/jsx-runtime': {
+          singleton: true,
+          strictVersion: false,
+          requiredVersion: false,
+          eager: true,
         },
       },
     }),

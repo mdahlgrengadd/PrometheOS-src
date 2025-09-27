@@ -1,8 +1,3 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-
-const container = document.getElementById('root');
-const root = createRoot(container!);
-
-root.render(React.createElement(App));
+// Entry point for the notepad remote
+// Import bootstrap to initialize shared dependencies
+import('./bootstrap');

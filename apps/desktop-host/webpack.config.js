@@ -1,4 +1,4 @@
-const { ModuleFederationPlugin } = require('@module-federation/enhanced');
+const ModuleFederationPlugin = require('webpack').container.ModuleFederationPlugin;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -64,6 +64,7 @@ module.exports = {
   plugins: [
     new ModuleFederationPlugin({
       name: 'desktop_host',
+      filename: 'remoteEntry.js',
 
       // Remotes - dynamically loaded applications
       remotes: {
