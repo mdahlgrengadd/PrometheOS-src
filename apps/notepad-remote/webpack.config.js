@@ -5,6 +5,7 @@ const path = require('path');
 // Configuration constants - modify these for different environments
 const NOTEPAD_REMOTE_URL = process.env.NOTEPAD_REMOTE_URL || 'http://localhost:3001';
 const SHARED_UI_KIT_URL = process.env.SHARED_UI_KIT_URL || 'http://localhost:3003';
+const HOST_URL = process.env.HOST_URL || 'http://localhost:3011';
 const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 3001;
 
 module.exports = {
@@ -55,6 +56,7 @@ module.exports = {
       },
       remotes: {
         shared_ui_kit: `shared_ui_kit@${SHARED_UI_KIT_URL}/remoteEntry.js`,
+        desktop_host: `desktop_host@${HOST_URL}/remoteEntry.js`,
       },
       shared: {
         react: {

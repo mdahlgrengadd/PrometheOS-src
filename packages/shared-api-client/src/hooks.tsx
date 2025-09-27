@@ -20,13 +20,23 @@ export const ApiClientProvider: React.FC<{
   );
 };
 
-// Hook to use API client
+// Hook to use API client with graceful fallback
 export function useApiClient(): IApiClient {
   const context = useContext(ApiClientContext);
-  if (!context) {
-    throw new Error('useApiClient must be used within an ApiClientProvider');
+
+  // First try context provider
+  if (context) {
+    return context;
   }
-  return context;
+
+  // Fallback to host bridge if available
+  if (typeof window !== 'undefined' && window.__HOST_API_BRIDGE__) {
+    console.log('[API Client] Using host bridge fallback');
+    return getApiClient();
+  }
+
+  // No API client available
+  throw new Error('useApiClient must be used within an ApiClientProvider or host bridge must be available');
 }
 
 // Hook for executing API actions with React integration

@@ -195,8 +195,75 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Expose API bridge globally for remotes
     (window as any).__HOST_API_BRIDGE__ = hostApiBridge;
 
-    console.log('[API Provider] Host API Bridge exposed for remotes');
-  }, [executeAction]);
+    // Expose API testing interface for browser console
+    (window as any).__PROMETHEOS_API__ = {
+      // Execute any registered action
+      executeAction: async (componentId: string, actionId: string, params?: Record<string, unknown>) => {
+        console.log(`🔧 [API Test] Executing ${componentId}.${actionId}`, params);
+        const result = await executeAction(componentId, actionId, params);
+        console.log(`📋 [API Test] Result:`, result);
+        return result;
+      },
+
+      // List all registered components
+      listComponents: () => {
+        const comps = getComponents();
+        console.log(`📦 [API Test] Registered components (${comps.length}):`, comps.map(c => `${c.id} (${c.type})`));
+        return comps;
+      },
+
+      // Get specific component details
+      getComponent: (componentId: string) => {
+        const comps = getComponents();
+        const comp = comps.find(c => c.id === componentId);
+        console.log(`🔍 [API Test] Component ${componentId}:`, comp);
+        return comp;
+      },
+
+      // Textarea specific helpers
+      textarea: {
+        setValue: async (apiId: string, text: string) => {
+          console.log(`📝 [API Test] Setting textarea ${apiId} to: "${text}"`);
+          return await executeAction(apiId, 'setValue', { value: text });
+        },
+
+        getValue: async (apiId: string) => {
+          console.log(`📖 [API Test] Getting textarea ${apiId} value`);
+          return await executeAction(apiId, 'getValue');
+        },
+
+        clear: async (apiId: string) => {
+          console.log(`🗑️ [API Test] Clearing textarea ${apiId}`);
+          return await executeAction(apiId, 'clear');
+        },
+
+        appendText: async (apiId: string, text: string) => {
+          console.log(`➕ [API Test] Appending to textarea ${apiId}: "${text}"`);
+          return await executeAction(apiId, 'appendText', { text });
+        },
+      },
+
+      // Event system helpers
+      events: {
+        emit: async (eventName: string, data?: unknown) => {
+          console.log(`📡 [API Test] Emitting event: ${eventName}`, data);
+          return await hostApiBridge.emitEvent(eventName, data);
+        },
+
+        subscribe: async (eventName: string, callback?: (data: unknown) => void) => {
+          const defaultCallback = (data: unknown) => {
+            console.log(`🔔 [API Test] Event received: ${eventName}`, data);
+          };
+          console.log(`👂 [API Test] Subscribing to event: ${eventName}`);
+          return await hostApiBridge.subscribeEvent(eventName, callback || defaultCallback);
+        },
+      },
+    };
+
+    console.log('🌐 [API Provider] Host API Bridge and testing interface exposed');
+    console.log('💡 [API Test] Use __PROMETHEOS_API__ in browser console to test API functionality');
+    console.log('💡 [API Test] Example: __PROMETHEOS_API__.textarea.setValue("notepad-textarea-notepad", "Hello API!")');
+  }, [executeAction, getComponents]);
 
   const contextValue: IApiContextValue = {
     registerComponent,

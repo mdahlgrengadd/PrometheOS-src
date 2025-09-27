@@ -95,11 +95,15 @@ export function withApi<P extends object>(
 
       // Gracefully handle missing API client context in federated environment
       let apiClient = null;
+      let hasHostBridge = false;
+
       try {
         apiClient = useApiClient();
+        hasHostBridge = typeof window !== 'undefined' && !!window.__HOST_API_BRIDGE__;
+        console.log(`[Federated API] API client available${hasHostBridge ? ' via host bridge' : ' via provider'}`);
       } catch (error) {
         // API client not available in this context - continue without it
-        console.warn('[Federated API] API client not available, running in fallback mode:', error.message);
+        console.log('[Federated API] API client not available, running in fallback mode');
       }
 
       // Generate a unique ID if not provided
@@ -231,6 +235,10 @@ export function withApi<P extends object>(
           const registrationResult = useComponentRegistration(fullApiDoc);
           registered = registrationResult.registered;
           error = registrationResult.error;
+
+          if (registered) {
+            console.log(`[Federated API] Component registered: ${uniqueId.current}${hasHostBridge ? ' (via host bridge)' : ' (via provider)'}`);
+          }
         } catch (err) {
           console.warn('[Federated API] Component registration failed:', err.message);
           error = err.message;

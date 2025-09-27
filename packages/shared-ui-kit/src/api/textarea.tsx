@@ -8,7 +8,7 @@ import {
 } from "../textarea";
 
 import { textareaApiActions, textareaApiDoc } from "./textarea-api";
-// import { useTextareaHandlers } from "./textarea-handlers";
+import { useTextareaHandlers } from "./textarea-handlers";
 
 // Re-export for backward compatibility
 export { textareaApiActions, textareaApiDoc } from "./textarea-api";
@@ -39,8 +39,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       onChangeRef.current = onChange;
     }, [onChange]);
 
-    // TODO: Implement federated textarea handlers when ApiClientProvider is available
-    // const handlers = useTextareaHandlers(apiId, valueRef, onChangeRef);
+    // Federated textarea handlers for API integration
+    const handlers = useTextareaHandlers(apiId, valueRef, onChangeRef);
 
     return (
       <ApiTextarea

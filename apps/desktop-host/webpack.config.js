@@ -74,6 +74,12 @@ module.exports = {
       name: 'desktop_host',
       filename: 'remoteEntry.js',
 
+      // Exports - what the host exposes to remotes
+      exposes: {
+        './ApiProvider': './src/api/ApiProvider.tsx',
+        './HostApiBridge': './src/api/HostApiBridge.tsx',
+      },
+
       // Remotes - dynamically loaded applications
       remotes: {
         notepad: `notepad@${NOTEPAD_REMOTE_URL}/remoteEntry.js`,
