@@ -3,6 +3,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme tokens using CSS variables */
+:root {
+  --background: #0b0f19;
+  --foreground: #e5e7eb;
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+  --border: #374151;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --gray-100: #f3f4f6;
+  --muted-50: rgba(31, 41, 55, 0.5);
+  --muted-30: rgba(31, 41, 55, 0.3);
+}
+
+/* BeOS-inspired palette override */
+body.theme-beos {
+  --background: #0e1220;
+  --foreground: #e6e8ee;
+  --muted: #1b2233;
+  --muted-foreground: #9aa3b2;
+  --border: #2a3347;
+}
+
+/* Minimal token utility classes to match legacy design */
+.bg-background { background-color: var(--background) !important; }
+.text-foreground { color: var(--foreground) !important; }
+.bg-muted { background-color: var(--muted) !important; }
+.text-muted-foreground { color: var(--muted-foreground) !important; }
+.bg-muted\/50 { background-color: var(--muted-50) !important; }
+.bg-muted\/30 { background-color: var(--muted-30) !important; }
+.border { border-color: var(--border) !important; }
+.border-b { border-bottom: 1px solid var(--border) !important; }
+.border-t { border-top: 1px solid var(--border) !important; }
+
+/* A few common utilities used by remotes (fallback if Tailwind misses them) */
+.bg-blue-500 { background-color: var(--blue-500) !important; }
+.hover\:bg-blue-600:hover { background-color: var(--blue-600) !important; }
+.text-white { color: #fff !important; }
+.bg-gray-100 { background-color: var(--gray-100) !important; }
+.rounded { border-radius: 0.25rem !important; }
+.p-2 { padding: 0.5rem !important; }
+.px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.px-2 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+.py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+.w-48 { width: 12rem !important; }
+.h-6 { height: 1.5rem !important; }
+.text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+.font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important; }
+.text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+
 /* Base reset and setup */
 * {
   box-sizing: border-box;
