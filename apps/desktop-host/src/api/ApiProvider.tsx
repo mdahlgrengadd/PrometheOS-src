@@ -277,11 +277,7 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     console.log('🌐 [API Provider] Host API Bridge and testing interface exposed');
     console.log('💡 [API Test] Use __PROMETHEOS_API__ in browser console to test API functionality');
     console.log('💡 [API Test] Example: __PROMETHEOS_API__.textarea.setValue("notepad-textarea-notepad", "Hello API!")');
-    
-    // NOTE: registerComponent is intentionally excluded from deps to prevent infinite loops
-    // The bridge captures registerComponent in closure and doesn't need to update when it changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [executeAction, getComponents]);
+  }, [executeAction, getComponents, registerComponent]);
 
   const contextValue: IApiContextValue = {
     registerComponent,

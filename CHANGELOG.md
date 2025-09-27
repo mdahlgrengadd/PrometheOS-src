@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-09-27
+
+### 🔧 CRITICAL STABILITY FIXES
+
+#### Fixed
+- **Infinite Re-render Loop**: Resolved circular dependency in API component registration system
+  - Fixed `useComponentRegistration` hook to prevent apiClient dependency cycles
+  - Stabilized `ApiClientProvider` to avoid unnecessary DirectApiClient recreations
+  - Added proper ESLint disable comments to prevent future "helpful" dependency additions
+- **React Context Pattern**: Stabilized API client provider implementation
+  - Components now register once and remain stable throughout lifecycle
+  - Eliminated unnecessary re-registrations and API client churning
+- **Registration Guards**: Enhanced duplicate registration prevention
+  - Added registration tracking in both DirectApiClient and ApiProvider
+  - Proper cleanup isolation using closure-captured references
+
+#### Performance
+- **Eliminated Re-render Cycles**: Components no longer trigger infinite registration loops
+- **Stable API Clients**: DirectApiClient instances persist throughout component lifecycle
+- **Reduced CPU Usage**: No more unnecessary registration/unregistration cycles
+
+#### Technical Details
+- **Root Cause**: `apiClient` dependency in `useComponentRegistration` causing effect re-runs
+- **Solution**: Removed `apiClient` from effect dependencies, captured in closure for cleanup
+- **Prevention**: Added ESLint disable comments with explanatory documentation
+
 ## [2.0.0] - 2025-09-27
 
 ### 🔥 MAJOR ARCHITECTURAL TRANSFORMATION
