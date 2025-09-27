@@ -1,7 +1,7 @@
 // Clean API Client Provider for React Context Pattern
 import React, { useMemo } from 'react';
-import { ApiClientProvider as SharedApiClientProvider } from '../../../../packages/shared-api-client/src/hooks';
-import { IApiClient, IApiComponent, IActionResult } from '../../../../packages/shared-api-client/src/types';
+import { ApiClientProvider as SharedApiClientProvider } from '@shared/api-client';
+import type { IApiClient, IApiComponent, IActionResult } from '@shared/api-client';
 import { useApi } from './ApiProvider';
 
 /**

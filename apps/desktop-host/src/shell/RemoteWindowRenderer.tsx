@@ -45,10 +45,11 @@ export const RemoteWindowRenderer: React.FC<RemoteWindowRendererProps> = ({
       return apiPattern;
     }
 
-    // Auto-detection logic - for now, default to bridge for backward compatibility
-    // In the future, this could inspect the remote component or use configuration
-    console.log(`[RemoteWindowRenderer] Auto-detecting API pattern for ${window.id} - using bridge for compatibility`);
-    return 'bridge';
+    // Default to React Context pattern for cleaner integration
+    console.log(
+      `[RemoteWindowRenderer] Auto-detecting API pattern for ${window.id} - using context`
+    );
+    return 'context';
   }, [apiPattern, window.id]);
 
   const windowStyle: React.CSSProperties = window.isMaximized

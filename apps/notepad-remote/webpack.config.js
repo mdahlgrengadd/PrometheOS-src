@@ -30,6 +30,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       '@shared/ui-kit$': path.resolve(__dirname, '../../packages/shared-ui-kit/src/index.ts'),
+      '@shared/api-client$': path.resolve(__dirname, '../../packages/shared-api-client/src/index.ts'),
     },
   },
 
@@ -72,6 +73,12 @@ module.exports = {
           eager: true,
         },
         'react/jsx-runtime': {
+          singleton: true,
+          strictVersion: false,
+          requiredVersion: false,
+          eager: true,
+        },
+        '@shared/api-client': {
           singleton: true,
           strictVersion: false,
           requiredVersion: false,

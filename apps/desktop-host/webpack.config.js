@@ -13,13 +13,17 @@ module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
   devtool: 'source-map',
-  resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx'],
-    alias: {
-      '@': './src',
-      '@src': './src',
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
+      alias: {
+        '@': './src',
+        '@src': './src',
+        '@shared/api-client$': require('path').resolve(
+          __dirname,
+          '../../packages/shared-api-client/src/index.ts'
+        ),
+      },
     },
-  },
   devServer: {
     port: DEV_SERVER_PORT,
     host: DEV_SERVER_HOST,
@@ -117,6 +121,8 @@ module.exports = {
         '@shared/api-client': {
           singleton: true,
           eager: true,
+          requiredVersion: false,
+          strictVersion: false,
         },
         '@shared/themes': {
           singleton: true,

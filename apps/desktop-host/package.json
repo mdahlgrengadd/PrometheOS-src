@@ -8,6 +8,7 @@
     "build:workers": "node ../../scripts/build-workers.cjs"
   },
   "dependencies": {
+    "@shared/api-client": "file:../../packages/shared-api-client",
     "@react-three/drei": "^9.95.0",
     "@react-three/fiber": "^8.15.0",
     "ajv": "^8.17.1",
