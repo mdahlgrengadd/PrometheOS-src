@@ -9,6 +9,7 @@ import { DesktopShell } from './shell/DesktopShell';
 import { DesktopBootstrap } from './core/DesktopBootstrap';
 import { WorkerManager } from './workers/WorkerManager';
 import { SystemApiIntegration } from './api/SystemApiIntegration';
+import { Toaster } from 'sonner';
 
 export const DesktopHost: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -72,6 +73,7 @@ export const DesktopHost: React.FC = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+        <Toaster richColors position="top-right" closeButton />
         <ApiProvider>
           <SystemApiIntegration>
             <WorkerManager>
