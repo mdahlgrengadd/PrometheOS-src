@@ -1,61 +1,17 @@
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 import { SystemApiProvider } from '@shared/system-api';
 import { useWindowStore } from '../store/windowStore';
 import { toast } from 'sonner';
-
-// Create a mock API client context for the host
-const HostApiClientContext = createContext<any>(null);
-
-const HostApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Mock API client that just provides the interface the SystemApiProvider expects
-  const mockApiClient = {
-    registerComponent: (component: any) => {
-      console.log('[Host] Registering component:', component.id);
-      return Promise.resolve();
-    },
-    unregisterComponent: (componentId: string) => {
-      console.log('[Host] Unregistering component:', componentId);
-      return Promise.resolve();
-    },
-    executeAction: (componentId: string, actionId: string, parameters: any) => {
-      console.log('[Host] Execute action:', componentId, actionId, parameters);
-      return Promise.resolve({ success: true, data: parameters });
-    },
-    subscribeEvent: (eventName: string, callback: (data: unknown) => void) => {
-      console.log('[Host] Subscribe to event:', eventName);
-      return Promise.resolve(() => console.log('[Host] Unsubscribe from event:', eventName));
-    },
-    emitEvent: (eventName: string, data?: unknown) => {
-      console.log('[Host] Emit event:', eventName, data);
-      return Promise.resolve();
-    },
-    getComponents: () => {
-      return Promise.resolve([]);
-    },
-    getEventNames: () => {
-      return Promise.resolve([]);
-    },
-    sendMCPMessage: (message: any) => {
-      console.log('[Host] Send MCP message:', message);
-      return Promise.resolve({ jsonrpc: '2.0', id: message.id, result: {} });
-    }
-  };
-
-  return (
-    <HostApiClientContext.Provider value={mockApiClient}>
-      {children}
-    </HostApiClientContext.Provider>
-  );
-};
-
-// Mock hook for the host context
-const useHostApiClient = () => {
-  const context = useContext(HostApiClientContext);
-  if (!context) {
-    throw new Error('useHostApiClient must be used within HostApiClientProvider');
-  }
-  return context;
-};
+import { useApi } from './ApiProvider';
+import { eventBus } from '../plugins/EventBus';
+import type {
+  IApiClient,
+  IApiComponent,
+  IActionResult,
+  MCPRequest,
+  MCPResponse,
+} from '@shared/api-client';
+import type { IApiComponent as HostApiComponent } from '../types/api';
 
 interface SystemApiIntegrationProps {
   children: React.ReactNode;
@@ -64,57 +20,45 @@ interface SystemApiIntegrationProps {
 export const SystemApiIntegration: React.FC<SystemApiIntegrationProps> = ({ children }) => {
   // Get window store for app launcher integration
   const windowStore = useWindowStore();
+  const api = useApi();
 
-  // Create host API client
-  const hostApiClient = {
-    registerComponent: (component: any) => {
-      console.log('[Host] Registering component:', component.id);
-      return Promise.resolve();
+  // Real host API client adapter that forwards to the host ApiProvider and shared event bus
+  const hostApiClient: IApiClient = {
+    async executeAction(
+      componentId: string,
+      actionId: string,
+      parameters?: Record<string, unknown>
+    ): Promise<IActionResult> {
+      return api.executeAction(componentId, actionId, parameters);
     },
-    unregisterComponent: (componentId: string) => {
-      console.log('[Host] Unregistering component:', componentId);
-      return Promise.resolve();
+    async registerComponent(component: IApiComponent): Promise<void> {
+      api.registerComponent(component as unknown as HostApiComponent);
     },
-    executeAction: (componentId: string, actionId: string, parameters: any) => {
-      console.log('[Host] Execute action:', componentId, actionId, parameters);
-      return Promise.resolve({ success: true, data: parameters });
+    async unregisterComponent(componentId: string): Promise<void> {
+      api.unregisterComponent(componentId);
     },
-    subscribeEvent: (eventName: string, callback: (data: unknown) => void) => {
-      console.log('[Host] Subscribe to event:', eventName);
-      return Promise.resolve(() => console.log('[Host] Unsubscribe from event:', eventName));
+    async getComponents(): Promise<IApiComponent[]> {
+      return api.getComponents() as unknown as IApiComponent[];
     },
-    emitEvent: (eventName: string, data?: unknown) => {
-      console.log('[Host] Emit event:', eventName, data);
-      return Promise.resolve();
+    async subscribeEvent(
+      eventName: string,
+      callback: (data: unknown) => void
+    ): Promise<() => void> {
+      return eventBus.subscribe(eventName, callback);
     },
-    getComponents: () => {
-      return Promise.resolve([]);
+    async emitEvent(eventName: string, data?: unknown): Promise<void> {
+      eventBus.emit(eventName, data);
     },
-    getEventNames: () => {
-      return Promise.resolve([]);
+    async getEventNames(): Promise<string[]> {
+      return [];
     },
-    sendMCPMessage: (message: any) => {
-      console.log('[Host] Send MCP message:', message);
-      return Promise.resolve({ jsonrpc: '2.0', id: message.id, result: {} });
-    }
+    async sendMCPMessage(message: MCPRequest): Promise<MCPResponse> {
+      return { jsonrpc: '2.0', id: message?.id ?? null, result: {} };
+    },
   };
 
   // Create event bus placeholder - in a real implementation this would connect to the actual event bus
-  const eventBus = {
-    emit: (eventName: string, data: any) => {
-      console.log(`[EventBus] Emit: ${eventName}`, data);
-      // In the real implementation, this would integrate with the actual event system
-    },
-    subscribe: (eventName: string, callback: (data: any) => void) => {
-      console.log(`[EventBus] Subscribe: ${eventName}`);
-      // In the real implementation, this would integrate with the actual event system
-      return () => console.log(`[EventBus] Unsubscribe: ${eventName}`);
-    },
-    unsubscribe: (eventName: string, callback: (data: any) => void) => {
-      console.log(`[EventBus] Unsubscribe: ${eventName}`);
-      // In the real implementation, this would integrate with the actual event system
-    }
-  };
+  // Use the shared event bus imported above
 
   // Create plugin registry placeholder - this would connect to the actual registry
   const pluginRegistry = {
@@ -138,8 +82,14 @@ export const SystemApiIntegration: React.FC<SystemApiIntegrationProps> = ({ chil
   };
 
   // Create toast provider using sonner
+  type ToastConfig = {
+    title: string;
+    description?: string;
+    variant?: 'default' | 'destructive';
+    duration?: number;
+  };
   const toastProvider = {
-    toast: (config: any) => {
+    toast: (config: ToastConfig) => {
       const { title, description, variant = 'default', duration = 5000 } = config;
 
       if (variant === 'destructive') {
@@ -151,21 +101,26 @@ export const SystemApiIntegration: React.FC<SystemApiIntegrationProps> = ({ chil
   };
 
   // Create dialog provider placeholder - this would integrate with the actual dialog system
+  type BasicDialogConfig = { title: string; message: string; type?: 'confirm' | 'alert' | 'prompt' };
   const dialogProvider = {
-    showDialog: async (config: any) => {
+    showDialog: async (config: BasicDialogConfig) => {
       const { title, message, type = 'confirm' } = config;
 
       switch (type) {
-        case 'alert':
+        case 'alert': {
           alert(`${title}\n\n${message}`);
           return true;
-        case 'confirm':
+        }
+        case 'confirm': {
           return confirm(`${title}\n\n${message}`);
-        case 'prompt':
+        }
+        case 'prompt': {
           const result = prompt(`${title}\n\n${message}`);
           return result !== null ? result : '';
-        default:
+        }
+        default: {
           return confirm(`${title}\n\n${message}`);
+        }
       }
     }
   };

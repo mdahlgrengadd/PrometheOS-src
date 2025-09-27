@@ -18,7 +18,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@shared/api-client": ["../../packages/shared-api-client/src"],
-      "@shared/api-client/*": ["../../packages/shared-api-client/src/*"]
+      "@shared/api-client/*": ["../../packages/shared-api-client/src/*"],
+      "@shared/system-api": ["../../packages/shared-system-api/src"],
+      "@shared/system-api/*": ["../../packages/shared-system-api/src/*"]
     }
   },
   "include": [
