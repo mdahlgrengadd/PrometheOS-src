@@ -1,11 +1,12 @@
 // Remote Registry - Manages Module Federation remotes
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { ACTIVE_CONFIG } from '../config/environment';
 
 interface RemoteConfig {
   name: string;
   url: string;
   port: number;
-  manifest?: any;
+  manifest?: unknown;
   status: 'loading' | 'ready' | 'error';
 }
 
@@ -20,14 +21,14 @@ const RemoteRegistryContext = createContext<RemoteRegistryContextType | null>(nu
 const DEFAULT_REMOTES: RemoteConfig[] = [
   {
     name: 'notepad',
-    url: 'http://localhost:3001/remoteEntry.js',
-    port: 3001,
+    url: `${ACTIVE_CONFIG.NOTEPAD_REMOTE_URL}/remoteEntry.js`,
+    port: parseInt(ACTIVE_CONFIG.NOTEPAD_REMOTE_URL.split(':')[2] || '3001', 10),
     status: 'loading',
   },
   // {
   //   name: 'calculator',
-  //   url: 'http://localhost:3002/remoteEntry.js',
-  //   port: 3002,
+  //   url: `${ACTIVE_CONFIG.CALCULATOR_REMOTE_URL}/remoteEntry.js`,
+  //   port: parseInt(ACTIVE_CONFIG.CALCULATOR_REMOTE_URL.split(':')[2] || '3002', 10),
   //   status: 'loading',
   // },
 ];
@@ -56,6 +57,7 @@ export const RemoteRegistry: React.FC<{ children: React.ReactNode }> = ({ childr
       let Component: React.ComponentType | undefined;
       switch (name) {
         case 'notepad': {
+          // @ts-expect-error - Module Federation remote import
           const mod = await import('notepad/App');
           Component = mod.default;
           break;

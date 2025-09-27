@@ -6,10 +6,15 @@
 - Assets are under `public/`; builds emit to `dist/`. Scripts in `scripts/` handle worker bundling (`build-workers.cjs`) and shadow FS setup—use via npm scripts.
 
 ## Build, Test, and Development Commands
-- Host (apps/desktop-host): `npm run dev` (http://localhost:3000), `npm run build`, `npm run build:workers`.
+- **All Services**: `npm run dev` (starts host, notepad, and UI kit simultaneously)
+- **Individual Services**: `npm run dev:host`, `npm run dev:notepad`, `npm run dev:ui-kit`
+- **Stop All Services**: `npm run stop` (kills all processes on ports 3000-3099)
+- **Test Services**: `npm run test:services` (checks if all services are running)
+- Host (apps/desktop-host): `npm run dev` (http://localhost:3011), `npm run build`, `npm run build:workers`.
 - Remote example (apps/notepad-remote): `npm run start` (http://localhost:3001), `npm run build`.
-- Legacy root (Vite): `npm run dev`, `npm run build`, `npm run preview`, `npm run build:workers`, `npm run lint`, `npm run test`, `npm run test:watch`.
-- Tip: run host and remotes in separate terminals during development.
+- Shared UI Kit (packages/shared-ui-kit): `npm run start` (http://localhost:3003), `npm run build`.
+- Legacy root (Vite): `npm run dev:legacy`, `npm run build`, `npm run preview`, `npm run build:workers`, `npm run lint`, `npm run test`, `npm run test:watch`.
+- **Tip**: Use `npm run dev` from project root for full development environment.
 
 ## Coding Style & Naming Conventions
 - TypeScript + React 18; 2‑space indentation; functional components and hooks.
@@ -31,3 +36,11 @@
 - Validate MCP/tool parameters; prefer the Host API bridge over ad‑hoc messaging.
 - Restrict remote/plugin origins in config; avoid insecure dynamic code execution.
 - For Pyodide and workers, prefer configurable/base‑URL hosting rather than hard‑coded CDNs.
+
+## Environment Configuration
+- **Browser-Compatible**: Uses TypeScript constants instead of `process.env` in browser code
+- **Configuration File**: `apps/desktop-host/src/config/environment.ts` - Central configuration management
+- **Build-Time Variables**: Webpack configs support Node.js environment variables for build-time configuration
+- **Multi-Environment**: Built-in support for development, staging, and production environments
+- **URL Configuration**: All Module Federation URLs are configurable via environment constants
+- **Documentation**: See `CONFIG_GUIDE.md` and `DEV_WORKFLOW.md` for detailed setup instructions

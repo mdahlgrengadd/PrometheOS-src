@@ -26,35 +26,46 @@ This project has been **completely refactored** from a Vite-based plugin system 
 
 ### Running the Module Federation Environment
 
-**Step 1: Install Dependencies**
+**🎯 FASTEST WAY - Single Command:**
 ```bash
-# Install host dependencies
+# Install dependencies (one-time setup)
+npm install
+
+# Start all services simultaneously
+npm run dev
+# 🚀 All services running: Host (3011), Notepad (3001), UI Kit (3003)
+```
+
+**🔧 Alternative - Individual Services:**
+```bash
+# Install dependencies for each service
 cd apps/desktop-host && npm install
-
-# Install remote dependencies
 cd ../notepad-remote && npm install
+cd ../packages/shared-ui-kit && npm install
+
+# Start services in separate terminals
+npm run dev:host      # Terminal 1: Host at localhost:3011
+npm run dev:notepad   # Terminal 2: Notepad at localhost:3001  
+npm run dev:ui-kit    # Terminal 3: UI Kit at localhost:3003
 ```
 
-**Step 2: Start Development Servers**
+**🛑 Stop All Services:**
 ```bash
-# Terminal 1: Start host application
-cd apps/desktop-host && npm run dev
-# 🚀 Host running at http://localhost:3000
-
-# Terminal 2: Start notepad remote
-cd apps/notepad-remote && npm run start
-# 🚀 Remote running at http://localhost:3001
+npm run stop          # Kills all development servers (ports 3000-3099)
 ```
 
-**Step 3: Access Application**
-- Open `http://localhost:3000` in your browser
-- The host will dynamically load the notepad remote
-- Experience federated microfrontend architecture in action
+**🧪 Test Services:**
+```bash
+npm run test:services # Check if all services are running correctly
+```
 
 ### Module Federation URLs
-- **Host Application**: `http://localhost:3000`
+- **Host Application**: `http://localhost:3011`
 - **Notepad Remote**: `http://localhost:3001`
-- **Remote Entry**: `http://localhost:3001/remoteEntry.js`
+- **Shared UI Kit**: `http://localhost:3003`
+- **Remote Entries**: 
+  - Notepad: `http://localhost:3001/remoteEntry.js`
+  - UI Kit: `http://localhost:3003/remoteEntry.js`
 
 ## 📁 Project Structure
 
@@ -62,9 +73,10 @@ cd apps/notepad-remote && npm run start
 ```
 📁 Project Root/
 ├── 📁 apps/
-│   ├── 📁 desktop-host/          # Host application (port 3000)
+│   ├── 📁 desktop-host/          # Host application (port 3011)
 │   │   ├── src/
 │   │   │   ├── api/             # API bridge system
+│   │   │   ├── config/          # Environment configuration
 │   │   │   ├── core/            # Window management, providers
 │   │   │   ├── shell/           # Desktop shell, remote registry
 │   │   │   └── workers/         # Worker management
@@ -78,12 +90,20 @@ cd apps/notepad-remote && npm run start
 │   │   ├── webpack.config.js    # Module Federation remote config
 │   │   └── package.json
 │   │
-│   └── 📁 packages/ (planned)   # Shared libraries (@shared/*)
+│   └── 📁 packages/             # Shared libraries (@shared/*)
+│       ├── 📁 shared-ui-kit/    # Shared UI components (port 3003)
+│       ├── 📁 shared-api-client/ # API client library
+│       └── 📁 shared-themes/    # Theme system
 │
 ├── 📁 src/ (legacy)             # Original Vite-based system
-├── 📄 REFACTOR_MF.md            # Complete migration documentation
-├── 📄 CLAUDE.md                 # Development guidelines
-└── 📄 CHANGELOG.md              # Architecture transformation log
+├── 📁 scripts/                 # Build and utility scripts
+│   └── stop-dev-servers.cjs    # Port cleanup utility
+├── 📄 CONFIG_GUIDE.md          # Environment configuration guide
+├── 📄 DEV_WORKFLOW.md          # Development workflow guide
+├── 📄 README_DEV.md            # Developer quick reference
+├── 📄 REFACTOR_MF.md           # Complete migration documentation
+├── 📄 CLAUDE.md                # Development guidelines
+└── 📄 CHANGELOG.md             # Architecture transformation log
 ```
 
 ## 🛠️ Technologies Used

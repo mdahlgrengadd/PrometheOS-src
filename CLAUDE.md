@@ -21,15 +21,28 @@ The system has been successfully refactored from a Vite-based plugin system to *
 **New Development Structure:**
 ```
 📁 apps/
-├── 📁 desktop-host/          # Host application (port 3000)
+├── 📁 desktop-host/          # Host application (port 3011)
 ├── 📁 notepad-remote/       # First remote (port 3001)
-└── 📁 packages/ (planned)   # Shared libraries
+└── 📁 packages/             # Shared libraries
+    ├── 📁 shared-ui-kit/    # Shared UI components (port 3003)
+    ├── 📁 shared-api-client/
+    └── 📁 shared-themes/
 ```
 
 ## Development Commands
 
+**🚀 QUICK START - All Services:**
+- `npm run dev` - Start all services simultaneously (host, notepad, UI kit)
+- `npm run stop` - Kill all development servers (ports 3000-3099)
+- `npm run test:services` - Check if all services are running
+
+**Individual Services:**
+- `npm run dev:host` - Start host application at localhost:3011
+- `npm run dev:notepad` - Start notepad remote at localhost:3001
+- `npm run dev:ui-kit` - Start shared UI kit at localhost:3003
+
 **Host Application (`apps/desktop-host/`):**
-- `npm run dev` - Start host application at localhost:3000
+- `npm run dev` - Start host application at localhost:3011
 - `npm run build` - Production build of host
 - `npm run type-check` - TypeScript validation
 
@@ -37,6 +50,10 @@ The system has been successfully refactored from a Vite-based plugin system to *
 - `npm run start` - Start remote at localhost:3001
 - `npm run build` - Production build of remote
 - `npm run type-check` - TypeScript validation
+
+**Shared Packages (e.g., `packages/shared-ui-kit/`):**
+- `npm run start` - Start shared package at localhost:3003
+- `npm run build` - Production build of shared package
 
 **Legacy Commands (Original System):**
 - `npm run dev` - Start development server with worker building
@@ -312,6 +329,16 @@ shared: {
 ### Development Workflow
 
 **Starting Full Environment:**
+
+**Option 1: Single Command (Recommended):**
+```bash
+# From project root - starts all services simultaneously
+npm run dev
+
+# Access: http://localhost:3011 (host loads remotes dynamically)
+```
+
+**Option 2: Individual Services:**
 ```bash
 # Terminal 1: Start host application
 cd apps/desktop-host && npm run dev
@@ -319,13 +346,30 @@ cd apps/desktop-host && npm run dev
 # Terminal 2: Start notepad remote
 cd apps/notepad-remote && npm run start
 
-# Access: http://localhost:3000 (host loads remotes dynamically)
+# Terminal 3: Start shared UI kit
+cd packages/shared-ui-kit && npm run start
+
+# Access: http://localhost:3011 (host loads remotes dynamically)
+```
+
+**Stopping All Services:**
+```bash
+# Kill all development servers (ports 3000-3099)
+npm run stop
 ```
 
 **Module Federation URLs:**
-- Host: `http://localhost:3000`
+- Host: `http://localhost:3011`
 - Notepad Remote Entry: `http://localhost:3001/remoteEntry.js`
+- Shared UI Kit Remote Entry: `http://localhost:3003/remoteEntry.js`
 - Calculator Remote Entry: `http://localhost:3002/remoteEntry.js` (planned)
+
+**Environment Configuration:**
+- **Browser-Compatible**: No `process.env` usage in browser code
+- **Configuration File**: `apps/desktop-host/src/config/environment.ts`
+- **Build-Time Variables**: Webpack supports Node.js environment variables
+- **Multi-Environment**: Development, staging, production configurations
+- **Documentation**: `CONFIG_GUIDE.md`, `DEV_WORKFLOW.md`, `README_DEV.md`
 
 ### Integration with Legacy Systems
 

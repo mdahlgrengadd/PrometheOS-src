@@ -2,12 +2,17 @@ const { ModuleFederationPlugin } = require('@module-federation/enhanced');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
+// Configuration constants - modify these for different environments
+const NOTEPAD_REMOTE_URL = process.env.NOTEPAD_REMOTE_URL || 'http://localhost:3001';
+const SHARED_UI_KIT_URL = process.env.SHARED_UI_KIT_URL || 'http://localhost:3003';
+const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 3001;
+
 module.exports = {
   mode: 'development',
   entry: './src/index.ts',
 
   devServer: {
-    port: 3001,
+    port: DEV_SERVER_PORT,
     historyApiFallback: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -17,7 +22,7 @@ module.exports = {
   },
 
   output: {
-    publicPath: 'http://localhost:3001/',
+    publicPath: `${NOTEPAD_REMOTE_URL}/`,
   },
 
   resolve: {
@@ -49,7 +54,7 @@ module.exports = {
         './App': './src/bootstrap.tsx',
       },
       remotes: {
-        shared_ui_kit: 'shared_ui_kit@http://localhost:3003/remoteEntry.js',
+        shared_ui_kit: `shared_ui_kit@${SHARED_UI_KIT_URL}/remoteEntry.js`,
       },
       shared: {
         react: {

@@ -1,19 +1,23 @@
 const { ModuleFederationPlugin } = require('@module-federation/enhanced');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+// Configuration constants - modify these for different environments
+const SHARED_UI_KIT_URL = process.env.SHARED_UI_KIT_URL || 'http://localhost:3003';
+const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 3003;
+
 module.exports = {
   mode: 'development',
   entry: './src/index.ts',
   
   devServer: {
-    port: 3003,
+    port: DEV_SERVER_PORT,
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
   },
 
   output: {
-    publicPath: 'http://localhost:3003/',
+    publicPath: `${SHARED_UI_KIT_URL}/`,
   },
 
   resolve: {

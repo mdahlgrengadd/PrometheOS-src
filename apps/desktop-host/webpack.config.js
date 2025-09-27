@@ -1,6 +1,14 @@
 const ModuleFederationPlugin = require('webpack').container.ModuleFederationPlugin;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+// Configuration constants - modify these for different environments
+const HOST_URL = process.env.HOST_URL || 'http://localhost:3011';
+const NOTEPAD_REMOTE_URL = process.env.NOTEPAD_REMOTE_URL || 'http://localhost:3001';
+const CALCULATOR_REMOTE_URL = process.env.CALCULATOR_REMOTE_URL || 'http://localhost:3002';
+const SHARED_UI_KIT_URL = process.env.SHARED_UI_KIT_URL || 'http://localhost:3003';
+const DEV_SERVER_PORT = process.env.DEV_SERVER_PORT || 3011;
+const DEV_SERVER_HOST = process.env.DEV_SERVER_HOST || 'localhost';
+
 module.exports = {
   mode: 'development',
   entry: './src/index.tsx',
@@ -13,8 +21,8 @@ module.exports = {
     },
   },
   devServer: {
-    port: 3011,
-    host: 'localhost',
+    port: DEV_SERVER_PORT,
+    host: DEV_SERVER_HOST,
     historyApiFallback: true,
     static: {
       directory: './public'
@@ -26,7 +34,7 @@ module.exports = {
     },
   },
   output: {
-    publicPath: 'http://localhost:3011/',
+    publicPath: `${HOST_URL}/`,
   },
   module: {
     rules: [
@@ -68,8 +76,8 @@ module.exports = {
 
       // Remotes - dynamically loaded applications
       remotes: {
-        notepad: 'notepad@http://localhost:3001/remoteEntry.js',
-        // calculator: 'calculator@http://localhost:3002/remoteEntry.js', // Disabled until implemented
+        notepad: `notepad@${NOTEPAD_REMOTE_URL}/remoteEntry.js`,
+        // calculator: `calculator@${CALCULATOR_REMOTE_URL}/remoteEntry.js`, // Disabled until implemented
         // More remotes will be added dynamically via registry
       },
 
