@@ -306,17 +306,17 @@ export function WindowsWindow({
         style={{
           display: isMinimized ? "none" : undefined,
           width: isMaximized ? "100vw" : size?.width || width,
-          height: isMaximized ? "calc(100vh - 3rem)" : size?.height || height,
+          height: isMaximized ? (theme === "beos" ? "calc(100vh - 36px - 3rem)" : "calc(100vh - 3rem)") : size?.height || height,
           zIndex,
           position: isMaximized ? "fixed" : "absolute",
-          top: isMaximized ? 0 : undefined,
+          top: isMaximized ? (theme === "beos" ? "36px" : 0) : undefined,
           left: isMaximized ? 0 : undefined,
           ...(isMaximized ? {} : { x, y }),
           willChange: isDragging ? "transform" : "auto",
         }}
       >
-        {/* Title bar and controls, unless chrome is hidden */}
-        {!hideWindowChrome && (
+        {/* Title bar and controls, unless chrome is hidden or BeOS maximized */}
+        {!hideWindowChrome && !(theme === "beos" && isMaximized) && (
           <div
             ref={headerRef}
             className={cn(

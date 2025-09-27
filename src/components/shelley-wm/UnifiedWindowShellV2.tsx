@@ -404,10 +404,10 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
           ...(isMaximized
             ? {
                 position: "fixed",
-                top: 0,
+                top: theme === "beos" ? "36px" : 0,
                 left: 0,
                 width: "100vw",
-                height: "calc(100vh - 3rem)",
+                height: theme === "beos" ? "calc(100vh - 36px - 3rem)" : "calc(100vh - 3rem)",
               }
             : {
                 position: "absolute",
@@ -418,8 +418,8 @@ export const UnifiedWindowShellV2: React.FC<WindowShellProps> = ({
           y, // Use this syntax for motion values
         }}
       >
-        {/* Header and controls, unless chrome is hidden */}
-        {!hideWindowChrome && (
+        {/* Header and controls, unless chrome is hidden or BeOS maximized */}
+        {!hideWindowChrome && !(theme === "beos" && isMaximized) && (
           <div
             ref={headerRef}
             className={cn(
