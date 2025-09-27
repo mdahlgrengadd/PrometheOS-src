@@ -12,6 +12,10 @@ export { Button } from './button';
 export { Input } from './input';
 export { Label } from './label';
 
-export { Textarea } from './textarea';
-// api extended textarea
-//export { Textarea } from './api/textarea';
+//export { Textarea } from './textarea';
+// API-enabled components (federated)
+export { Textarea } from './api/textarea';
+
+// Federated API HOC and utilities
+export { withApi, useApiComponent } from './lib/withApi';
+export type { ApiComponentProps } from './lib/withApi';

@@ -1,14 +1,14 @@
-// filepath: c:\Users\mdahl\Documents\GitHub\draggable-desktop-dreamscape\src\components\ui\api\textarea.tsx
+// Federated API-enabled Textarea component
 import * as React from "react";
 
-import { withApi } from "@/api/hoc/withApi";
+import { withApi } from "../lib/withApi";
 import {
   Textarea as BaseTextarea,
   TextareaProps as BaseProps,
-} from "@/components/ui/textarea";
+} from "../textarea";
 
 import { textareaApiActions, textareaApiDoc } from "./textarea-api";
-import { registerTextareaHandlers } from "./textarea-handlers";
+// import { useTextareaHandlers } from "./textarea-handlers";
 
 // Re-export for backward compatibility
 export { textareaApiActions, textareaApiDoc } from "./textarea-api";
@@ -39,10 +39,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       onChangeRef.current = onChange;
     }, [onChange]);
 
-    // register handlers once
-    React.useEffect(() => {
-      return registerTextareaHandlers(apiId, valueRef, onChangeRef);
-    }, [apiId]);
+    // TODO: Implement federated textarea handlers when ApiClientProvider is available
+    // const handlers = useTextareaHandlers(apiId, valueRef, onChangeRef);
 
     return (
       <ApiTextarea

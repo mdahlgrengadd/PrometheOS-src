@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './globals.css';
+// import './globals.css';
 
 interface NotepadProps {
   windowId?: string;
@@ -85,7 +85,8 @@ const Notepad: React.FC<NotepadProps> = (props) => {
         </div>
       </div>
       <div className="flex-1 p-4">
-        <Textarea 
+        <Textarea
+          apiId={`notepad-textarea-${windowId}`}
           className="w-full h-full resize-none"
           placeholder="Type your notes here..."
           value={content}

@@ -24,6 +24,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       '@': require('path').resolve(__dirname, 'src'),
+      '@shared/api-client': require('path').resolve(__dirname, '../shared-api-client/src'),
     },
   },
   module: {
