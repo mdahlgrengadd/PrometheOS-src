@@ -18,10 +18,8 @@ module.exports = {
       alias: {
         '@': './src',
         '@src': './src',
-        '@shared/api-client$': require('path').resolve(
-          __dirname,
-          '../../packages/shared-api-client/src/index.ts'
-        ),
+        '@shared/api-client$': require('path').resolve(__dirname, '../../packages/shared-api-client/src/index.ts'),
+        '@shared/ui-kit$': require('path').resolve(__dirname, '../../packages/shared-ui-kit/src/index.ts'),
       },
     },
   devServer: {

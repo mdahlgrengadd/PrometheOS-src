@@ -1,5 +1,5 @@
 // React hooks for API client integration
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { IApiClient, IApiComponent, IActionResult } from './types';
 import { getApiClient } from './api-client';
 
@@ -116,27 +116,45 @@ export function useComponentRegistration(component: IApiComponent): {
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Stabilize the component reference to avoid re-registering on shallow identity changes
+  const actionsKey = JSON.stringify(component.actions);
+  const stateKey = JSON.stringify(component.state);
+  const stableComponent = useMemo<IApiComponent>(() => component, [
+    component.id,
+    component.type,
+    component.name,
+    component.description,
+    actionsKey,
+    stateKey,
+    component.path,
+  ]);
+
   useEffect(() => {
     const registerComponent = async () => {
       try {
-        await apiClient.registerComponent(component);
+        await apiClient.registerComponent(stableComponent);
         setRegistered(true);
         setError(null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(errorMessage);
         setRegistered(false);
-        console.error(`Failed to register component ${component.id}:`, err);
+        console.error(`Failed to register component ${stableComponent.id}:`, err);
       }
     };
 
     registerComponent();
 
-    // Cleanup on unmount
+    // Cleanup on unmount - capture the current apiClient in closure
+    const currentApiClient = apiClient;
+    const currentComponentId = stableComponent.id;
     return () => {
-      apiClient.unregisterComponent(component.id).catch(console.error);
+      currentApiClient.unregisterComponent(currentComponentId).catch(console.error);
     };
-  }, [apiClient, component]);
+    // NOTE: Only depend on stableComponent, not apiClient, to prevent re-registration cycles
+    // The apiClient is captured in closure and doesn't need to be in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableComponent]);
 
   return { registered, error };
 }
@@ -197,11 +215,14 @@ export function useMCPTool(toolName: string): {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<unknown>(null);
 
-  const call = async (args?: Record<string, unknown>) => {
+  const call = async (args: Record<string, unknown> = {}): Promise<any> => {
     setLoading(true);
     setError(null);
 
     try {
+      if (typeof apiClient.callMCPTool !== 'function') {
+        throw new Error('MCP tool calls are not supported by this API client');
+      }
       const response = await apiClient.callMCPTool(toolName, args);
       setResult(response);
       setError(null);

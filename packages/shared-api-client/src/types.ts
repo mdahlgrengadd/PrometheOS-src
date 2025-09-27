@@ -77,6 +77,10 @@ export interface IApiClient {
 
   // MCP Protocol support
   sendMCPMessage(message: MCPRequest): Promise<MCPResponse>;
+
+  // Convenience helpers (optional by implementations)
+  listMCPTools?(): Promise<any[]>;
+  callMCPTool?(toolName: string, arguments_: Record<string, unknown>): Promise<any>;
 }
 
 // Host API Bridge Interface (exposed by host to remotes)

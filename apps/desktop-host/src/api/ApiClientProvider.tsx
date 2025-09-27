@@ -11,9 +11,15 @@ import { useApi } from './ApiProvider';
  * the bridge pattern, providing cleaner integration for React remotes.
  */
 class DirectApiClient implements IApiClient {
+  private registeredComponents = new Set<string>();
   constructor(
-    private executeActionFn: (componentId: string, actionId: string, parameters?: Record<string, unknown>) => Promise<IActionResult>,
+    private executeActionFn: (
+      componentId: string,
+      actionId: string,
+      parameters?: Record<string, unknown>
+    ) => Promise<IActionResult>,
     private registerComponentFn: (component: IApiComponent) => void,
+    private unregisterComponentFn: (id: string) => void,
     private getComponentsFn: () => IApiComponent[],
     private remoteId: string = 'unknown-remote'
   ) {}
@@ -28,19 +34,37 @@ class DirectApiClient implements IApiClient {
   }
 
   async registerComponent(component: IApiComponent): Promise<void> {
+    const fullId = `${this.remoteId}.${component.id}`;
+
+    // Prevent duplicate registrations
+    if (this.registeredComponents.has(fullId)) {
+      console.log(`[Direct API Client] Component ${fullId} already registered, skipping`);
+      return;
+    }
+
     console.log(`[Direct API Client] Registering component ${component.id} from remote ${this.remoteId} via React Context`);
 
     // Add remote prefix to avoid conflicts
     const remoteComponent = {
       ...component,
-      id: `${this.remoteId}.${component.id}`,
+      id: fullId,
     };
 
     this.registerComponentFn(remoteComponent);
+    this.registeredComponents.add(fullId);
   }
 
   async unregisterComponent(componentId: string): Promise<void> {
-    console.warn(`[Direct API Client] Component unregistration not yet implemented for ${componentId}`);
+    const fullId = `${this.remoteId}.${componentId}`;
+    this.registeredComponents.delete(fullId);
+    try {
+      this.unregisterComponentFn(fullId);
+    } catch (err) {
+      console.warn(
+        `[Direct API Client] Failed to unregister component ${fullId}:`,
+        err instanceof Error ? err.message : String(err)
+      );
+    }
   }
 
   async getComponents(): Promise<IApiComponent[]> {
@@ -116,18 +140,50 @@ export const ApiClientProvider: React.FC<{
   children: React.ReactNode;
   remoteId?: string;
 }> = ({ children, remoteId = 'unknown-remote' }) => {
-  const { executeAction, registerComponent, getComponents } = useApi();
+  const hostApi = useApi();
+  
+  // Extract stable references to prevent recreation
+  const { executeAction, registerComponent, unregisterComponent, getComponents } = hostApi;
+
+  // Use a ref to store the client and only recreate when remoteId changes
+  const apiClientRef = React.useRef<DirectApiClient | null>(null);
+  const currentRemoteIdRef = React.useRef<string>('');
 
   const apiClient = useMemo(() => {
-    console.log(`[ApiClientProvider] Creating direct API client for remote: ${remoteId}`);
+    // Only recreate if remoteId changed or client doesn't exist
+    if (!apiClientRef.current || currentRemoteIdRef.current !== remoteId) {
+      console.log(`[ApiClientProvider] Creating direct API client for remote: ${remoteId}`);
+      currentRemoteIdRef.current = remoteId;
 
-    return new DirectApiClient(
-      executeAction,
-      registerComponent,
-      getComponents,
-      remoteId
-    );
-  }, [executeAction, registerComponent, getComponents, remoteId]);
+      // Adapt host API types to shared API client interface
+      const executeActionAdapted = (
+        componentId: string,
+        actionId: string,
+        parameters?: Record<string, unknown>
+      ) => executeAction(componentId, actionId, parameters);
+
+      const registerComponentAdapted = (component: IApiComponent) => {
+        // Shapes are compatible enough; pass through directly
+        (registerComponent as any)(component);
+      };
+
+      const unregisterComponentAdapted = (id: string) => {
+        (unregisterComponent as any)(id);
+      };
+
+      const getComponentsAdapted = () => (getComponents as any)();
+
+      apiClientRef.current = new DirectApiClient(
+        executeActionAdapted,
+        registerComponentAdapted,
+        unregisterComponentAdapted,
+        getComponentsAdapted,
+        remoteId
+      );
+    }
+
+    return apiClientRef.current;
+  }, [remoteId]); // Only depend on remoteId, not the host API functions
 
   return (
     <SharedApiClientProvider apiClient={apiClient}>

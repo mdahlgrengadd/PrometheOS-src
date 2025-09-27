@@ -54,6 +54,8 @@ export interface IApiClient {
     emitEvent(eventName: string, data?: unknown): Promise<void>;
     getEventNames(): Promise<string[]>;
     sendMCPMessage(message: MCPRequest): Promise<MCPResponse>;
+    listMCPTools?(): Promise<any[]>;
+    callMCPTool?(toolName: string, arguments_: Record<string, unknown>): Promise<any>;
 }
 export interface IHostApiBridge {
     executeAction(componentId: string, actionId: string, parameters?: Record<string, unknown>): Promise<IActionResult>;

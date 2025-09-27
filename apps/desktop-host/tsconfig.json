@@ -16,7 +16,9 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/api-client": ["../../packages/shared-api-client/src"],
+      "@shared/api-client/*": ["../../packages/shared-api-client/src/*"]
     }
   },
   "include": [

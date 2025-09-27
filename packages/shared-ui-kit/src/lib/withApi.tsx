@@ -2,15 +2,8 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import {
-  useApiClient,
-  useComponentRegistration,
-} from "../../../shared-api-client/src/hooks";
-import type {
-  IApiComponent,
-  IApiAction,
-  IApiParameter,
-} from "../../../shared-api-client/src/types";
+import { useApiClient, useComponentRegistration } from "@shared/api-client";
+import type { IApiComponent, IApiAction, IApiParameter } from "@shared/api-client";
 
 // API Component Props for federated components
 export interface ApiComponentProps {
@@ -120,12 +113,10 @@ export function withApi<P extends object>(
 
       // Gracefully handle missing API client context in federated environment
       let apiClient = null;
-      let hasHostBridge = false;
 
       try {
         apiClient = useApiClient();
-        hasHostBridge = typeof window !== 'undefined' && !!window.__HOST_API_BRIDGE__;
-        console.log(`[Federated API] API client available${hasHostBridge ? ' via Module Federation Bridge' : ' via React Context'}`);
+        console.log(`[Federated API] API client available`);
       } catch (error) {
         // API client not available in this context - continue without it
         console.log('[Federated API] API client not available, running in standalone mode');
@@ -141,10 +132,10 @@ export function withApi<P extends object>(
 
       // Generate automatic actions
       const autoGenerateActions = useCallback(() => {
-        const defaultActions = defaultApiDoc?.actions || [];
-        const propActions = api?.actions || [];
+        const defaultActions: IApiAction[] = defaultApiDoc?.actions || [];
+        const propActions: IApiAction[] = api?.actions || [];
 
-        const actionMap = new Map();
+        const actionMap = new Map<string, IApiAction>();
 
         // Add all default actions to the map
         defaultActions.forEach((action) => {
@@ -152,7 +143,7 @@ export function withApi<P extends object>(
         });
 
         // Add or override with prop actions
-        propActions.forEach((action) => {
+        propActions.forEach((action: IApiAction) => {
           actionMap.set(action.id, action);
         });
 
@@ -205,14 +196,6 @@ export function withApi<P extends object>(
           ...(apiState || {}),
         };
 
-        // Combined metadata
-        const combinedMetadata = {
-          ...(defaultApiDoc?.metadata || {}),
-          ...(api?.metadata || {}),
-          ...(apiMetadata || {}),
-          ...(apiName ? { name: apiName } : {}),
-        };
-
         return {
           id: uniqueId.current,
           type: apiType || api?.type || defaultApiDoc?.type || "unknown",
@@ -231,24 +214,18 @@ export function withApi<P extends object>(
             `/components/${uniqueId.current}`,
         };
       }, [
-        api?.description,
-        api?.metadata,
-        api?.path,
-        api?.state,
-        api?.type,
+        // Keep dependencies minimal and value-driven to avoid identity churn
         apiActions,
         apiDescription,
-        apiMetadata,
         apiPath,
         apiState,
         apiType,
+        apiName,
         autoGenerateActions,
         defaultApiDoc?.description,
-        defaultApiDoc?.metadata,
         defaultApiDoc?.path,
         defaultApiDoc?.state,
         defaultApiDoc?.type,
-        apiName,
       ]);
 
       // Use the federated component registration hook only if API client is available
@@ -262,11 +239,12 @@ export function withApi<P extends object>(
           error = registrationResult.error;
 
           if (registered) {
-            console.log(`[Federated API] Component registered: ${uniqueId.current}${hasHostBridge ? ' (via Module Federation Bridge)' : ' (via React Context)'}`);
+            console.log(`[Federated API] Component registered: ${uniqueId.current}`);
           }
         } catch (err) {
-          console.warn('[Federated API] Component registration failed:', err.message);
-          error = err.message;
+          const message = err instanceof Error ? err.message : String(err);
+          console.warn('[Federated API] Component registration failed:', message);
+          error = message;
         }
       } else {
         // Fallback mode - component works without API registration
@@ -289,7 +267,7 @@ export function withApi<P extends object>(
         if ("onClick" in props) {
           return (
             <Component
-              ref={(el) => {
+              ref={(el: any) => {
                 elementRef.current = el;
 
                 if (typeof ref === "function") {
@@ -333,15 +311,20 @@ export function useApiComponent(
   apiId: string,
   apiDoc: Omit<IApiComponent, "id">
 ) {
-  const component: IApiComponent = useMemo(() => ({
-    id: apiId,
-    ...apiDoc,
-    state: {
-      enabled: true,
+  const component: IApiComponent = useMemo(() => {
+    const mergedState = {
       visible: true,
-      ...apiDoc.state,
-    },
-  }), [apiId, apiDoc]);
+      ...(apiDoc.state || {}),
+    } as IApiComponent["state"];
+    if (typeof mergedState.enabled !== 'boolean') {
+      mergedState.enabled = true;
+    }
+    return {
+      id: apiId,
+      ...apiDoc,
+      state: mergedState,
+    };
+  }, [apiId, apiDoc]);
 
   // Gracefully handle missing API client context
   let registered = false;
@@ -352,8 +335,9 @@ export function useApiComponent(
     registered = registrationResult.registered;
     error = registrationResult.error;
   } catch (err) {
-    console.warn('[Federated API] useApiComponent fallback mode:', err.message);
-    error = err.message;
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn('[Federated API] useApiComponent fallback mode:', message);
+    error = message;
   }
 
   return {

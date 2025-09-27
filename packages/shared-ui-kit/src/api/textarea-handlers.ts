@@ -1,7 +1,7 @@
 import React from "react";
 
-import { useApiClient } from "../../../shared-api-client/src/hooks";
-import type { IActionResult } from "../../../shared-api-client/src/types";
+import { useApiClient } from "@shared/api-client";
+import type { IActionResult } from "@shared/api-client";
 
 /**
  * Federated textarea handlers for API integration

@@ -1,5 +1,5 @@
 // API Provider - Preserves sophisticated integration architecture
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 
 // Import existing API system (to be moved to host)
 import { IApiComponent, IActionResult } from '../types/api';
@@ -25,14 +25,22 @@ const ApiContext = createContext<IApiContextValue | null>(null);
 export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [components, setComponents] = useState<Record<string, IApiComponent>>({});
   const actionHandlersRef = useRef<Record<string, Record<string, (params?: Record<string, unknown>) => Promise<IActionResult>>>>({});
+  const registeredComponentsRef = useRef<Set<string>>(new Set());
 
   // Register component (preserving existing functionality)
-  const registerComponent = (component: IApiComponent) => {
+  const registerComponent = useCallback((component: IApiComponent) => {
+    if (registeredComponentsRef.current.has(component.id)) {
+      console.log(`[API Provider] Component ${component.id} already registered, skipping`);
+      return;
+    }
+
     console.log(`[API Provider] Registering component: ${component.id} (${component.type})`);
     setComponents(prev => ({
       ...prev,
       [component.id]: component,
     }));
+
+    registeredComponentsRef.current.add(component.id);
 
     // Emit event for component registration
     eventBus.emit('api:component:registered', component);
@@ -65,10 +73,10 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }, 100);
     }
-  };
+  }, []);
 
   // Unregister component
-  const unregisterComponent = (id: string) => {
+  const unregisterComponent = useCallback((id: string) => {
     console.log(`[API Provider] Unregistering component: ${id}`);
     setComponents(prev => {
       const newComponents = { ...prev };
@@ -79,12 +87,15 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Clean up action handlers
     delete actionHandlersRef.current[id];
 
+    // Track deregistration
+    registeredComponentsRef.current.delete(id);
+
     // Emit event for component unregistration
     eventBus.emit('api:component:unregistered', id);
-  };
+  }, []);
 
   // Update component state
-  const updateComponentState = (id: string, state: Partial<IApiComponent['state']>) => {
+  const updateComponentState = useCallback((id: string, state: Partial<IApiComponent['state']>) => {
     setComponents(prev => {
       if (!prev[id]) return prev;
       return {
@@ -101,10 +112,10 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Emit event for state update
     eventBus.emit('api:component:stateChanged', { id, state });
-  };
+  }, []);
 
   // Execute action (preserving existing functionality)
-  const executeAction = async (
+  const executeAction = useCallback(async (
     componentId: string,
     actionId: string,
     parameters?: Record<string, unknown>
@@ -138,10 +149,10 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       return { success: false, error: errorMessage };
     }
-  };
+  }, []);
 
   // Get all components
-  const getComponents = () => Object.values(components);
+  const getComponents = useCallback(() => Object.values(components), [components]);
 
   // Register action handler
   const registerActionHandler = (
@@ -266,6 +277,10 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     console.log('🌐 [API Provider] Host API Bridge and testing interface exposed');
     console.log('💡 [API Test] Use __PROMETHEOS_API__ in browser console to test API functionality');
     console.log('💡 [API Test] Example: __PROMETHEOS_API__.textarea.setValue("notepad-textarea-notepad", "Hello API!")');
+    
+    // NOTE: registerComponent is intentionally excluded from deps to prevent infinite loops
+    // The bridge captures registerComponent in closure and doesn't need to update when it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [executeAction, getComponents]);
 
   const contextValue: IApiContextValue = {

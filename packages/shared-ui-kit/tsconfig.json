@@ -16,7 +16,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "declaration": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@shared/api-client": ["../shared-api-client/src"],
+      "@shared/api-client/*": ["../shared-api-client/src/*"]
+    }
   },
   "include": [
     "src/**/*"

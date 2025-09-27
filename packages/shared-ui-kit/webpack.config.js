@@ -24,6 +24,7 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],
     alias: {
       '@': require('path').resolve(__dirname, 'src'),
+      // Keep local alias only for build-time resolution; Module Federation will still share
       '@shared/api-client': require('path').resolve(__dirname, '../shared-api-client/src'),
     },
   },
@@ -73,6 +74,12 @@ module.exports = {
           requiredVersion: false,
         },
         'react/jsx-runtime': {
+          singleton: true,
+          eager: true,
+          strictVersion: false,
+          requiredVersion: false,
+        },
+        '@shared/api-client': {
           singleton: true,
           eager: true,
           strictVersion: false,

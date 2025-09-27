@@ -21,9 +21,9 @@ console.log('🎨 Loading theme system and window management');
 
 try {
   root.render(
-    <React.StrictMode>
+
       <DesktopHost />
-    </React.StrictMode>
+
   );
   console.log('✅ React successfully mounted!');
 } catch (error) {

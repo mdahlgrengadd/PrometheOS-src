@@ -7,7 +7,9 @@
   "compilerOptions": {
     "baseUrl": ".",    "paths": {
       "@/*": ["./src/*"],
-      "prometheos-client": ["./src/prometheos-client"]
+      "prometheos-client": ["./src/prometheos-client"],
+      "@shared/api-client": ["./packages/shared-api-client/src"],
+      "@shared/api-client/*": ["./packages/shared-api-client/src/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,
