@@ -77,6 +77,7 @@ module.exports = {
       // Exports - what the host exposes to remotes
       exposes: {
         './ApiProvider': './src/api/ApiProvider.tsx',
+        './ApiClientProvider': './src/api/ApiClientProvider.tsx',
         './HostApiBridge': './src/api/HostApiBridge.tsx',
       },
 

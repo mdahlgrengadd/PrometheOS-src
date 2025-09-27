@@ -20,23 +20,43 @@ export const ApiClientProvider: React.FC<{
   );
 };
 
-// Hook to use API client with graceful fallback
+/**
+ * Hook to access the API client with dual-pattern support
+ *
+ * Supports two patterns:
+ * 1. React Context Pattern: Clean React integration via ApiClientProvider
+ * 2. Module Federation Bridge Pattern: Cross-remote communication via window.__HOST_API_BRIDGE__
+ *
+ * @returns {IApiClient} The API client instance
+ * @throws {Error} When neither pattern is available
+ */
 export function useApiClient(): IApiClient {
   const context = useContext(ApiClientContext);
 
-  // First try context provider
+  // Pattern 1: React Context Provider (preferred for React remotes)
   if (context) {
+    console.log('[API Client] ✅ Using React Context Pattern');
     return context;
   }
 
-  // Fallback to host bridge if available
+  // Pattern 2: Module Federation Host Bridge (for cross-remote communication)
   if (typeof window !== 'undefined' && window.__HOST_API_BRIDGE__) {
-    console.log('[API Client] Using host bridge fallback');
+    console.log('[API Client] ✅ Using Module Federation Bridge Pattern');
     return getApiClient();
   }
 
-  // No API client available
-  throw new Error('useApiClient must be used within an ApiClientProvider or host bridge must be available');
+  // No API client available - provide helpful guidance
+  throw new Error(`
+    🚫 API Client not available. Choose one option:
+
+    📋 Option 1 (React Context): Wrap your remote with <ApiClientProvider>
+       Example: <ApiClientProvider><YourComponent /></ApiClientProvider>
+
+    🌉 Option 2 (Bridge): Ensure window.__HOST_API_BRIDGE__ is available
+       Example: Host must expose API bridge via Module Federation
+
+    📖 See API_Refactor.md for detailed migration guide.
+  `);
 }
 
 // Hook for executing API actions with React integration

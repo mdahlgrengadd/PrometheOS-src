@@ -66,11 +66,36 @@ const componentRegistry = {
 };
 
 /**
- * Higher Order Component to make a component API-aware in federated environment
- * This allows components to be discoverable and interactable by the AI agent
- * @param Component The component to wrap
+ * Higher Order Component to make a component API-aware with dual-pattern support
+ *
+ * This HOC enables components to work with both:
+ * 1. React Context Pattern: When wrapped with ApiClientProvider
+ * 2. Module Federation Bridge Pattern: When window.__HOST_API_BRIDGE__ is available
+ *
+ * Features:
+ * - Automatic API client detection and selection
+ * - Component registration with API system
+ * - Action handler management
+ * - Graceful degradation to standalone mode
+ *
+ * @template P - Component props type
+ * @param Component The React component to wrap with API capabilities
  * @param defaultApiDoc Default API documentation for the component
- * @returns An API-aware component
+ * @returns An API-aware component that works in federated environments
+ *
+ * @example
+ * ```typescript
+ * // With default API doc
+ * const ApiButton = withApi(Button, {
+ *   type: 'Button',
+ *   name: 'UI Button',
+ *   description: 'Interactive button component',
+ *   actions: [{ id: 'click', name: 'Click', description: 'Click the button' }]
+ * });
+ *
+ * // Usage in remote
+ * <ApiButton apiId="my-button" onClick={handleClick}>Click me</ApiButton>
+ * ```
  */
 export function withApi<P extends object>(
   Component: React.ComponentType<P>,
@@ -100,10 +125,10 @@ export function withApi<P extends object>(
       try {
         apiClient = useApiClient();
         hasHostBridge = typeof window !== 'undefined' && !!window.__HOST_API_BRIDGE__;
-        console.log(`[Federated API] API client available${hasHostBridge ? ' via host bridge' : ' via provider'}`);
+        console.log(`[Federated API] API client available${hasHostBridge ? ' via Module Federation Bridge' : ' via React Context'}`);
       } catch (error) {
         // API client not available in this context - continue without it
-        console.log('[Federated API] API client not available, running in fallback mode');
+        console.log('[Federated API] API client not available, running in standalone mode');
       }
 
       // Generate a unique ID if not provided
@@ -237,7 +262,7 @@ export function withApi<P extends object>(
           error = registrationResult.error;
 
           if (registered) {
-            console.log(`[Federated API] Component registered: ${uniqueId.current}${hasHostBridge ? ' (via host bridge)' : ' (via provider)'}`);
+            console.log(`[Federated API] Component registered: ${uniqueId.current}${hasHostBridge ? ' (via Module Federation Bridge)' : ' (via React Context)'}`);
           }
         } catch (err) {
           console.warn('[Federated API] Component registration failed:', err.message);

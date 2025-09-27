@@ -99,3 +99,67 @@ export interface IHostApiBridge {
 
   emitEvent(eventName: string, data?: unknown): Promise<void>;
 }
+
+// Event Bus Interface
+export interface IEventBus {
+  emit(event: string, data?: any): void;
+  on(event: string, listener: Function): void;
+  off(event: string, listener: Function): void;
+  subscribe(event: string, listener: Function): () => void;
+}
+
+// Testing API Interface
+export interface ITestingAPI {
+  executeAction(
+    componentId: string,
+    actionId: string,
+    params?: Record<string, unknown>
+  ): Promise<IActionResult>;
+
+  listComponents(): IApiComponent[];
+  getComponent(componentId: string): IApiComponent | undefined;
+
+  textarea: {
+    setValue(apiId: string, text: string): Promise<IActionResult>;
+    getValue(apiId: string): Promise<IActionResult>;
+    clear(apiId: string): Promise<IActionResult>;
+    appendText(apiId: string, text: string): Promise<IActionResult>;
+  };
+
+  events: {
+    emit(eventName: string, data?: unknown): Promise<void>;
+    subscribe(
+      eventName: string,
+      callback?: (data: unknown) => void
+    ): Promise<() => void>;
+  };
+}
+
+// Global Window Interface Extensions for Module Federation Bridge Pattern
+declare global {
+  interface Window {
+    /**
+     * Module Federation Host API Bridge
+     * Provides cross-remote API communication in federated environments
+     */
+    __HOST_API_BRIDGE__?: IHostApiBridge;
+
+    /**
+     * Remote Application Identifier
+     * Set by host when loading remotes to identify the current remote context
+     */
+    __REMOTE_ID__?: string;
+
+    /**
+     * Global Event Bus
+     * Shared event system exposed by host for cross-remote communication
+     */
+    eventBus?: IEventBus;
+
+    /**
+     * PrometheOS API Testing Interface
+     * Global API for browser console testing and debugging
+     */
+    __PROMETHEOS_API__?: ITestingAPI;
+  }
+}
