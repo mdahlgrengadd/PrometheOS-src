@@ -13,12 +13,12 @@ Refactor the current API integration to support **both** the Bridge Pattern and 
 - **Testing Interface**: Global `__PROMETHEOS_API__` for browser console testing
 - **Sophisticated Integration**: 7-layer architecture preserved
 
-### ⚠️ Current Issues
-- **Misleading Terminology**: "fallback" implies degraded mode when it's actually primary
-- **Single Pattern**: Only bridge pattern supported, missing React Context option
-- **Over-engineered**: Complex global bridge when React Context would be simpler
-- **Type Safety**: Less TypeScript support compared to React Context
-- **Developer Experience**: Not idiomatic React patterns
+### ⚠️ Current Issues (historical) / ✅ Current Status
+- (was) Misleading terminology around "fallback" → ✅ clarified in logs/messages
+- (was) Single pattern (bridge-only) → ✅ dual-pattern implemented (React Context + Bridge)
+- (was) Over-engineered for React remotes → ✅ React Context path available and preferred
+- (was) Type safety weaker on bridge → ✅ typed Context path; bridge typings improved
+- (was) DX non-idiomatic for React → ✅ idiomatic Context integration available
 
 ## 🏗️ Proposed Architecture: Dual-Pattern Support
 
@@ -53,23 +53,23 @@ const apiClient = useApiClient(); // Uses React Context
 
 ## 📋 Implementation Plan
 
-### Phase 1: Improve Bridge Pattern (Week 1)
+### Phase 1: Improve Bridge Pattern (Week 1) — ✅ Completed
 
 #### 1.1 Fix Terminology and Logging
-```javascript
+```typescript
 // packages/shared-api-client/src/hooks.tsx
 export function useApiClient(): IApiClient {
   const context = useContext(ApiClientContext);
 
-  // First: Try React Context Provider
+  // Priority 1: React Context (preferred for React remotes)
   if (context) {
-    console.log('[API Client] Using React Context Provider');
+    console.log('[API Client] ✅ Using React Context Pattern');
     return context;
   }
 
-  // Second: Try Module Federation Host Bridge
+  // Priority 2: Module Federation Host Bridge (for non-React or legacy remotes)
   if (typeof window !== 'undefined' && window.__HOST_API_BRIDGE__) {
-    console.log('[API Client] Using Module Federation Host Bridge');
+    console.log('[API Client] ✅ Using Module Federation Bridge Pattern');
     return getApiClient();
   }
 
@@ -95,7 +95,7 @@ declare global {
 }
 ```
 
-### Phase 2: Add React Context Support (Week 2)
+### Phase 2: Add React Context Support (Week 2) — ✅ Completed
 
 #### 2.1 Export ApiProvider from Host
 ```javascript
@@ -108,65 +108,53 @@ exposes: {
 ```
 
 #### 2.2 Create Clean ApiClientProvider
-```javascript
-// apps/desktop-host/src/api/ApiClientProvider.tsx
-export const ApiClientProvider: React.FC<{
-  children: React.ReactNode;
-  remoteId?: string;
-}> = ({ children, remoteId }) => {
-  const { executeAction, registerComponent, /* ... */ } = useApi();
+```typescript
+// apps/desktop-host/src/api/ApiClientProvider.tsx (implemented)
+export const ApiClientProvider: React.FC<{ children: React.ReactNode; remoteId?: string; }>
+  = ({ children, remoteId = 'unknown-remote' }) => {
+  const { executeAction, registerComponent, unregisterComponent, getComponents } = useApi();
 
-  const apiClient = useMemo(() => new DirectApiClient({
-    executeAction,
-    registerComponent,
-    remoteId,
-  }), [executeAction, registerComponent, remoteId]);
+  // Stable client per-remoteId
+  const apiClientRef = useRef<DirectApiClient | null>(null);
+  const currentRemoteIdRef = useRef<string>('');
 
-  return (
-    <ApiClientContext.Provider value={apiClient}>
-      {children}
-    </ApiClientContext.Provider>
-  );
+  const apiClient = useMemo(() => {
+    if (!apiClientRef.current || currentRemoteIdRef.current !== remoteId) {
+      currentRemoteIdRef.current = remoteId;
+      apiClientRef.current = new DirectApiClient(
+        (cid, aid, params) => executeAction(cid, aid, params),
+        (c) => (registerComponent as any)(c),
+        (id) => (unregisterComponent as any)(id),
+        () => (getComponents as any)(),
+        remoteId
+      );
+    }
+    return apiClientRef.current!;
+  }, [remoteId]);
+
+  return <SharedApiClientProvider apiClient={apiClient}>{children}</SharedApiClientProvider>;
 };
 ```
 
-#### 2.3 Update RemoteWindowRenderer with Context Option
-```javascript
+#### 2.3 Update RemoteWindowRenderer with Context Option — implemented as `apiPattern`
+```typescript
 // apps/desktop-host/src/shell/RemoteWindowRenderer.tsx
 interface RemoteWindowRendererProps {
   window: WindowState;
-  useReactContext?: boolean; // New option
+  apiPattern?: 'context' | 'bridge' | 'auto'; // default 'auto' → context
 }
 
-export const RemoteWindowRenderer: React.FC<RemoteWindowRendererProps> = ({
-  window,
-  useReactContext = false
-}) => {
-  const remoteComponent = (
-    <Suspense fallback={<LoadingFallback />}>
-      <RemoteComponent />
-    </Suspense>
-  );
-
-  return (
-    <div className="remote-window" style={windowStyle}>
-      <div className="window-container">
-        <RemoteErrorBoundary remoteName={window.id}>
-          {useReactContext ? (
-            <ApiClientProvider remoteId={window.id}>
-              {remoteComponent}
-            </ApiClientProvider>
-          ) : (
-            remoteComponent
-          )}
-        </RemoteErrorBoundary>
-      </div>
-    </div>
-  );
-};
+// In render:
+{effectiveApiPattern === 'context' ? (
+  <ApiClientProvider remoteId={window.id}>{remoteComponent}</ApiClientProvider>
+) : (
+  remoteComponent
+)}
 ```
 
-### Phase 3: Dual-Mode Support (Week 3)
+> Auto-detection currently defaults to the React Context pattern. Bridge remains available for non-React or legacy remotes.
+
+### Phase 3: Dual-Mode Support (Week 3) — 🔄 In Progress
 
 #### 3.1 Smart Pattern Detection
 ```javascript
@@ -198,7 +186,7 @@ export function useApiClient(): IApiClient {
 }
 ```
 
-#### 3.2 Remote Configuration System
+#### 3.2 Remote Configuration System (planned)
 ```javascript
 // apps/desktop-host/src/config/remoteConfig.ts
 export interface RemoteConfig {
@@ -224,7 +212,7 @@ export const REMOTE_CONFIGS: RemoteConfig[] = [
 ];
 ```
 
-#### 3.3 Auto-Detection Logic
+#### 3.3 Auto-Detection Logic (planned)
 ```javascript
 // apps/desktop-host/src/shell/RemoteManager.tsx
 const determineApiPattern = (remoteConfig: RemoteConfig, component: React.ComponentType) => {
@@ -240,7 +228,7 @@ const determineApiPattern = (remoteConfig: RemoteConfig, component: React.Compon
 };
 ```
 
-### Phase 4: Migration and Examples (Week 4)
+### Phase 4: Migration and Examples (Week 4) — ✅ Partial
 
 #### 4.1 Create Migration Guide
 ```markdown
@@ -310,16 +298,16 @@ export const HybridApp = () => {
 ## 🔄 Implementation Phases
 
 ### Phase 1: Foundation (Days 1-3)
-- [ ] Fix terminology and logging
-- [ ] Improve TypeScript declarations
-- [ ] Add better error messages
-- [ ] Update documentation
+- [x] Fix terminology and logging
+- [x] Improve TypeScript declarations
+- [x] Add better error messages
+- [x] Update documentation
 
 ### Phase 2: Context Support (Days 4-6)
-- [ ] Create ApiClientProvider export
-- [ ] Update RemoteWindowRenderer
-- [ ] Test React Context pattern
-- [ ] Verify type safety
+- [x] Create ApiClientProvider export
+- [x] Update RemoteWindowRenderer (apiPattern with auto default)
+- [x] Test React Context pattern
+- [x] Verify type safety
 
 ### Phase 3: Dual-Mode (Days 7-9)
 - [ ] Implement smart detection
@@ -328,10 +316,32 @@ export const HybridApp = () => {
 - [ ] Test both patterns together
 
 ### Phase 4: Polish (Days 10-12)
-- [ ] Create migration examples
-- [ ] Write comprehensive documentation
-- [ ] Add performance optimizations
+- [x] Create migration examples
+- [x] Write comprehensive documentation
+- [x] Add performance optimizations (registration stability)
 - [ ] Create testing utilities
+
+---
+
+## ✅ Stability Fixes Completed (2025-09-27)
+
+### Infinite Re-render Loop — Root Cause & Fixes
+- Root cause: Effect dependencies causing component registration/unregistration cycles
+- Fixes:
+  - `useComponentRegistration`: effect depends only on a value-stable `stableComponent`; `apiClient` captured in closure for cleanup
+  - `ApiClientProvider`: stable `DirectApiClient` instance per remote via refs; no churn
+  - `ApiProvider`: bridge effect includes `registerComponent` in deps (function is `useCallback([])`-stable)
+  - Duplicate-registration guards in both `DirectApiClient` and `ApiProvider`
+
+### Module Federation Sharing & Aliasing
+- React and ReactDOM configured as singletons
+- `@shared/api-client` and `@shared/ui-kit` aliased to source and shared as singletons across host/remote
+
+### Logs to Expect
+- Context path: `[API Client] ✅ Using React Context Pattern`
+- Bridge path: `[API Client] ✅ Using Module Federation Bridge Pattern`
+- Client creation: `[ApiClientProvider] Creating direct API client for remote: <id>` (once per remote)
+
 
 ## 🧪 Testing Strategy
 
