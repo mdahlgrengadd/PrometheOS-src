@@ -35,3 +35,4 @@ export declare function useMCPTool(toolName: string): {
     error: string | null;
     result: unknown;
 };
+//# sourceMappingURL=hooks.d.ts.map

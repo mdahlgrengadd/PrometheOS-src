@@ -4,10 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others --prefix-colors \"cyan,magenta,yellow\" --names \"HOST,NOTEPAD,UI-KIT\" \"npm run dev:host\" \"npm run dev:notepad\" \"npm run dev:ui-kit\"",
+    "dev": "concurrently --kill-others --prefix-colors \"cyan,magenta,yellow,green\" --names \"HOST,NOTEPAD,UI-KIT,SYS-API\" \"npm run dev:host\" \"npm run dev:notepad\" \"npm run dev:ui-kit\" \"npm run dev:system-api\"",
     "dev:host": "cd apps/desktop-host && npm run dev",
     "dev:notepad": "cd apps/notepad-remote && npm run start",
     "dev:ui-kit": "cd packages/shared-ui-kit && npm run start",
+    "dev:system-api": "cd packages/shared-system-api && npm run dev",
     "dev:legacy": "node scripts/build-workers.cjs && vite",
     "stop": "node scripts/stop-dev-servers.cjs",
     "test:services": "node test-services.cjs",

@@ -8,6 +8,7 @@ import { RemoteRegistry } from './shell/RemoteRegistry';
 import { DesktopShell } from './shell/DesktopShell';
 import { DesktopBootstrap } from './core/DesktopBootstrap';
 import { WorkerManager } from './workers/WorkerManager';
+import { SystemApiIntegration } from './api/SystemApiIntegration';
 
 export const DesktopHost: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -72,14 +73,16 @@ export const DesktopHost: React.FC = () => {
     <ErrorBoundary>
       <ThemeProvider>
         <ApiProvider>
-          <WorkerManager>
-            <WindowManager>
-              <RemoteRegistry>
-                <DesktopBootstrap />
-                <DesktopShell />
-              </RemoteRegistry>
-            </WindowManager>
-          </WorkerManager>
+          <SystemApiIntegration>
+            <WorkerManager>
+              <WindowManager>
+                <RemoteRegistry>
+                  <DesktopBootstrap />
+                  <DesktopShell />
+                </RemoteRegistry>
+              </WindowManager>
+            </WorkerManager>
+          </SystemApiIntegration>
         </ApiProvider>
       </ThemeProvider>
     </ErrorBoundary>

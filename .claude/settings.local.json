@@ -12,7 +12,10 @@
       "Bash(taskkill:*)",
       "Bash(npm run build:*)",
       "Bash(curl:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npm run stop:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

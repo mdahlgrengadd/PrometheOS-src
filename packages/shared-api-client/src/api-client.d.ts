@@ -22,3 +22,4 @@ export declare class FederatedApiClient implements IApiClient {
     callMCPTool(toolName: string, arguments_?: Record<string, unknown>): Promise<any>;
 }
 export declare function getApiClient(): FederatedApiClient;
+//# sourceMappingURL=api-client.d.ts.map

@@ -20,6 +20,7 @@ module.exports = {
         '@src': './src',
         '@shared/api-client$': require('path').resolve(__dirname, '../../packages/shared-api-client/src/index.ts'),
         '@shared/ui-kit$': require('path').resolve(__dirname, '../../packages/shared-ui-kit/src/index.ts'),
+        '@shared/system-api$': require('path').resolve(__dirname, '../../packages/shared-system-api/src/index.ts'),
       },
     },
   devServer: {
@@ -117,6 +118,12 @@ module.exports = {
           eager: true,
         },
         '@shared/api-client': {
+          singleton: true,
+          eager: true,
+          requiredVersion: false,
+          strictVersion: false,
+        },
+        '@shared/system-api': {
           singleton: true,
           eager: true,
           requiredVersion: false,
