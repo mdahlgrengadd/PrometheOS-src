@@ -195,6 +195,9 @@ export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Expose API bridge globally for remotes
     (window as any).__HOST_API_BRIDGE__ = hostApiBridge;
 
+    // Also expose the event bus for direct access by handlers
+    (window as any).eventBus = eventBus;
+
     // Expose API testing interface for browser console
     (window as any).__PROMETHEOS_API__ = {
       // Execute any registered action

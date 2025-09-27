@@ -57,19 +57,40 @@ export function useTextareaHandlers(
     },
   }), [valueRef, onChangeRef]);
 
-  // Register handlers with the federated API client
+  // Register handlers with the federated API client via event bus
   React.useEffect(() => {
-    // Note: In the federated architecture, action handlers would be registered
-    // as part of the component registration process rather than individually
-    // This is a placeholder for the federated approach
+    const eventBus = (window as any).eventBus || (window as any).__HOST_API_BRIDGE__?.eventBus;
 
-    console.log(`[Federated API] Textarea handlers ready for ${apiId}`);
+    if (!eventBus) {
+      console.warn(`[Federated API] No event bus available for registering handlers for ${apiId}`);
+      return;
+    }
+
+    // Register each handler via event bus
+    const handlersToRegister = [
+      { actionId: 'setValue', handler: handlers.setValue },
+      { actionId: 'getValue', handler: handlers.getValue },
+      { actionId: 'clear', handler: handlers.clear },
+      { actionId: 'appendText', handler: handlers.appendText },
+    ];
+
+    handlersToRegister.forEach(({ actionId, handler }) => {
+      eventBus.emit('api:registerActionHandler', {
+        componentId: apiId,
+        actionId,
+        handler,
+      });
+      console.log(`[Federated API] Registered handler: ${apiId}.${actionId}`);
+    });
+
+    console.log(`[Federated API] All textarea handlers registered for ${apiId}`);
 
     // Return cleanup function
     return () => {
       console.log(`[Federated API] Cleaning up textarea handlers for ${apiId}`);
+      // Note: In a full implementation, we'd unregister handlers here
     };
-  }, [apiId]);
+  }, [apiId, handlers.setValue, handlers.getValue, handlers.clear, handlers.appendText]);
 
   return handlers;
 }
