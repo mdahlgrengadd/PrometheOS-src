@@ -17,6 +17,7 @@ const Notepad: React.FC<NotepadProps> = (props) => {
   } = props || {};
 
   const [Button, setButton] = useState<React.ComponentType<any> | null>(null);
+  const [Textarea, setTextarea] = useState<React.ComponentType<any> | null>(null);
   const [content, setContent] = useState('');
 
   useEffect(() => {
@@ -28,15 +29,19 @@ const Notepad: React.FC<NotepadProps> = (props) => {
         console.log('[Notepad] UI kit loaded:', uiKit);
         if (active) {
           setButton(() => uiKit.Button);
+          setTextarea(() => uiKit.Textarea);
         }
       } catch (error) {
         console.error('[Notepad] Failed to load UI kit:', error);
         if (active) {
-          // Fallback to simple button
+          // Fallback components
           setButton(() => ({ children, ...props }: any) => (
             <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600" {...props}>
               {children}
             </button>
+          ));
+          setTextarea(() => ({ ...props }: any) => (
+            <textarea className="w-full h-full border p-2 resize-none" {...props} />
           ));
         }
       }
@@ -46,7 +51,7 @@ const Notepad: React.FC<NotepadProps> = (props) => {
     };
   }, []);
 
-  if (!Button) {
+  if (!Button || !Textarea) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -80,8 +85,8 @@ const Notepad: React.FC<NotepadProps> = (props) => {
         </div>
       </div>
       <div className="flex-1 p-4">
-        <textarea 
-          className="w-full h-full border p-2 resize-none"
+        <Textarea 
+          className="w-full h-full resize-none"
           placeholder="Type your notes here..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
